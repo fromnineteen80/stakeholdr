@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { STAKEHOLDER_DATA } from './data';
 import { uid, nowStamp, Store } from './store';
+import { Icon, abbrev } from './components';
 // users.jsx - Avatar, profile menu, user stack, user list popup, login gate,
 // edit-profile modal, owner picker.
 

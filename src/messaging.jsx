@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { displayName, Icon } from './components';
+import { Avatar, UserAutocomplete } from './users';
 // Messaging - right-side sidebar AND full-page view. Both read/write the same
 // conversation + message store, so a message you send in the sidebar is
 // instantly visible on the page and vice-versa.

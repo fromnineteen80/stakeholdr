@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { STAKEHOLDER_DATA } from './data';
-import { coordToPct, pctToCoord, abbrev, Icon, StatusPill, displayName, normalizeUrl } from './components';
+import { coordToPct, pctToCoord, abbrev, Icon, StatusPill, PriorityPill, StatusDot, Tags, displayName, normalizeUrl } from './components';
+import { OwnersDisplay } from './users';
 // Map tab - 4×6 stakeholder map with draggable dots.
 // Two-way: dragging a dot updates the underlying scores (scaled across team).
 // Three visual variations driven by Tweaks: classic / halo / density.

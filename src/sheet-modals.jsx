@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { STAKEHOLDER_DATA } from './data';
 import { displayName, normalizeUrl, formatPhone, Icon, FilterSection, SortFieldList } from './components';
 import { StakeholderProfile } from './profiles';
+import { MultiOwnerPicker } from './users';
 // sheet-modals.jsx - extracted from sheet.jsx
 // StakeholderModal (create/edit), FilterPopover, SortPopover, IssueSelector, NotesModal.
 // Sibling text/babel script: shares global scope with sheet.jsx; all exported to window.

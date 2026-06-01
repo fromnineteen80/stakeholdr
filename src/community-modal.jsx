@@ -5,7 +5,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { STAKEHOLDER_DATA } from './data';
 import { displayName, Icon } from './components';
 import { uid } from './store';
-import { communityValueScore } from './community';
+import { communityValueScore, CommunityProfile } from './community';
 import { IssueSelector } from './sheet-modals';
 import { MultiOwnerPicker } from './users';
 

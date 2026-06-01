@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { STAKEHOLDER_DATA } from './data';
 import { displayName, Icon, StatusPill } from './components';
 import { StakeholderModal } from './sheet-modals';
+import { Avatar, UserAutocomplete } from './users';
 // Scoring tab - stakeholders × team members. Each cell is an (x, y) rating from
 // that team member; weighted average drives the dot position on the Map tab.
 

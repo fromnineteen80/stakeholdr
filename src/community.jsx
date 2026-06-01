@@ -13,6 +13,9 @@ import { uid, cmdKeyLabel } from './store';
 import { Avatar, OwnersDisplay, MultiOwnerPicker } from './users';
 import { IssueSelector } from './sheet-modals';
 import { RecordShell, MetaField } from './record';
+import { CommunityModal } from './community-modal';
+import { LandingView } from './landing';
+import { StakeholderProfile } from './profiles';
 
 const KIND_COLORS = {
   "Philanthropy":           { bg: "#DDE7C2", fg: "#2f5a26" },

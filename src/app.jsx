@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { STAKEHOLDER_DATA } from './data';
-import { displayName, formatDateLong, Icon, StatusPill } from './components';
+import { displayName, formatDateLong, Icon, StatusPill, Tags } from './components';
 import { uid, nowStamp, usePersistentState } from './store';
 import { Avatar, UserStack, ProfileMenu, LoginView, EditProfileModal, MultiOwnerPicker, UserListPopup } from './users';
 import { SheetView } from './sheet';
