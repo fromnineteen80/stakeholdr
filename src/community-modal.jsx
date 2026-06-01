@@ -6,6 +6,8 @@ import { STAKEHOLDER_DATA } from './data';
 import { displayName, Icon } from './components';
 import { uid } from './store';
 import { communityValueScore } from './community';
+import { IssueSelector } from './sheet-modals';
+import { MultiOwnerPicker } from './users';
 
 // StakeholderPicker - typeahead multi-select of stakeholders (mirrors the
 // UserAutocomplete pattern but over the stakeholder list). Returns ids.
