@@ -5,8 +5,9 @@ import { uid, nowStamp } from './store';
 import { StakeholderModal, IssueSelector } from './sheet-modals';
 import { StakeholderProfile } from './profiles';
 import { affiliatedCommunity, communityEntryAmount } from './community';
-import { OwnersDisplay, MultiOwnerPicker, UserAutocomplete } from './users';
+import { OwnersDisplay, MultiOwnerPicker, UserAutocomplete, Avatar } from './users';
 import { LandingView } from './landing';
+import { RecordShell } from './record';
 
 // Plan tab - landing grid of plans (like Community) + full-page editor + review.
 // Reuses stakeholders, users, community, issues from the shared Store.
@@ -231,20 +232,17 @@ function PlanHome({ explainerSlot, plans, workspaces, wsStakeholders, onOpen, on
   );
 }
 
-// ── PlanEditor - full-page editor (the working surface) ─────────────────
+// ── PlanEditor - full-page editor using RecordShell ─────────────────────
 function PlanEditor({ plan, workspace, workspaces, stakeholders, allStakeholders, scores, team, isMaster, stakeholderWorkspaces, setStakeholderWorkspaces, addStakeholder, updateStakeholder, getWorkspacesForStakeholder, updateCommunityApp, onOpenWorkspace, users, community, companyIssues, currentUser, updatePlan, onBack, onReview }) {
   const D = STAKEHOLDER_DATA;
   const p = plan;
   const [newSh, setNewSh] = useState(false);
-  const [addExisting, setAddExisting] = useState(false);
   const [viewShId, setViewShId] = useState(null);
   const set = (patch) => updatePlan({ ...p, ...patch, updatedAt: today() });
   const sector = D.SEP_SECTOR_MODELS.find(m => m.id === p.sectorModel) || D.SEP_SECTOR_MODELS[0];
   const goal = D.SEP_GOAL_MODELS.find(m => m.id === p.goalModel) || D.SEP_GOAL_MODELS[0];
   const linkedCommunity = (p.communityIds || []).map(id => community.find(c => c.id === id)).filter(Boolean);
   function rel(s) { const wc = D.weightedCoord(s.id, scores || {}, team || []); return D.statusFor(wc.x, wc.y); }
-  // SEP auto-ranking: suggestion per stakeholder, ordered most-critical first.
-  // Override (if any) wins over the suggestion for both the pill and the sort.
   const sepCtx = { scores, team, community, planIssues: p.issues || [] };
   const ranked = (stakeholders || []).map(s => ({
     s,
@@ -260,7 +258,6 @@ function PlanEditor({ plan, workspace, workspaces, stakeholders, allStakeholders
     if (band) next[id] = band; else delete next[id];
     set({ priorityOverrides: next });
   }
-  // Every field must be filled before the plan can be saved.
   const planMissing = [];
   if (!(p.title || "").trim() || p.title === "Insert Plan Name") planMissing.push("Plan name");
   if (!p.workspaceId) planMissing.push("Workspace");
@@ -278,246 +275,250 @@ function PlanEditor({ plan, workspace, workspaces, stakeholders, allStakeholders
   if (!(p.measurement || "").trim()) planMissing.push("Measurement");
   const planValid = planMissing.length === 0;
   const viewSh = viewShId ? stakeholders.find(s => s.id === viewShId) : null;
-  // existing stakeholders not yet assigned to this plan's workspace
   const addableStakeholders = (allStakeholders || []).filter(s => !(stakeholderWorkspaces[s.id] || []).includes(p.workspaceId));
   function assignExisting(id) {
     if (!id) return;
-    setStakeholderWorkspaces({ ...stakeholderWorkspaces, [id]: [ ...(stakeholderWorkspaces[id] || []), p.workspaceId ] });
-    setAddExisting(false);
+    setStakeholderWorkspaces({ ...stakeholderWorkspaces, [id]: [...(stakeholderWorkspaces[id] || []), p.workspaceId] });
   }
 
-  return (
-    <div className="sheet-wrap">
-      <div className="sheet-toolbar">
-        <button className="plan-back" onClick={onBack}>‹ All plans</button>
-        <input className="plan-toolbar-title" value={p.title} placeholder="Insert Plan Name" onChange={e => set({ title: e.target.value })} />
-        <div className="spacer" style={{ flex: 1 }} />
-        <label className="plan-model-pick">
-          <div className="designed-select">
-            <select value={p.sectorModel} onChange={e => set({ sectorModel: e.target.value })}>
-              {D.SEP_SECTOR_MODELS.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-            </select>
-          </div>
-        </label>
-        <label className="plan-model-pick">
-          <div className="designed-select">
-            <select value={p.goalModel} onChange={e => set({ goalModel: e.target.value })}>
-              {D.SEP_GOAL_MODELS.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-            </select>
-          </div>
-        </label>
-        <button className="btn btn-primary" disabled={!planValid} onClick={onBack}>Save</button>
-        {!planValid && <span className="modal-missing" title={planMissing.join(", ")}>{planMissing.length} left: {planMissing.slice(0, 2).join(", ")}{planMissing.length > 2 ? "…" : ""}</span>}
-      </div>
-
-      <div className="plan-body">
-        {/* Floating metadata sidebar */}
-        <aside className="plan-aside">
-          <label className="plan-aside-field"><span className="lbl">One-line summary</span>
-            <textarea className="plan-field" rows={2} placeholder="A single sentence describing this plan - shown on the plan card and review."
-              value={p.summary || ""} onChange={e => set({ summary: e.target.value })} />
+  const sections = [
+    {
+      id: "scenario", label: "Scenario & Context", icon: "description",
+      render: () => (
+        <div className="record-fields">
+          <label className="plan-q"><span className="lbl">What this plan solves &amp; its impact to the company</span>
+            <textarea className="plan-field" rows={3} value={p.scenarioSolves || ""} onChange={e => set({ scenarioSolves: e.target.value })} />
           </label>
-          <label className="plan-aside-field"><span className="lbl">Status</span>
-            <div className="designed-select">
-              <select value={p.status || "Idea"} onChange={e => set({ status: e.target.value })}>
-                {PLAN_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
+          <label className="plan-q"><span className="lbl">What we plan to do - a phased approach</span>
+            <textarea className="plan-field" rows={3} value={p.scenarioApproach || ""} onChange={e => set({ scenarioApproach: e.target.value })} />
           </label>
-          <label className="plan-aside-field"><span className="lbl">Workspace</span>
-            <div className="designed-select">
-              <select value={p.workspaceId} onChange={e => set({ workspaceId: e.target.value })}>
-                {workspaces.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
-              </select>
-            </div>
+          <label className="plan-q"><span className="lbl">The outcome we expect</span>
+            <textarea className="plan-field" rows={3} value={p.scenarioOutcome || ""} onChange={e => set({ scenarioOutcome: e.target.value })} />
           </label>
-          <label className="plan-aside-field"><span className="lbl">Market</span>
-            <div className="designed-select">
-              <select value={p.market || ""} onChange={e => set({ market: e.target.value, region: "" })}>
-                <option value="">Select market…</option>
-                {Object.keys(D.MARKETS).map(m => <option key={m}>{m}</option>)}
-              </select>
-            </div>
-          </label>
-          <label className="plan-aside-field"><span className="lbl">Region</span>
-            <div className="designed-select">
-              <select value={p.region || ""} onChange={e => set({ region: e.target.value })}>
-                <option value="">Select region…</option>
-                {(D.MARKETS[p.market] || []).map(r => <option key={r}>{r}</option>)}
-              </select>
-            </div>
-          </label>
-          <label className="plan-aside-field"><span className="lbl">Site</span>
-            <div className="designed-select">
-              <select value={p.site || ""} onChange={e => {
-                const id = e.target.value;
-                const s = (D.SITES || []).find(x => x.id === id);
-                if (s && s.state) set({ site: id, state: s.state });
-                else set({ site: id });
-              }}>
-                <option value="">None</option>
-                {(D.SITES || []).map(s => <option key={s.id} value={s.id}>{D.siteLabel(s)}</option>)}
-              </select>
-            </div>
-          </label>
-          <label className="plan-aside-field"><span className="lbl">State</span>
-            <div className="designed-select">
-              <select value={p.state || ""} onChange={e => set({ state: e.target.value })}>
-                <option value="">None</option>
-                {(D.US_STATES || []).map(st => <option key={st} value={st}>{D.STATE_ABBR[st] || st}</option>)}
-              </select>
-            </div>
-          </label>
-          <label className="plan-aside-field"><span className="lbl">Geography</span>
-            <div className="designed-select">
-              <select value={p.geography || ""} onChange={e => set({ geography: e.target.value })}>
-                <option value="">Select geography…</option>
-                {(D.GEOGRAPHIES || []).map(g => <option key={g}>{g}</option>)}
-              </select>
-            </div>
-          </label>
-          <div className="plan-aside-field plan-divider"><span className="lbl">Owners</span>
-            <MultiOwnerPicker users={users} owners={p.owners || []} onChange={v => set({ owners: v })} size={26} />
-          </div>
-          <div className="plan-aside-field plan-divider"><span className="lbl">Issues</span>
-            <IssueSelector selected={p.issues || []} companyIssues={companyIssues || []} onChange={issues => set({ issues })} />
-          </div>
-          <div className="plan-aside-field plan-divider plan-community-field"><span className="lbl">Linked community investment</span>
-            <PlanCommunity linked={linkedCommunity} all={community} market={p.market} region={p.region} onChange={communityIds => set({ communityIds })} />
-          </div>
-        </aside>
-
-        {/* Main plan document */}
-        <div className="plan-main">
-          <PlanSection n="1" title="Scenario & Context">
-            <label className="plan-q"><span className="lbl">What this plan solves &amp; its impact to the company</span>
-              <textarea className="plan-field" rows={3} value={p.scenarioSolves || ""} onChange={e => set({ scenarioSolves: e.target.value })} />
-            </label>
-            <label className="plan-q"><span className="lbl">What we plan to do - a phased approach</span>
-              <textarea className="plan-field" rows={3} value={p.scenarioApproach || ""} onChange={e => set({ scenarioApproach: e.target.value })} />
-            </label>
-            <label className="plan-q"><span className="lbl">The outcome we expect</span>
-              <textarea className="plan-field" rows={3} value={p.scenarioOutcome || ""} onChange={e => set({ scenarioOutcome: e.target.value })} />
-            </label>
-          </PlanSection>
-
-          <PlanSection n="2" title="Aligning With Organizational Goals">
-            <p className="plan-inherited-note">Inherited from your organization's goals (set in Settings). How does your plan align with this organizational goal and drive success or defend your license to operate?</p>
-            <div className="plan-goal-list">
-              {(D.ORG_GOALS || []).map((g, i) => (
-                <div className="plan-goal-item" key={i}>
-                  <div className="subheader-text plan-goal-title">{g}</div>
-                  <textarea
-                    className="plan-field plan-goal-note"
-                    placeholder="How does this plan work to achieve this goal in this workspace?"
-                    value={(p.goalNotes && p.goalNotes[g]) || ""}
-                    onChange={e => set("goalNotes", { ...(p.goalNotes || {}), [g]: e.target.value })}
-                  />
-                </div>
-              ))}
-            </div>
-          </PlanSection>
-
-          <PlanSection n="3" title="Stakeholders In This Plan">
-            <div className="plan-sh-table">
-              <div className="plan-sh-thead">
-                <span>Stakeholder</span><span>Type</span><span>Relationship</span><span>Priority</span>
-              </div>
-              {ranked.map(({ s, suggestion, override }) => (
-                <div className="plan-sh-trow" key={s.id} onClick={() => setViewShId(s.id)} title="Open stakeholder">
-                  <span className="plan-sh-name">{displayName(s) || s.name}</span>
-                  <span className="muted">{s.type}</span>
-                  <span><StatusPill status={rel(s)} /></span>
-                  <span><PlanPriorityCell s={s} suggestion={suggestion} override={override} canEdit={!!currentUser && currentUser.role === "manager"} onSet={(b) => setPriorityOverride(s.id, b)} /></span>
-                </div>
-              ))}
-              {/* inline add-existing as the last white line */}
-              <div className="plan-sh-addrow">
-                <PlanAutocomplete
-                  options={addableStakeholders}
-                  getLabel={s => (displayName(s) || s.name)}
-                  getSub={s => s.type}
-                  onPick={assignExisting}
-                  placeholder="Add existing stakeholder…"
+        </div>
+      )
+    },
+    {
+      id: "goals", label: "Org Goals", icon: "beenhere",
+      render: () => (
+        <div className="record-prose">
+          <p className="plan-inherited-note">Inherited from your organization's goals. How does your plan align with each goal and drive success?</p>
+          <div className="plan-goal-list">
+            {(D.ORG_GOALS || []).map((g, i) => (
+              <div className="plan-goal-item" key={i}>
+                <div className="subheader-text plan-goal-title">{g}</div>
+                <textarea
+                  className="plan-field plan-goal-note"
+                  placeholder="How does this plan work to achieve this goal in this workspace?"
+                  value={(p.goalNotes && p.goalNotes[g]) || ""}
+                  onChange={e => set({ goalNotes: { ...(p.goalNotes || {}), [g]: e.target.value } })}
                 />
               </div>
-            </div>
-            <button className="btn plan-add-btn" onClick={() => setNewSh(true)}>Add New Stakeholder</button>
-          </PlanSection>
-
-          <PlanSection n="4" title="Tactics">
-            <PlanStrategies strategies={p.strategies || []} users={users} onChange={strategies => set({ strategies })} />
-          </PlanSection>
-
-          <PlanSection n="5" title="Measurement & Reporting">
-            <textarea className="plan-field" rows={4} placeholder="Cadence, metrics, and how progress ties to the fiscal quarters…"
-              value={p.measurement} onChange={e => set({ measurement: e.target.value })} />
-          </PlanSection>
+            ))}
+          </div>
         </div>
+      )
+    },
+    {
+      id: "stakeholders", label: "Stakeholders", icon: "users",
+      render: () => (
+        <div className="record-table-embed">
+          <div className="plan-sh-table">
+            <div className="plan-sh-thead">
+              <span>Stakeholder</span><span>Type</span><span>Relationship</span><span>Priority</span>
+            </div>
+            {ranked.map(({ s, suggestion, override }) => (
+              <div className="plan-sh-trow" key={s.id} onClick={() => setViewShId(s.id)} title="Open stakeholder">
+                <span className="plan-sh-name">{displayName(s) || s.name}</span>
+                <span className="muted">{s.type}</span>
+                <span><StatusPill status={rel(s)} /></span>
+                <span><PlanPriorityCell s={s} suggestion={suggestion} override={override} canEdit={!!currentUser && currentUser.role === "manager"} onSet={(b) => setPriorityOverride(s.id, b)} /></span>
+              </div>
+            ))}
+            <div className="plan-sh-addrow">
+              <PlanAutocomplete
+                options={addableStakeholders}
+                getLabel={s => (displayName(s) || s.name)}
+                getSub={s => s.type}
+                onPick={assignExisting}
+                placeholder="Add existing stakeholder…"
+              />
+            </div>
+          </div>
+          <div className="sheet-footer">
+            <div className="group"><Icon name="users" /> <strong style={{ color: "var(--ink)" }}>{stakeholders.length}</strong> stakeholders</div>
+            <div className="spacer" style={{ flex: 1 }} />
+            <button className="footer-export-btn" onClick={() => setNewSh(true)}>Add New Stakeholder</button>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: "tactics", label: "Tactics", icon: "build",
+      render: () => (
+        <div className="record-fields">
+          <PlanStrategies strategies={p.strategies || []} users={users} onChange={strategies => set({ strategies })} />
+        </div>
+      )
+    },
+    {
+      id: "measurement", label: "Measurement", icon: "sliders",
+      render: () => (
+        <div className="record-fields">
+          <label className="plan-q"><span className="lbl">Cadence, metrics, and progress reporting</span>
+            <textarea className="plan-field" rows={5} placeholder="How will progress be measured and reported across fiscal quarters?"
+              value={p.measurement || ""} onChange={e => set({ measurement: e.target.value })} />
+          </label>
+        </div>
+      )
+    }
+  ];
 
-        {/* Right sidebar: cross-functional team + SEP model explanation */}
-        <aside className="plan-aside plan-aside-right">
-          <div className="plan-aside-field">
-            <span className="lbl">Cross-functional team</span>
-            <PlanTeam team={p.team || []} users={users} onChange={team => set({ team })} />
+  const rightRail = (
+    <div className="record-rail-inner">
+      <div className="record-rail-sec">
+        <label className="plan-aside-field"><span className="lbl">Summary</span>
+          <textarea className="plan-field" rows={2} placeholder="One-line summary…"
+            value={p.summary || ""} onChange={e => set({ summary: e.target.value })} />
+        </label>
+        <label className="plan-aside-field"><span className="lbl">Status</span>
+          <div className="designed-select">
+            <select value={p.status || "Idea"} onChange={e => set({ status: e.target.value })}>
+              {PLAN_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
           </div>
-          <div className="plan-aside-field plan-divider">
-            <span className="lbl">How stakeholders are prioritized</span>
-            <p className="plan-aside-explain">We <strong>suggest</strong> a priority for each stakeholder from their map position, issue overlap, and community ties - weighted by the factors below. It's a starting point: managers can override any suggestion (look for the <span className="prio-suggest-inline">✦</span>).</p>
-            <SepExplain sector={sector} goal={goal} />
+        </label>
+        <label className="plan-aside-field"><span className="lbl">Workspace</span>
+          <div className="designed-select">
+            <select value={p.workspaceId} onChange={e => set({ workspaceId: e.target.value })}>
+              {workspaces.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+            </select>
           </div>
-          <div className="plan-aside-field plan-divider">
-            <span className="lbl">Personas</span>
-            <div className="plan-addon-note"><Icon name="lock" className="ico" /> Add-on - persona modeling from polling &amp; listening sessions.</div>
+        </label>
+        <label className="plan-aside-field"><span className="lbl">Market</span>
+          <div className="designed-select">
+            <select value={p.market || ""} onChange={e => set({ market: e.target.value, region: "" })}>
+              <option value="">Select market…</option>
+              {Object.keys(D.MARKETS).map(m => <option key={m}>{m}</option>)}
+            </select>
           </div>
-        </aside>
+        </label>
+        <label className="plan-aside-field"><span className="lbl">Region</span>
+          <div className="designed-select">
+            <select value={p.region || ""} onChange={e => set({ region: e.target.value })}>
+              <option value="">Select region…</option>
+              {(D.MARKETS[p.market] || []).map(r => <option key={r}>{r}</option>)}
+            </select>
+          </div>
+        </label>
+        <label className="plan-aside-field"><span className="lbl">Site</span>
+          <div className="designed-select">
+            <select value={p.site || ""} onChange={e => {
+              const id = e.target.value;
+              const s = (D.SITES || []).find(x => x.id === id);
+              if (s && s.state) set({ site: id, state: s.state });
+              else set({ site: id });
+            }}>
+              <option value="">None</option>
+              {(D.SITES || []).map(s => <option key={s.id} value={s.id}>{D.siteLabel(s)}</option>)}
+            </select>
+          </div>
+        </label>
+        <label className="plan-aside-field"><span className="lbl">State</span>
+          <div className="designed-select">
+            <select value={p.state || ""} onChange={e => set({ state: e.target.value })}>
+              <option value="">None</option>
+              {(D.US_STATES || []).map(st => <option key={st} value={st}>{D.STATE_ABBR[st] || st}</option>)}
+            </select>
+          </div>
+        </label>
+        <label className="plan-aside-field"><span className="lbl">Geography</span>
+          <div className="designed-select">
+            <select value={p.geography || ""} onChange={e => set({ geography: e.target.value })}>
+              <option value="">Select geography…</option>
+              {(D.GEOGRAPHIES || []).map(g => <option key={g}>{g}</option>)}
+            </select>
+          </div>
+        </label>
       </div>
-
-      <div className="sheet-footer">
-        <div className="group"><Icon name="plan" /> <strong style={{ color: "var(--ink)" }}>{stakeholders.length}</strong> stakeholders in plan</div>
-        <div className="group">·</div>
-        <div className="group">{workspace ? workspace.name : "-"}</div>
-        <div className="group">·</div>
-        <div className="group">{sector.name}</div>
-        <div className="spacer" style={{ flex: 1 }} />
-        <div className="group muted">Saved · {planDate(p.updatedAt)}</div>
+      <div className="record-rail-sec">
+        <div className="plan-aside-field plan-divider"><span className="lbl">Owners</span>
+          <MultiOwnerPicker users={users} owners={p.owners || []} onChange={v => set({ owners: v })} size={26} />
+        </div>
+        <div className="plan-aside-field plan-divider"><span className="lbl">Issues</span>
+          <IssueSelector selected={p.issues || []} companyIssues={companyIssues || []} onChange={issues => set({ issues })} />
+        </div>
+        <div className="plan-aside-field plan-divider plan-community-field"><span className="lbl">Community investment</span>
+          <PlanCommunity linked={linkedCommunity} all={community} market={p.market} region={p.region} onChange={communityIds => set({ communityIds })} />
+        </div>
       </div>
+      <div className="record-rail-sec">
+        <div className="plan-aside-field"><span className="lbl">Cross-functional team</span>
+          <PlanTeam team={p.team || []} users={users} onChange={team => set({ team })} />
+        </div>
+        <div className="plan-aside-field plan-divider"><span className="lbl">How stakeholders are prioritized</span>
+          <p className="plan-aside-explain">We <strong>suggest</strong> a priority from map position, issue overlap, and community ties. Managers can override any suggestion (look for the <span className="prio-suggest-inline">✦</span>).</p>
+          <SepExplain sector={sector} goal={goal} />
+        </div>
+        <div className="plan-aside-field plan-divider"><span className="lbl">Personas</span>
+          <div className="plan-addon-note"><Icon name="lock" className="ico" /> Add-on – persona modeling from polling &amp; listening.</div>
+        </div>
+      </div>
+      {!planValid && (
+        <div className="record-rail-sec">
+          <span className="modal-missing">{planMissing.length} required: {planMissing.slice(0, 3).join(", ")}{planMissing.length > 3 ? "…" : ""}</span>
+        </div>
+      )}
+    </div>
+  );
 
-      {newSh && StakeholderModal && (
+  return (
+    <>
+      <RecordShell
+        backLabel="All plans"
+        onBack={onBack}
+        title={p.title}
+        subtitle={workspace ? workspace.name : ""}
+        sections={sections}
+        rightRail={rightRail}
+        navTitle="Plan sections"
+        toolbar={
+          <span className="scaffold-controls">
+            <input
+              style={{ fontSize: 13, border: "1px solid var(--rule-2)", borderRadius: 6, padding: "4px 8px", background: "var(--paper)", color: "var(--ink)", minWidth: 160 }}
+              value={p.title} placeholder="Plan name" onChange={e => set({ title: e.target.value })} />
+            <div className="designed-select">
+              <select value={p.sectorModel} onChange={e => set({ sectorModel: e.target.value })}>
+                {D.SEP_SECTOR_MODELS.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+            </div>
+            <div className="designed-select">
+              <select value={p.goalModel} onChange={e => set({ goalModel: e.target.value })}>
+                {D.SEP_GOAL_MODELS.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+            </div>
+            <button className="btn btn-primary" disabled={!planValid} onClick={onBack}>Save</button>
+          </span>
+        }
+      />
+      {newSh && (
         <StakeholderModal
-          users={users}
-          workspaces={workspaces}
-          isMaster={false}
-          currentUser={currentUser}
-          existing={null}
-          companyIssues={companyIssues}
-          community={community}
-          stakeholders={stakeholders}
+          users={users} workspaces={workspaces} isMaster={false} currentUser={currentUser}
+          existing={null} companyIssues={companyIssues} community={community} stakeholders={stakeholders}
           onCancel={() => setNewSh(false)}
           onSubmit={(data) => { if (addStakeholder) addStakeholder(data, p.workspaceId); setNewSh(false); }}
         />
       )}
-
-      {viewSh && StakeholderProfile && (
+      {viewSh && (
         <StakeholderProfile
-          stakeholder={viewSh}
-          users={users}
-          stakeholders={allStakeholders || stakeholders}
-          community={community}
-          scores={scores}
-          team={team}
+          stakeholder={viewSh} users={users} stakeholders={allStakeholders || stakeholders}
+          community={community} scores={scores} team={team}
           getWorkspacesForStakeholder={getWorkspacesForStakeholder}
-          updateCommunityApp={updateCommunityApp}
-          currentUser={currentUser}
-          companyIssues={companyIssues}
-          onClose={() => setViewShId(null)}
+          updateCommunityApp={updateCommunityApp} currentUser={currentUser}
+          companyIssues={companyIssues} onClose={() => setViewShId(null)}
         />
       )}
-
-      {addExisting && false && (
-        <></>
-      )}
-    </div>
+    </>
   );
 }
 
@@ -570,7 +571,7 @@ function PlanAutocomplete({ options, getLabel, getSub, onPick, placeholder, dark
   );
 }
 
-// ── PlanReview - full-length read-only page ─────────────────────────────
+// ── PlanReview - read-only view using RecordShell ───────────────────────
 function PlanReview({ plan, workspace, stakeholders, users, community, companyIssues, currentUser, scores, team, onBack, onEdit }) {
   const D = STAKEHOLDER_DATA;
   const p = plan;
@@ -586,34 +587,22 @@ function PlanReview({ plan, workspace, stakeholders, users, community, companyIs
     const band = (p.priorityOverrides || {})[s.id] || sug.band;
     return { s, band };
   }).sort((a, b) => PRIO[a.band] - PRIO[b.band]);
-  const RS = ({ title, children }) => (
-    <section className="plan-review-section">
-      <h2>{title}</h2>
-      {children}
-    </section>
-  );
 
-  return (
-    <div className="sheet-wrap">
-      <div className="sheet-toolbar">
-        <button className="btn btn-ghost" onClick={onBack} title="All plans"><Icon name="chevron-left" /> Plans</button>
-        <span style={{ fontWeight: 500 }}>{p.title}</span>
-        <div className="spacer" style={{ flex: 1 }} />
-        <button className="btn btn-primary" onClick={onEdit}><Icon name="edit" /> Edit plan</button>
-      </div>
-
-      <div className="plan-review-body">
-        <div className="plan-review-doc">
-        <header className="plan-review-head">
+  const sections = [
+    {
+      id: "overview", label: "Overview", icon: "description",
+      render: () => (
+        <div className="record-prose">
+          <header className="plan-review-head">
             <h1>{p.title}</h1>
-            <div className="muted">{workspace ? workspace.name : ""}{(p.market || p.region) ? " · " + [p.market, p.region].filter(Boolean).join(" / ") : ""}{p.site && D.SITES ? " · " + (D.siteLabel(D.SITES.find(s => s.id === p.site) || {}) || "") : ""}{p.state ? " · " + (D.STATE_ABBR[p.state] || p.state) : ""}{p.geography ? " · " + p.geography : ""} · Updated {planDate(p.updatedAt)}</div>
+            <div className="muted">{workspace ? workspace.name : ""}{(p.market || p.region) ? " · " + [p.market, p.region].filter(Boolean).join(" / ") : ""}{p.site && D.SITES ? " · " + (D.siteLabel(D.SITES.find(s => s.id === p.site) || {}) || "") : ""}{p.state ? " · " + (D.STATE_ABBR[p.state] || p.state) : ""}{p.geography ? " · " + p.geography : ""}</div>
             {p.summary && <p className="plan-review-summary">{p.summary}</p>}
             <div className="plan-review-models">
               {PLAN_GOAL_COLORS[p.goalModel]
                 ? <span className="tag" style={{ background: PLAN_GOAL_COLORS[p.goalModel].bg, color: PLAN_GOAL_COLORS[p.goalModel].fg, borderColor: "transparent" }}>{goal.name}</span>
                 : <span className="tag" style={{ background: "var(--bg-2)", color: "var(--ink-2)" }}>{goal.name}</span>}
               <span className="comm-stage-text" style={{ color: PLAN_STAGE_FG[p.status] || "var(--ink-2)" }}>{p.status || "Idea"}</span>
-              <span className="spacer" style={{ flex: 1 }} />
+              <span style={{ flex: 1 }} />
               <OwnersDisplay users={users} owners={p.owners || []} size={26} />
             </div>
             <div className="plan-algobar" style={{ marginTop: 12 }}>
@@ -623,125 +612,177 @@ function PlanReview({ plan, workspace, stakeholders, users, community, companyIs
               <code>{goal.name}: {fmt(goal)}</code>
             </div>
           </header>
-
-          <RS title="Scenario & Context">
-            {(p.scenarioSolves || p.scenarioApproach || p.scenarioOutcome) ? (
-              <div className="plan-review-scenario">
-                {p.scenarioSolves && <div><span className="lbl">What this plan solves &amp; its impact</span><p className="plan-review-prose">{p.scenarioSolves}</p></div>}
-                {p.scenarioApproach && <div><span className="lbl">Our phased approach</span><p className="plan-review-prose">{p.scenarioApproach}</p></div>}
-                {p.scenarioOutcome && <div><span className="lbl">The outcome we expect</span><p className="plan-review-prose">{p.scenarioOutcome}</p></div>}
-              </div>
-            ) : <p className="plan-review-prose"><span className="muted">Not written yet.</span></p>}
-          </RS>
-
-          <RS title="Aligning With Organizational Goals">
-            {(D.ORG_GOALS || []).length ? (
-              <div className="plan-goal-list">
-                {D.ORG_GOALS.map((g, i) => (
-                  <div className="plan-goal-item" key={i}>
-                    <div className="subheader-text plan-goal-title">{g}</div>
-                    {(p.goalNotes && p.goalNotes[g])
-                      ? <p className="plan-review-prose" style={{ margin: "4px 0 0" }}>{p.goalNotes[g]}</p>
-                      : <p className="muted" style={{ margin: "4px 0 0", fontSize: 12.5 }}>No approach described yet.</p>}
-                  </div>
-                ))}
-              </div>
-            ) : <p className="muted">No goals listed.</p>}
-          </RS>
-
-          <RS title="Stakeholders In This Plan">
-            {rankedSh.length ? (
-              <div className="plan-sh-table" style={{ overflow: "visible" }}>
-                <div className="plan-sh-thead">
-                  <span>Stakeholder</span><span>Type</span><span>Relationship</span><span>Priority</span>
-                </div>
-                {rankedSh.map(({ s, band }) => (
-                  <div className="plan-sh-trow" key={s.id} style={{ cursor: "default" }}>
-                    <span className="plan-sh-name">{displayName(s) || s.name}</span>
-                    <span className="muted">{s.type}</span>
-                    <span><StatusPill status={rel(s)} /></span>
-                    <span><PriorityPill value={band} /></span>
-                  </div>
-                ))}
-              </div>
-            ) : <p className="muted">No stakeholders in this workspace.</p>}
-          </RS>
-
-          <RS title="Cross-functional Team">
-            {(p.team || []).length ? (
-              <div className="plan-review-team">
-                {p.team.map(m => {
-                  const u = users.find(x => x.id === m.userId); if (!u) return null;
-                  return <div className="plan-review-teamrow" key={m.userId}><Avatar user={u} size={28} /><div><div style={{ fontWeight: 500, fontSize: 13 }}>{u.name}</div><div className="muted" style={{ fontSize: 11.5 }}>{m.role || u.title}</div></div></div>;
-                })}
-              </div>
-            ) : <p className="muted">No team assigned.</p>}
-          </RS>
-
-          <RS title="Tactics">
-            {(p.strategies || []).length ? p.strategies.map(s => {
-              const owner = users.find(u => u.id === s.ownerId);
-              return (
-                <div className="plan-review-strat" key={s.id}>
-                  <div className="plan-review-strat-title">{s.title || "Untitled"}</div>
-                  {s.how && <p className="plan-review-prose">{s.how}</p>}
-                  <div className="plan-review-strat-meta muted">
-                    {s.timing && <span>Timing: {s.timing}</span>}
-                    {owner && <span>Lead: {owner.name}</span>}
-                  </div>
-                </div>
-              );
-            }) : <p className="muted">No tactics yet.</p>}
-          </RS>
-
-          <RS title="Issues">
-            {(p.issues || []).length ? <span style={{ display: "inline-flex", flexWrap: "wrap", gap: 4 }}><Tags values={p.issues} /></span> : <p className="muted">None.</p>}
-          </RS>
-
-          <RS title="Community Investment">
-            {linkedCommunity.length ? linkedCommunity.map(c => (
-              <div className="plan-review-comm" key={c.id}>
-                <span style={{ fontWeight: 500 }}>{c.name}</span>
-                <span className="muted"> - {c.kind} · {c.stage} · {communityEntryAmount(c)}</span>
-              </div>
-            )) : <p className="muted">No community investments linked.</p>}
-          </RS>
-
-          <RS title="Measurement & Reporting">
-            <p className="plan-review-prose">{p.measurement || <span className="muted">Not written yet.</span>}</p>
-          </RS>
-      </div>
-      </div>
-    </div>
-  );
-}
-
-function PlanSection({ n, title, tag, wide, children }) {
-  return (
-    <div className={"plan-section" + (wide ? " plan-section-wide" : "")}>
-      <div className="plan-section-head">
-        <span className="plan-section-n">{n}</span>
-        <h3>{title}</h3>
-        {tag && <span className="plan-tag">{tag}</span>}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function PlanList({ items, onChange, placeholder }) {
-  const [draft, setDraft] = useState("");
-  function add() { const v = draft.trim(); if (!v) return; onChange([...(items || []), v]); setDraft(""); }
-  return (
-    <div className="plan-list">
-      {(items || []).map((it, i) => (
-        <div className="plan-list-item" key={i}>
-          <span className="plan-list-bullet" />
-          <input value={it} onChange={e => { const next = [...items]; next[i] = e.target.value; onChange(next); }} />
-          <button className="btn btn-ghost" onClick={() => onChange(items.filter((_, j) => j !== i))} aria-label="Remove"><Icon name="close" /></button>
         </div>
-      ))}
+      )
+    },
+    {
+      id: "scenario", label: "Scenario", icon: "notes",
+      render: () => (
+        <div className="record-prose">
+          {(p.scenarioSolves || p.scenarioApproach || p.scenarioOutcome) ? (
+            <div className="plan-review-scenario">
+              {p.scenarioSolves && <div><span className="lbl">What this plan solves &amp; its impact</span><p className="plan-review-prose">{p.scenarioSolves}</p></div>}
+              {p.scenarioApproach && <div><span className="lbl">Our phased approach</span><p className="plan-review-prose">{p.scenarioApproach}</p></div>}
+              {p.scenarioOutcome && <div><span className="lbl">The outcome we expect</span><p className="plan-review-prose">{p.scenarioOutcome}</p></div>}
+            </div>
+          ) : <p className="muted">Not written yet.</p>}
+        </div>
+      )
+    },
+    {
+      id: "goals", label: "Org Goals", icon: "beenhere",
+      render: () => (
+        <div className="record-prose">
+          {(D.ORG_GOALS || []).length ? (
+            <div className="plan-goal-list">
+              {D.ORG_GOALS.map((g, i) => (
+                <div className="plan-goal-item" key={i}>
+                  <div className="subheader-text plan-goal-title">{g}</div>
+                  {(p.goalNotes && p.goalNotes[g])
+                    ? <p className="plan-review-prose" style={{ margin: "4px 0 0" }}>{p.goalNotes[g]}</p>
+                    : <p className="muted" style={{ margin: "4px 0 0", fontSize: 12.5 }}>No approach described yet.</p>}
+                </div>
+              ))}
+            </div>
+          ) : <p className="muted">No goals listed.</p>}
+        </div>
+      )
+    },
+    {
+      id: "stakeholders", label: "Stakeholders", icon: "users",
+      render: () => (
+        <div className="record-table-embed">
+          {rankedSh.length ? (
+            <div className="plan-sh-table">
+              <div className="plan-sh-thead">
+                <span>Stakeholder</span><span>Type</span><span>Relationship</span><span>Priority</span>
+              </div>
+              {rankedSh.map(({ s, band }) => (
+                <div className="plan-sh-trow" key={s.id} style={{ cursor: "default" }}>
+                  <span className="plan-sh-name">{displayName(s) || s.name}</span>
+                  <span className="muted">{s.type}</span>
+                  <span><StatusPill status={rel(s)} /></span>
+                  <span><PriorityPill value={band} /></span>
+                </div>
+              ))}
+            </div>
+          ) : <p className="muted" style={{ padding: 16 }}>No stakeholders in this workspace.</p>}
+        </div>
+      )
+    },
+    {
+      id: "tactics", label: "Tactics", icon: "build",
+      render: () => (
+        <div className="record-prose">
+          {(p.strategies || []).length ? p.strategies.map(s => {
+            const owner = users.find(u => u.id === s.ownerId);
+            return (
+              <div className="plan-review-strat" key={s.id}>
+                <div className="plan-review-strat-title">{s.title || "Untitled"}</div>
+                {s.how && <p className="plan-review-prose">{s.how}</p>}
+                <div className="plan-review-strat-meta muted">
+                  {s.timing && <span>Timing: {s.timing}</span>}
+                  {owner && <span>Lead: {owner.name}</span>}
+                </div>
+              </div>
+            );
+          }) : <p className="muted">No tactics yet.</p>}
+        </div>
+      )
+    },
+    {
+      id: "team", label: "Team", icon: "users",
+      render: () => (
+        <div className="record-prose">
+          {(p.team || []).length ? (
+            <div className="plan-review-team">
+              {p.team.map(m => {
+                const u = users.find(x => x.id === m.userId); if (!u) return null;
+                return (
+                  <div className="plan-review-teamrow" key={m.userId}>
+                    <Avatar user={u} size={28} />
+                    <div>
+                      <div style={{ fontWeight: 500, fontSize: 13 }}>{u.name}</div>
+                      <div className="muted" style={{ fontSize: 11.5 }}>{m.role || u.title}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : <p className="muted">No team assigned.</p>}
+        </div>
+      )
+    },
+    {
+      id: "community", label: "Community", icon: "community",
+      render: () => (
+        <div className="record-prose">
+          {linkedCommunity.length ? linkedCommunity.map(c => (
+            <div className="plan-review-comm" key={c.id}>
+              <span style={{ fontWeight: 500 }}>{c.name}</span>
+              <span className="muted"> – {c.kind} · {c.stage} · {communityEntryAmount(c)}</span>
+            </div>
+          )) : <p className="muted">No community investments linked.</p>}
+        </div>
+      )
+    },
+    {
+      id: "issues", label: "Issues", icon: "cases",
+      render: () => (
+        <div className="record-prose">
+          {(p.issues || []).length
+            ? <span style={{ display: "inline-flex", flexWrap: "wrap", gap: 4 }}><Tags values={p.issues} /></span>
+            : <p className="muted">No issues linked.</p>}
+        </div>
+      )
+    },
+    {
+      id: "measurement", label: "Measurement", icon: "sliders",
+      render: () => (
+        <div className="record-prose">
+          {p.measurement
+            ? <p className="plan-review-prose">{p.measurement}</p>
+            : <p className="muted">Not written yet.</p>}
+        </div>
+      )
+    }
+  ];
+
+  const rightRail = (
+    <div className="record-rail-inner">
+      <div className="record-rail-sec">
+        <div className="mf"><span className="mf-label">Status</span>
+          <span className="mf-value" style={{ color: PLAN_STAGE_FG[p.status] || "var(--ink-2)" }}>{p.status || "Idea"}</span>
+        </div>
+        <div className="mf"><span className="mf-label">Workspace</span><span className="mf-value">{workspace ? workspace.name : "-"}</span></div>
+        <div className="mf"><span className="mf-label">Market</span><span className="mf-value">{p.market || "-"}</span></div>
+        <div className="mf"><span className="mf-label">Region</span><span className="mf-value">{p.region || "-"}</span></div>
+        {p.site && D.SITES && <div className="mf"><span className="mf-label">Site</span><span className="mf-value">{D.siteLabel(D.SITES.find(s => s.id === p.site) || {})}</span></div>}
+        {p.state && <div className="mf"><span className="mf-label">State</span><span className="mf-value">{D.STATE_ABBR[p.state] || p.state}</span></div>}
+        {p.geography && <div className="mf"><span className="mf-label">Geography</span><span className="mf-value">{p.geography}</span></div>}
+        <div className="mf"><span className="mf-label">Updated</span><span className="mf-value">{planDate(p.updatedAt)}</span></div>
+      </div>
+      <div className="record-rail-sec">
+        <div className="mf-label" style={{ marginBottom: 4 }}>SEP model</div>
+        <code style={{ fontSize: 10.5, color: "var(--ink-3)", display: "block", lineHeight: 1.6 }}>{sector.name}: {fmt(sector)}</code>
+        <code style={{ fontSize: 10.5, color: "var(--ink-3)", display: "block", lineHeight: 1.6 }}>{goal.name}: {fmt(goal)}</code>
+      </div>
     </div>
+  );
+
+  return (
+    <RecordShell
+      backLabel="All plans"
+      onBack={onBack}
+      title={p.title}
+      subtitle={workspace ? workspace.name : ""}
+      sections={sections}
+      rightRail={rightRail}
+      navTitle="Plan sections"
+      toolbar={
+        <button className="btn btn-primary" onClick={onEdit}><Icon name="edit" /> Edit plan</button>
+      }
+    />
   );
 }
 

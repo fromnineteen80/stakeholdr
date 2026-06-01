@@ -4588,28 +4588,6 @@ input::-webkit-input-placeholder, textarea::-webkit-input-placeholder { color: v
 .nav-tabs-right-button:hover, .scoring-explainer-bar .btn:hover, .explainer-controls .btn:hover,
 .scoring-explainer-bar .designed-select select:hover, .explainer-controls .designed-select select:hover,
 .scoring-explainer-bar .impact-chip:hover, .ws-selector:hover { border-color: var(--rule-2); }
-.msym { font-size:14px; }
-.nav-tabs .tab .msym.ico, .nav-tabs-right-button .msym.ico, .nav-tabs-right-button .msym,
-.scoring-explainer-bar .msym, .scoring-explainer-bar .msym.ico, .scoring-explainer-bar .ico,
-.sheet-footer .msym.ico, .sheet-footer .ico, .comm-footer .msym.ico, .comm-footer .ico,
-.record-nav-item .msym, .record-nav-collapse .msym, .record-nav-head .record-nav-collapse .msym,
-.record-rail-head .record-nav-collapse .msym, .record-topbar .footer-export-btn .msym,
-.record-rail-btn .msym, .msym.ico, .msym.edit-icon, .ws-selector-caret,
-.ws-tab-close-icon, .ua-clear-icon, .footer-export-btn .ico { font-size:14px; }
-.plan-big, .record-empty .msym, .messaging-empty .msym, .plan-placeholder-icon .msym { font-size:34px; }
-.brand-mark .brand-glyph, .av-system .brand-glyph { font-size:20px; }
-.msym { font-size:15px; }
-.nav-tabs .tab .msym.ico, .nav-tabs-right-button .msym.ico, .nav-tabs-right-button .msym,
-.scoring-explainer-bar .msym, .scoring-explainer-bar .msym.ico, .scoring-explainer-bar .ico,
-.sheet-footer .msym, .sheet-footer .msym.ico, .sheet-footer .ico,
-.comm-footer .msym, .comm-footer .msym.ico, .comm-footer .ico,
-.ws-tab-bar .msym, .ws-tab .msym, .app-footer .msym,
-.record-nav-item .msym, .record-nav-collapse .msym, .record-nav-head .record-nav-collapse .msym,
-.record-rail-head .record-nav-collapse .msym, .record-topbar .footer-export-btn .msym,
-.record-rail-btn .msym, .msym.ico, .msym.edit-icon, .ws-selector-caret,
-.ws-tab-close-icon, .ua-clear-icon, .footer-export-btn .ico, .footer-export-btn .msym { font-size:15px; }
-.plan-big, .record-empty .msym, .messaging-empty .msym, .plan-placeholder-icon .msym { font-size:34px; }
-.brand-mark .brand-glyph, .av-system .brand-glyph { font-size:20px; }
 .msym { font-size:16px; }
 .nav-tabs .tab .msym.ico, .nav-tabs-right-button .msym.ico, .nav-tabs-right-button .msym,
 .scoring-explainer-bar .msym, .scoring-explainer-bar .msym.ico, .scoring-explainer-bar .ico,
