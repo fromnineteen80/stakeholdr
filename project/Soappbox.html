@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Soappbox · Stakeholder engagement for the public square</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600;6..72,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F2EFE7; --bg-2:#ECE8DD; --paper:#FAF8F2; --white:#FFFFFF;
+    --ink:#1F1A14; --ink-2:#4B4439; --ink-3:#7A7164; --ink-mute:#ADA396;
+    --rule:#DCD6C8; --rule-2:#E8E2D2;
+    --accent:#024AD8; --accent-ink:#022B7E;
+    --terra:#B5552C; --rose:#C7603E; --green:#3E7A2E; --gold:#B07E1F;
+    --serif:"Newsreader","Source Serif Pro",Georgia,serif;
+    --sans:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+    --mono:"IBM Plex Mono","SF Mono",ui-monospace,Menlo,monospace;
+    --maxw:1200px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--sans);
+    font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale; font-feature-settings:"ss01","cv11";
+  }
+  a{color:inherit; text-decoration:none;}
+  .msym{font-family:"Material Symbols Outlined"; font-weight:normal; font-style:normal; line-height:1;
+    text-transform:none; letter-spacing:normal; white-space:nowrap; direction:ltr;
+    font-feature-settings:'liga'; -webkit-font-feature-settings:'liga'; -webkit-font-smoothing:antialiased;
+    font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; user-select:none;}
+  .kicker{font-family:var(--mono); font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-3);}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 32px;}
+
+  /* ── Nav ───────────────────────────────────────────── */
+  .nav{position:sticky; top:0; z-index:50; background:rgba(242,239,231,.82);
+    backdrop-filter:blur(14px) saturate(140%); -webkit-backdrop-filter:blur(14px) saturate(140%);
+    border-bottom:1px solid var(--rule);}
+  .nav-inner{max-width:var(--maxw); margin:0 auto; padding:16px 32px; display:flex; align-items:center; gap:28px;}
+  .brand{display:inline-flex; align-items:center; gap:10px; font-family:var(--serif); font-weight:600; font-size:22px; letter-spacing:-.01em;}
+  .brand .mark{width:29px; height:29px; flex:0 0 29px; display:block;}
+  .nav-links{display:flex; gap:26px; margin-left:18px;}
+  .nav-links a{font-size:14px; color:var(--ink-2); transition:color .15s;}
+  .nav-links a:hover{color:var(--ink);}
+  .nav-right{margin-left:auto; display:flex; align-items:center; gap:14px;}
+  .nav-login{font-size:14px; font-weight:500; color:var(--ink); padding:9px 18px; border:1px solid var(--ink); border-radius:999px; transition:.15s; white-space:nowrap;}
+  .nav-login:hover{background:var(--ink); color:var(--bg);}
+
+  /* ── Buttons ───────────────────────────────────────── */
+  .btn{display:inline-flex; align-items:center; gap:8px; font-family:var(--sans); font-size:15px; font-weight:500;
+    padding:13px 26px; border-radius:999px; cursor:pointer; border:1px solid transparent; transition:.16s; white-space:nowrap;}
+  .btn-primary{background:var(--ink); color:var(--bg);}
+  .btn-primary:hover{background:#000; transform:translateY(-1px);}
+  .btn-ghost{background:transparent; color:var(--ink); border-color:var(--rule);}
+  .btn-ghost:hover{border-color:var(--ink); }
+  .btn .msym{font-size:19px;}
+
+  /* ── Hero ──────────────────────────────────────────── */
+  .hero{padding:70px 0 40px;}
+  .hero-grid{display:grid; grid-template-columns:1.05fr .95fr; gap:64px; align-items:center;}
+  .hero-art{position:relative;}
+  image-slot{display:block; width:100%;}
+  .hero-art image-slot{height:480px; box-shadow:var(--shadow,0 2px 4px rgba(50,40,20,.06),0 24px 60px rgba(50,40,20,.14)); border:1px solid var(--rule);}
+  .hero-art .floatcard{position:absolute; right:-22px; bottom:34px; background:var(--white); border:1px solid var(--rule);
+    border-radius:14px; padding:14px 16px; box-shadow:0 12px 30px rgba(50,40,20,.16); display:flex; align-items:center; gap:12px; max-width:240px;}
+  .hero-art .fc-dot{width:34px; height:34px; border-radius:50%; flex:0 0 34px; background:var(--green); display:grid; place-items:center; color:#fff;}
+  .hero-art .fc-dot .msym{font-size:19px;}
+  .hero-art .fc-t{font-size:12.5px; line-height:1.35; color:var(--ink-2);}
+  .hero-art .fc-t b{color:var(--ink); font-weight:600;}
+  .hero-copy .kicker{display:block; margin-bottom:20px;}
+  .hero-copy h1{font-family:var(--serif); font-weight:600; font-size:60px; line-height:1.02; letter-spacing:-.022em; margin:0 0 22px;}
+  .hero-copy h1 em{font-style:italic; color:var(--terra);}
+  .hero-copy p{font-size:18.5px; line-height:1.55; color:var(--ink-2); margin:0 0 30px; max-width:30em;}
+  .hero-cta{display:flex; gap:14px; flex-wrap:wrap; align-items:center;}
+  .hero-note{margin-top:18px; font-size:13px; color:var(--ink-3); display:flex; align-items:center; gap:7px;}
+  .hero-note .msym{font-size:16px; color:var(--green);}
+
+  /* ── Three pillars ─────────────────────────────────── */
+  .pillars{padding:46px 0 20px;}
+  .pillar-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
+  .pillar{background:var(--white); border:1px solid var(--rule); border-radius:16px; padding:30px 28px 32px;
+    transition:.18s; position:relative; overflow:hidden;}
+  .pillar:hover{transform:translateY(-3px); box-shadow:0 16px 40px rgba(50,40,20,.10);}
+  .pillar .ic{width:46px; height:46px; border-radius:12px; display:grid; place-items:center; margin-bottom:20px; color:#fff;}
+  .pillar .ic .msym{font-size:25px;}
+  .pillar:nth-child(1) .ic{background:var(--terra);}
+  .pillar:nth-child(2) .ic{background:var(--accent);}
+  .pillar:nth-child(3) .ic{background:var(--green);}
+  .pillar .pk{font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-mute);}
+  .pillar h3{font-family:var(--serif); font-weight:600; font-size:23px; letter-spacing:-.01em; margin:6px 0 10px;}
+  .pillar p{font-size:15px; color:var(--ink-2); margin:0; line-height:1.55;}
+
+  /* ── Manifesto / quote ─────────────────────────────── */
+  .manifesto{padding:96px 0 88px; text-align:center;}
+  .manifesto .quote{font-family:var(--serif); font-style:italic; font-weight:500; font-size:34px; line-height:1.32;
+    letter-spacing:-.015em; max-width:22em; text-wrap:balance; margin:0 auto 14px; color:var(--ink);}
+  .manifesto .quote .mk{color:var(--terra); font-style:normal;}
+  .manifesto .qby{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-3); margin-bottom:54px;}
+  .manifesto .rule{width:60px; height:1px; background:var(--rule); margin:0 auto 54px;}
+  .manifesto .lead{font-family:var(--serif); font-weight:400; font-size:27px; line-height:1.46; letter-spacing:-.01em;
+    max-width:21em; margin:0 auto; color:var(--ink-2);}
+  .manifesto .lead b{color:var(--ink); font-weight:600;}
+
+  /* ── Showcase rows ─────────────────────────────────── */
+  .showcase{padding:30px 0 40px;}
+  .row{display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center; padding:48px 0;}
+  .row + .row{border-top:1px solid var(--rule-2);}
+  .row.flip .row-art{order:2;}
+  .row-copy .kicker{display:block; margin-bottom:16px;}
+  .row-copy h2{font-family:var(--serif); font-weight:600; font-size:38px; line-height:1.08; letter-spacing:-.018em; margin:0 0 16px;}
+  .row-copy p{font-size:17px; color:var(--ink-2); margin:0 0 18px; line-height:1.55;}
+  .row-list{list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:11px;}
+  .row-list li{display:flex; gap:11px; align-items:flex-start; font-size:15px; color:var(--ink-2);}
+  .row-list .msym{font-size:20px; color:var(--green); flex:0 0 20px; margin-top:1px;}
+  .row-art image-slot{height:380px; border:1px solid var(--rule); box-shadow:0 2px 4px rgba(50,40,20,.05),0 18px 44px rgba(50,40,20,.10);}
+
+  /* ── Logo / proof band ─────────────────────────────── */
+  .band{border-top:1px solid var(--rule); border-bottom:1px solid var(--rule); background:var(--paper); padding:40px 0;}
+  .band-inner{display:flex; align-items:center; justify-content:space-between; gap:40px; flex-wrap:wrap;}
+  .band p{font-family:var(--serif); font-size:21px; font-style:italic; color:var(--ink-2); margin:0; max-width:24em; line-height:1.4;}
+  .band .tags{display:flex; gap:10px; flex-wrap:wrap;}
+  .band .tag{font-family:var(--mono); font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3);
+    border:1px solid var(--rule); border-radius:999px; padding:7px 14px;}
+
+  /* ── Closing CTA ───────────────────────────────────── */
+  .closer{padding:104px 0;}
+  .closer-card{background:var(--ink); color:var(--bg); border-radius:24px; padding:72px 64px; text-align:center; position:relative; overflow:hidden;}
+  .closer-card::before{content:""; position:absolute; inset:0; background:
+    radial-gradient(circle at 18% 30%, rgba(181,85,44,.28), transparent 42%),
+    radial-gradient(circle at 82% 70%, rgba(2,74,216,.26), transparent 44%);}
+  .closer-card > *{position:relative;}
+  .closer .kicker{color:var(--ink-mute); display:block; margin-bottom:18px;}
+  .closer h2{font-family:var(--serif); font-weight:600; font-size:50px; line-height:1.04; letter-spacing:-.02em; margin:0 0 18px;}
+  .closer p{font-size:18px; color:#D9D2C5; max-width:30em; margin:0 auto 32px;}
+  .closer .btn-primary{background:var(--bg); color:var(--ink);}
+  .closer .btn-primary:hover{background:#fff;}
+
+  /* ── Footer ────────────────────────────────────────── */
+  .foot{border-top:1px solid var(--rule); padding:54px 0 40px;}
+  .foot-grid{display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:36px;}
+  .foot-brand .brand{margin-bottom:14px;}
+  .foot-brand p{font-size:14px; color:var(--ink-3); max-width:24em; margin:0;}
+  .foot-col h4{font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-mute); margin:0 0 14px;}
+  .foot-col a{display:block; font-size:14.5px; color:var(--ink-2); padding:5px 0; transition:color .15s;}
+  .foot-col a:hover{color:var(--ink);}
+  .foot-bot{max-width:var(--maxw); margin:34px auto 0; padding:22px 32px 0; border-top:1px solid var(--rule-2);
+    display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; font-size:13px; color:var(--ink-3);}
+
+  @media (max-width:900px){
+    .hero-grid{grid-template-columns:1fr; gap:40px;}
+    .hero-art{order:2;}
+    .hero-copy h1{font-size:46px;}
+    .pillar-grid{grid-template-columns:1fr;}
+    .row{grid-template-columns:1fr; gap:30px;}
+    .row.flip .row-art{order:0;}
+    .nav-links{display:none;}
+    .closer-card{padding:52px 28px;}
+    .closer h2{font-size:36px;}
+    .foot-grid{grid-template-columns:1fr 1fr;}
+  }
+</style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="#top" data-screen-label="brand">
+        <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2.5" fill="none" stroke="#6E7B33" stroke-width="2"/><circle cx="12" cy="9" r="3" fill="#EFC23A"/><path d="M6 17c0-2 4-3.1 6-3.1s6 1.1 6 3.1v1H6v-1z" fill="#EFC23A"/></svg>
+        Soappbox
+      </a>
+      <nav class="nav-links">
+        <a href="#product">Product</a>
+        <a href="#approach">Approach</a>
+        <a href="#showcase">How it works</a>
+      </nav>
+      <div class="nav-right">
+        <a class="nav-login" href="Stakeholder Tool.html">Log in</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div class="hero-art">
+          <image-slot id="hero" shape="rounded" radius="18" placeholder="Drop your hero image. The stakeholder map looks great here"></image-slot>
+          <div class="floatcard">
+            <span class="fc-dot"><span class="msym">trending_up</span></span>
+            <span class="fc-t"><b>Strategic Partner</b><br>Mayor Chen moved +2 zones this quarter</span>
+          </div>
+        </div>
+        <div class="hero-copy">
+          <span class="kicker">Stakeholder engagement platform</span>
+          <h1>Know where every&nbsp;stakeholder <em>stands.</em></h1>
+          <p>Soappbox maps influence and alignment, suggests who to engage first, and turns scattered relationships into a strategy your whole team can run, in full view of the people who matter.</p>
+          <div class="hero-cta">
+            <a class="btn btn-primary" href="Stakeholder Tool.html">Get started <span class="msym">arrow_forward</span></a>
+            <a class="btn btn-ghost" href="#showcase"><span class="msym">play_circle</span> See how it works</a>
+          </div>
+          <div class="hero-note"><span class="msym">check_circle</span> Built for government affairs, public policy &amp; community teams</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- THREE PILLARS -->
+    <section class="pillars" id="product">
+      <div class="wrap pillar-grid">
+        <div class="pillar">
+          <div class="ic"><span class="msym">map</span></div>
+          <div class="pk">Map</div>
+          <h3>See the whole square</h3>
+          <p>Plot every stakeholder by influence and alignment. Weighted team scoring keeps the map honest, and shows you exactly how relationships move over time.</p>
+        </div>
+        <div class="pillar">
+          <div class="ic"><span class="msym">description</span></div>
+          <div class="pk">Plan</div>
+          <h3>Engage the right voices first</h3>
+          <p>Sector and goal models score each stakeholder, so Soappbox suggests who matters most for every plan. Tactics, leads, and timing stay in one place.</p>
+        </div>
+        <div class="pillar">
+          <div class="ic"><span class="msym">favorite</span></div>
+          <div class="pk">Create value</div>
+          <h3>Invest where it counts</h3>
+          <p>Track community investment and shared value, linked back to the stakeholders it moves, so every dollar and hour ties to a relationship and an outcome.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- MANIFESTO -->
+    <section class="manifesto" id="approach">
+      <div class="wrap">
+        <p class="quote">Stakeholders exist in a <span class="mk">public square</span> where ideas are exchanged, your credibility is won or lost, and value is created, shared, or squandered.</p>
+        <div class="qby">The Soappbox principle</div>
+      </div>
+    </section>
+
+    <!-- SHOWCASE -->
+    <section class="showcase" id="showcase">
+      <div class="wrap">
+
+        <div class="row">
+          <div class="row-art">
+            <image-slot id="show-map" shape="rounded" radius="14" placeholder="Drop a screenshot of the stakeholder map"></image-slot>
+          </div>
+          <div class="row-copy">
+            <span class="kicker">The map</span>
+            <h2>Every stakeholder, in one&nbsp;view.</h2>
+            <p>A living influence-and-alignment grid. Each teammate scores what they see; Soappbox blends it into one defensible position for every stakeholder, and animates the shift as the relationship changes.</p>
+            <ul class="row-list">
+              <li><span class="msym">check</span> Weighted, multi-rater scoring</li>
+              <li><span class="msym">check</span> Nine engagement zones, from Defend to Strategic Partner</li>
+              <li><span class="msym">check</span> Movement history, quarter over quarter</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="row flip">
+          <div class="row-art">
+            <image-slot id="show-plan" shape="rounded" radius="14" placeholder="Drop a screenshot of an engagement plan"></image-slot>
+          </div>
+          <div class="row-copy">
+            <span class="kicker">The plan</span>
+            <h2>From insight to engagement&nbsp;plan.</h2>
+            <p>Pick a sector and a goal model and Soappbox auto-ranks your stakeholders by priority, a suggestion your managers can override in a click. Scenario, goals, tactics, and the cross-functional team all live on one page.</p>
+            <ul class="row-list">
+              <li><span class="msym">check</span> SEP auto-ranking from real signals</li>
+              <li><span class="msym">check</span> Tactics with leads and timing</li>
+              <li><span class="msym">check</span> Linked community investment</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row-art">
+            <image-slot id="show-comm" shape="rounded" radius="14" placeholder="Drop a screenshot of the community view"></image-slot>
+          </div>
+          <div class="row-copy">
+            <span class="kicker">Shared value</span>
+            <h2>Turn engagement into shared&nbsp;value.</h2>
+            <p>Philanthropy, volunteering, corporate giving, and political action: every value-driven engagement, tracked from idea to outcome and tied to the stakeholders and communities it serves.</p>
+            <ul class="row-list">
+              <li><span class="msym">check</span> Full investment archive with budgets</li>
+              <li><span class="msym">check</span> Team alignment and approval votes</li>
+              <li><span class="msym">check</span> Linked back to the map</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- PROOF BAND -->
+    <section class="band">
+      <div class="wrap band-inner">
+        <p>“The teams that win in public are the ones who never stop listening.”</p>
+        <div class="tags">
+          <span class="tag">Government Affairs</span>
+          <span class="tag">Public Policy</span>
+          <span class="tag">Community Engagement</span>
+          <span class="tag">Corporate Comms</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- CLOSING CTA -->
+    <section class="closer">
+      <div class="wrap">
+        <div class="closer-card">
+          <span class="kicker">Ready when you are</span>
+          <h2>Step onto the soapbox.</h2>
+          <p>Map your stakeholders, build your first engagement plan, and bring your whole team into the public square.</p>
+          <a class="btn btn-primary" href="Stakeholder Tool.html">Get started <span class="msym">arrow_forward</span></a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="foot">
+    <div class="wrap foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top">
+          <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2.5" fill="none" stroke="#6E7B33" stroke-width="2"/><circle cx="12" cy="9" r="3" fill="#EFC23A"/><path d="M6 17c0-2 4-3.1 6-3.1s6 1.1 6 3.1v1H6v-1z" fill="#EFC23A"/></svg>
+          Soappbox
+        </a>
+        <p>Stakeholder engagement, built for the public square.</p>
+      </div>
+      <div class="foot-col">
+        <h4>Product</h4>
+        <a href="#product">The map</a>
+        <a href="#product">Plans &amp; SEP</a>
+        <a href="#product">Community</a>
+        <a href="Stakeholder Tool.html">Log in</a>
+      </div>
+      <div class="foot-col">
+        <h4>Company</h4>
+        <a href="#approach">Approach</a>
+        <a href="#showcase">How it works</a>
+        <a href="#">Careers</a>
+      </div>
+      <div class="foot-col">
+        <h4>Legal</h4>
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Security</a>
+      </div>
+    </div>
+    <div class="foot-bot">
+      <span>© 2026 Soappbox. All rights reserved.</span>
+      <span>Made for teams who show up in public.</span>
+    </div>
+  </footer>
+
+  <script src="image-slot.js"></script>
+</body>
+</html>
