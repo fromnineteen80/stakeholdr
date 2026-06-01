@@ -906,6 +906,8 @@ function AppLoggedIn({ currentUser, users, setUsers, persistUsers, logOut, setCu
             stakeholders={stakeholders}
             stakeholderWorkspaces={stakeholderWorkspaces}
             setStakeholderWorkspaces={setStakeholderWorkspaces}
+            scores={scores}
+            team={team}
             activeWorkspaceId={activeWorkspaceId}
             setActiveWorkspaceId={(id) => openWorkspaceTab(id)}
             users={users}

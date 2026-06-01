@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import * as ReactDOM from 'react-dom';
 import { Icon, FilterSection, SortFieldList } from './components';
 import { cmdKeyLabel } from './store';
 // landing.jsx — shared landing shell for the Plan and Community pages.
