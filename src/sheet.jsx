@@ -4,6 +4,7 @@ import { STAKEHOLDER_DATA } from './data';
 import { displayName, normalizeUrl, formatPhone, Icon, Tags, StatusPill, PriorityPill } from './components';
 import { cmdKeyLabel, uid } from './store';
 import { StakeholderModal, NotesModal, FilterPopover, SortPopover } from './sheet-modals';
+import { StakeholderRecord } from './profiles';
 import { OwnersDisplay } from './users';
 import { affiliatedCommunity } from './community';
 
@@ -304,6 +305,29 @@ export function SheetView({ explainerSlot, addNonce, addNonceFor, stakeholders, 
     else { setSortKey(k); setSortDir("asc"); }
   }
 
+  // Expanding a row opens the full-page stakeholder record (read + edit) on
+  // the universal scaffold, replacing the table surface while it's open.
+  if (editing) {
+    return (
+      <StakeholderRecord
+        stakeholder={editing}
+        users={users}
+        stakeholders={stakeholders}
+        community={community}
+        scores={scores}
+        team={team}
+        companyIssues={companyIssues}
+        workspaces={workspaces}
+        getWorkspacesForStakeholder={getWorkspacesForStakeholder}
+        onOpenWorkspace={onOpenWorkspace}
+        updateCommunityApp={updateCommunityApp}
+        currentUser={currentUser}
+        onBack={() => setEditId(null)}
+        onSave={(patch) => updateStakeholder(editing.id, patch)}
+      />
+    );
+  }
+
   return (
     <div className="sheet-wrap">
       {explainerSlot && ReactDOM.createPortal(
@@ -433,25 +457,6 @@ export function SheetView({ explainerSlot, addNonce, addNonceFor, stakeholders, 
           stakeholders={stakeholders}
           onCancel={() => setNewOpen(false)}
           onSubmit={(data) => { addStakeholder(data); setNewOpen(false); }}
-        />
-      )}
-      {editing && (
-        <StakeholderModal
-          users={users}
-          workspaces={workspaces}
-          isMaster={isMaster}
-          currentUser={currentUser}
-          existing={editing}
-          companyIssues={companyIssues}
-          community={community}
-          stakeholders={stakeholders}
-          scores={scores}
-          team={team}
-          getWorkspacesForStakeholder={getWorkspacesForStakeholder}
-          updateCommunityApp={updateCommunityApp}
-          onOpenWorkspace={onOpenWorkspace}
-          onCancel={() => setEditId(null)}
-          onSubmit={(patch) => { updateStakeholder(editing.id, patch); setEditId(null); }}
         />
       )}
       {notesFor && (
