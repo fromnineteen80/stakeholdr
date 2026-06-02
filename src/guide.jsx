@@ -595,6 +595,28 @@ THE SUPABASE SWAP (one file: the Store) — save → supabase.from(table).upsert
 OTHER BACKEND-PHASE ITEMS (captured here, owned by their areas) — COUNTRY LIST: replace the static COUNTRIES snapshot with ISO-3166 (REST Countries API or a countries table); keep the site rule { id, city, state?, country } with US sites forcing country="United States". PRESENCE: the online-avatar stack + People sidebar must be REAL (Supabase Realtime Presence or a last_seen heartbeat), with a TRUE +N overflow, excluding the system bot — not the static presence seed. (The universal custom dropdown is a UI item, captured in the component vocabulary, not persistence.)
 
 REALTIME UX — a change in one place (e.g. a message sent in the sidebar) appears live everywhere (the page, other tabs, other users) because every consumer subscribes to its table. Same code path local or via Supabase.` },
+      { t: "Enterprise state model — the universal record envelope (audit · time · timezone · versions · soft-delete)", d:
+`This is the CROSS-CUTTING model wrapped around EVERY entity (stakeholders, plans, community, workspaces, users, scores, messages, notes, votes, …). Captured ONCE here and inherited by all domain boxes so no entity is missed. Source tags: [CODE] in the current app · [SETTINGS] configurable · [SPEC] the user's enterprise requirement, NOT yet in code (capture or it is lost) · [STD] standard enterprise pattern, proposed.
+
+IDENTITY [CODE] — every row has a stable uuid id (crypto.randomUUID), so concurrent multi-user creates never collide and writes are idempotent/retry-safe.
+
+AUDIT COLUMNS on every mutable row — created_at [CODE], created_by [CODE], updated_at [CODE], updated_by [SPEC — add]. WHO + WHEN for every create and every change.
+
+TIMESTAMP PRECISION [SPEC/FIX — critical] — ALL timestamps stored as UTC ISO-8601 to the MILLISECOND (Postgres timestamptz). The current code is INCONSISTENT — nowStamp() is full ISO but some writers store DATE-ONLY (toISOString().slice(0,10)); that MUST become full millisecond everywhere, because simultaneous edits need distinct, strictly-orderable stamps or they break/clobber. Date-only is allowed ONLY for genuine calendar fields (lastContact, decisionDeadline).
+
+TIME ZONE [SETTINGS] — appConfig.timeZone (default America/Los_Angeles, manager-set). Rule: STORE every timestamp in UTC; DISPLAY in the org time zone. "Created, updated, and approved timestamps are shown in this time zone." Quarters/rollups/cadence compute against it too.
+
+FISCAL MODEL [CODE] — appConfig.fiscalStartMonth + fiscalStartDay → the fiscal YEAR and four equal QUARTERS (see Cadence box). Drives community rollups, scoring cadence, history snapshots, and "FY## Q#" labels. Quarter boundaries derived, never hardcoded.
+
+EDIT VERSIONS / "TIME CAPSULE" [SPEC — add, not in code] — every record change is VERSIONED into a per-record history you can view and RESTORE over time (an audit trail / time machine). Implementation: an APPEND-ONLY versions/audit-log row per change { entity, row_id, changed_by, changed_at(ms), field-or-diff, before/after } (Tier-2 append → no clobber, full history forever). Viewing = read the row's version list; restore = write a prior version FORWARD as a new change (never destructive). This is an enterprise feature in its own right — capture its UI later (per-record history panel).
+
+SOFT DELETE [STD] — deleted_at + deleted_by instead of hard delete: deletes/replacements propagate in realtime, stay recoverable, and preserve history; lists filter out soft-deleted rows. (Hard delete only where FK cascade + no recovery need.)
+
+OPTIMISTIC CONCURRENCY [STD, per Persistence] — a per-row version (or the ms updated_at) is the conflict token: a write carries the version it read; a newer server version REJECTS it → client re-reads/re-applies. Combined with the THREE-TIER model (records column-level / append-only inserts / collaborative-doc CRDT) and ms precision, simultaneous work CONVERGES instead of overwriting.
+
+APPLIES UNIFORMLY — these columns/mechanisms are added to EVERY entity's schema and to the Store's write path once, not re-decided per feature. The Database-schema box's per-table SQL inherits this envelope (extend each table with created_by/updated_by/updated_at-ms/deleted_at/deleted_by + the versions/audit table).
+
+⚠️ NOT EXHAUSTIVE YET — the user has flagged there is MORE enterprise backend/state detail than the above ("so much else"). This box is the FRAME; it must be filled out completely from the user's enterprise spec before rebuild. OPEN: enumerate every remaining backend/state field, rule, and solution (see the request in chat) and capture each here verbatim — do NOT invent or assume.` },
       { t: "Database schema (Supabase) — full SQL + RLS + realtime swap (captured here; source files vanish at rebuild)", d:
 `The complete Postgres schema for STATE B (Supabase). Captured verbatim into the .io because db.js will not exist at rebuild — this guide is the only source. Column case: SQL is snake_case; the in-memory/JSON is camelCase (map at the transport boundary). Every mutable table has created_at/updated_at (timestamptz default now()).
 
