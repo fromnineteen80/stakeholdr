@@ -52,6 +52,42 @@ Only after the capture is **verified complete** do we archive the old code and r
   the **Settings → Design page** (toward the Claude aesthetic). Re-skinning never touches
   components.
 
+## DESIGN START-STATE (theme tokens — user-provided; clean & restrained like Claude)
+Initial MUI theme tokens (the Settings → Design page tunes them later). Clean, restrained,
+readable, a pleasure to use — never massive type, generous-but-tight spacing.
+- **Surface greys (light→dark):** `#FFFFFF` · `#FEFDFC` · `#FCFBF9` · `#F8F7F3` · `#F4F3ED`
+  · `#F0EEE6` · `#E8E6DE` (lightest = content/cards; stepping darker for panels, fields,
+  hovers, rails, borders — Claude-like).
+- **Ink/text:** `#666361` (primary text) · `#ABA9A4` (muted/secondary) · `#DFDDD6`
+  (faint / dividers / disabled).
+- **Type:** small and clean; modest weights; **no oversized headings**. Hierarchy comes
+  from weight + the serif/mono roles, not size bloat. Body ~13–14px.
+- **Icons:** common-sense, clean, ~1em, modest — Claude-like.
+- **Spacing:** consistent rhythm, airy but tight. **Readability, ease, and pleasure of use
+  are the bar.**
+
+## MUI — USE THE FULL LIBRARY (never bare-minimum)
+Every UI element in a spec box and in code must name its **specific MUI component +
+variant + key props**, chosen as the right tool for the job from the full surface —
+not the first/easiest. "A button" / "a dropdown" is a shortcut and is **not acceptable**.
+- Buttons: `Button` (variant `contained|outlined|text`) · `IconButton` · `Fab` ·
+  `ToggleButton/ToggleButtonGroup` — choose by intent.
+- Selection: `Select`+`MenuItem` (short fixed sets) · `Autocomplete` (searchable/large/
+  multi/typeahead) · `Menu` · `NativeSelect` · `RadioGroup`.
+- Table: **`DataGrid`** for the Lists table (sort/filter/reorder/virtualize) vs `Table` for
+  simple static lists.
+- Inputs: `TextField` (variants/adornments) · `Checkbox` · `Switch` · `Slider` · `Chip`.
+- Structure: `Dialog` · `Drawer` · `Popover` · `Menu` · `Accordion` · `Card` · `Tabs` ·
+  `Snackbar`/`Alert` · `Tooltip` · `Stepper` · `Badge` · `LinearProgress`.
+- **Spec rule:** a box that describes UI is incomplete until it states the exact MUI
+  component + variant + props for each element.
+
+## HANDSHAKE / submit control
+The guide (`src/guide.jsx`, the `.io`) needs an MUI submit/confirm control (e.g. a
+`Button`) so the user can signal agreement on a box. Honest mechanism: the sandbox cannot
+read the user's browser; so "submit" = the user's signal, and the durable record is the
+assistant committing `done:true` into the guide source. Build the control with MUI.
+
 ## METHOD
 1. Read the relevant source.
 2. Write **one box, in order**, fully and losslessly (or the book's next prose chunk).
