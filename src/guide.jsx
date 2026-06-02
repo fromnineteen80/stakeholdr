@@ -523,7 +523,25 @@ RELATION TO MESSAGES — Messaging is the lighter conversation form; the Whitebo
 
 STATUS — concept + requirements captured; the design and the URL-embed API are OPEN. To be designed deliberately.` },
       { t: "Settings — org config + the start-state & design-customization dashboard (separate from Workspaces)" },
-      { t: "Messaging — conversations/messages model, @ / # / $ mention links" },
+      { t: "Messaging — conversations, threads, @ / # / $ / mention links (built + developer-inferred)", d:
+`WHAT IT IS — app-wide team messaging: a right-edge SIDEBAR (quick) and a full MESSAGES PAGE (list left, thread right). Conversations are DIRECT, GROUP, or SYSTEM. Lighter sibling to the Whiteboard (Messages = chat; Whiteboard = advanced collaboration — boundary to confirm). Not workspace-scoped — conversations are app-wide between users.
+
+DATA MODEL [BUILT] — conversation: { id, kind: "direct"|"group"|"system", participants: [userId], title (null for direct; set for group; "Reminders" for system) }. messages: { conversationId → [ { id, from: userId, body, at: ISO } ] }. The SYSTEM conversation (c-system, the "Reminders" bot u-system) includes all non-system users and is read-only (the bot posts scoring reminders; users don't reply).
+conversationTitle [BUILT]: system → "Reminders"; direct → the OTHER participant's name; group → its title.
+
+THREAD RENDER [BUILT] — per message: avatar + author + time; CONSECUTIVE messages from the same author within 60s are GROUPED (avatar/meta hidden); own messages styled "mine"; body run through renderMentions; auto-scroll to newest; empty state "No messages yet."
+
+MENTIONS [BUILT render, compose partial] — FOUR triggers typed in the composer: "@" → stakeholder (stk), "/" → workspace (wsp), "#" → plan (pln), "$" → community (cmy). A typeahead on the trigger char lets you pick an entity; it inserts a parseable token {{type:id|label}}. renderMentions turns those tokens into clickable CHIPS (colored per type) that call openMention(type, id) → opens that record's READ-ONLY page. [DESIGN/FIX: ensure the composer typeahead fully resolves the picked entity into the token for all four types; the rendering already works.]
+
+SEND / START [BUILT] — sendMessage(conversationId, body) appends { id, from: currentUser, body, at: now }. startConversation(participantIds, title) creates a conversation (DM = single participant, no title; group = participants + title) via a New-Conversation modal.
+
+UNREAD [BROKEN — DESIGN] — the message badge currently shows unreadCount = the UNSCORED-stakeholder count, NOT real unread messages (a placeholder hack). REPLACE with genuine unread: store per-user-per-conversation lastReadAt (or lastReadMessageId); unread = messages with at > lastReadAt and from ≠ me; badge = Σ across conversations; opening a conversation marks it read. The Reminders/system thread's "needs scoring" count can remain a separate signal, not the message unread.
+
+REAL-TIME / PERSISTENCE [BUILT local; DESIGN backend] — messages persist via the Store (localStorage + BroadcastChannel) so a message sent in the sidebar appears on the page live across tabs; the Supabase swap (postgres_changes) is the later transport (see Persistence box).
+
+DEVELOPER-INFERRED ADDITIONS (not built; design deliberately) — @-mention NOTIFICATIONS (notify a mentioned teammate); message EDIT/DELETE; thread SEARCH; ATTACHMENTS; reactions; presence/typing. Keep scope tight; these are future.
+
+UI KIND (components later, NO hand-built CSS) — a docked sidebar panel + a full page (conversation list + thread pane); message bubbles (grouped), avatars, a composer with a mention typeahead (4 triggers → a picker list), mention chips (clickable → read-only record), a New-Conversation modal (participant multi-select + optional group title), an unread badge. Components from the universal kit after the full spec.` },
       { t: "Persistence / realtime — entities + exact shapes, Store, Supabase swap" },
       { t: "Catalogs — categories/types · markets/regions · segments/BUs · issues · kinds/stages/ask-types" },
       { t: "Design refs — element→MD3 (Material Web) component map · Material Symbols map · Inter/Newsreader" },
