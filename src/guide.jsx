@@ -481,7 +481,48 @@ RECORD SECTIONS (record.community.edit) — Project overview (name, kind, stage,
 LANDING — grid/list of applications showing kind, stage, amount (USD-equivalent), value score, vote tally; a ROLLUP strip (Requested · Approved · Annual · 3-yr Cumulative) in USD.
 
 UI KIND (components later, NO hand-built CSS) — landing list/table with rollup strip; record = the universal record shell (the 9 sections); selects for kind/stage/currency/askType/recurrence; number fields for amounts + monetization; the two value-score inputs; a for/against/abstain votes control; a MANAGER-ONLY Approve action; a budget/FX readout (current vs locked historic); the embedded FX conversion API. Exact components from the universal kit after the full spec.` },
-      { t: "Workspaces & Settings — fields, sub-panes, manager gating, propagation" },
+      { t: "Workspaces — the team's working surface (segment/BU scope, workHQ, Setup sub-page, roles)", d:
+`WHAT IT IS — a WORKSPACE is the team's working surface, scoped to a (SEGMENT, BUSINESS UNIT). Within it the team works the per-workspace STAKEHOLDER TABLE (the CRM-fields home — see the Lists table box), the workHQ quick-hits strip, the WHITEBOARD (see its box), Scoring, Map, Plans, and Community — all filtered to the active workspace. Nav = "Workspaces"; SETUP is a SUB-PAGE of Workspaces (not its own top-level nav). Settings is a SEPARATE module (its own box).
+
+WORKSPACE DATA MODEL — id · name · segment · businessUnit · owners[] (the members) · createdBy (the lead/creator) · createdAt. Membership = owners[]. Stakeholder↔workspace via the stakeholderWorkspaces join.
+
+SEGMENTS → BUSINESS UNITS (catalog, manager-editable in Settings) — Personal Systems → [Commercial PCs & Laptops · Consumer PCs · Other Products · Services]; Printing → [Hardware · Supplies · Graphics & 3D Printing]; Corporate Investments → [Poly · HyperX]; Corporate Functions → [Marketing · Communications · Legal / GA&PP · HP Foundation · Supply Chain · SLED]. A workspace picks ONE (segment, BU) pair.
+
+MASTER & TABS — Master (__master) = immovable first tab = the union of ALL stakeholders (Scoring disabled on Master). Workspaces open as TABS (activate / close; Master can't close); the active tab scopes the whole app. Create-from-workspace auto-assigns the stakeholder to it; create-from-Master leaves it unassigned; a stakeholder can belong to MULTIPLE workspaces.
+
+THE WORKING SURFACE (workspace home) — the workHQ strip + the stakeholder table, with three layout MODES (expand-intel / split / expand-table) that resize the two. The Whiteboard clicks OUT into a side-by-side split (see Whiteboard box).
+
+workHQ (quick-hits, computed live from the Store — KEEP for now, improve later) — cards: ALERTS (recent Developments = latest notes across the workspace's stakeholders, newest first); NEED YOUR SCORE (stakeholders the current user hasn't scored); TASKS (community applications Proposed/Under Review awaiting the user's vote). Signals: COLD ENGAGEMENT (High-priority stakeholders with no contact in 90 days); RELATIONSHIP MIX (positive / winnable / negative counts from weighted positions); a summary line; a quick "+ Stakeholder" button.
+
+SETUP (sub-page of Workspaces) — lists ALL workspaces GROUPED BY SEGMENT, with segment/market/region filters + search + sort; CREATE new (name, segment→BU, invite teammates); EDIT if allowed; ASSIGN stakeholders to workspaces (the join). A user can SEE all workspaces here (to browse/sort) but can only OPEN / WORK IN the ones they created or are a member of; for the rest they can ASK TO JOIN (a join-request flow).
+
+ROLES & VISIBILITY (NOTE: the role model still needs final resolution — captured as the working intent) —
+• MEMBERSHIP: a user only sees/works in workspaces they belong to (owners[]). In Setup they can browse ALL but only enter their own/member ones; they REQUEST TO JOIN others.
+• WORKSPACE LEAD (creator): ANY user can CREATE a workspace and invite teammates — this makes them the workspace's LEAD, but NOT necessarily an app-level MANAGER. The lead-vs-app-manager distinction is OPEN ("more like a lead") — to be resolved.
+• APP MANAGER powers: ADD users to other workspaces; REMOVE team members; DELETE a workspace (with a warning/confirm).
+• MANAGER CONTINUITY: a workspace must always have a manager — if the only manager LEAVES, another must be ASSIGNED first (cannot be left manager-less). [Mirrors the last-teammate guard in Scoring.]
+
+CROSS-LINKS / SCOPING — Lists / Scoring / Map filter to the active workspace; Plans are one set per workspace; Community + Map can aggregate. The per-workspace stakeholder table IS the Lists table scoped to visibleStakeholders (do not re-spec — see the Lists box).
+
+UI KIND (components later, NO hand-built CSS) — Workspaces nav → the working surface (workHQ strip + stakeholder table, 3 modes; whiteboard split) + the Setup sub-page (grouped/filterable/sortable workspace list, create dialog, member management, join-request, stakeholder assignment); open-workspace tabs. Components from the universal kit after the full spec.` },
+      { t: "Whiteboard — team collaboration white-space (NEW; articulated, not designed yet)", d:
+`A NEW FEATURE — articulated here, NOT designed yet. A team "WHITE SPACE" to write, collaborate, and comment: an ADVANCED form of Messages, in the spirit of Slack + Todoist. It lives under Workspaces as the team's collaboration surface. Purpose: plan; write; capture IDEAS for planning or for noting a stakeholder's significance.
+
+CAPABILITIES (requirements) —
+• IDEAS — captured quickly, then SORTED and ASSIGNED (to teammates), like a lightweight task/idea board (Todoist-like).
+• COLLABORATIVE WRITING — multiple teammates write together; EDITS SHOWN LIKE WORD (track changes / edit history / authorship), so changes are visible and attributable.
+• COMMENTS — threaded comments on the writing/ideas (Slack-like discussion).
+• NEWS / SOCIAL CAPTURE — paste just a URL (a stakeholder's social-feed post, a news article) and the app must FIND, DISCERN, and EMBED or CREATE a beautiful capture from that URL alone: news-outlet name + headline + preview (or an embedded social post). Requires a link-unfurling / oEmbed / page-metadata API (Integrations/APIs bucket); the app decides per URL whether to embed or render a generated card.
+• REAL-TIME, MULTI-USER collaboration.
+
+PLAN INTEGRATION — from a PLAN EDIT you can CALL BACK to your whiteboard (if you've used one) to pull ideas/notes/captures into the plan; and you can CONTINUE whiteboarding from within plan view OR edit. Whiteboard content feeds and links into Plans.
+
+LAYOUT (preference) — it clicks OUT of workHQ into a TWO-PANE, SIDE-BY-SIDE SPLIT (like Apple's split-view windows): whiteboard beside the work surface or plan.
+
+RELATION TO MESSAGES — Messaging is the lighter conversation form; the Whiteboard is the advanced collaboration/whiteboarding surface. (How they relate or merge: to confirm.)
+
+STATUS — concept + requirements captured; the design and the URL-embed API are OPEN. To be designed deliberately.` },
+      { t: "Settings — org config + the start-state & design-customization dashboard (separate from Workspaces)" },
       { t: "Messaging — conversations/messages model, @ / # / $ mention links" },
       { t: "Persistence / realtime — entities + exact shapes, Store, Supabase swap" },
       { t: "Catalogs — categories/types · markets/regions · segments/BUs · issues · kinds/stages/ask-types" },
