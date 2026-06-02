@@ -4637,85 +4637,89 @@ input::-webkit-input-placeholder, textarea::-webkit-input-placeholder { color: v
 .scaffold-controls .msym, .scaffold-controls .msym.ico { font-size:11px; }
 .scaffold-controls .kbd { background:#F4F3ED; }
 .scaffold-controls .search input, .scaffold-controls .search input::placeholder { font-size:11px; }
-@media (max-width:760px){ .record-twocol { grid-template-columns:1fr; }
-}
-
-
-
-/* Scaffold: table section breaks the 720px reading cap and fills main content */
-.record-section-body:has(.record-table-embed) { max-width:none; }
 
 /* ════════════════════════════════════════════════════════════════════
    AUTHORITATIVE RECORD SCAFFOLD — single source of truth.
-   record.stakeholder / .plan / .community (+ .edit) all render through
-   RecordShell and inherit ONLY from this block. See RECORD_SCAFFOLD.md.
-   Surfaces: rails = light grey (--bg-2) · main content = white (--paper-2)
-   · app bg behind = --paper. Top bar STATIC; main is the only flex column.
+   record.[type].view / .edit all render through RecordShell (record.jsx)
+   and inherit ONLY from this block. See RECORD_SCAFFOLD.md.
+   · Surfaces (3): rails = grey (--bg-2) · top bar + main = white (--paper-2)
+     · app bg behind = --bg.
+   · Type: mono eyebrows/labels · serif headings · sans body.
+   · Top bar is STATIC; .record-main is the ONLY width-flexible region, so the
+     layout truly reflows as either rail collapses.
    ════════════════════════════════════════════════════════════════════ */
-.record-wrap { flex:1; display:flex; flex-direction:column; min-height:0; background:var(--paper); }
+:root { --rail-w:248px; --rail-collapsed:56px; --record-read:720px; }
 
-/* Top bar — static; never moves when rails toggle */
-.record-topbar { display:flex; align-items:center; gap:14px; min-height:42px; padding:0 14px; border-bottom:1px solid var(--rule); background:var(--paper); flex:0 0 auto; }
-.record-topbar .plan-back { display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:500; color:var(--ink-3); background:transparent; border:0; padding:6px 6px 6px 0; cursor:pointer; }
+.record-wrap { flex:1; min-height:0; display:flex; flex-direction:column; background:var(--bg); }
+
+/* Top bar — static white band, full width above the rails */
+.record-topbar { flex:0 0 auto; display:flex; align-items:center; gap:14px; min-height:52px; padding:8px 20px; background:var(--paper-2); border-bottom:1px solid var(--rule); }
+.record-topbar .plan-back { display:inline-flex; align-items:center; gap:5px; font-size:13px; font-weight:500; color:var(--ink-3); background:transparent; border:0; padding:6px 8px 6px 0; cursor:pointer; white-space:nowrap; }
 .record-topbar .plan-back:hover { color:var(--ink); }
-.record-title-group { display:flex; flex-direction:column; gap:1px; min-width:0; }
-.record-title { font-size:15px; font-weight:600; color:var(--ink-4); }
-.record-subtitle { font-size:11px; color:var(--ink-mute); }
-.record-toolbar { display:inline-flex; align-items:center; gap:8px; }
+.record-title-group { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.record-title { font-family:var(--serif); font-size:18px; font-weight:500; color:var(--ink); line-height:1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.record-subtitle { font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:0.07em; color:var(--ink-mute); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.record-toolbar { display:inline-flex; align-items:center; gap:8px; flex:0 0 auto; }
 
 /* Body — flex row; ONLY .record-main flexes */
-.record-body { flex:1; display:flex; min-height:0; }
+.record-body { flex:1; min-height:0; display:flex; }
 
-/* Rails — identical 240/56, mirrored; light-grey surface */
-.record-nav, .record-rail { flex:0 0 240px; background:var(--paper); transition:flex-basis .15s; overflow:auto; }
-.record-nav { display:flex; flex-direction:column; gap:3px; padding:16px 12px; border-right:1px solid var(--rule-2); }
-.record-rail { padding:16px 12px; border-left:1px solid var(--rule-2); }
-.record-nav.collapsed, .record-rail.collapsed { flex-basis:56px; }
-.record-nav-head, .record-rail-head { display:flex; align-items:center; gap:8px; height:40px; box-sizing:border-box; margin:0 0 16px; }
-.record-rail-head { flex-direction:row; justify-content:flex-start; }
-.record-nav-title { flex:1; font-size:11px; text-transform:uppercase; letter-spacing:0.07em; font-weight:600; color:var(--ink-3); white-space:nowrap; overflow:hidden; }
-.record-nav.collapsed .record-nav-title { display:none; }
+/* Rails — grey chrome, identical & mirrored, animated collapse */
+.record-nav, .record-rail { flex:0 0 var(--rail-w); min-width:0; background:var(--bg-2); overflow:auto; transition:flex-basis .16s ease; }
+.record-nav { display:flex; flex-direction:column; gap:2px; padding:20px 14px; border-right:1px solid var(--rule-2); }
+.record-rail { padding:20px 14px; border-left:1px solid var(--rule-2); }
+.record-nav.collapsed, .record-rail.collapsed { flex-basis:var(--rail-collapsed); }
+.record-nav-head, .record-rail-head { display:flex; align-items:center; gap:8px; min-height:28px; margin:0 0 14px; }
 .record-nav.collapsed .record-nav-head, .record-rail.collapsed .record-rail-head { justify-content:center; }
-.record-nav-collapse { border:0; background:transparent; color:var(--ink-3); cursor:pointer; padding:4px; display:inline-flex; }
-.record-nav-collapse:hover { color:var(--ink); }
-.record-nav-collapse .msym, .record-rail-head .record-nav-collapse .msym { font-size:16px; }
-.record-nav-item { display:flex; align-items:center; gap:11px; padding:9px 11px; font-size:13px; font-weight:500; color:var(--ink-3); border:0; background:transparent; border-radius:7px; cursor:pointer; text-align:left; white-space:nowrap; overflow:hidden; }
-.record-nav-item .msym { font-size:16px; color:var(--ink-3); font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 20; }
-.record-nav-item:hover { background:transparent; color:var(--ink-4); font-weight:600; }
-.record-nav-item.on { background:transparent; color:var(--ink-4); font-weight:600; }
-.record-nav-item.on .msym { color:var(--ink-4); }
+.record-nav-title { flex:1; font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; font-weight:500; color:var(--ink-mute); white-space:nowrap; overflow:hidden; }
+.record-nav.collapsed .record-nav-title, .record-rail.collapsed .record-nav-title { display:none; }
+.record-nav-collapse { border:0; background:transparent; color:var(--ink-mute); cursor:pointer; padding:4px; display:inline-flex; border-radius:6px; }
+.record-nav-collapse:hover { color:var(--ink); background:rgba(0,0,0,.05); }
+
+/* Section nav items — active item floats white on the grey rail */
+.record-nav-item { display:flex; align-items:center; gap:10px; padding:8px 10px; font-size:13px; font-weight:500; color:var(--ink-3); border:0; background:transparent; border-radius:7px; cursor:pointer; text-align:left; white-space:nowrap; overflow:hidden; }
+.record-nav-item .msym { font-size:18px; color:var(--ink-mute); flex:0 0 auto; }
+.record-nav-item:hover { background:rgba(0,0,0,.05); color:var(--ink); }
+.record-nav-item.on { background:var(--paper-2); color:var(--ink); font-weight:600; box-shadow:var(--shadow-card); }
+.record-nav-item.on .msym { color:var(--accent); }
 .record-nav.collapsed .record-nav-label { display:none; }
+.record-nav.collapsed .record-nav-item { justify-content:center; padding:8px; }
 .record-rail.collapsed .record-rail-inner { display:none; }
 
-/* Main content — WHITE; the only width-flexible region */
-.record-main { flex:1; min-width:0; overflow:auto; background:var(--paper-2); padding:16px 40px 48px; }
-.record-section-head { height:40px; box-sizing:border-box; display:flex; align-items:center; font-size:17px; font-weight:600; color:var(--ink-4); margin:0 0 16px; }
-.record-section-body { max-width:720px; }
-.record-section-body:has(.record-table-embed) { max-width:none; }
+/* Main content — white; the ONLY width-flexible region. Content is left-aligned
+   to the gutter: reading blocks cap their measure, full-bleed blocks fill. */
+.record-main { flex:1 1 auto; min-width:0; overflow:auto; background:var(--paper-2); display:flex; flex-direction:column; padding:28px 40px 64px; }
+.record-section-head { font-family:var(--serif); font-size:20px; font-weight:500; color:var(--ink); line-height:1.2; margin:0 0 20px; }
+.record-section-body { width:100%; }
+.record-fields, .record-prose, .record-twocol, .record-fields-2 { width:100%; max-width:var(--record-read); }
 .record-fields { display:flex; flex-direction:column; gap:20px; }
 .record-fields-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
 .record-twocol { display:grid; grid-template-columns:1fr 1fr; gap:32px; align-items:start; }
-.record-prose p { font-size:13px; line-height:1.65; color:var(--ink-3); margin:0 0 14px; max-width:680px; }
-.record-prose-tags { display:flex; gap:6px; }
-.record-table-embed { width:100%; overflow:auto; }
-.record-table-embed .sheet-cell, .record-table-embed .sheet-head .sheet-cell { border-left:0; border-right:0; }
+.record-prose p { font-size:13px; line-height:1.65; color:var(--ink-3); margin:0 0 14px; }
+.record-prose-tags { display:flex; flex-wrap:wrap; gap:6px; }
 @media (max-width:760px){ .record-twocol, .record-fields-2 { grid-template-columns:1fr; } }
+
+/* Plug-and-play table embed — fills the full width of main and reuses the
+   single-source .sheet-* table verbatim (no restyle); scrolls within main. */
+.record-table-embed { width:100%; max-width:100%; overflow:auto; }
+.record-table-embed .sheet-cell, .record-table-embed .sheet-head .sheet-cell { border-left:0; border-right:0; }
 
 /* Right rail content */
 .record-rail-inner { display:flex; flex-direction:column; gap:0; }
-.record-rail-sec { padding:18px 0; border-top:1px solid var(--rule-2); display:flex; flex-direction:column; gap:10px; }
+.record-rail-sec { padding:16px 0; border-top:1px solid var(--rule-2); display:flex; flex-direction:column; gap:10px; }
 .record-rail-sec:first-child { padding-top:0; border-top:0; }
+.record-rail-title { font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; font-weight:500; color:var(--ink-mute); }
 
-/* MetaField — one look, read + edit */
-.mf { display:flex; flex-direction:column; gap:6px; }
-.mf-label { font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-3); font-weight:600; }
-.mf-value { font-size:13px; color:var(--ink-3); line-height:1.6; }
+/* MetaField — one footprint, read + edit */
+.mf { display:flex; flex-direction:column; gap:5px; }
+.mf-label { font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:0.07em; color:var(--ink-mute); font-weight:500; }
+.mf-value { font-size:13px; color:var(--ink); line-height:1.55; }
 .mf-empty { color:var(--ink-mute); }
 .mf-tags { display:inline-flex; flex-wrap:wrap; gap:4px; }
-.mf-input, .record-main .designed-select select { width:100%; box-sizing:border-box; background:var(--paper-2); border:1px solid var(--rule); border-radius:8px; padding:9px 11px; font:inherit; font-size:13px; color:var(--ink-3); }
+.mf-input, .record-main .designed-select select { width:100%; box-sizing:border-box; background:var(--paper-2); border:1px solid var(--rule); border-radius:8px; padding:9px 11px; font:inherit; font-size:13px; color:var(--ink); }
 .mf-input:focus, .record-main .designed-select select:focus { outline:0; border-color:var(--accent); box-shadow:0 0 0 3px rgba(2,74,216,.15); }
 .mf-input::placeholder { color:var(--ink-mute); }
 .mf-long { resize:vertical; line-height:1.6; min-height:96px; }
-/* Rail fields read on the grey rail = white fill */
-.record-rail .mf-input, .record-rail .designed-select select, .record-rail .mf-long { background:var(--paper-2); border:1px solid var(--rule); }
+/* Rail fields read on grey = white fill */
+.record-rail .mf-input, .record-rail .designed-select select, .record-rail .mf-long { background:var(--paper-2); border:1px solid var(--rule-2); }
 .record-wrap strong, .record-wrap b { font-weight:600; }
