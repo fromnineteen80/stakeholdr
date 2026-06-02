@@ -617,6 +617,31 @@ OPTIMISTIC CONCURRENCY [STD, per Persistence] — a per-row version (or the ms u
 APPLIES UNIFORMLY — these columns/mechanisms are added to EVERY entity's schema and to the Store's write path once, not re-decided per feature. The Database-schema box's per-table SQL inherits this envelope (extend each table with created_by/updated_by/updated_at-ms/deleted_at/deleted_by + the versions/audit table).
 
 ⚠️ NOT EXHAUSTIVE YET — the user has flagged there is MORE enterprise backend/state detail than the above ("so much else"). This box is the FRAME; it must be filled out completely from the user's enterprise spec before rebuild. OPEN: enumerate every remaining backend/state field, rule, and solution (see the request in chat) and capture each here verbatim — do NOT invent or assume.` },
+      { t: "Enterprise architecture — the full solution (demo-first → production), 20 pillars", d:
+`What X / Facebook / Slack / Todoist / Claude all needed to be real products — mapped to Stakeholdr. DEMO-FIRST: ship the Demo (seed org + sample users + stakeholders, FULL capability, add dummy AND real people, no backend) → then flip ONE switch to Production (Supabase). Full developer spec: docs/ENTERPRISE_ARCHITECTURE.md (this is the readable outline; that is the build handoff).
+
+1. PRINCIPLES — one data layer; server = source of truth; optimistic UI; multi-tenant; everything auditable.
+2. TWO STATES + SWITCH — Demo (localStorage/BroadcastChannel, seeded) ↔ Production (Supabase); one env flag; identical component code.
+3. TENANCY — organizations (tenants); every row carries org_id; memberships(org_id,user_id,role); invite code STKH-XXXX-XXXX / SSO domain; seats + add-on entitlements.
+4. IDENTITY & AUTH — Supabase Auth: email/password, magic link, SSO/SAML/OIDC (enterprise), optional MFA; remove demo auto-manager.
+5. AUTHORIZATION & RLS — roles manager/member/workspace-lead/system; RLS enforces tenant isolation + per-row gates (the REAL boundary; UI gating is cosmetic).
+6. DATA MODEL — the universal record envelope (id, org_id, created/updated _at/_by ms-UTC, deleted_at/by, version); FK cascades; normalize collections to rows; constraints/checks.
+7. STATE/REALTIME/COLLAB — three tiers (records column-level / append-only inserts / collaborative-doc CRDT); Supabase Realtime (postgres_changes + Presence + Broadcast); offline queue.
+8. VERSIONING & AUDIT — edit-version "time capsule" (append-only record_versions, restore-forward); immutable audit log; activity feed.
+9. ARCHIVES, RETENTION, BACKUP — soft-delete + Archive state; retention/purge; PITR backups; exports (plan→Word/PDF, tables→CSV, org export).
+10. FILES & MEDIA — Supabase Storage buckets (attachments, photos, exports, whiteboard); signed URLs; size/type limits; scan; CDN.
+11. BACKGROUND JOBS — Edge Functions/cron: fiscal-year rollover (snapshot + rescore prompt), reminders, digests, FX refresh, notification fan-out, purge.
+12. NOTIFICATIONS — in-app + transactional email; @-mentions, invites, rescore reminders, vote requests, plan deadlines; prefs + digests.
+13. INTEGRATIONS — FX conversion, URL unfurl/oEmbed (whiteboard), ISO-3166 countries; roadmap: LegiScan/Quorum/CRM/marketing/Drive/social; bounded connectors + secrets vault.
+14. SEARCH — Postgres full-text (or pgvector) across stakeholders/plans/community/messages/notes, org-scoped.
+15. SECURITY & COMPLIANCE — TLS + at-rest encryption; secrets vault; least privilege; SOC 2, GDPR + CCPA (export/delete, DPA, consent), PII handling, data residency; rate limits, validation, CSP, dep scanning.
+16. OBSERVABILITY — structured logs, error tracking (Sentry), metrics/uptime/alerting, query perf.
+17. PERFORMANCE & SCALE — indexes, pagination/virtualization, connection pooling, caching, no N+1, realtime fan-out limits.
+18. BILLING & LICENSING — Stripe per-seat subscriptions, plan tiers, add-on gating (Personas, AI Message Generator), usage metering.
+19. ADMIN & SUPPORT — org admin console (members/roles/fiscal/segments/categories/branding/invite/billing); audited support impersonation; feature flags; status page; in-app help.
+20. MIGRATIONS, ENVIRONMENTS, TESTING — versioned SQL migrations; demo/staging/prod + CI/CD; the traceability manifest + build-guard + contract/e2e tests + per-feature verification.
+
+This box is the FRAME and the menu; each pillar's detail is in its domain box and in docs/ENTERPRISE_ARCHITECTURE.md. As we capture each module we tie its rows/jobs/permissions back to these pillars.` },
       { t: "Database schema (Supabase) — full SQL + RLS + realtime swap (captured here; source files vanish at rebuild)", d:
 `The complete Postgres schema for STATE B (Supabase). Captured verbatim into the .io because db.js will not exist at rebuild — this guide is the only source. Column case: SQL is snake_case; the in-memory/JSON is camelCase (map at the transport boundary). Every mutable table has created_at/updated_at (timestamptz default now()).
 
