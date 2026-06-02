@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { STAKEHOLDER_DATA } from './data';
-import { displayName, Icon, StatusPill, PriorityPill } from './components';
+import { Icon } from './components';
+import { SheetView } from './sheet';
 // record.jsx — Universal record scaffold (read + edit), single source of design.
-// Three primitives, nothing forked per entity:
-//   • RecordShell — the page: static top bar, collapsible left rail (sub-page
-//     nav), flexible white center, collapsible right rail (metadata).
-//   • RecordTable — a plug-and-play embed of the single-source .sheet-* table;
-//     pass columns + rows and drop it into a section. Never hand-build a table.
-//   • MetaField  — one field, two states (read shows the value, edit swaps an
-//     input). Same footprint in both, so view/edit stay identical structurally.
-// ALL visual rules live in the AUTHORITATIVE RECORD SCAFFOLD block in styles.css.
+//   • RecordShell — the page: static top bar (back · toolbar · view/edit), a
+//     collapsible left rail (sub-page nav), a FULL-WIDTH white center whose
+//     content reflows as rails toggle, a collapsible right rail (metadata), and
+//     a pinned footer. The page TITLE lives in the content (a real page header),
+//     never in the top bar.
+//   • MetaField — one field, two states (read shows value, edit swaps an input).
+// Tables are NOT re-implemented here — records embed the real app table
+// (SheetView) verbatim. ALL visual rules live in the AUTHORITATIVE RECORD
+// SCAFFOLD block in styles.css.
 
 // ── MetaField — one field, two states ───────────────────────────────────
 // type: text | long | select | tags | date
@@ -41,38 +43,12 @@ export function MetaField({ label, value, editing, type = "text", options = [], 
   );
 }
 
-// ── RecordTable — plug-and-play embed of the single-source sheet table ──────
-// columns: [{ key, label, width?, frozen?, cls?, render?(row, i) }]
-//   width  — any grid track value (e.g. "44px", "minmax(160px,2fr)"); defaults flexible
-//   frozen — "idx" | "edit" (adds the frozen-column treatment from the sheet)
-//   cls    — extra cell class (e.g. "idx", "edit", "cell-strong")
-//   render — cell content for a row (falls back to row[key])
-// rows: [{ id, ... }]   footer: optional node rendered in a .sheet-footer
-export function RecordTable({ columns, rows, footer, minWidth = "max-content" }) {
-  const template = columns.map(c => c.width || "minmax(120px,1fr)").join(" ");
-  const cellCls = (c) => "sheet-cell" + (c.frozen ? ` frozen frozen-${c.frozen}` : "") + (c.cls ? ` ${c.cls}` : "");
-  return (
-    <div className="record-table-embed">
-      <div className="sheet-scroll">
-        <div className="sheet-grid" style={{ gridTemplateColumns: template, minWidth }}>
-          <div className="sheet-head">
-            {columns.map(c => <div key={c.key} className={cellCls(c)}>{c.label}</div>)}
-          </div>
-          {rows.map((row, i) => (
-            <div className="sheet-row" key={row.id != null ? row.id : i}>
-              {columns.map(c => <div key={c.key} className={cellCls(c)}>{c.render ? c.render(row, i) : row[c.key]}</div>)}
-            </div>
-          ))}
-        </div>
-        {footer != null && <div className="sheet-footer">{footer}</div>}
-      </div>
-    </div>
-  );
-}
-
-// ── RecordShell — static top bar · collapsible sub-page rail · flexible
-//                  center · collapsible metadata rail. Drives read AND edit. ──
-export function RecordShell({ backLabel, onBack, title, subtitle, editing, onToggleEdit, sections, rightRail, navTitle, railTitle, toolbar }) {
+// ── RecordShell — static bar · sub-page rail · full-width center · metadata
+//                  rail · pinned footer. Drives read AND edit. ───────────────
+export function RecordShell({
+  backLabel, onBack, pageIcon, title, subtitle, editing, onToggleEdit,
+  sections, rightRail, navTitle, railTitle, toolbar, footer
+}) {
   const [active, setActive] = useState(sections[0] && sections[0].id);
   const [navCollapsed, setNavCollapsed] = useState(false);
   const [railCollapsed, setRailCollapsed] = useState(false);
@@ -80,13 +56,9 @@ export function RecordShell({ backLabel, onBack, title, subtitle, editing, onTog
 
   return (
     <div className="record-wrap">
-      {/* Static top bar — back · title/subtitle · toolbar · view↔edit */}
+      {/* Static top bar — back · adaptive toolbar · view↔edit. No title here. */}
       <div className="record-topbar">
         {onBack && <button className="plan-back" onClick={onBack}><Icon name="chevron-left" /> {backLabel || "Back"}</button>}
-        <div className="record-title-group">
-          {title && <span className="record-title">{title}</span>}
-          {subtitle && <span className="record-subtitle">{subtitle}</span>}
-        </div>
         <span style={{ flex: 1 }} />
         {toolbar && <span className="record-toolbar">{toolbar}</span>}
         {onToggleEdit && (
@@ -114,13 +86,20 @@ export function RecordShell({ backLabel, onBack, title, subtitle, editing, onTog
           ))}
         </nav>
 
-        {/* Center — the only width-flexible region */}
+        {/* Center — full-width, the only width-flexible region */}
         <div className="record-main">
+          <div className="record-page-head">
+            {pageIcon && <span className="record-page-icon"><Icon name={pageIcon} /></span>}
+            <div className="record-page-titles">
+              {subtitle && <span className="record-page-eyebrow">{subtitle}</span>}
+              {title && <span className="record-page-title">{title}</span>}
+            </div>
+          </div>
           {section && <div className="record-section-head">{section.label}</div>}
           <div className="record-section-body">{section && section.render(editing)}</div>
         </div>
 
-        {/* Right rail — metadata (mirrors the left rail's head + collapse) */}
+        {/* Right rail — metadata */}
         {rightRail && (
           <aside className={"record-rail" + (railCollapsed ? " collapsed" : "")}>
             <div className="record-rail-head">
@@ -133,11 +112,14 @@ export function RecordShell({ backLabel, onBack, title, subtitle, editing, onTog
           </aside>
         )}
       </div>
+
+      {/* Pinned footer */}
+      {footer && <div className="record-footer">{footer}</div>}
     </div>
   );
 }
 
-// ── SampleRecord — neutral live preview to tune the shell (Scaffold menu) ──
+// ── SampleRecord — neutral live preview to tune the shell (Scaffolds menu) ──
 export function SampleRecord() {
   const [editing, setEditing] = useState(false);
   const [d, setD] = useState({
@@ -150,35 +132,45 @@ export function SampleRecord() {
     note: ""
   });
   const set = (k, v) => setD(p => ({ ...p, [k]: v }));
-
-  // Real stakeholders → exercises RecordTable exactly as the workspace table.
   const D = STAKEHOLDER_DATA;
-  const rows = (D.STAKEHOLDERS || []).slice(0, 8).map(s => {
-    const wc = D.weightedCoord(s.id, D.SEED_SCORES || {}, D.TEAM || []);
-    return { id: s.id, isPerson: s.isPerson, name: displayName(s) || s.name, org: s.org, type: s.type, rel: D.statusFor(wc.x, wc.y), pri: s.priority };
-  });
-  const columns = [
-    { key: "idx", label: "", width: "44px", frozen: "idx", cls: "idx", render: (r, i) => i + 1 },
-    { key: "icon", label: "", width: "44px", frozen: "edit", cls: "edit", render: r => <Icon name={r.isPerson ? "person" : "groups"} className="ico" /> },
-    { key: "name", label: "Stakeholder", width: "minmax(160px,2fr)", render: r => <span className="cell-text">{r.name}</span> },
-    { key: "org", label: "Organization", width: "minmax(140px,1.5fr)", render: r => <span className="cell-text">{r.org}</span> },
-    { key: "type", label: "Type", width: "minmax(120px,1fr)", cls: "cell-strong", render: r => r.type },
-    { key: "rel", label: "Relationship", width: "140px", render: r => <StatusPill status={r.rel} /> },
-    { key: "pri", label: "Priority", width: "110px", render: r => <PriorityPill value={r.pri} /> }
-  ];
-  const tableFooter = (
-    <>
-      <div className="group"><Icon name="table" /> <strong style={{ color: "var(--ink)" }}>{rows.length}</strong> stakeholders</div>
-      <div className="spacer" style={{ flex: 1 }} />
-      <div className="group"><button className="footer-export-btn"><Icon name="download" /> Export CSV</button></div>
-    </>
+
+  // The table sub-page embeds the REAL workspace table (SheetView) verbatim —
+  // same columns, design, and behavior — limited to 8 stakeholders.
+  const sample8 = (D.STAKEHOLDERS || []).slice(0, 8);
+  const noop = () => {};
+  const embeddedTable = (
+    <div className="record-table-embed">
+      <SheetView
+        explainerSlot={null}
+        stakeholders={sample8}
+        scores={D.SEED_SCORES || {}}
+        team={D.TEAM || []}
+        updateStakeholder={noop}
+        openDetail={noop}
+        selectedId={null}
+        setSelectedId={noop}
+        workspaceLabel="Sample"
+        isMaster={true}
+        getWorkspacesForStakeholder={() => []}
+        workspaces={D.WORKSPACES || []}
+        users={D.USERS || []}
+        addStakeholder={noop}
+        openStakeholderId={null}
+        onConsumeOpen={noop}
+        currentUser={(D.USERS || [])[0]}
+        companyIssues={D.ISSUES || []}
+        community={D.COMMUNITY || []}
+        updateCommunityApp={noop}
+        onOpenWorkspace={noop}
+      />
+    </div>
   );
 
   const sections = [
     { id: "prose", label: "Single column", icon: "notes", render: () => (
       <div className="record-prose">
         <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-        <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium.</p>
+        <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.</p>
         <div className="record-prose-tags"><span className="tag">Reference</span><span className="tag">Scaffold</span><span className="tag">Lorem</span></div>
       </div>
     ) },
@@ -204,9 +196,7 @@ export function SampleRecord() {
         </div>
       </div>
     ) },
-    { id: "table", label: "Table embed", icon: "table_rows", render: () => (
-      <RecordTable columns={columns} rows={rows} footer={tableFooter} />
-    ) }
+    { id: "table", label: "Table embed", icon: "table_rows", render: () => embeddedTable }
   ];
 
   const rightRail = (
@@ -228,6 +218,7 @@ export function SampleRecord() {
     <RecordShell
       backLabel="Samples"
       onBack={() => {}}
+      pageIcon="description"
       title={d.name}
       subtitle="Universal scaffold preview"
       editing={editing}
@@ -241,6 +232,13 @@ export function SampleRecord() {
           <button className="btn">Filter</button>
           <button className="btn">Sort</button>
         </span>
+      }
+      footer={
+        <>
+          <span>Universal scaffold preview</span>
+          <span style={{ flex: 1 }} />
+          <span>Updated June 10, 2026</span>
+        </>
       }
     />
   );
