@@ -260,31 +260,37 @@ MD3 BUILD MAP (the table is a Material Web HOLE → Angular Material; cell contr
       { t: "Plan algorithm — sector/type model catalog, plan selection, workspace→plan stakeholder flow", d:
 `SCOPE — this captures the PLAN ALGORITHM and how stakeholders flow into a plan. It is APP KNOWLEDGE, not the full plan-page element spec (sections/fields/validation come later, when we build the plan + stakeholder pages). The algorithm is NOT the plan: the algorithm tells you WHICH plan it is, and that classification dictates some CUSTOM parts of the plan page built later.
 
-THE ALGORITHM CATALOG — pre-built engagement algorithms in two families, each defined as a small set of weighted FACTORS (weights ≈ sum to 1). A team developing a plan in a workspace PICKS the right one (there is a basic/default option).
+THE ALGORITHM CATALOG (AUTHORITATIVE — from the "Stakeholder Engagement Modeling" doc; these supersede the simplified versions that were in data.js). Each model is a Stakeholder Engagement Priority (SEP) formula: a weighted blend of 4 FACTORS summing to 1.0, scored 0–1 per factor. The models are "building blocks for customizable persona modeling," meant to be enriched by other data sets, surveys, ongoing stakeholder feedback, and polling (ties to the Personas / polling add-ons).
 
-PLAN-TYPE / SCENARIO models (the "goal" family) — 7:
-• General Engagement (basic default) — I .25 · U .25 · EP .25 · IR .25
-• Generating Shared Value — MV .4 · TB .3 · CI .2 · I .1
-• Corporate Crisis — I .3 · U .35 · EP .15 · RI .2
-• Activist Shareholders — EC .35 · SE .3 · SA .2 · RM .15
-• Diversity, Equity & Inclusion — DI .35 · IC .3 · EO .2 · CI .15
-• Community Investment — CNA .35 · PD .3 · IM .2 · CTS .15
-• Union Negotiations — NP .35 · ER .3 · FS .2 · OR .15
+IMPORTANT — FACTOR KEYS ARE MODEL-SCOPED, not a single global catalog. The same abbreviation can mean different things in different models: CE = "Consumer Expectations" (Retail) vs "Community Engagement" (Government/Nonprofit/Education) vs "Customer Engagement" (Auto); SI = "Sustainability Initiatives" (Retail) vs "Service Improvement" (Government); IC = "Inclusive Communication" (DEI) vs "Innovation Collaboration" (Energy); CI = "Collaborative Innovation" (Shared Value) vs "Community Involvement" (DEI); FS = "Financial Sustainability" (Union) vs "Funding Sustainability" (Nonprofit). Always read a factor's label within its own model.
 
-INDUSTRY-SECTOR models — 11 (sectors without a detailed formula fall back to the general 4-factor balance):
-• Energy — I .25 · LTSA .3 · ES .25 · IC .2
-• Technology — I .2 · IS .3 · MR .25 · RC .25
-• Retail — CE .35 · SI .3 · DC .25 · I .1
-• Financial — RC .35 · CT .3 · TI .25 · I .1
-• Education — DT .3 · CE .3 · IE .2 · I .2
-• Utilities — RC .3 · I .25 · ES .25 · CTS .2
-• Government & Public Sector — I .3 · RC .25 · CTS .25 · EC .2
-• Healthcare & Pharma — RC .3 · CT .3 · TI .2 · IR .2
-• Nonprofit & Social Impact — CNA .3 · PD .3 · CTS .2 · IM .2
-• Big Agriculture — RC .3 · SI .25 · CE .25 · I .2
-• Auto Manufacturing — I .25 · RC .25 · SI .25 · MR .25
+GENERALIZED / DEFAULT model — SEP_general = (I × .25) + (U × .25) + (EP × .25) + (IR × .25). I=Influence (capacity to affect the org's decisions/operations/strategy), U=Urgency (immediacy of the concern/need to engage), EP=Engagement Potential (likelihood engaging yields a positive outcome), IR=Impact on Reputation (potential to move reputation up or down). This is the basic option, balanced across the four, adaptable to any context.
 
-FACTOR CATALOG (key → label) referenced by the models: I Influence · U Urgency · EP Engagement Potential · IR Impact on Reputation · MV Mutual Value · TB Trust-Building · CI Collaborative Innovation · RI Reputation Impact · EC Effective Communication · SE Shareholder Engagement · SA Strategic Alignment · RM Reputation Management · DI Diversity Initiatives · IC Inclusive Communication · EO Equity in Opportunity · CNA Community Needs Assessment · PD Partnership Development · IM Impact Measurement · CTS Community Trust & Support · NP Negotiation Preparedness · ER Employee Relations · FS Financial Sustainability · OR Organizational Reputation · CE Consumer/Community Expectations · SI Sustainability Initiatives · DC Digital Commerce Adaptation · RC Regulatory Compliance · CT Customer Trust · TI Technological Innovation · DT Digital Transformation · IE Inclusive Environment · IS Innovation Support · MR Market Readiness · LTSA Long-Term Strategic Alignment · ES Environmental Stewardship. (Each factor carries a one-line description in the source for help/tooltip text.)
+PLAN-TYPE / SCENARIO models — 7:
+• General Engagement (basic default) — SEP_general = I .25 · U .25 · EP .25 · IR .25. Foundational balanced engagement.
+• Generating Shared Value — SEP_mv = MV .4 · TB .3 · CI .2 · I .1. Deepen mutual, value-creating partnerships (Mutual Value, Trust-Building, Collaborative Innovation, Influence).
+• Corporate Crisis — SEP_cr = I .3 · U_adjusted .35 · EP_adjusted .15 · RI .2. Crisis management, reputation repair, continuity; Urgency & Engagement-Potential are CRISIS-ADJUSTED variants, RI = Reputation Impact (perception during a crisis).
+• Activist Shareholders — SEP_as = EC .35 · SE .3 · SA .2 · RM .15. Effective Communication, Shareholder Engagement, Strategic Alignment, Reputation Management.
+• Diversity, Equity & Inclusion — SEP_dei = DI .35 · IC .3 · EO .2 · CI .15. Diversity Initiatives, Inclusive Communication, Equity in Opportunity, Community Involvement.
+• Community Investment — SEP_ci = CNA .35 · PD .3 · IM .2 · CTS .15. Community Needs Assessment, Partnership Development, Impact Measurement, Community Trust & Support.
+• Union Negotiations — SEP_un = NP .35 · ER .3 · FS .2 · OR .15. Negotiation Preparedness, Employee Relations, Financial Sustainability, Organizational Reputation.
+
+INDUSTRY-SECTOR models — 11 (each tailored to that sector's pressures):
+• Energy — SEP_st = I .25 · LTSA .3 · ES .25 · IC .2. Sustainability transformation: Influence, Long-Term Strategic Alignment, Environmental Stewardship, Innovation Collaboration.
+• Technology — SEP_te = I .2 · IS .3 · MR .25 · RC .25. Innovation trajectories & market acceptance: Influence, Innovation Support, Market Readiness, Regulatory Compliance.
+• Retail — SEP_rs = CE .35 · SI .3 · DC .25 · I .1. Shifting consumer expectations, sustainability, digital commerce: Consumer Expectations, Sustainability Initiatives, Digital Commerce Adaptation, Influence.
+• Financial — SEP_fs = RC .35 · CT .3 · TI .25 · I .1. Regulation, transparency/security, tech: Regulatory Compliance, Customer Trust, Technological Innovation, Influence.
+• Education — SEP_ed = DT .3 · CE .3 · IE .2 · I .2. Digital learning, community ties, inclusion: Digital Transformation, Community Engagement, Inclusive Environment, Influence.
+• Utilities — SEP_ut = RC .35 · PS .3 · TO .2 · ST .15. Pricing + new regulation under public scrutiny: Regulatory Compliance, Price Sensitivity, Transparency in Operations, Stakeholder Trust.
+• Government & Public Sector — SEP_gp = SI .3 · CE .3 · RA .25 · SDI .15. Service quality + accountability: Service Improvement, Community Engagement, Regulatory Alignment, Service Delivery Innovation.
+• Healthcare & Pharma — SEP_hp = MI .3 · RC .25 · PE .25 · HPR .2. Innovation + patient trust/safety: Medical Innovation, Regulatory Compliance, Patient Engagement, Healthcare Provider Relationships.
+• Nonprofit & Social Impact — SEP_np = CE .3 · IM .3 · FS .25 · AE .15. Community change > financials: Community Engagement, Impact Measurement, Funding Sustainability, Advocacy Effectiveness.
+• Big Agriculture — SEP_ag = SAP .3 · TA .25 · MA .25 · RC .2. Sustainable + productive farming: Sustainable Agricultural Practices, Technological Adoption, Market Access, Regulatory Compliance.
+• Auto Manufacturing — SEP_am = EA .35 · TI .25 · SCS .2 · CE .2. EV transition + loyalty: Electrification Acceleration, Technological Innovation, Supply Chain Sustainability, Customer Engagement.
+
+CORRECTION vs the old code — data.js had DIVERGENT (placeholder) sector formulas for Utilities, Government, Healthcare, Nonprofit, Agriculture, and Auto (it reused generic factors like CTS/CT/SI/I). The DOC formulas above are authoritative and replace them; the goal-family models and Energy/Technology/Retail/Financial/Education matched.
+
+THE 12-STEP ENGAGEMENT FRAMEWORK (the doc's backbone; a plan moves through these phases) — PURPOSE: 1 Set goals for your organization · 2 Issue identification · 3 Stakeholder identification · 4 Stakeholder prioritization. PLAN: 5 Landscape analysis · 6 Cross-functional alignment · 7 Research & listening sessions · 8 Early stakeholder analysis & modeling. EXECUTE: 9 Launch campaign · 10 Ongoing stakeholder analysis · 11 Collaborate with stakeholders · 12 Realize shared value where possible. (The doc also includes a worked Energy-sector example — scenario, goals, prioritization modeling, polling, personas-by-category, an execution checklist, a community-investment plan, predictions/reactions, and a communication strategy — reference material for the plan-page build later.)
 
 HOW STAKEHOLDERS ENTER A PLAN (the flow):
 1) The workspace team decides to develop a plan and PICKS an algorithm (sector + plan type; basic default available).
