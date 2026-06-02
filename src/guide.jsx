@@ -301,6 +301,96 @@ HOW STAKEHOLDERS ENTER A PLAN (the flow):
 NOT YET ALIGNED (explicit TODO, do not treat as built) — the step where each stakeholder's RELATIONSHIP-based RECOMMENDATION is matched/aligned to the picked plan algorithm (so the plan can suggest who fits the chosen scenario). The old code's sepScore (deriving per-stakeholder 0–100 from the weighted position: power=(y+10)/20, align=(x+10)/20, opp=1−align, urgency, engage, issue-overlap, community-tie, blended through the sector+goal factor weights → High≥67 / Medium≥40 / Low band, with a per-plan manager override and a ✦ auto-suggest marker) was an ATTEMPT at this alignment. It is NOT settled and NOT the source of a stakeholder's priority — priority is the manual field on the stakeholder. We will define the relationship→algorithm alignment deliberately later.
 
 UI ELEMENTS NEEDED (kind only — components built later): plan setup PICKS the algorithm via two selectors (industry sector + plan type, with the basic default preselected); the plan's stakeholder list is ORDERED by existing Priority (high first) and shows each stakeholder's Priority + Relationship (already-captured pills); ADD controls for "from this workspace", "from Master", and "create new"; (later) a recommendation/alignment surface once that step is defined. No hand-built CSS — these come from the universal component system built after the full spec.` },
+      { t: "Plan algorithm — FACTOR KEY (every abbreviation defined; the only build reference)", d:
+`Every SEP factor used by the model catalog, with its definition. Factor keys are MODEL-SCOPED — where one abbreviation has different meanings, each is listed. Each factor is scored 0–1 for a stakeholder, then blended by the model's weights.
+
+CORE / GENERAL & CRISIS:
+• I — Influence: a stakeholder's capacity to affect the org's decisions, operations, or strategic direction — mobilizing resources, swaying public opinion, impacting regulatory/market environments.
+• U — Urgency: the immediacy of the stakeholder's concern or the need to engage (time-sensitive). CRISIS variant U_adjusted: need for immediate engagement with those who can impact the crisis outcome or the org's ability to manage it swiftly (weight raised to .35; incorporates Crisis Response Readiness).
+• EP — Engagement Potential: likelihood that engaging the stakeholder yields a positive outcome. CRISIS variant EP_adjusted: likelihood that engaging during a crisis yields a positive result.
+• IR — Impact on Reputation: the stakeholder's potential to move the org's reputation up or down.
+• RI — Reputation Impact (Crisis): potential to significantly influence public/company perception during a crisis.
+
+SHARED VALUE:
+• MV — Mutual Value: potential for engagement to create significant value for BOTH sides (co-creation, shared benefits, mutual growth).
+• TB — Trust-Building: capacity of engagements to build and strengthen trust (foundation for long-term relationships).
+• CI — Collaborative Innovation (Shared Value): potential for joint innovation, idea-sharing, co-development. [MODEL-SCOPED: in DEI, CI = Community Involvement — effectiveness of engaging the broader community in DEI efforts (partnerships, outreach, public DEI initiatives).]
+
+ACTIVIST SHAREHOLDERS:
+• EC — Effective Communication: ability to communicate clearly, transparently, and on time with shareholders/stakeholders.
+• SE — Shareholder Engagement: strength/impact of proactive, constructive investor relationships.
+• SA — Strategic Alignment: alignment of strategy with stakeholder/shareholder interests.
+• RM — Reputation Management: impact of engagements/communications on managing public and media narratives.
+
+DEI:
+• DI — Diversity Initiatives: influence over or contribution to diversity initiatives.
+• IC — Inclusive Communication (DEI): effectiveness of engagements in fostering inclusive communication. [MODEL-SCOPED: in Energy, IC = Innovation Collaboration — potential for collaborative innovation with stakeholders.]
+• EO — Equity in Opportunity: role in ensuring equitable access and advancement (employment, opportunity).
+• (CI — Community Involvement: see Shared Value note above.)
+
+COMMUNITY INVESTMENT:
+• CNA — Community Needs Assessment: ability to identify and articulate community needs.
+• PD — Partnership Development: role in forming partnerships that extend reach.
+• IM — Impact Measurement: contribution to measuring outcomes and accountability.
+• CTS — Community Trust & Support: effectiveness of engagements in building/maintaining community trust.
+
+UNION NEGOTIATIONS:
+• NP — Negotiation Preparedness: readiness for productive negotiation.
+• ER — Employee Relations: strength of relationships with workers.
+• FS — Financial Sustainability (Union): influence on/contribution to financial stability and efficiency. [MODEL-SCOPED: in Nonprofit, FS = Funding Sustainability — role in ensuring the org's funding/financial sustainability.]
+• OR — Organizational Reputation: effect of negotiations and their outcomes on the org's standing.
+
+CROSS-SECTOR:
+• RC — Regulatory Compliance: role in shaping, enforcing, advising on, or adhering to regulatory frameworks (used across Utilities/Healthcare/Agriculture/Financial/Technology; sector wording varies, same essence).
+• TI — Technological Innovation: impact on fostering technological innovation (Financial/Auto/Healthcare-adjacent).
+
+UTILITIES:
+• PS — Price Sensitivity: impact of engagements on addressing/mitigating pricing concerns.
+• TO — Transparency in Operations: effectiveness in promoting operational transparency.
+• ST — Stakeholder Trust: influence on building or restoring trust.
+
+GOVERNMENT & PUBLIC SECTOR:
+• SI — Service Improvement (Government): influence/contribution toward improving public services. [MODEL-SCOPED: in Retail, SI = Sustainability Initiatives — impact on advancing sustainability.]
+• CE — Community Engagement (Government/Nonprofit/Education): effectiveness in fostering active community engagement. [MODEL-SCOPED: Retail CE = Consumer Expectations — influence over shaping consumer expectations; Auto CE = Customer Engagement — maintaining customer loyalty/engagement.]
+• RA — Regulatory Alignment: role ensuring public services/initiatives align with regulation.
+• SDI — Service Delivery Innovation: potential for innovative approaches/technologies to enhance service delivery.
+
+HEALTHCARE & PHARMA:
+• MI — Medical Innovation: influence/contribution toward medical innovation.
+• PE — Patient Engagement: effectiveness in enhancing patient engagement and satisfaction.
+• HPR — Healthcare Provider Relationships: quality/strength of relationships with healthcare providers.
+
+NONPROFIT & SOCIAL IMPACT:
+• AE — Advocacy Effectiveness: ability to support or lead effective advocacy efforts. (CE, IM, FS as above — note FS = Funding Sustainability here.)
+
+BIG AGRICULTURE:
+• SAP — Sustainable Agricultural Practices: influence/contribution toward sustainable farming.
+• TA — Technological Adoption: impact on fostering adoption of advanced agricultural technologies.
+• MA — Market Access: role enabling/facilitating access to markets.
+
+AUTO MANUFACTURING:
+• EA — Electrification Acceleration: role in promoting/facilitating EV adoption and electrification.
+• SCS — Supply Chain Sustainability: influence on making the supply chain sustainable. (TI, CE as above — CE = Customer Engagement here.)
+
+RETAIL:
+• DC — Digital Commerce Adaptation: role supporting/driving adoption of digital commerce platforms. (CE = Consumer Expectations, SI = Sustainability Initiatives, I as above.)
+
+FINANCIAL:
+• CT — Customer Trust: impact on building/restoring customer trust. (RC, TI, I as above.)
+
+EDUCATION:
+• DT — Digital Transformation: influence/role in supporting digital transformation (digital learning tools).
+• IE — Inclusive Environment: impact on promoting diversity, equity, inclusion within the institution. (CE = Community Engagement, I as above.)
+
+TECHNOLOGY:
+• IS — Innovation Support: role in supporting/advancing the company's innovation.
+• MR — Market Readiness: ability to influence market readiness/acceptance of new offerings. (I, RC as above.)
+
+ENERGY:
+• LTSA — Long-Term Strategic Alignment: alignment with the org's long-term (sustainability) strategy.
+• ES — Environmental Stewardship: expectations/contributions toward environmental protection. (I as above, IC = Innovation Collaboration here.)
+
+Each factor's definition above is the source-of-truth tooltip/help text for that factor in the plan UI.` },
       { t: "Plan — every section, field, validation, review mode" },
       { t: "Community — every section, field, value score, votes, FY budget rollups" },
       { t: "Workspaces & Settings — fields, sub-panes, manager gating, propagation" },
