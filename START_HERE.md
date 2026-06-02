@@ -28,8 +28,8 @@ right way:** build the lossless single source of truth in the guide first, then 
 
 ## The job, in one sentence
 Capture the ENTIRE existing app as a **lossless spec written into the build guide on the
-.io** (`src/guide.jsx`), box by box — then rebuild the app fresh on MUI **from that
-capture**.
+.io** (`src/guide.jsx`), box by box — then rebuild the app fresh on Material Design 3
+(Material Web) **from that capture**.
 
 ## What "lossless" means (non-negotiable)
 Every field, value, rule, formula, and behavior is written out as **ACTUAL CONTENT, never a
@@ -52,31 +52,38 @@ load github.io**, so the **user is the eyes** — you push, they verify on the `
 
 ## Where the capture goes
 Into `src/guide.jsx`, as each checklist item's expandable detail (`d` field, rendered in an
-MUI `Accordion`). A box written only in chat does **not** count — it must render on the `.io`.
+an expandable detail). A box written only in chat does **not** count — it must render on the `.io`.
 After the user confirms a box, seal it by setting `done: true` on that item and committing.
 
 ## Organization (currently wrong — fix it)
 Organize by **DOMAIN**. Right now "Ecosystem" and "Relationship engine" are wrongly dumped
 under "Phase 0 · Assemble the foundation" — they are APP KNOWLEDGE and must move to a proper
-domain section. Phase 0 = SETUP ONLY (MUI install, theme tokens, fonts).
+domain section. Phase 0 = SETUP ONLY (Material Web install, MD3 :root tokens, fonts).
 
-## MUI-only (the build law)
-Every element is a **standard MUI component** or a composition of them, named explicitly with
-its variant (e.g. `Autocomplete` vs `Select`; `DataGrid` vs `Table`; `Button variant` vs
-`IconButton`) — use the **full library**, the right tool, never the bare minimum. **Changes
-are made with OTHER MUI components, never custom hacks.** Forbidden: `<span>`/`<div>` as UI,
-ad-hoc/inline styling, `!important`, stray/duplicated CSS, premature customization. Theming
-via `createTheme({ palette, typography, shape, components }) + ThemeProvider` — a **single
-source**; define a token once → every component inherits it; never style a component one-off.
+## Material Design 3 only (the build law)
+Every element is a **standard Material Design 3 component from Google's Material Web
+(`@material/web`)** or a composition of them, named explicitly with its variant (e.g.
+`md-outlined-select` + `md-select-option` vs `md-menu`; `md-filled-button` vs
+`md-outlined-button` vs `md-icon-button`) — use the **full kit**, the right tool, never the
+bare minimum. **NEVER MUI / `@mui/*` or any other third-party UI library.** MD3 ships no data
+grid and no chart, so the Lists table and the Map plot are **MD3-tokened compositions**
+(md-* primitives + semantic HTML + inline SVG), never a third-party table/chart lib. **Changes
+are made with OTHER MD3 components, never custom hacks.** Forbidden: MUI, `<span>`/`<div>` as UI,
+ad-hoc/inline styling, `!important`, stray/duplicated CSS, premature customization. Theming via
+**MD3 design tokens as CSS custom properties at `:root`** (`--md-sys-color-*`,
+`--md-sys-typescale-*`, `--md-ref-typeface-*`) — a **single source**; define a token once →
+every md-* element inherits it; never style a component one-off.
 
 ## Fonts & colors — ONLY what the user authorized
-- **Type: Inter only.** Do NOT introduce Newsreader, IBM Plex, or any font the user didn't
-  ask for. The old app's CSS used others; that does **not** authorize them. (The previous
-  session wrongly inserted IBM Plex/Newsreader — do not repeat that mistake.)
-- **Palette (theme tokens):** surfaces light→dark `#FFFFFF · #FEFDFC · #FCFBF9 · #F8F7F3 ·
-  #F4F3ED · #F0EEE6 · #E8E6DE`; ink `text.primary #666361 · text.secondary #ABA9A4 ·
-  text.disabled #DFDDD6`. Small, clean type; modest weights; airy-but-tight spacing;
-  readability/ease/pleasure first — clean like Claude.
+- **Type: Inter (body/UI) + Newsreader (titles) only.** Inter → `--md-ref-typeface-plain`;
+  Newsreader → `--md-ref-typeface-brand` (display/headline titles only). Do NOT introduce
+  IBM Plex Mono, Roboto, or any other family. (A previous session wrongly inserted IBM Plex
+  Mono — removed.)
+- **Palette (MD3 color tokens):** surfaces light→dark `#FFFFFF · #FEFDFC · #FCFBF9 · #F8F7F3 ·
+  #F4F3ED · #F0EEE6 · #E8E6DE` → `--md-sys-color-surface` + `surface-container*` ramp; ink
+  `--md-sys-color-on-surface #666361 · on-surface-variant #ABA9A4 · outline/outline-variant
+  #DFDDD6`. Small, clean type; modest weights; airy-but-tight spacing; readability/ease/
+  pleasure first — clean like Claude.
 
 ## Key files
 - `src/guide.jsx` — the `.io` build guide (where boxes go). `src/main.jsx` renders only it.
@@ -92,13 +99,15 @@ behavior written into the guide as actual content):
    no longer be read or imported. The rebuild is genuinely fresh-eyes.
 2. **You build FROM:** the **single source of truth** — the captured boxes in `src/guide.jsx`,
    plus the book and `APP_SPEC.md`. **Not** the old code.
-3. **You build WITH:** **MUI, only.** Standard Material Design components (the full library;
-   the exact component + variant named for each element) assembled into the app, themed by
-   **one MUI theme** (`createTheme`: `palette` = the grey/ink tokens above; `typography.fontFamily`
-   = **Inter**). No custom CSS, no non-MUI elements, no fonts beyond Inter.
+3. **You build WITH:** **Material Design 3 (Material Web `@material/web`), only.** Standard MD3
+   components (the full kit; the exact `md-*` element + variant named for each element; Lists
+   table + Map plot as MD3-tokened compositions since MD3 has no grid/chart) assembled into the
+   app, themed by **one MD3 token layer** at `:root` (`--md-sys-color-*` = the grey/ink tokens
+   above; `--md-ref-typeface-plain` = Inter, `--md-ref-typeface-brand` = Newsreader). No custom
+   CSS beyond the token+layout layer, no non-MD3 elements, no fonts beyond Inter + Newsreader.
 
 In one line: **research → lossless single source of truth in the guide → old code archived away
-→ rebuild the whole app from that capture, with MUI + the Inter/palette theme.**
+→ rebuild the whole app from that capture, with Material Design 3 + the Inter/Newsreader/palette tokens.**
 
 ## First actions in the new session
 1. Read this file + `CLAUDE.md` fully; skim `APP_SPEC.md`.
