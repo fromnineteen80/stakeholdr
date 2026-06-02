@@ -50,6 +50,13 @@ THEMING = single source, MD3 tokens as CSS custom properties, NOT per-component 
 
 PALETTE START-STATE mapped to MD3 color tokens: surfaces light→dark #FFFFFF · #FEFDFC · #FCFBF9 · #F8F7F3 · #F4F3ED · #F0EEE6 · #E8E6DE → --md-sys-color-surface and the --md-sys-color-surface-container(-low/-high/-highest) ramp + --md-sys-color-surface-dim/-bright; ink → --md-sys-color-on-surface #666361, --md-sys-color-on-surface-variant #ABA9A4, --md-sys-color-outline / outline-variant #DFDDD6. Small clean type, modest weights, no oversized headings; tight-but-airy spacing; readability/ease/pleasure are the bar.
 
+START-STATE DESIGN RULES (design intent — enforced via design tokens + components, NEVER hand-built CSS; toolkit-agnostic):
+• No shadows and no gradients, EVER — flat, solid surfaces only.
+• Links / nav items: no hover background and no current/active-page background change; show state via ink weight/color, not a background swap.
+• Sidebars are NEVER white — a surface one step darker than the main content.
+• Main content is ALWAYS white.
+• Input fields on a sidebar are lighter than the sidebar but NOT white, and use one of our palette colors.
+
 START-STATE DESIGN RULES (all enforced via MD3 tokens / component theming — NEVER custom hand-built CSS):
 • NO SHADOWS, NO GRADIENTS, EVER — elevation tokens set to none/flat; backgrounds are solid surface tokens only.
 • LINKS / NAV ITEMS — no hover background and no current/active-page background change. State is shown by ink weight/color, never by a background swap.
