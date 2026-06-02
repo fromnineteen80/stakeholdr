@@ -98,7 +98,13 @@ assistant committing `done:true` into the guide source. Build the control with M
 
 ## METHOD
 1. Read the relevant source.
-2. Write **one box, in order**, fully and losslessly (or the book's next prose chunk).
+2. Write **one box, in order**, fully and losslessly **INTO `src/guide.jsx`** as that
+   checkbox's expandable detail (the item's `d` field, rendered in an MUI `Accordion`),
+   then **commit + push so the `.io` SHOWS the longform.** A box written only in chat does
+   NOT count — the `.io` must never be bare bullet labels. PORT the already-written boxes
+   into the guide now: **Box 1 = the Material-Design-only law** (in this file) and **Box 2 =
+   the Type & Icon system** (in this file / chat). Then every remaining Phase-0 item and
+   every page/module box gets its own longform `d`. Hundreds of boxes, each with real detail.
 3. Declare it "entirely lossless." User confirms.
 4. Next box. Repeat until the whole app is captured. Then verify, then archive, then build.
 - The checklist lives in `src/guide.jsx` (a pure-MUI guidebook); the `.io` renders ONLY the
