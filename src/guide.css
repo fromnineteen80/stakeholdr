@@ -1,0 +1,165 @@
+/* guide.css — the MD3 token + layout layer for the .io build guide.
+   This is the sanctioned single source of design tokens (Box 1 / Box 2):
+   MD3 system color, typeface, and shape tokens set once at :root; every
+   Material Web (md-*) element inherits them. No per-component styling. */
+
+:root {
+  /* Typeface tokens — Inter (plain) + Newsreader (brand/titles) only */
+  --md-ref-typeface-plain: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --md-ref-typeface-brand: "Newsreader", "Source Serif Pro", "Charter", Georgia, serif;
+
+  /* Surface ramp (light -> dark) per the start-state palette */
+  --md-sys-color-surface: #FFFFFF;
+  --md-sys-color-surface-container-lowest: #FFFFFF;
+  --md-sys-color-surface-container-low: #FCFBF9;
+  --md-sys-color-surface-container: #F8F7F3;
+  --md-sys-color-surface-container-high: #F4F3ED;
+  --md-sys-color-surface-container-highest: #F0EEE6;
+  --md-sys-color-surface-dim: #F0EEE6;
+  --md-sys-color-surface-bright: #FFFFFF;
+  --md-sys-color-background: #FCFBF9;
+
+  /* Ink */
+  --md-sys-color-on-surface: #666361;
+  --md-sys-color-on-surface-variant: #ABA9A4;
+  --md-sys-color-on-background: #666361;
+  --md-sys-color-outline: #DFDDD6;
+  --md-sys-color-outline-variant: #E8E6DE;
+
+  /* Restrained primary/secondary (re-skinned later via Settings -> Design) */
+  --md-sys-color-primary: #666361;
+  --md-sys-color-on-primary: #FFFFFF;
+  --md-sys-color-secondary-container: #F0EEE6;
+  --md-sys-color-on-secondary-container: #666361;
+
+  color-scheme: light;
+}
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--md-ref-typeface-plain);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--md-sys-color-on-surface);
+  background: var(--md-sys-color-background);
+  -webkit-font-smoothing: antialiased;
+}
+
+md-icon { font-family: "Material Symbols Outlined"; }
+
+/* ---- App shell layout: top bar + left rail + main ---- */
+.gx-shell {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas: "bar bar" "rail main";
+  min-height: 100vh;
+}
+
+.gx-appbar {
+  grid-area: bar;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: var(--md-sys-color-surface-container);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+.gx-appbar-icon { color: var(--md-sys-color-on-surface); }
+.gx-appbar-title {
+  flex: 1;
+  margin: 0;
+  font-family: var(--md-ref-typeface-brand);
+  font-size: 19px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
+.gx-appbar-progress { position: absolute; left: 0; right: 0; bottom: 0; }
+
+.gx-rail {
+  grid-area: rail;
+  border-right: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container-low);
+  overflow: auto;
+}
+.gx-rail-item { --md-list-item-leading-space: 16px; cursor: pointer; }
+.gx-rail-item--active {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+.gx-main {
+  grid-area: main;
+  padding: 28px 32px 64px;
+  max-width: 1040px;
+  overflow: auto;
+}
+.gx-eyebrow {
+  margin: 0 0 2px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.gx-phase-title {
+  margin: 0 0 8px;
+  font-family: var(--md-ref-typeface-brand);
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
+.gx-phase-blurb { margin: 0 0 12px; color: var(--md-sys-color-on-surface-variant); max-width: 70ch; }
+.gx-phase-count { margin-bottom: 16px; }
+
+.gx-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  margin: 0 0 20px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  background: var(--md-sys-color-surface-container-low);
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 12.5px;
+}
+.gx-note-icon { font-size: 18px; color: var(--md-sys-color-on-surface-variant); }
+
+/* ---- Items ---- */
+.gx-items {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--md-sys-color-surface);
+}
+.gx-item { border-top: 1px solid var(--md-sys-color-outline-variant); }
+.gx-item:first-child { border-top: 0; }
+
+.gx-item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  list-style: none;
+}
+.gx-item-row::-webkit-details-marker { display: none; }
+.gx-item-title { flex: 1; color: var(--md-sys-color-on-surface); }
+.gx-item-expand {
+  color: var(--md-sys-color-on-surface-variant);
+  transition: transform .15s ease;
+}
+details[open] > .gx-item-row .gx-item-expand { transform: rotate(180deg); }
+
+.gx-item-detail {
+  padding: 4px 16px 18px 52px;
+  white-space: pre-line;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+.gx-item--flat { cursor: default; }

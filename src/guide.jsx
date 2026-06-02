@@ -1,21 +1,14 @@
 import { useState, useMemo } from 'react';
-import {
-  CssBaseline, Box, AppBar, Toolbar, Typography, Drawer, List, ListItemButton,
-  ListItemIcon, ListItemText, Checkbox, LinearProgress, Chip, Divider, Paper, Alert,
-  Accordion, AccordionSummary, AccordionDetails
-} from '@mui/material';
-import Inventory2Icon from '@mui/icons-material/Inventory2';
-import InventoryIcon from '@mui/icons-material/Inventory';
-import FoundationIcon from '@mui/icons-material/Foundation';
-import PaletteIcon from '@mui/icons-material/Palette';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import TableViewIcon from '@mui/icons-material/TableView';
-import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
-import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
-import DnsIcon from '@mui/icons-material/Dns';
-import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
-import ChecklistIcon from '@mui/icons-material/Checklist';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import './guide.css';
+// Material Design 3 — Google Material Web (@material/web). Zero MUI.
+import '@material/web/checkbox/checkbox.js';
+import '@material/web/list/list.js';
+import '@material/web/list/list-item.js';
+import '@material/web/icon/icon.js';
+import '@material/web/divider/divider.js';
+import '@material/web/chips/chip-set.js';
+import '@material/web/chips/assist-chip.js';
+import '@material/web/progress/linear-progress.js';
 
 // guide.jsx — Stakeholdr BUILD GUIDE.
 // 100% plug-and-play Material Design 3 (Material Web) — no hand-rolled spans, no custom
@@ -24,13 +17,12 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 // the inferred detail captured "as the Anthropic dev"; the user reviews on the
 // .io and we seal each handshake by committing the check (done:true) into source.
 
-const DRAWER = 360;
 const STORAGE = "stakeholdr_guide_checks_v1";
 
 // d: optional inferred detail rendered in an expandable panel under the item.
 const PHASES = [
   {
-    id: "p0", Icon: Inventory2Icon, label: "Foundation · setup only",
+    id: "p0", icon: "inventory_2", label: "Foundation · setup only",
     blurb: "The build laws and tooling that must exist before anything is rebuilt — the component kit, the type/icon system, and the meta docs. SETUP ONLY; all app knowledge lives in the Capture section below.",
     items: [
       { t: "Material Design 3 (Material Web) is the ONLY component kit — the law for every element", done: true, d:
@@ -75,7 +67,7 @@ ICON VOCABULARY (semantic name → Material Symbols ligature, verbatim — prese
     ]
   },
   {
-    id: "cap", Icon: ChecklistIcon, label: "Capture · App knowledge (lossless SSOT)",
+    id: "cap", icon: "checklist", label: "Capture · App knowledge (lossless SSOT)",
     blurb: "The lossless single source of truth — the entire existing app captured by DOMAIN as actual content, never labels. Each box expands to its full longform detail; we rebuild the app FROM these boxes once verified complete.",
     items: [
       { t: "Ecosystem — how it all connects (expand to read the full capture)", d:
@@ -212,7 +204,7 @@ MD3 BUILD MAP (Material Web — MD3 ships NO chart component, so the plot is han
     ]
   },
   {
-    id: "p1", Icon: InventoryIcon, label: "Archive the old .io",
+    id: "p1", icon: "inventory", label: "Archive the old .io",
     blurb: "Bundle every legacy page/feature module into a parked folder excluded from the build, so nothing can interact with what we build on main. Nothing is deleted — it's parked for reference. CONFIRM before moving.",
     items: [
       { t: "Confirm the foundation (Phase 0) is complete with the user" },
@@ -223,7 +215,7 @@ MD3 BUILD MAP (Material Web — MD3 ships NO chart component, so the plot is han
     ]
   },
   {
-    id: "p2", Icon: FoundationIcon, label: "2 · Material foundation & theme",
+    id: "p2", icon: "foundation", label: "2 · Material foundation & theme",
     blurb: "Stand up the neutral, token-driven MD3 theme everything renders through. Design is a layer, not baked in.",
     items: [
       { t: "MD3 :root design tokens (--md-sys-color-* / --md-sys-typescale-* / --md-ref-typeface-*) so the Design page can re-skin live" },
@@ -233,7 +225,7 @@ MD3 BUILD MAP (Material Web — MD3 ships NO chart component, so the plot is han
     ]
   },
   {
-    id: "p4", Icon: DashboardIcon, label: "App shell",
+    id: "p4", icon: "dashboard", label: "App shell",
     blurb: "The frame every page lives in — standard Material components only. Built before the Design page, because you can't re-skin a shell that doesn't exist yet.",
     items: [
       { t: "Brand bar / AppBar (icon + name + workspace selector + people + profile)" },
@@ -243,7 +235,7 @@ MD3 BUILD MAP (Material Web — MD3 ships NO chart component, so the plot is han
     ]
   },
   {
-    id: "p3", Icon: PaletteIcon, label: "Settings → Design page",
+    id: "p3", icon: "palette", label: "Settings → Design page",
     blurb: "The page that controls every design token live, with subtext describing the Claude endgame. This is how the look comes back without vibing — and it comes after the shell exists to re-skin.",
     items: [
       { t: "Design controls (MD3 / Material Web) for color tokens, type scale, density, radius, surfaces" },
@@ -253,7 +245,7 @@ MD3 BUILD MAP (Material Web — MD3 ships NO chart component, so the plot is han
     ]
   },
   {
-    id: "p5", Icon: TableViewIcon, label: "5 · Pages (in order)",
+    id: "p5", icon: "table_view", label: "5 · Pages (in order)",
     blurb: "Rebuild each page from standard MD3 (Material Web) components, strictly to its spec. Confirm each before the next.",
     items: [
       { t: "Lists / workspace table (every column + edit mode per TABLE_COLUMNS)" },
@@ -269,7 +261,7 @@ MD3 BUILD MAP (Material Web — MD3 ships NO chart component, so the plot is han
     ]
   },
   {
-    id: "p6", Icon: ViewSidebarIcon, label: "6 · Record scaffold & workHQ",
+    id: "p6", icon: "view_sidebar", label: "6 · Record scaffold & workHQ",
     blurb: "The universal read/edit shell all record types pour through, and the workspace intelligence strip.",
     items: [
       { t: "RecordShell on Material (sub-page nav · content · metadata · footer; read↔edit parity)" },
@@ -280,7 +272,7 @@ MD3 BUILD MAP (Material Web — MD3 ships NO chart component, so the plot is han
     ]
   },
   {
-    id: "p7", Icon: RocketLaunchIcon, label: "7 · Demo features (client-side)",
+    id: "p7", icon: "rocket_launch", label: "7 · Demo features (client-side)",
     blurb: "Everything buildable now without a backend.",
     items: [
       { t: "Import offline stakeholder lists (CSV/Excel → column-map → preview → commit)" },
@@ -292,7 +284,7 @@ MD3 BUILD MAP (Material Web — MD3 ships NO chart component, so the plot is han
     ]
   },
   {
-    id: "p8", Icon: DnsIcon, label: "8 · Backend (Supabase)",
+    id: "p8", icon: "dns", label: "8 · Backend (Supabase)",
     blurb: "Multi-user, real-time, secure — the transport swap inside store.js plus the required fixes.",
     items: [
       { t: "Row-level writes (per-row upsert/delete; replace whole-array last-write-wins)" },
@@ -304,7 +296,7 @@ MD3 BUILD MAP (Material Web — MD3 ships NO chart component, so the plot is han
     ]
   },
   {
-    id: "p9", Icon: WorkspacePremiumIcon, label: "9 · Paid add-ons",
+    id: "p9", icon: "workspace_premium", label: "9 · Paid add-ons",
     blurb: "The monetized layer, gated.",
     items: [
       { t: "Personas (persona modeling from polling/listening)" },
@@ -335,69 +327,78 @@ export function Guide() {
   const phaseDone = phase.items.filter((_, i) => checks[phase.id + "-" + i]).length;
 
   return (
-    <Box sx={{ display: "flex" }}>
-      <CssBaseline />
-      <AppBar position="fixed" sx={{ zIndex: (t) => t.zIndex.drawer + 1 }}>
-        <Toolbar>
-          <ChecklistIcon sx={{ mr: 1.5 }} />
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>Stakeholdr — Build Guide</Typography>
-          <Chip label={`${doneCount}/${allIds.length} · ${pct}%`} color={pct === 100 ? "success" : "default"} />
-        </Toolbar>
-        <LinearProgress variant="determinate" value={pct} />
-      </AppBar>
+    <div className="gx-shell">
+      <header className="gx-appbar">
+        <md-icon class="gx-appbar-icon">checklist</md-icon>
+        <h1 className="gx-appbar-title">Stakeholdr — Build Guide</h1>
+        <md-assist-chip label={`${doneCount}/${allIds.length} · ${pct}%`}></md-assist-chip>
+        <md-linear-progress class="gx-appbar-progress" value={pct / 100}></md-linear-progress>
+      </header>
 
-      <Drawer variant="permanent" sx={{ width: DRAWER, flexShrink: 0, [`& .MuiDrawer-paper`]: { width: DRAWER, boxSizing: "border-box" } }}>
-        <Toolbar />
-        <Box sx={{ overflow: "auto" }}>
-          <List>
-            {PHASES.map(p => {
-              const total = p.items.length;
-              const done = p.items.filter((_, i) => checks[p.id + "-" + i]).length;
-              const PhaseIcon = p.Icon;
-              return (
-                <ListItemButton key={p.id} selected={p.id === active} onClick={() => setActive(p.id)}>
-                  <ListItemIcon><PhaseIcon color={p.id === active ? "primary" : "action"} /></ListItemIcon>
-                  <ListItemText primary={p.label} secondary={`${done}/${total} complete`} />
-                </ListItemButton>
-              );
-            })}
-          </List>
-        </Box>
-      </Drawer>
+      <nav className="gx-rail" aria-label="Phases">
+        <md-list>
+          {PHASES.map(p => {
+            const total = p.items.length;
+            const done = p.items.filter((_, i) => checks[p.id + "-" + i]).length;
+            return (
+              <md-list-item
+                key={p.id}
+                type="button"
+                class={"gx-rail-item" + (p.id === active ? " gx-rail-item--active" : "")}
+                onClick={() => setActive(p.id)}
+              >
+                <md-icon slot="start">{p.icon}</md-icon>
+                {p.label}
+                <span slot="supporting-text">{done}/{total} complete</span>
+              </md-list-item>
+            );
+          })}
+        </md-list>
+      </nav>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-        <Toolbar />
-        <Typography variant="overline" color="text.secondary">Phase</Typography>
-        <Typography variant="h5" gutterBottom>{phase.label}</Typography>
-        <Typography color="text.secondary" paragraph>{phase.blurb}</Typography>
-        <Chip variant="outlined" label={`${phaseDone}/${phase.items.length} in this phase`} sx={{ mb: 2 }} />
-        <Alert severity="info" sx={{ mb: 2 }}>We confirm every item together before checking it off and before moving to the next phase.</Alert>
-        <Paper variant="outlined">
-          <List disablePadding>
-            {phase.items.map((it, i) => {
-              const id = phase.id + "-" + i;
-              const on = !!checks[id];
-              const head = (
-                <ListItemButton onClick={() => toggle(id)}>
-                  <ListItemIcon><Checkbox edge="start" checked={on} tabIndex={-1} disableRipple /></ListItemIcon>
-                  <ListItemText primary={it.t} />
-                </ListItemButton>
-              );
+      <main className="gx-main">
+        <p className="gx-eyebrow">Phase</p>
+        <h2 className="gx-phase-title">{phase.label}</h2>
+        <p className="gx-phase-blurb">{phase.blurb}</p>
+        <md-assist-chip class="gx-phase-count" label={`${phaseDone}/${phase.items.length} in this phase`}></md-assist-chip>
+        <div className="gx-note" role="note">
+          <md-icon class="gx-note-icon">info</md-icon>
+          <span>We confirm every item together before checking it off and before moving to the next phase.</span>
+        </div>
+
+        <section className="gx-items">
+          {phase.items.map((it, i) => {
+            const id = phase.id + "-" + i;
+            const on = !!checks[id];
+            const check = (
+              <md-checkbox
+                class="gx-check"
+                checked={on || undefined}
+                aria-label={on ? "Done" : "Not done"}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(id); }}
+              ></md-checkbox>
+            );
+            if (it.d) {
               return (
-                <Box key={id}>
-                  {i > 0 && <Divider component="li" />}
-                  {it.d ? (
-                    <Accordion disableGutters elevation={0} square>
-                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>{head}</AccordionSummary>
-                      <AccordionDetails><Typography variant="body2" color="text.secondary" sx={{ pl: 7, pb: 1, whiteSpace: "pre-line" }}>{it.d}</Typography></AccordionDetails>
-                    </Accordion>
-                  ) : head}
-                </Box>
+                <details className="gx-item" key={id}>
+                  <summary className="gx-item-row">
+                    {check}
+                    <span className="gx-item-title">{it.t}</span>
+                    <md-icon className="gx-item-expand">expand_more</md-icon>
+                  </summary>
+                  <div className="gx-item-detail">{it.d}</div>
+                </details>
               );
-            })}
-          </List>
-        </Paper>
-      </Box>
-    </Box>
+            }
+            return (
+              <label className="gx-item gx-item-row gx-item--flat" key={id}>
+                {check}
+                <span className="gx-item-title">{it.t}</span>
+              </label>
+            );
+          })}
+        </section>
+      </main>
+    </div>
   );
 }
