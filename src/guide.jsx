@@ -120,7 +120,32 @@ THE 14 ZONES — cells (x / y) · tone · color / text / border · STRATEGY → 
 14 Strategic Partner — {x≥5, y>5} · positive · #74B556 / #FFF / #1f3f17 · Shared Value Created → Formalize a working relationship/partnership to produce and measure shared value; grows the business, increases reputation, produces solutions.
 
 STATUS_ORDER (spectrum, most-negative→positive): Proactively Defend · Defend · Protect · Respond · Identify · Monitor · Maintain · Connect · Commit · Cooperate · Collaborate · Valuable Relationship · High Value Relationship · Strategic Partner.` },
-      { t: "Scoring & weighting — grid layout, edit-only-your-column, weightedCoord, score outcomes" },
+      { t: "Scoring & weighting — the team matrix, edit-only-your-column, weighted position", d:
+`WHAT IT IS — the Scoring page is a MATRIX where the team collectively rates each stakeholder, and those ratings blend into the single position that drives the Map, the Lists table, and every profile. Rows = stakeholders (one per stakeholder in the active workspace). Columns = team members (one per teammate on this workspace), followed by two computed columns: "Weighted (x, y)" and "Relationship".
+
+THE CELL — each cell is one teammate's rating of one stakeholder: a pair (x, y), each an INTEGER from -10 to 10. x = alignment/support (negative = opposed, positive = supportive); y = influence/importance (negative = low, positive = high). These are the two axes the Relationship engine reads.
+
+EDIT-ONLY-YOUR-COLUMN — a teammate may edit ONLY their own column (the column whose teammate is the logged-in user). Every other column is READ-ONLY. This is deliberate: a position is a blend of independent judgments, so you never overwrite a colleague's read on a stakeholder. Your column is visually distinguished as "mine".
+• Your editable cell: two numeric inputs labelled x and y — MUI TextField type="number", size small, inputProps {min:-10, max:10, step:1}, each with +/- stepper IconButtons (ExpandLess/ExpandMore) that increment/decrement by 1 and CLAMP to [-10,10]. Clamp rule: a non-numeric entry becomes 0; anything out of range snaps to the nearest bound.
+• A read-only (teammate) cell: shows their x and y values as static text (Typography), with a Tooltip "{teammate name}'s score".
+• UNSCORED ≠ (0,0): a cell a teammate has never scored renders EMPTY (an em-dash "—" placeholder), NOT a fake 0/0, and is EXCLUDED from the weighted average. A real 0,0 is stored only when that teammate deliberately enters it. (Correction from the old build, which showed unscored cells as 0/0 and made "no opinion" indistinguishable from "dead-centre".)
+
+SCORE RECORD (persisted shape) — scores[stakeholderId][teamMemberId] = { x, y, createdAt, updatedAt }. createdAt is stamped on the FIRST score for that cell; updatedAt is restamped on EVERY change. Stored in the synced "scores" table. Removing a teammate deletes that teammate's entry from every stakeholder's row (their column of scores is purged).
+
+THE TEAM BAR (top of page) — one Card per teammate, in this order: (1) the logged-in user first, (2) then workspace owners in their listed order, (3) then everyone else in original order. Each card shows: Avatar + name + title; a WEIGHT control; a derived "% of team" readout.
+• WEIGHT — MUI Slider, min 0.1, max 2.0, step 0.1, baseline 1.0 marked with a tick (Slider marks at 1.0). Value displayed as "1.0x" (mono). Weight 0 is DISALLOWED — every teammate on the workspace counts for something; to exclude someone, remove them rather than zero them (correction from the old build, where weight 0 silently nullified a rater while leaving them on the team).
+• % OF TEAM — that teammate's weight / sum of all weights, shown as a percentage (Chip or Typography). Recomputes live as any weight changes.
+• REMOVE (x) — IconButton (CloseIcon). GATED: only a manager OR a workspace owner may remove or hand off a teammate; for a plain member the control is hidden/disabled. (Correction: the old build had this gate torn out, leaving removal open to anyone.)
+
+ADD A TEAMMATE — a Dialog with an Autocomplete listing users NOT already on the team and excluding the system bot ("Reminders"); a chosen user is added at weight 1.0 (baseline). Duplicate adds are guarded (a user already on the team is skipped). Also reachable from the context-aware create (+) when the active page is Scoring.
+
+LAST-TEAMMATE GUARD — a workspace cannot have zero teammates. Attempting to remove the final teammate opens a Dialog that forces a choice: HAND OFF to a replacement teammate (Select of eligible users) — which adds the replacement then removes the last member — OR DELETE THE WORKSPACE entirely (destructive Button). No path leaves a workspace teamless.
+
+THE MATH — weightedCoord(stakeholderId, scores, team): for each teammate who HAS scored this stakeholder and whose weight > 0, accumulate sx += x*weight, sy += y*weight, totalW += weight; result = { x: sx/totalW, y: sy/totalW }. Teammates with no score for this stakeholder are skipped; weight <= 0 is skipped (and with the 0.1 floor, can't normally occur). If totalW is 0 (nobody has scored), the position is { x: 0, y: 0 }. The "Weighted (x, y)" column renders each axis to ONE decimal, colored positive/negative; "Relationship" runs statusFor(x,y) and shows the resulting zone as a StatusPill (rebuilt as an MUI Chip themed by the zone's color/text from STATUSES).
+
+SCOPING — Scoring is a PER-WORKSPACE collaboration act and is DISABLED on Master: if the active workspace is Master, the Scoring nav item is hidden, and navigating to Scoring on Master redirects to the Map. (Master is the read-only org-wide union; you score within a workspace, not across the whole org.)
+
+MUI BUILD MAP — matrix: DataGrid (sticky first "Stakeholder" column, virtualized rows, custom cell renderers for editable vs read-only) or a composed Table for the simpler case; editable x/y cell: two TextField type="number" small + stepper IconButtons; weight: Slider (marks, min 0.1/max 2.0/step 0.1); % of team: Chip; teammate card: Card + Avatar + Typography + IconButton; add-teammate: Dialog + Autocomplete; last-teammate: Dialog + Select + destructive Button; relationship: Chip (zone-themed). Stakeholder name cell is a clickable link (ButtonBase) opening that stakeholder's profile.` },
       { t: "Lists table — every column: source field · edit mechanism (inline/modal/computed) · MUI component" },
       { t: "SEP algorithm — base signals, factor→signal map, sector/goal models, bands, manager override" },
       { t: "Plan — every section, field, validation, review mode" },
