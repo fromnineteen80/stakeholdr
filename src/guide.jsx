@@ -191,7 +191,37 @@ MD3 BUILD MAP (Material Web — MD3 ships NO chart component, so the plot is han
 • Scorecard (right rail): a tokened surface-container side panel (md-list/md-list-item rows); status as md-assist-chip (zone-tokened); issues/tags as md-chip-set chips; owners as overlapping avatars; "Show history" as an md-filter-chip or md-text-button toggle; collapse/expand via md-icon-button (chevron_right/chevron_left). Empty state lists six recent stakeholders as md-text-buttons.
 • Display options (mapStyle/showLabels/showZoneLabels/dotSize) come from the Settings/Design controls, read as props — never ad-hoc.
 • Selection state lifts to the page so Scoring/Lists/Map share the selected stakeholder.` },
-      { t: "Lists table — every column: source field · edit mechanism (inline/modal/computed) · MD3 component" },
+      { t: "Lists table — the master stakeholder table (columns · edit mechanism · MD3 composition)", d:
+`WHAT IT IS — the Lists page is the MASTER STAKEHOLDER TABLE: the app's primary data surface (a spreadsheet), NOT an MD3 list-detail layout. The SAME table component renders Master (all stakeholders) and each workspace (rows filtered to that workspace via the stakeholderWorkspaces join), and is EMBEDDED elsewhere (record pages). Rows = the workspace-scoped visibleStakeholders; each row computes, live, _x/_y = weightedCoord, _status = statusFor(_x,_y), and _unscored = (team has members AND no team member has scored this stakeholder).
+
+COLUMNS — two groups.
+FROZEN (sticky-left, not reorderable, in order): (1) idx — 1-based row number; (2) edit — an icon button opening the full stakeholder record (person icon if isPerson, else org/group icon); (3) Stakeholder — displayName (read-only here; double-click opens the record); (4) Organization — INLINE editable text; for an org (not a person) editing it mirrors into name too, for a person name is left untouched.
+REORDERABLE (drag to reorder; order persisted PER USER in localStorage key hp_map_col_order_v3 — per-device, not synced; unknown keys dropped, new keys appended): Category · Type · Market · Region · Geography · State/Prov. · Sites · Issues · Priority · x · y · Relationship · Tags · Owner · Email · Phone · X account · Last contact · Status · Notes · Website · Community investment.
+
+EDIT MECHANISM per column —
+• INLINE dropdown (select): Category, Type, Market, Region, Geography, State, Site, Status. CASCADES: changing Category resets Type to the new category's first type; changing Market resets Region to the market's first region; choosing a Site that has a state fills State. Status options: Active/Watch/Dormant.
+• INLINE text: Organization. INLINE date: Last contact (a calendar picker; stores YYYY-MM-DD).
+• CLICK-TO-MODAL: Notes — the cell shows a preview; clicking opens the Notes modal which appends an entry to notesHistory ({id, body, at, by}) and updates the notes field.
+• DISPLAY-ONLY in the grid (edited via the full record modal): Issues (tag chips), Tags (chips), Priority (High/Med/Low pill), Owner (owner avatars), Community investment (affiliatedCommunity pills), Email (mailto link), Phone (tel link, formatted), X account (x.com link), Website ("Visit Website" link). COMPUTED read-only: x and y (to 1 decimal, tone-colored: >1 positive, <-1 negative), Relationship (the zone pill).
+
+TOOLBAR (above the table) — Search (matches displayName/name/org/type/notes/tags); Filter popover (Type, Priority, Status, Owners, Issues, Zone — OR within a field, AND across fields; option lists auto-aggregated from the rows so only values present appear); Sort popover (sortable field list + direction, with custom orderings: name=displayName, priority High>Med>Low, status Active>Watch>Dormant, site=site label); Categories multi-select; Sites multi-select; and three IMPACT-BAND chips — Positive impact / Winnable middle / Negative impact — each showing a live count AND acting as a band filter (bands group the 14 zones: positive = Cooperate..Strategic Partner; middle = Monitor/Maintain/Connect/Commit; negative = Proactively Defend..Identify).
+
+SORT DEFAULT (no explicit sort) — unscored stakeholders FIRST, then by most-recent lastContact (descending).
+
+FOOTER — "{filtered} of {total} stakeholders"; Avg x and Avg y over the filtered rows (1 decimal); Export CSV (a fixed column set — Stakeholder, Organization, Category, Type, Market, Region, Geography, Issues, Priority, Tags, Owners(resolved to names), Last contact, Status, x, y, Relationship, Website, Notes — with proper quote/comma/newline escaping; filename from the workspace label).
+
+INTERACTIONS — clicking a row selects it (selection lifts to the page; shared with Map/Scoring); double-clicking the name (or the edit icon) opens the full record; the notes cell opens the Notes modal. Horizontal scroll with a left-edge shadow once scrolled; frozen columns auto-size to content and their sticky offsets are measured after layout so they stack deterministically.
+
+MD3 BUILD MAP (Material Web — MD3 has NO data grid AND NO date picker, so this is a sanctioned MD3-tokened composition; verified against the Material Web component set).
+• Table structure: a semantic <table> (or CSS grid) styled SOLELY with MD3 surface/outline tokens; frozen columns via position:sticky left with measured offsets; the whole table horizontally scrollable. No third-party grid, no MUI.
+• Dropdown cells (Category/Type/Market/Region/Geography/State/Site/Status): md-outlined-select + md-select-option (intrinsic-width so columns autofit).
+• Text cell (Organization): md-outlined-text-field (no label, dense).
+• Date cell (Last contact): a tokened calendar composition opened from an md-icon-button/field inside an md-menu — MD3 ships no date picker, so this is composed from md-* + tokens (same sanctioned exception as the table).
+• Relationship / Priority: md-assist-chip (zone- or priority-tokened via the single-sourced --zone-* / priority custom properties — no inline literals). Issues/Tags/Community: md-chip-set + md-assist-chip. Owners: overlapping avatars. Email/Phone/X/Website: semantic anchors.
+• Edit icon + reorder grips: md-icon-button (person/groups, drag_indicator). Column reorder = pointer-DnD composition (MD3 has no DnD).
+• Toolbar: search = md-outlined-text-field with a leading search md-icon; Filter/Sort/Categories/Sites = md-outlined-button (or md-icon-button) opening an md-menu of md-menu-items with md-checkboxes for multi-select (or an md-dialog for the richer multi-field filter panel); impact bands = md-filter-chip set (selected = active filter).
+• Footer: MD3 label/body text + an Export CSV md-text-button (download md-icon). Computed x/y tone via on-surface vs error/positive tokens.
+• Selection/edit/notes state lifts to the page; the Notes modal and the full record open via md-dialog (record modal captured with the Record scaffold box).` },
       { t: "SEP algorithm — base signals, factor→signal map, sector/goal models, bands, manager override" },
       { t: "Plan — every section, field, validation, review mode" },
       { t: "Community — every section, field, value score, votes, FY budget rollups" },
