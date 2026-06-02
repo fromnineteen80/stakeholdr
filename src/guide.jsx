@@ -257,7 +257,7 @@ MD3 BUILD MAP (the table is a Material Web HOLE → Angular Material; cell contr
 • Toolbar: search = md-outlined-text-field with a leading search md-icon; Filter/Sort/Categories/Sites = md-outlined-button (or md-icon-button) opening an md-menu of md-menu-items with md-checkboxes for multi-select (or an md-dialog for the richer multi-field filter panel); impact bands = md-filter-chip set (selected = active filter).
 • Footer: MD3 label/body text + an Export CSV md-text-button (download md-icon). Computed x/y tone via on-surface vs error/positive tokens.
 • Selection/edit/notes state lifts to the page; the Notes modal and the full record open via md-dialog (record modal captured with the Record scaffold box).` },
-      { t: "Plan algorithm — sector/type model catalog, plan selection, workspace→plan stakeholder flow", d:
+      { t: "Plan algorithm — sector/type model catalog, plan selection, workspace→plan stakeholder flow", done: true, d:
 `SCOPE — this captures the PLAN ALGORITHM and how stakeholders flow into a plan. It is APP KNOWLEDGE, not the full plan-page element spec (sections/fields/validation come later, when we build the plan + stakeholder pages). The algorithm is NOT the plan: the algorithm tells you WHICH plan it is, and that classification dictates some CUSTOM parts of the plan page built later.
 
 THE ALGORITHM CATALOG (AUTHORITATIVE — from the "Stakeholder Engagement Modeling" doc; these supersede the simplified versions that were in data.js). Each model is a plan-algorithm formula: a weighted blend of 4 FACTORS summing to 1.0, scored 0–1 per factor. The models are "building blocks for customizable persona modeling," meant to be enriched by other data sets, surveys, ongoing stakeholder feedback, and polling (ties to the Personas / polling add-ons).
@@ -301,7 +301,7 @@ HOW STAKEHOLDERS ENTER A PLAN (the flow):
 THE RELATIONSHIP → ALGORITHM ALIGNMENT — DESIGNED (see the "Relationship recommendation alignment" box): each stakeholder's scored relationship + issues + community ties + category-affinity produce a "Plan Fit" BAND (High/Med/Low) + reason + the relationship's prescribed MOVE, weighted by the picked plan algorithm. It is advisory, transparent, overridable, and NEVER the source of a stakeholder's manual Priority. (The old code's per-stakeholder 0–100 attempt is superseded by that designed model.)
 
 UI ELEMENTS NEEDED (kind only — components built later): plan setup PICKS the algorithm via two selectors (industry sector + plan type, with the basic default preselected); the plan's stakeholder list is ORDERED by existing Priority (high first) and shows each stakeholder's Priority + Relationship (already-captured pills); ADD controls for "from this workspace", "from Master", and "create new"; (later) a recommendation/alignment surface once that step is defined. No hand-built CSS — these come from the universal component system built after the full spec.` },
-      { t: "Plan algorithm — FACTOR KEY (every abbreviation defined; the only build reference)", d:
+      { t: "Plan algorithm — FACTOR KEY (every abbreviation defined; the only build reference)", done: true, d:
 `Every plan-algorithm factor used by the model catalog, with its definition. Factor keys are MODEL-SCOPED — where one abbreviation has different meanings, each is listed. Each factor is scored 0–1 for a stakeholder, then blended by the model's weights.
 
 CORE / GENERAL & CRISIS:
@@ -391,7 +391,7 @@ ENERGY:
 • ES — Environmental Stewardship: expectations/contributions toward environmental protection. (I as above, IC = Innovation Collaboration here.)
 
 Each factor's definition above is the source-of-truth tooltip/help text for that factor in the plan UI.` },
-      { t: "Relationship recommendation alignment — how a stakeholder maps to the plan algorithm (designed)", d:
+      { t: "Relationship recommendation alignment — how a stakeholder maps to the plan algorithm (designed)", done: true, d:
 `THE PROBLEM (the piece that was "not yet aligned") — inside a plan, after the manually-prioritized stakeholders, we must surface the stakeholders whose RELATIONSHIP best fits the picked plan algorithm, each with a recommended move. Designed here as equal parts engineer and public-affairs veteran. HONESTY FIRST: we have NO real per-factor data per stakeholder (no measured "Price Sensitivity" etc.), and we will NOT fake one. We design only on signals the app genuinely holds.
 
 WHAT WE ACTUALLY HAVE PER STAKEHOLDER: the scored RELATIONSHIP position (x = support/alignment -10..10, y = influence/importance -10..10) → a ZONE (one of 14, each with a strategy + action); the manual PRIORITY (High/Med/Low); the stakeholder's ISSUES; CATEGORY/TYPE; and COMMUNITY TIES. The plan picks a SECTOR + PLAN-TYPE algorithm (4 weighted factors each).
@@ -406,7 +406,7 @@ THE MOVE = the relationship ZONE's strategy + action (already defined in the 14-
 ORDERING in plan element 6: (1) manual PRIORITY first (High→Low) — never overridden by Fit; (2) then the algorithm-aligned recommendations by FIT band (High→Low). The team may still freely add anyone (workspace / Master / new) regardless of Fit.
 
 WHY THIS IS THE HONEST SUCCESSOR TO THE OLD per-stakeholder scoring attempt — same observable inputs (it too reduced everything to ~7 signals), but: (a) the factor→signal mapping is DISCLOSED, not hidden; (b) output is a FIT BAND + plain reason, not an arbitrary 0–100; (c) it is anchored in the relationship's prescribed MOVE (the actual PA substance), not a lone number; (d) it adds CATEGORY AFFINITY, which is how a real public-affairs strategist actually triages by plan type; (e) it is advisory, overridable, and never overrides manual Priority; (f) it is never called SEP. LATER, polling/personas (premium) can sharpen these signals; until then Fit runs on relationship + issues + community + category affinity.` },
-      { t: "Plan page — plan elements, fields, exists/fix/create (blends the example + the old code)", d:
+      { t: "Plan page — plan elements, fields, exists/fix/create (blends the example + the old code)", done: true, d:
 `WHAT IT IS — a Plan is a structured engagement document scoped to ONE workspace, produced after the team PICKS a plan algorithm (industry sector + plan type; basic default). Surfaces: a LANDING grid of the workspace's plans, plus record.plan.view and record.plan.edit.
 
 LAYOUT (record.plan) — a LEFT SIDEBAR lists the PLAN ELEMENTS by NAME (no numbers shown). Selecting an element opens its MAIN CONTENT, which is broken into SECTIONS holding that element's decisions, collaboration, content creation, and fields. Elements behave like SUB-PAGES; together they build a single plan you can ARCHIVE, revisit, and EXPORT as one Word file. TERMINOLOGY: the numbered items below are PLAN ELEMENTS; "sections" = the sub-divisions of an element's main content.
@@ -441,7 +441,7 @@ EXPORT / ARCHIVE — the completed plan exports to a SINGLE Word file and can be
 UI KIND (components built later, NO hand-built CSS): landing = a list/table of plans with type chip + tactic count; record.plan = the universal record shell — left sidebar of element NAMES (sub-page nav) + a main content area whose sections hold text fields, per-goal note fields, a strategy builder (strategies → optional tactics with an assignee picker [teammate, partner stakeholder, or consultant] and/or phases with timeframes), sponsor/consultant row editors, a priority-ordered stakeholder table with light Involvement/Risk/Opportunity inputs, a key-messages list, a feedback composer, locked add-on panels for Polling/Personas; review = read-only rendering; plus a Word export. Exact components come from the universal kit after the full spec.
 
 SCOPE — app-knowledge for the plan page; precise validation and the final recommendation-alignment formula are refined when we build it. Items marked "(confirm)" are example-derived and await your confirmation.` },
-      { t: "Stakeholder Plan — worked-example reference (structure to preserve from the doc)", d:
+      { t: "Stakeholder Plan — worked-example reference (structure to preserve from the doc)", done: true, d:
 `Reusable STRUCTURE pulled from the doc's worked example (Gold Coast Refinery), captured so it survives without the PDF. This is element SKELETON, not the illustrative narrative.
 
 POLLING (premium element 8) — a stakeholder survey: a set of QUESTIONS posed to N recipients, then RESULTS as insight bullets. Starter question template (generalize per plan): awareness of the issue/mandate and its implications; primary concerns (e.g. pollution/safety/health); support for the proposed approach/alternative; expected impact (e.g. on prices/jobs); extent of support for the org's compliance/initiative; willingness to support local initiatives; views on jobs/economic impact; credibility of the org's information; interest in participating in stakeholder meetings. RESULTS = themed findings (splits, demographic skews, top concerns, anxieties by group).
