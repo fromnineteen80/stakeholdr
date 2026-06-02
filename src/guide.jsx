@@ -40,7 +40,7 @@ THE KIT (verbatim): Google Material Web (@material/web), the official MD3 web-co
 
 USE THE FULL KIT (never bare-minimum) — name the specific md-* element + variant for each element: buttons md-filled-button / md-outlined-button / md-text-button / md-elevated-button / md-filled-tonal-button, md-icon-button, md-fab; selection md-outlined-select|md-filled-select + md-select-option (short fixed sets), md-menu + md-menu-item (action menus), md-checkbox, md-radio, md-switch, md-slider; chips md-chip-set + md-assist/filter/input/suggestion-chip; inputs md-outlined-text-field / md-filled-text-field; structure md-dialog, md-list + md-list-item, md-tabs + md-primary-tab/md-secondary-tab, md-divider, md-elevation, md-linear-progress / md-circular-progress; md-icon for icons; md-ripple / md-focus-ring for interaction states.
 
-NO DATA TABLE, NO CHART IN MD3 — Material Web deliberately ships neither a data grid nor a chart. The Lists table and the Map plot are therefore COMPOSED from MD3 primitives (md-list, md-outlined-select, md-icon-button, md-chip, etc.) plus semantic HTML for tabular structure and inline SVG for the plot, styled SOLELY with MD3 design tokens — never a third-party table/chart library, never MUI. This is the single sanctioned place we compose beyond stock components, and it stays 100% MD3-tokened.
+HOLES — Material Web ships no data grid and no chart. The DATA TABLE (Lists) is built with ANGULAR MATERIAL (mat-table + Angular CDK), themed to the MD3 tokens. The MAP plot (no chart component exists anywhere) is the one sanctioned MD3-tokened SVG composition. Everything else is a Material Web md-* component. Never a third-party kit, never MUI.
 
 CHANGES TOO: when we later modify something, the change is made with OTHER MD3 / Material Web components — recompose standard MD3, never a custom hack and never MUI.
 
@@ -50,7 +50,15 @@ THEMING = single source, MD3 tokens as CSS custom properties, NOT per-component 
 
 PALETTE START-STATE mapped to MD3 color tokens: surfaces light→dark #FFFFFF · #FEFDFC · #FCFBF9 · #F8F7F3 · #F4F3ED · #F0EEE6 · #E8E6DE → --md-sys-color-surface and the --md-sys-color-surface-container(-low/-high/-highest) ramp + --md-sys-color-surface-dim/-bright; ink → --md-sys-color-on-surface #666361, --md-sys-color-on-surface-variant #ABA9A4, --md-sys-color-outline / outline-variant #DFDDD6. Small clean type, modest weights, no oversized headings; tight-but-airy spacing; readability/ease/pleasure are the bar.
 
-DONE = (1) every element is a standard Material Web md-* component (or sanctioned MD3-tokened composition for table/plot); (2) renders, zero console errors; (3) zero MUI, no spans-as-UI, no !important, no bespoke styling; (4) all look comes from MD3 :root tokens.` },
+START-STATE DESIGN RULES (all enforced via MD3 tokens / component theming — NEVER custom hand-built CSS):
+• NO SHADOWS, NO GRADIENTS, EVER — elevation tokens set to none/flat; backgrounds are solid surface tokens only.
+• LINKS / NAV ITEMS — no hover background and no current/active-page background change. State is shown by ink weight/color, never by a background swap.
+• SIDEBARS — never white. The sidebar uses a surface-container token darker than the main content (e.g. --md-sys-color-surface-container / -high), never --md-sys-color-surface (#FFFFFF).
+• MAIN CONTENT — always white (--md-sys-color-surface / #FFFFFF).
+• INPUT FIELDS ON A SIDEBAR — lighter than the sidebar but NOT white, and must use one of our palette colors (a surface-container step lighter than the rail, never #FFFFFF).
+• These map to surface tokens per region; the sidebar/app-bar regions that carry them come from layout components (or, where the kit has no layout component, the one sanctioned token-only layout layer — never ad-hoc styling).
+
+DONE = (1) every element is a standard Material Web md-* component, an Angular-Material hole-filler (table/datepicker/etc.), or the one MD3-tokened SVG map plot; (2) renders, zero console errors; (3) zero MUI, no spans-as-UI, no !important, no shadows/gradients, no bespoke styling; (4) all look comes from MD3 tokens; (5) start-state design rules above are honored.` },
       { t: "Type & Icon system — Inter (body/UI) + Newsreader (titles) + Material Symbols icons", done: true, d:
 `TWO type roles only + the MD3 icon set, loaded as web fonts, applied via MD3 typeface/typescale tokens at :root — never per-component. ONLY Inter and Newsreader are authorized; NO IBM Plex Mono, no Roboto, no other family (the previous session wrongly added IBM Plex Mono / extra fonts — removed).
 
@@ -69,25 +77,18 @@ WEB FONTS LOADED (Google Fonts) — ONLY: Inter 400;500;600;700 · Newsreader op
 ICONS: MD3 icon set = Material Symbols, rendered via <md-icon> (the icon ligature name as its text content, e.g. <md-icon>search</md-icon>) — NEVER hand-rolled span glyphs, NEVER @mui/icons-material. Axis settings: FILL 0, wght 300–400, GRAD 0, opsz 20; size 1em, never larger than its label.
 
 ICON VOCABULARY (semantic name → Material Symbols ligature, verbatim — preserve the meaning): search→search · plus→add · filter→filter_list · sort→swap_vert · download→download · close→close · target→map · grid→settings · work→work · table→table_rows · category→category · cases→cases · language→language · beenhere→beenhere · apartment→apartment · check→check · content_copy→content_copy · user→person · users→groups · help→help · map→map · sliders→thumb_up · plan→description · lock→lock · message→chat · expand→open_in_full · logout→logout · edit→edit · chevron→expand_more · chevronUp→expand_less · layers→layers · community→favorite · drag→drag_indicator · chevron-left→chevron_left · chevron-right→chevron_right · double-left→keyboard_double_arrow_left · double-right→keyboard_double_arrow_right · sparkle→auto_awesome · brandmark→id_card · build→build · clock→history · mail→mail · phone→call` },
-      { t: "MD3 component availability — drop-in vs labs vs build-to-spec (Material Web is in maintenance mode)", d:
-`THE HARD FACT — Google Material Web (@material/web) is in MAINTENANCE MODE. Its roadmap states, verbatim, there is "no current work planned for new features or components." So components it never shipped, it will NOT ship. Every build map must classify each UI element into one of the buckets below and NEVER reach for a component that does not exist.
+      { t: "Component sourcing — Material Web (primary) + Angular Material for the holes", d:
+`THE STACK — Material Web (@material/web) is the PRIMARY MD3 kit; it gives the clean MD3 look. But Material Web is in MAINTENANCE MODE and ships no data grid, no date/time picker, no nav rail/drawer, no app bars, etc. Those HOLES are filled by ANGULAR MATERIAL + the Angular CDK (mat-table, mat-paginator, matSort, mat-datepicker, cdk-virtual-scroll, cdkDropList drag-drop, etc.). The real app is therefore built in ANGULAR, which hosts Material Web web-components (CUSTOM_ELEMENTS_SCHEMA) as the primary UI and Angular Material only for the holes. BOTH kits are themed from one MD3 token source. (This build-guide .io itself is a React + Material Web scratch surface — it has no table, so it needs no Angular; the architecture below is for the rebuilt app.)
 
-OFFICIAL SETUP (from the Material Web getting-started, adapted — Inter/Newsreader, not their Roboto):
-• Components: import per-component side-effect modules (e.g. import '@material/web/button/filled-button.js') — or '@material/web/all.js' for everything.
-• Typescale: import { styles as typescaleStyles } from '@material/web/typography/md-typescale-styles.js'; then document.adoptedStyleSheets.push(typescaleStyles.styleSheet). Use the .md-typescale-<scale>-<size> classes (e.g. .md-typescale-headline-medium, .md-typescale-body-large).
-• Fonts: their sample uses Roboto as the default; WE OVERRIDE with --md-ref-typeface-plain = Inter (drives title/body/label) and --md-ref-typeface-brand = Newsreader (drives display/headline). No Roboto.
-• Icons: Material Symbols is the MD3 icon set; <md-icon> renders the ligature (font-family "Material Symbols Outlined", axes FILL 0 / wght 400 / GRAD 0 / opsz 20). The font is loaded in index.html.
-• Theme: all color/shape via --md-sys-* tokens at :root (single source).
+FONTS — Inter (body/UI) via --md-ref-typeface-plain; Newsreader for TITLES ONLY (display/headline roles) via --md-ref-typeface-brand; Material Symbols via <md-icon>. No Roboto, no IBM Plex, no other family.
 
-BUCKET 1 — STABLE drop-in (@material/web/*): md-elevated/filled/filled-tonal/outlined/text-button, md-icon-button, md-fab; md-checkbox, md-radio, md-switch, md-slider; md-chip-set + md-assist/filter/input/suggestion-chip; md-dialog; md-list + md-list-item; md-menu + md-menu-item + md-sub-menu; md-outlined/filled-select + md-select-option; md-outlined/filled-text-field; md-tabs + md-primary/secondary-tab; md-divider, md-elevation, md-icon, md-linear/circular-progress, md-ripple, md-focus-ring.
+OFFICIAL MATERIAL WEB SETUP — components: import per-component side-effect modules (e.g. import '@material/web/button/filled-button.js') or '@material/web/all.js'. Typescale: import { styles as typescaleStyles } from '@material/web/typography/md-typescale-styles.js'; document.adoptedStyleSheets.push(typescaleStyles.styleSheet); use .md-typescale-<scale>-<size> classes. Theme: all color/shape via --md-sys-* tokens at :root (single source); Angular Material themed from the same palette via --mat-sys-*.
 
-BUCKET 2 — LABS / experimental drop-in (@material/web/labs/*): cards (released Q4 2023), navigation bar, navigation drawer, navigation tab, segmented button, badge, item. Usable, but flagged experimental (APIs less stable) — verify against the repo before relying on one.
-
-BUCKET 3 — IN THE MD3 SPEC but NOT in Material Web → BUILD TO THE PUBLISHED MD3 SPEC with tokens (faithful MD3, traceable to m3.material.io anatomy/measurements/states — not freelance CSS): top app bar, BOTTOM APP BAR (≈ our app footer), date picker, time picker, search, snackbar, tooltip, banner, bottom sheet.
-
-BUCKET 4 — NOT IN MD3 AT ALL → MD3-TOKENED COMPOSITION (semantic HTML + inline SVG, tokens only): the DATA TABLE (Lists) and the CHART/scatter (Map). No design system ships these.
-
-RULE FOR EVERY BUILD MAP: name the element, state its bucket, and for buckets 3/4 cite the MD3 spec it follows. Compositions use ONLY MD3 tokens (color/shape/typescale/spacing) — never magic numbers, never per-component CSS hacks, never MUI.` },
+SOURCING RULE (state it in every build map):
+• Material Web component EXISTS → use it: md-*-button, md-icon-button, md-fab; md-checkbox, md-radio, md-switch, md-slider; md-chip-set + chips; md-dialog; md-list + md-list-item; md-menu + md-menu-item; md-outlined/filled-select + md-select-option; md-outlined/filled-text-field; md-tabs + md-primary/secondary-tab; md-divider, md-elevation, md-icon, md-linear/circular-progress, md-ripple, md-focus-ring. (Labs, experimental: cards, navigation bar/drawer/tab, segmented button, badge.)
+• Material Web HOLE → Angular Material / CDK, themed to the MD3 tokens: DATA TABLE = mat-table + matSort + mat-paginator + cdk-virtual-scroll + cdkDropList; date/time = mat-datepicker; plus nav rail/drawer, app bars, snackbar, tooltip as needed.
+• No component in EITHER (only the relationship MAP scatter plot) → the one sanctioned MD3-tokened composition: semantic HTML + inline SVG, tokens only.
+NEVER: MUI, hand-rolled UI primitives, ad-hoc / !important CSS, a component that doesn't exist.` },
       { t: "This build guide is the only thing rendered on the .io", done: true },
       { t: "APP_SPEC.md — exhaustive functional spec committed", done: true },
       { t: "CLAUDE.md — engineering discipline + Material-only rule", done: true },
@@ -239,11 +240,11 @@ PAGE FOOTER (the page-level footer that sits at the bottom of THIS page; distinc
 
 INTERACTIONS — clicking a row selects it (selection lifts to the page; shared with Map/Scoring); double-clicking the name (or the edit icon) opens the full record; the notes cell opens the Notes modal. Horizontal scroll with a left-edge shadow once scrolled; frozen columns auto-size to content and their sticky offsets are measured after layout so they stack deterministically.
 
-MD3 BUILD MAP (Material Web — MD3 has NO data grid AND NO date picker, so this is a sanctioned MD3-tokened composition; verified against the Material Web component set).
-• Table structure: a semantic <table> (or CSS grid) styled SOLELY with MD3 surface/outline tokens; frozen columns via position:sticky left with measured offsets; the whole table horizontally scrollable. No third-party grid, no MUI.
-• Dropdown cells (Category/Type/Market/Region/Geography/State/Site/Status): md-outlined-select + md-select-option (intrinsic-width so columns autofit).
-• Text cell (Organization): md-outlined-text-field (no label, dense).
-• Date cell (Last contact): a tokened calendar composition opened from an md-icon-button/field inside an md-menu — MD3 ships no date picker, so this is composed from md-* + tokens (same sanctioned exception as the table).
+MD3 BUILD MAP (the table is a Material Web HOLE → Angular Material; cell controls are Material Web where they exist).
+• Table: ANGULAR MATERIAL mat-table (built on the CDK table), themed to the MD3 tokens — sticky header + sticky/frozen Stakeholder/Org columns, matSort, mat-paginator, cdk-virtual-scroll (large workspaces), cdkDropList drag-drop for column reorder, and custom cell templates so each cell hosts its own control. No third-party grid, no MUI.
+• Dropdown cells (Category/Type/Market/Region/Geography/State/Site/Status): md-outlined-select + md-select-option (Material Web; intrinsic-width so columns autofit).
+• Text cell (Organization): md-outlined-text-field (Material Web; no label, dense).
+• Date cell (Last contact): ANGULAR MATERIAL mat-datepicker (date picker is a Material Web hole), themed to the MD3 tokens.
 • Relationship (the SCORED zone — computed from the team's scores via statusFor, and it follows the stakeholder everywhere): md-assist-chip, background/text from the single-sourced --zone-* tokens. Priority (a SEPARATE, manually-set High/Medium/Low field): a distinct md-assist-chip with its own priority tokens. Two different fields — relationship is derived from scoring, priority is set by hand. Issues/Tags/Community: md-chip-set + md-assist-chip. Owners: overlapping avatars. Email/Phone/X/Website: semantic anchors.
 • Edit icon + reorder grips: md-icon-button (person/groups, drag_indicator). Column reorder = pointer-DnD composition (MD3 has no DnD).
 • Toolbar: search = md-outlined-text-field with a leading search md-icon; Filter/Sort/Categories/Sites = md-outlined-button (or md-icon-button) opening an md-menu of md-menu-items with md-checkboxes for multi-select (or an md-dialog for the richer multi-field filter panel); impact bands = md-filter-chip set (selected = active filter).
