@@ -65,6 +65,14 @@ readable, a pleasure to use — never massive type, generous-but-tight spacing.
 - **Icons:** common-sense, clean, ~1em, modest — Claude-like.
 - **Spacing:** consistent rhythm, airy but tight. **Readability, ease, and pleasure of use
   are the bar.**
+- **HOW it's applied = MUI's native theming API, NOT custom code.** Configure
+  `createTheme({ palette, typography, shape, components })` + `ThemeProvider` — standard
+  MUI, zero custom CSS / styled hacks / per-component styling. Map: greys →
+  `palette.background.default`/`paper` + `palette.grey.*` + `palette.divider`; inks →
+  `palette.text.primary = #666361`, `text.secondary = #ABA9A4`, `text.disabled = #DFDDD6`;
+  type rules → `typography` (fontFamily Inter, restrained sizes/weights). Components
+  **inherit automatically**; never style a component one-off. Re-skinning later (toward
+  Claude) = changing these theme tokens only.
 
 ## MUI — USE THE FULL LIBRARY (never bare-minimum)
 Every UI element in a spec box and in code must name its **specific MUI component +
