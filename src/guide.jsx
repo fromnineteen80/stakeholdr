@@ -1,28 +1,56 @@
-// Lossless build-guide content — ported verbatim from the React guide.
-// Each phase: { id, icon (Material Symbols), label, blurb, items:[{t, done?, d?}] }.
-export const PHASES = [
+import { useState, useMemo } from 'react';
+import './guide.css';
+// Material Design 3 — Google Material Web (@material/web). Zero MUI.
+import '@material/web/checkbox/checkbox.js';
+import '@material/web/list/list.js';
+import '@material/web/list/list-item.js';
+import '@material/web/icon/icon.js';
+import '@material/web/divider/divider.js';
+import '@material/web/chips/chip-set.js';
+import '@material/web/chips/assist-chip.js';
+import '@material/web/progress/linear-progress.js';
+// Official MD3 typescale: adopt the stylesheet so .md-typescale-* classes work.
+// Fonts come from our --md-ref-typeface-plain (Inter) / -brand (Newsreader) tokens,
+// not Roboto. display/headline -> brand (Newsreader); title/body/label -> plain (Inter).
+import { styles as typescaleStyles } from '@material/web/typography/md-typescale-styles.js';
+if (typeof document !== 'undefined' && typescaleStyles?.styleSheet
+    && !document.adoptedStyleSheets.includes(typescaleStyles.styleSheet)) {
+  document.adoptedStyleSheets = [...document.adoptedStyleSheets, typescaleStyles.styleSheet];
+}
+
+// guide.jsx — Stakeholdr BUILD GUIDE.
+// 100% plug-and-play Material Design 3 (Material Web) — no hand-rolled spans, no custom
+// styling yet (that arrives via the Settings → Design page in Phase 3). This is
+// the single source we follow to rebuild the app, in order. Each item carries
+// the inferred detail captured "as the Anthropic dev"; the user reviews on the
+// .io and we seal each handshake by committing the check (done:true) into source.
+
+const STORAGE = "stakeholdr_guide_checks_v1";
+
+// d: optional inferred detail rendered in an expandable panel under the item.
+const PHASES = [
   {
     id: "p0", icon: "inventory_2", label: "Foundation · setup only",
     blurb: "The build laws and tooling that must exist before anything is rebuilt — the component kit, the type/icon system, and the meta docs. SETUP ONLY; all app knowledge lives in the Capture section below.",
     items: [
-      { t: "Material Design 3 (Angular Material) is the ONLY component kit — the law for every element", done: true, d:
-`Every UI element is a standard Material Design 3 component from Angular Material (@angular/material) + the Angular CDK (@angular/cdk), or a composition of them; never a hand-rolled element, and NEVER MUI/Material-Web/any other third-party kit.
+      { t: "Material Design 3 (Material Web) is the ONLY component kit — the law for every element", done: true, d:
+`Every UI element is a standard Material Design 3 component from Google's Material Web (@material/web), or a composition of them; never a hand-rolled element, and NEVER MUI or any other third-party kit.
 
-THE STACK (verbatim): Angular 19 + Angular Material (@angular/material) + Angular CDK (@angular/cdk), Google's official MD3 implementation for the web. Design language + tokens from m3.material.io. Build with @angular/build (esbuild) to a flat dist/, deployed to GitHub Pages. Components are Angular directives/components used in templates (e.g. <mat-toolbar>, <mat-table>, mat-button), imported as standalone modules into each component's imports. WHY Angular Material (not Material Web): Material Web is in maintenance mode and ships no table/datepicker/nav; Angular Material is actively maintained and ships them all, with the CDK (virtual scroll, drag-drop, overlay) for data-dense UI.
+THE KIT (verbatim): Google Material Web (@material/web), the official MD3 web-components. Design language + tokens from m3.material.io. NOT MUI / @mui/material — that was a wrong turn and is being removed everywhere. Build: React 18 + Vite, deployed to GitHub Pages. Material Web ships as custom elements (<md-*>) imported per component (e.g. import '@material/web/button/filled-button.js') and rendered directly in JSX; props are attributes, and events are standard DOM events (bound via refs/addEventListener since React 18 does not natively bind custom-element events/props for all cases).
 
-USE THE FULL KIT (never bare-minimum) — name the specific Angular Material component + variant: buttons mat-button / mat-raised-button / mat-stroked-button / mat-flat-button / mat-icon-button / mat-fab / mat-mini-fab; selection mat-select + mat-option, mat-autocomplete (typeahead), mat-menu, mat-checkbox, mat-radio-group, mat-slide-toggle, mat-slider, mat-button-toggle-group; chips mat-chip-set + mat-chip / mat-chip-row / mat-chip-option; inputs mat-form-field + matInput, mat-datepicker; structure mat-toolbar, mat-sidenav(-container), mat-list / mat-nav-list, mat-tab-group, mat-expansion-panel, mat-card, mat-dialog, mat-bottom-sheet, mat-divider, mat-tooltip, mat-snack-bar, mat-progress-bar / mat-progress-spinner, mat-stepper, mat-badge, mat-paginator, matSort; mat-icon for icons. CDK: cdk-virtual-scroll, cdkDropList/cdkDrag, cdk overlay, a11y, table.
+USE THE FULL KIT (never bare-minimum) — name the specific md-* element + variant for each element: buttons md-filled-button / md-outlined-button / md-text-button / md-elevated-button / md-filled-tonal-button, md-icon-button, md-fab; selection md-outlined-select|md-filled-select + md-select-option (short fixed sets), md-menu + md-menu-item (action menus), md-checkbox, md-radio, md-switch, md-slider; chips md-chip-set + md-assist/filter/input/suggestion-chip; inputs md-outlined-text-field / md-filled-text-field; structure md-dialog, md-list + md-list-item, md-tabs + md-primary-tab/md-secondary-tab, md-divider, md-elevation, md-linear-progress / md-circular-progress; md-icon for icons; md-ripple / md-focus-ring for interaction states.
 
-DATA TABLE = mat-table (CDK table): sticky header + sticky/frozen columns, matSort, mat-paginator, row selection, arbitrary cell templates (inline-edit cells), footer rows, cdk drag-drop for column reorder, cdk-virtual-scroll for large sets. The ONLY thing with no Material component is the relationship MAP plot (a chart) → a tokened inline-SVG composition, styled solely with MD3 tokens. That is the single sanctioned place we compose beyond stock components.
+NO DATA TABLE, NO CHART IN MD3 — Material Web deliberately ships neither a data grid nor a chart. The Lists table and the Map plot are therefore COMPOSED from MD3 primitives (md-list, md-outlined-select, md-icon-button, md-chip, etc.) plus semantic HTML for tabular structure and inline SVG for the plot, styled SOLELY with MD3 design tokens — never a third-party table/chart library, never MUI. This is the single sanctioned place we compose beyond stock components, and it stays 100% MD3-tokened.
 
-CHANGES TOO: when we later modify something, the change is made with OTHER Angular Material / CDK components — recompose standard MD3, never a custom hack and never MUI.
+CHANGES TOO: when we later modify something, the change is made with OTHER MD3 / Material Web components — recompose standard MD3, never a custom hack and never MUI.
 
-FORBIDDEN: MUI / @mui/* / @material/web / any non-Angular-Material UI lib; raw span/div as UI primitives (allowed only as layout/SVG containers); ad-hoc/inline styling; !important; stray/duplicated/patch CSS; reaching into a component's internal classes; premature visual customization.
+FORBIDDEN: MUI / @mui/* anywhere; non-MD3 UI libraries; raw span/div as UI primitives (allowed only as layout/SVG containers); ad-hoc/inline styling; !important; stray/duplicated/patch CSS; premature visual customization.
 
-THEMING = single source, MD3 tokens, NOT per-component code: one Sass theme via mat.theme((color, typography, density)); it emits --mat-sys-* system tokens; every component inherits them. Customize only through token overrides (e.g. mat.X-overrides) and --mat-sys-* — never internal selectors. Change a token once → it updates everywhere. Re-skinning later (toward Claude) = changing tokens only.
+THEMING = single source, MD3 tokens as CSS custom properties, NOT per-component code: set --md-sys-color-*, --md-sys-typescale-*, and --md-ref-typeface-* once at :root; every md-* element inherits automatically; change a token once → it updates everywhere. Never style a component one-off. Re-skinning later (toward Claude) = changing tokens only.
 
-PALETTE START-STATE mapped to MD3 color tokens: surfaces light→dark #FFFFFF · #FEFDFC · #FCFBF9 · #F8F7F3 · #F4F3ED · #F0EEE6 · #E8E6DE → --mat-sys-surface and the --mat-sys-surface-container(-low/-high/-highest) ramp + --mat-sys-surface-dim/-bright; ink → --mat-sys-on-surface #666361, --mat-sys-on-surface-variant #ABA9A4, --mat-sys-outline / outline-variant #DFDDD6. Small clean type, modest weights, no oversized headings; tight-but-airy spacing; readability/ease/pleasure are the bar.
+PALETTE START-STATE mapped to MD3 color tokens: surfaces light→dark #FFFFFF · #FEFDFC · #FCFBF9 · #F8F7F3 · #F4F3ED · #F0EEE6 · #E8E6DE → --md-sys-color-surface and the --md-sys-color-surface-container(-low/-high/-highest) ramp + --md-sys-color-surface-dim/-bright; ink → --md-sys-color-on-surface #666361, --md-sys-color-on-surface-variant #ABA9A4, --md-sys-color-outline / outline-variant #DFDDD6. Small clean type, modest weights, no oversized headings; tight-but-airy spacing; readability/ease/pleasure are the bar.
 
-DONE = (1) every element is a standard Angular Material component (or the sanctioned MD3-tokened SVG composition for the map plot); (2) renders, zero console errors; (3) zero MUI/Material-Web, no spans-as-UI, no !important, no internal-class overrides, no bespoke styling; (4) all look comes from the one MD3 token theme.` },
+DONE = (1) every element is a standard Material Web md-* component (or sanctioned MD3-tokened composition for table/plot); (2) renders, zero console errors; (3) zero MUI, no spans-as-UI, no !important, no bespoke styling; (4) all look comes from MD3 :root tokens.` },
       { t: "Type & Icon system — Inter (body/UI) + Newsreader (titles) + Material Symbols icons", done: true, d:
 `TWO type roles only + the MD3 icon set, loaded as web fonts, applied via MD3 typeface/typescale tokens at :root — never per-component. ONLY Inter and Newsreader are authorized; NO IBM Plex Mono, no Roboto, no other family (the previous session wrongly added IBM Plex Mono / extra fonts — removed).
 
@@ -334,3 +362,100 @@ MD3 BUILD MAP (Material Web — MD3 has NO data grid AND NO date picker, so this
     ]
   },
 ];
+
+export function Guide() {
+  const allIds = useMemo(() => PHASES.flatMap(p => p.items.map((_, i) => p.id + "-" + i)), []);
+  const [active, setActive] = useState(PHASES[0].id);
+  const [checks, setChecks] = useState(() => {
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem(STORAGE) || "{}"); } catch {}
+    PHASES.forEach(p => p.items.forEach((it, i) => { const id = p.id + "-" + i; if (it.done && !(id in saved)) saved[id] = true; }));
+    return saved;
+  });
+  const toggle = (id) => setChecks(prev => {
+    const next = { ...prev, [id]: !prev[id] };
+    try { localStorage.setItem(STORAGE, JSON.stringify(next)); } catch {}
+    return next;
+  });
+
+  const phase = PHASES.find(p => p.id === active) || PHASES[0];
+  const doneCount = allIds.filter(id => checks[id]).length;
+  const pct = Math.round((doneCount / allIds.length) * 100);
+  const phaseDone = phase.items.filter((_, i) => checks[phase.id + "-" + i]).length;
+
+  return (
+    <div className="gx-shell">
+      <header className="gx-appbar">
+        <md-icon class="gx-appbar-icon">checklist</md-icon>
+        <h1 className="gx-appbar-title md-typescale-headline-small">Stakeholdr — Build Guide</h1>
+        <md-assist-chip label={`${doneCount}/${allIds.length} · ${pct}%`}></md-assist-chip>
+        <md-linear-progress class="gx-appbar-progress" value={pct / 100}></md-linear-progress>
+      </header>
+
+      <nav className="gx-rail" aria-label="Phases">
+        <md-list>
+          {PHASES.map(p => {
+            const total = p.items.length;
+            const done = p.items.filter((_, i) => checks[p.id + "-" + i]).length;
+            return (
+              <md-list-item
+                key={p.id}
+                type="button"
+                class={"gx-rail-item" + (p.id === active ? " gx-rail-item--active" : "")}
+                onClick={() => setActive(p.id)}
+              >
+                <md-icon slot="start">{p.icon}</md-icon>
+                {p.label}
+                <span slot="supporting-text">{done}/{total} complete</span>
+              </md-list-item>
+            );
+          })}
+        </md-list>
+      </nav>
+
+      <main className="gx-main">
+        <p className="gx-eyebrow md-typescale-label-medium">Phase</p>
+        <h2 className="gx-phase-title md-typescale-headline-medium">{phase.label}</h2>
+        <p className="gx-phase-blurb md-typescale-body-medium">{phase.blurb}</p>
+        <md-assist-chip class="gx-phase-count" label={`${phaseDone}/${phase.items.length} in this phase`}></md-assist-chip>
+        <div className="gx-note" role="note">
+          <md-icon class="gx-note-icon">info</md-icon>
+          <span className="md-typescale-body-small">We confirm every item together before checking it off and before moving to the next phase.</span>
+        </div>
+
+        <section className="gx-items">
+          {phase.items.map((it, i) => {
+            const id = phase.id + "-" + i;
+            const on = !!checks[id];
+            const check = (
+              <md-checkbox
+                class="gx-check"
+                checked={on || undefined}
+                aria-label={on ? "Done" : "Not done"}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(id); }}
+              ></md-checkbox>
+            );
+            if (it.d) {
+              return (
+                <details className="gx-item" key={id}>
+                  <summary className="gx-item-row">
+                    {check}
+                    <span className="gx-item-title md-typescale-body-large">{it.t}</span>
+                    <md-icon className="gx-item-expand">expand_more</md-icon>
+                  </summary>
+                  <div className="gx-item-detail md-typescale-body-medium">{it.d}</div>
+                </details>
+              );
+            }
+            return (
+              <label className="gx-item gx-item-row gx-item--flat" key={id}>
+                {check}
+                <span className="gx-item-title md-typescale-body-large">{it.t}</span>
+              </label>
+            );
+          })}
+        </section>
+      </main>
+    </div>
+  );
+}
