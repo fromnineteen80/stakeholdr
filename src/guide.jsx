@@ -545,7 +545,31 @@ REAL-TIME / PERSISTENCE [BUILT local; DESIGN backend] — messages persist via t
 DEVELOPER-INFERRED ADDITIONS (not built; design deliberately) — @-mention NOTIFICATIONS (notify a mentioned teammate); message EDIT/DELETE; thread SEARCH; ATTACHMENTS; reactions; presence/typing. Keep scope tight; these are future.
 
 UI KIND (components later, NO hand-built CSS) — a docked sidebar panel + a full page (conversation list + thread pane); message bubbles (grouped), avatars, a composer with a mention typeahead (4 triggers → a picker list), mention chips (clickable → read-only record), a New-Conversation modal (participant multi-select + optional group title), an unread badge. Components from the universal kit after the full spec.` },
-      { t: "Persistence / realtime — entities + exact shapes, Store, Supabase swap" },
+      { t: "Persistence & realtime — the ONE transport boundary (Store now · Supabase swap · the traps)", d:
+`THE PRINCIPLE (this is what stops the backend from becoming a patch-by-patch death spiral) — the UI talks to EXACTLY ONE interface: usePersistentState(table, seed), a drop-in for useState. It NEVER touches the transport. Every entity flows through the SAME generic path (load / save / subscribe by table). So moving from localStorage to Supabase is a SINGLE-FILE change in the Store — there are NO per-entity connectors to build or patch one-by-one. Get the one transport right (row-level + RLS) and every module is correct at once. Do NOT introduce bespoke per-feature persistence — that is the anti-pattern that kills the build.
+
+THE STORE TODAY [BUILT] — window.Store over localStorage + BroadcastChannel:
+• Namespace PREFIX "hpsm:"; SCHEMA_VERSION ("v9") stamped at "hpsm:__schema" — bump it to wipe ONLY our namespace on a breaking change.
+• load(table, seed): read persisted JSON or fall back to seed (and persist the seed so the table exists for other tabs).
+• save(table, value, silent): write JSON + broadcast { table, value } on BroadcastChannel("hpsm-sync"); silent skips the broadcast (used when applying a change that arrived FROM another tab, to avoid an echo loop).
+• subscribe(table, cb): register a per-table listener; returns an unsubscribe.
+• reset(): clear the namespace (hard "reset demo data").
+• Fallback: browsers without BroadcastChannel use the window "storage" event.
+• THE EVENT SHAPE { table, value } IS EXACTLY what a Supabase postgres_changes subscription delivers — chosen so the transport swap needs no UI change.
+• usePersistentState(table, seed): useState seeded from Store.load; an effect persists on change (save); a subscribe effect applies incoming changes; a skipPersist ref prevents re-broadcasting a change that arrived from elsewhere.
+• ids: window.uid(prefix) = crypto.randomUUID (collision-resistant for concurrent multi-user creates). window.nowStamp() = full ISO timestamptz; date-only fields (lastContact) keep YYYY-MM-DD.
+
+SYNCED ENTITIES (each = one usePersistentState table = one Supabase table) — stakeholders · scores · team · workspaces · stakeholderWorkspaces (join) · users · conversations · messages · community · plans · appConfig. PER-DEVICE, NOT synced: currentUser (this tab's session) and the column-order preference. Exact shapes live in their domain boxes; scores = { [stakeholderId]: { [teamMemberId]: {x,y,createdAt,updatedAt} } }; stakeholderWorkspaces = { [stakeholderId]: [workspaceId,…] }; messages = { [conversationId]: [{id,from,body,at,kind?}] }; appConfig = { appName, accent, brand, brandIcon, fiscalStartMonth, fiscalStartDay, issues[], functions[], sites[] }. Every mutable record carries createdAt + updatedAt.
+
+THE SUPABASE SWAP (one file: the Store) — save → supabase.from(table).upsert(changedRow); delete → supabase.from(table).delete().eq('id', id); subscribe → a per-table postgres_changes channel whose callback fires the SAME (table, value=row) shape; apply the incoming ROW into the in-memory collection BY ID (merge — never replace the whole array). The React layer does not change at all. db.js holds the full SQL: tables, columns, FKs with ON DELETE CASCADE, and drafted RLS.
+
+⚠️ TRAP #1 — ROW-LEVEL WRITES (the easy-to-forget killer). TODAY save() persists the WHOLE collection array, which is last-write-wins across users (A edits sh-03, B edits sh-07 at once → second save clobbers the first). When wiring Supabase, EVERY mutation must write only the CHANGED ROW (upsert/delete by id), not the array. Scores: write only the one (stakeholder × teammate) row that changed (PK = stakeholder_id + team_member_id) — never the whole scores object. Use updatedAt for last-modified-wins or a version check for stricter merge. Affected updaters (must each become row-scoped): updateStakeholder, updateWorkspace, updateCommunityApp, updatePlan, updateScore, updateTeam, addStakeholder, addWorkspace, addTeamMember, removeWorkspace, removeUser, removeTeamMember, and the messaging/conversation writers.
+
+⚠️ TRAP #2 — REAL AUTH + RLS. The demo auto-promotes EVERY login to manager (remove that). Roles come from the users table / Supabase Auth, not from login. Wire Supabase Auth (email or SSO) → map to a users row. Enforce RLS (client gating is cosmetic only): scores writable only for the user's own team-member rows; workspace delete restricted to created_by OR manager; appConfig + users.role writable only by managers; plans/community writes scoped to owners/team.
+
+OTHER BACKEND-PHASE ITEMS (captured here, owned by their areas) — COUNTRY LIST: replace the static COUNTRIES snapshot with ISO-3166 (REST Countries API or a countries table); keep the site rule { id, city, state?, country } with US sites forcing country="United States". PRESENCE: the online-avatar stack + People sidebar must be REAL (Supabase Realtime Presence or a last_seen heartbeat), with a TRUE +N overflow, excluding the system bot — not the static presence seed. (The universal custom dropdown is a UI item, captured in the component vocabulary, not persistence.)
+
+REALTIME UX — a change in one place (e.g. a message sent in the sidebar) appears live everywhere (the page, other tabs, other users) because every consumer subscribes to its table. Same code path local or via Supabase.` },
       { t: "Catalogs — categories/types · markets/regions · segments/BUs · issues · kinds/stages/ask-types" },
       { t: "Design refs — element→MD3 (Material Web) component map · Material Symbols map · Inter/Newsreader" },
       { t: "INDEX — manifest + traceability (feature → spec → MD3 component → verification)" },
