@@ -257,7 +257,44 @@ MD3 BUILD MAP (the table is a Material Web HOLE → Angular Material; cell contr
 • Toolbar: search = md-outlined-text-field with a leading search md-icon; Filter/Sort/Categories/Sites = md-outlined-button (or md-icon-button) opening an md-menu of md-menu-items with md-checkboxes for multi-select (or an md-dialog for the richer multi-field filter panel); impact bands = md-filter-chip set (selected = active filter).
 • Footer: MD3 label/body text + an Export CSV md-text-button (download md-icon). Computed x/y tone via on-surface vs error/positive tokens.
 • Selection/edit/notes state lifts to the page; the Notes modal and the full record open via md-dialog (record modal captured with the Record scaffold box).` },
-      { t: "SEP algorithm — base signals, factor→signal map, sector/goal models, bands, manager override" },
+      { t: "Plan algorithm — sector/type model catalog, plan selection, workspace→plan stakeholder flow", d:
+`SCOPE — this captures the PLAN ALGORITHM and how stakeholders flow into a plan. It is APP KNOWLEDGE, not the full plan-page element spec (sections/fields/validation come later, when we build the plan + stakeholder pages). The algorithm is NOT the plan: the algorithm tells you WHICH plan it is, and that classification dictates some CUSTOM parts of the plan page built later.
+
+THE ALGORITHM CATALOG — pre-built engagement algorithms in two families, each defined as a small set of weighted FACTORS (weights ≈ sum to 1). A team developing a plan in a workspace PICKS the right one (there is a basic/default option).
+
+PLAN-TYPE / SCENARIO models (the "goal" family) — 7:
+• General Engagement (basic default) — I .25 · U .25 · EP .25 · IR .25
+• Generating Shared Value — MV .4 · TB .3 · CI .2 · I .1
+• Corporate Crisis — I .3 · U .35 · EP .15 · RI .2
+• Activist Shareholders — EC .35 · SE .3 · SA .2 · RM .15
+• Diversity, Equity & Inclusion — DI .35 · IC .3 · EO .2 · CI .15
+• Community Investment — CNA .35 · PD .3 · IM .2 · CTS .15
+• Union Negotiations — NP .35 · ER .3 · FS .2 · OR .15
+
+INDUSTRY-SECTOR models — 11 (sectors without a detailed formula fall back to the general 4-factor balance):
+• Energy — I .25 · LTSA .3 · ES .25 · IC .2
+• Technology — I .2 · IS .3 · MR .25 · RC .25
+• Retail — CE .35 · SI .3 · DC .25 · I .1
+• Financial — RC .35 · CT .3 · TI .25 · I .1
+• Education — DT .3 · CE .3 · IE .2 · I .2
+• Utilities — RC .3 · I .25 · ES .25 · CTS .2
+• Government & Public Sector — I .3 · RC .25 · CTS .25 · EC .2
+• Healthcare & Pharma — RC .3 · CT .3 · TI .2 · IR .2
+• Nonprofit & Social Impact — CNA .3 · PD .3 · CTS .2 · IM .2
+• Big Agriculture — RC .3 · SI .25 · CE .25 · I .2
+• Auto Manufacturing — I .25 · RC .25 · SI .25 · MR .25
+
+FACTOR CATALOG (key → label) referenced by the models: I Influence · U Urgency · EP Engagement Potential · IR Impact on Reputation · MV Mutual Value · TB Trust-Building · CI Collaborative Innovation · RI Reputation Impact · EC Effective Communication · SE Shareholder Engagement · SA Strategic Alignment · RM Reputation Management · DI Diversity Initiatives · IC Inclusive Communication · EO Equity in Opportunity · CNA Community Needs Assessment · PD Partnership Development · IM Impact Measurement · CTS Community Trust & Support · NP Negotiation Preparedness · ER Employee Relations · FS Financial Sustainability · OR Organizational Reputation · CE Consumer/Community Expectations · SI Sustainability Initiatives · DC Digital Commerce Adaptation · RC Regulatory Compliance · CT Customer Trust · TI Technological Innovation · DT Digital Transformation · IE Inclusive Environment · IS Innovation Support · MR Market Readiness · LTSA Long-Term Strategic Alignment · ES Environmental Stewardship. (Each factor carries a one-line description in the source for help/tooltip text.)
+
+HOW STAKEHOLDERS ENTER A PLAN (the flow):
+1) The workspace team decides to develop a plan and PICKS an algorithm (sector + plan type; basic default available).
+2) They INTEGRATE relevant stakeholders FROM the workspace. Each stakeholder already carries a PRIORITY (manual High/Medium/Low, shown in the workspace/Lists table; set on the stakeholder page — not yet built) AND an already-scored RELATIONSHIP (the team's weighted zone from Scoring).
+3) HIGH-PRIORITY stakeholders must surface in the plan BEFORE others (ordered by the existing Priority: High → Medium → Low).
+4) FREE COMPOSITION — the team may also: add ANY teammate-chosen stakeholder from the workspace regardless of algorithm/recommendation; add ANY stakeholder from MASTER that isn't in the workspace; or CREATE a NEW stakeholder for the plan → it is added to BOTH the plan and the workspace. (Plan + stakeholder creation built later; Master/workspace already captured via their tables.)
+
+NOT YET ALIGNED (explicit TODO, do not treat as built) — the step where each stakeholder's RELATIONSHIP-based RECOMMENDATION is matched/aligned to the picked plan algorithm (so the plan can suggest who fits the chosen scenario). The old code's sepScore (deriving per-stakeholder 0–100 from the weighted position: power=(y+10)/20, align=(x+10)/20, opp=1−align, urgency, engage, issue-overlap, community-tie, blended through the sector+goal factor weights → High≥67 / Medium≥40 / Low band, with a per-plan manager override and a ✦ auto-suggest marker) was an ATTEMPT at this alignment. It is NOT settled and NOT the source of a stakeholder's priority — priority is the manual field on the stakeholder. We will define the relationship→algorithm alignment deliberately later.
+
+UI ELEMENTS NEEDED (kind only — components built later): plan setup PICKS the algorithm via two selectors (industry sector + plan type, with the basic default preselected); the plan's stakeholder list is ORDERED by existing Priority (high first) and shows each stakeholder's Priority + Relationship (already-captured pills); ADD controls for "from this workspace", "from Master", and "create new"; (later) a recommendation/alignment surface once that step is defined. No hand-built CSS — these come from the universal component system built after the full spec.` },
       { t: "Plan — every section, field, validation, review mode" },
       { t: "Community — every section, field, value score, votes, FY budget rollups" },
       { t: "Workspaces & Settings — fields, sub-panes, manager gating, propagation" },
