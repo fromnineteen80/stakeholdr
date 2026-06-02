@@ -36,7 +36,7 @@ html {
 }
 
 html, body { height: 100%; }
-body { margin: 0; background: var(--mat-sys-background); color: var(--mat-sys-on-surface); }
+body { margin: 0; background: var(--mat-sys-background); color: var(--mat-sys-on-surface); font: var(--mat-sys-body-medium); }
 
 // mat-icon renders Material Symbols (set as default fontSet in main.ts).
 .material-symbols-outlined {
@@ -44,9 +44,9 @@ body { margin: 0; background: var(--mat-sys-background); color: var(--mat-sys-on
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
 }
 
-// ---- App-shell layout (MD3-tokened) ----
+// ---- App-shell layout (MD3-tokened). Type comes from MD3 typescale tokens. ----
 .gx-appbar { gap: 12px; }
-.gx-appbar-title { font-family: var(--mat-sys-brand-family, Newsreader); font-weight: 500; }
+.gx-appbar-title { font: var(--mat-sys-title-large); }
 .gx-spacer { flex: 1 1 auto; }
 
 .gx-body { display: grid; grid-template-columns: 360px 1fr; min-height: calc(100vh - 68px); }
@@ -54,11 +54,11 @@ body { margin: 0; background: var(--mat-sys-background); color: var(--mat-sys-on
 .gx-rail-active { background: var(--mat-sys-surface-container-high); }
 .gx-main { padding: 28px 32px 64px; max-width: 1040px; overflow: auto; }
 
-.gx-eyebrow { margin: 0 0 2px; text-transform: uppercase; letter-spacing: .08em; font-size: 11px; color: var(--mat-sys-on-surface-variant); }
-.gx-phase-title { margin: 0 0 8px; font-family: var(--mat-sys-brand-family, Newsreader); font-weight: 500; }
-.gx-phase-blurb { margin: 0 0 16px; color: var(--mat-sys-on-surface-variant); max-width: 70ch; }
+.gx-eyebrow { margin: 0 0 2px; text-transform: uppercase; font: var(--mat-sys-label-medium); color: var(--mat-sys-on-surface-variant); }
+.gx-phase-title { margin: 0 0 8px; font: var(--mat-sys-headline-small); }
+.gx-phase-blurb { margin: 0 0 16px; font: var(--mat-sys-body-medium); color: var(--mat-sys-on-surface-variant); max-width: 70ch; }
 
 .gx-items { margin-top: 16px; }
 .gx-item { margin-bottom: 6px; }
 .gx-item-flat { display: flex; align-items: center; padding: 12px 16px; border: 1px solid var(--mat-sys-outline-variant); border-radius: 8px; background: var(--mat-sys-surface); }
-.gx-item-detail { white-space: pre-line; color: var(--mat-sys-on-surface-variant); font-size: 13px; line-height: 1.6; }
+.gx-item-detail { white-space: pre-line; color: var(--mat-sys-on-surface-variant); font: var(--mat-sys-body-small); line-height: 1.6; }
