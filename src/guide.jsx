@@ -30,8 +30,8 @@ const STORAGE = "stakeholdr_guide_checks_v1";
 // d: optional inferred detail rendered in an expandable panel under the item.
 const PHASES = [
   {
-    id: "p0", Icon: Inventory2Icon, label: "0 · Assemble the foundation",
-    blurb: "Gather everything we need before a single feature is rebuilt — the component kit, the type/icons, and the complete written knowledge layer. Capture first, code later.",
+    id: "p0", Icon: Inventory2Icon, label: "Foundation · setup only",
+    blurb: "The build laws and tooling that must exist before anything is rebuilt — the component kit, the type/icon system, and the meta docs. SETUP ONLY; all app knowledge lives in the Capture section below.",
     items: [
       { t: "Material Design (MUI) is the ONLY component kit — the law for every element", done: true, d:
 `Every UI element is a standard Material Design (MUI) component or a composition of them; never a hand-rolled element.
@@ -67,6 +67,12 @@ ICON VOCABULARY (semantic name → glyph, verbatim — preserve the meaning when
       { t: "This build guide is the only thing rendered on the .io", done: true },
       { t: "APP_SPEC.md — exhaustive functional spec committed", done: true },
       { t: "CLAUDE.md — engineering discipline + Material-only rule", done: true },
+    ]
+  },
+  {
+    id: "cap", Icon: ChecklistIcon, label: "Capture · App knowledge (lossless SSOT)",
+    blurb: "The lossless single source of truth — the entire existing app captured by DOMAIN as actual content, never labels. Each box expands to its full longform detail; we rebuild the app FROM these boxes once verified complete.",
+    items: [
       { t: "Ecosystem — how it all connects (expand to read the full capture)", d:
 `ENTITIES (11 synced tables): stakeholders · scores · team · workspaces · stakeholderWorkspaces (join) · users · conversations · messages · community · plans · appConfig. Each persists via usePersistentState(table, seed) → Store (localStorage + BroadcastChannel now; Supabase upsert + postgres_changes later). Per-device, NOT synced: currentUser (this tab's session) and the column-order preference.
 
@@ -128,7 +134,7 @@ STATUS_ORDER (spectrum, most-negative→positive): Proactively Defend · Defend 
     ]
   },
   {
-    id: "p1", Icon: InventoryIcon, label: "1 · Archive the old .io",
+    id: "p1", Icon: InventoryIcon, label: "Archive the old .io",
     blurb: "Bundle every legacy page/feature module into a parked folder excluded from the build, so nothing can interact with what we build on main. Nothing is deleted — it's parked for reference. CONFIRM before moving.",
     items: [
       { t: "Confirm the foundation (Phase 0) is complete with the user" },
