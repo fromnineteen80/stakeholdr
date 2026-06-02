@@ -1,16 +1,15 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import * as ReactDOM from 'react-dom';
 import { STAKEHOLDER_DATA } from './data';
-import { Icon, displayName, StatusPill, PriorityPill } from './components';
-import { MultiOwnerPicker, ConfirmDialog, OwnersDisplay } from './users';
-import { RecordShell, MetaField } from './record';
+import { Icon } from './components';
+import { MultiOwnerPicker, ConfirmDialog } from './users';
 // Setup tab - workspaces management (HP segment + business unit scope).
 // Workspaces use multi-owner avatars (no names/titles inline), date created,
 // role-gated deletion with confirm dialog, and a popped-up card for create/edit.
 
 export function SetupView({
   workspaces, addWorkspace, updateWorkspace, removeWorkspace,
-  stakeholders, stakeholderWorkspaces, setStakeholderWorkspaces, scores, team,
+  stakeholders, stakeholderWorkspaces, setStakeholderWorkspaces,
   activeWorkspaceId, setActiveWorkspaceId, users, currentUser,
   editWorkspaceId, setEditWorkspaceId,
   createOpen, setCreateOpen, explainerSlot, companySegments
@@ -18,7 +17,6 @@ export function SetupView({
   const D = STAKEHOLDER_DATA;
   const SEGMAP = (companySegments && Object.keys(companySegments).length) ? companySegments : D.SEGMENTS;
 
-  const [recordWsId, setRecordWsId] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [showAll, setShowAll] = useState(false);
   const [search, setSearch] = useState("");
@@ -95,33 +93,6 @@ export function SetupView({
   const segments = Object.keys(SEGMAP);
   const editingWs = workspaces.find(w => w.id === editWorkspaceId);
   const wsToDelete = workspaces.find(w => w.id === confirmDeleteId);
-
-  // Full-page workspace record (read + edit) takes over the setup surface.
-  const recordWs = workspaces.find(w => w.id === recordWsId);
-  if (recordWs) {
-    return (
-      <WorkspaceRecord
-        ws={recordWs}
-        users={users}
-        currentUser={currentUser}
-        stakeholders={stakeholders}
-        stakeholderWorkspaces={stakeholderWorkspaces}
-        setStakeholderWorkspaces={setStakeholderWorkspaces}
-        scores={scores}
-        team={team}
-        segMap={SEGMAP}
-        canDelete={canDelete(recordWs)}
-        onBack={() => setRecordWsId(null)}
-        onUpdate={(patch) => updateWorkspace(recordWs.id, patch)}
-        onActivate={() => setActiveWorkspaceId(recordWs.id)}
-        onDelete={() => {
-          if (!canDelete(recordWs)) { alert("Only the workspace creator or a manager can delete this workspace."); return; }
-          removeWorkspace(recordWs.id);
-          setRecordWsId(null);
-        }}
-      />
-    );
-  }
 
   return (
     <div className="setup-wrap">
@@ -229,7 +200,6 @@ export function SetupView({
                     markets={marketsByWs[ws.id] ? [...marketsByWs[ws.id].markets] : []}
                     regions={marketsByWs[ws.id] ? [...marketsByWs[ws.id].regions] : []}
                     onActivate={() => setActiveWorkspaceId(ws.id)}
-                    onOpen={() => setRecordWsId(ws.id)}
                     onDelete={() => attemptDelete(ws.id)}
                     onEdit={() => setEditWorkspaceId(ws.id)}
                     onUpdate={(patch) => updateWorkspace(ws.id, patch)}
@@ -301,13 +271,13 @@ export function SetupView({
   );
 }
 
-export function WorkspaceCard({ ws, isActive, count, markets, regions, onActivate, onOpen, onDelete, onEdit, onUpdate, users, canDelete }) {
+export function WorkspaceCard({ ws, isActive, count, markets, regions, onActivate, onDelete, onEdit, onUpdate, users, canDelete }) {
   const D = STAKEHOLDER_DATA;
   return (
     <div className="comm-card ws-card" onClick={onActivate} style={{ cursor: "pointer" }}>
       <div className="comm-card-head">
         <div style={{ minWidth: 0, flex: 1 }}>
-          <span className="comm-card-name plan-card-title" onClick={(e) => { e.stopPropagation(); (onOpen || onEdit)(); }} title="Open workspace record">{ws.name}</span>
+          <span className="comm-card-name plan-card-title" onClick={(e) => { e.stopPropagation(); onEdit(); }} title="Open / edit workspace">{ws.name}</span>
           <div className="comm-card-recipient muted">{ws.businessUnit}</div>
         </div>
         <MultiOwnerPicker users={users} owners={ws.owners || []} onChange={(next) => onUpdate({ owners: next })} />
@@ -349,184 +319,6 @@ function formatCreated(iso) {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return iso;
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-}
-
-// ── WorkspaceRecord — full-page read+edit record on the RecordShell ──────
-export function WorkspaceRecord({
-  ws, users, currentUser, stakeholders, stakeholderWorkspaces, setStakeholderWorkspaces,
-  scores, team, segMap, onBack, onUpdate, onDelete, onActivate, canDelete
-}) {
-  const D = STAKEHOLDER_DATA;
-  const SEG = (segMap && Object.keys(segMap).length) ? segMap : D.SEGMENTS;
-  const segments = Object.keys(SEG);
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(ws);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  useEffect(() => { setDraft(ws); setEditing(false); }, [ws && ws.id]);
-  const set = (k, v) => setDraft(d => ({ ...d, [k]: v }));
-  const bus = SEG[draft.segment] || [];
-  const valid = (draft.name || "").trim().length > 0 && (draft.owners || []).length > 0;
-
-  function save() {
-    if (!valid) return;
-    onUpdate({ name: draft.name.trim(), segment: draft.segment, businessUnit: draft.businessUnit, scope: draft.scope, scopeState: draft.scopeState, owners: draft.owners });
-    setEditing(false);
-  }
-  function cancel() { setDraft(ws); setEditing(false); }
-
-  // Stakeholders assigned to this workspace + derived markets/regions.
-  const wsStakeholders = stakeholders.filter(s => (stakeholderWorkspaces[s.id] || []).includes(ws.id));
-  const markets = [...new Set(wsStakeholders.map(s => s.market).filter(Boolean))];
-  const regions = [...new Set(wsStakeholders.map(s => s.region).filter(Boolean))];
-  function rel(s) { const wc = D.weightedCoord(s.id, scores || {}, team || []); return D.statusFor(wc.x, wc.y); }
-  function unassign(id) {
-    setStakeholderWorkspaces({ ...stakeholderWorkspaces, [id]: (stakeholderWorkspaces[id] || []).filter(w => w !== ws.id) });
-  }
-
-  const creator = users.find(u => u.id === ws.createdBy);
-
-  const sections = [
-    {
-      id: "details", label: "Details", icon: "grid",
-      render: (ed) => (
-        <div className="record-fields">
-          <MetaField label="Workspace name" value={draft.name} editing={ed} placeholder="e.g. GA&PP – North America" onChange={v => set("name", v)} />
-          <label className="mf">
-            <span className="mf-label">Segment</span>
-            {!ed ? <span className="mf-value">{draft.segment || <span className="mf-empty">—</span>}</span> : (
-              <span className="designed-select mf-input">
-                <select value={draft.segment} onChange={e => { const seg = e.target.value; setDraft(d => ({ ...d, segment: seg, businessUnit: (SEG[seg] || [])[0] || "" })); }}>
-                  {segments.map(s => <option key={s}>{s}</option>)}
-                </select>
-              </span>
-            )}
-          </label>
-          <label className="mf">
-            <span className="mf-label">Business unit</span>
-            {!ed ? <span className="mf-value">{draft.businessUnit || <span className="mf-empty">—</span>}</span> : (
-              <span className="designed-select mf-input">
-                <select value={draft.businessUnit} onChange={e => set("businessUnit", e.target.value)}>
-                  {bus.map(b => <option key={b}>{b}</option>)}
-                </select>
-              </span>
-            )}
-          </label>
-          <MetaField label="Scope" value={draft.scope} editing={ed} type="select" placeholder="None" options={["National", "State"]} onChange={v => set("scope", v === "" ? "" : v)} />
-          {draft.scope === "State" && (
-            <label className="mf">
-              <span className="mf-label">State</span>
-              {!ed ? <span className="mf-value">{draft.scopeState ? (D.STATE_ABBR[draft.scopeState] || draft.scopeState) : <span className="mf-empty">—</span>}</span> : (
-                <span className="designed-select mf-input">
-                  <select value={draft.scopeState || ""} onChange={e => set("scopeState", e.target.value)}>
-                    <option value="">Select state…</option>
-                    {(D.US_STATES || []).map(st => <option key={st} value={st}>{D.STATE_ABBR[st] || st}</option>)}
-                  </select>
-                </span>
-              )}
-            </label>
-          )}
-          <label className="mf">
-            <span className="mf-label">Owners</span>
-            <div style={{ paddingTop: 2 }}>
-              {ed
-                ? <MultiOwnerPicker users={users} owners={draft.owners || []} onChange={next => set("owners", next)} size={28} />
-                : ((draft.owners || []).length ? <OwnersDisplay users={users} owners={draft.owners} size={26} /> : <span className="mf-empty">—</span>)}
-            </div>
-          </label>
-        </div>
-      )
-    },
-    {
-      id: "stakeholders", label: "Stakeholders", icon: "users",
-      render: () => (
-        <div className="record-table-embed">
-          {wsStakeholders.length ? (
-            <div className="plan-sh-table">
-              <div className="plan-sh-thead">
-                <span>Stakeholder</span><span>Type</span><span>Relationship</span><span>Priority</span>
-              </div>
-              {wsStakeholders.map(s => (
-                <div className="plan-sh-trow" key={s.id} style={{ cursor: "default" }}>
-                  <span className="plan-sh-name">{displayName(s) || s.name}</span>
-                  <span className="muted">{s.type}</span>
-                  <span><StatusPill status={rel(s)} /></span>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                    <PriorityPill value={s.priority} />
-                    <button className="btn btn-ghost" title="Remove from workspace" onClick={() => unassign(s.id)}><Icon name="close" /></button>
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : <p className="muted" style={{ padding: 16 }}>No stakeholders assigned to this workspace yet. Assign them from the Master pool.</p>}
-          <div className="sheet-footer">
-            <div className="group"><Icon name="users" /> <strong style={{ color: "var(--ink)" }}>{wsStakeholders.length}</strong> stakeholders</div>
-            <div className="spacer" style={{ flex: 1 }} />
-            <button className="footer-export-btn" onClick={onActivate}><Icon name="table" /> Open workspace table</button>
-          </div>
-        </div>
-      )
-    }
-  ];
-
-  const rightRail = (
-    <div className="record-rail-inner">
-      <div className="record-rail-sec">
-        <div className="mf"><span className="mf-label">Segment</span><span className="mf-value"><SegmentBadge segment={ws.segment} small /></span></div>
-        <div className="mf"><span className="mf-label">Business unit</span><span className="mf-value">{ws.businessUnit || "-"}</span></div>
-        <div className="mf"><span className="mf-label">Stakeholders</span><span className="mf-value">{wsStakeholders.length}</span></div>
-        <div className="mf"><span className="mf-label">Markets</span><span className="mf-value">{markets.length ? markets.join(", ") : "-"}</span></div>
-        <div className="mf"><span className="mf-label">Regions</span><span className="mf-value">{regions.length ? regions.join(", ") : "-"}</span></div>
-      </div>
-      <div className="record-rail-sec">
-        <div className="mf"><span className="mf-label">Owners</span>
-          <span className="mf-value">{(ws.owners || []).length ? <OwnersDisplay users={users} owners={ws.owners} size={22} /> : "-"}</span>
-        </div>
-        <div className="mf"><span className="mf-label">Created by</span><span className="mf-value">{creator ? creator.name : "-"}</span></div>
-        <div className="mf"><span className="mf-label">Created</span><span className="mf-value">{formatCreated(ws.createdAt)}</span></div>
-      </div>
-    </div>
-  );
-
-  return (
-    <>
-      <RecordShell
-        backLabel="All workspaces"
-        onBack={onBack}
-        title={ws.name}
-        subtitle={ws.segment + " · " + ws.businessUnit}
-        editing={editing}
-        sections={sections}
-        rightRail={rightRail}
-        navTitle="Workspace"
-        toolbar={
-          <span className="scaffold-controls">
-            {editing ? (
-              <>
-                <button className="btn" onClick={cancel}>Cancel</button>
-                <button className="btn btn-primary" onClick={save} disabled={!valid}>Save changes</button>
-                {canDelete && <button className="btn btn-ghost" title="Delete workspace" onClick={() => setConfirmDelete(true)}><Icon name="close" /> Delete</button>}
-              </>
-            ) : (
-              <>
-                <button className="btn" onClick={onActivate}><Icon name="table" /> Open table</button>
-                <button className="btn btn-primary" onClick={() => setEditing(true)}><Icon name="edit" /> Edit</button>
-              </>
-            )}
-          </span>
-        }
-      />
-      <ConfirmDialog
-        open={confirmDelete}
-        title="Delete workspace?"
-        body={<p style={{ margin: 0 }}><strong>{ws.name}</strong> will be removed. Stakeholders stay in the Master pool. This can't be undone.</p>}
-        confirmLabel="Yes, delete"
-        cancelLabel="Cancel"
-        danger
-        onConfirm={() => { setConfirmDelete(false); if (onDelete) onDelete(); }}
-        onCancel={() => setConfirmDelete(false)}
-      />
-    </>
-  );
 }
 
 // ── WorkspaceModal - popped-up card for Create or Edit ───────────────
