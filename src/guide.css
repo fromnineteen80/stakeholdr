@@ -46,7 +46,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-md-icon { font-family: "Material Symbols Outlined"; }
+/* Material Symbols is the MD3 icon set; md-icon renders the ligature in it. */
+md-icon {
+  font-family: "Material Symbols Outlined";
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 20;
+}
 
 /* ---- App shell layout: top bar + left rail + main ---- */
 .gx-shell {
@@ -70,12 +74,11 @@ md-icon { font-family: "Material Symbols Outlined"; }
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 .gx-appbar-icon { color: var(--md-sys-color-on-surface); }
+/* Type comes from the MD3 .md-typescale-* classes; these rules carry only
+   layout + color, never hand-set font sizes/families. */
 .gx-appbar-title {
   flex: 1;
   margin: 0;
-  font-family: var(--md-ref-typeface-brand);
-  font-size: 19px;
-  font-weight: 500;
   color: var(--md-sys-color-on-surface);
 }
 .gx-appbar-progress { position: absolute; left: 0; right: 0; bottom: 0; }
@@ -100,16 +103,11 @@ md-icon { font-family: "Material Symbols Outlined"; }
 }
 .gx-eyebrow {
   margin: 0 0 2px;
-  font-size: 11px;
-  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--md-sys-color-on-surface-variant);
 }
 .gx-phase-title {
   margin: 0 0 8px;
-  font-family: var(--md-ref-typeface-brand);
-  font-size: 26px;
-  font-weight: 500;
   color: var(--md-sys-color-on-surface);
 }
 .gx-phase-blurb { margin: 0 0 12px; color: var(--md-sys-color-on-surface-variant); max-width: 70ch; }
@@ -125,7 +123,6 @@ md-icon { font-family: "Material Symbols Outlined"; }
   border-radius: 8px;
   background: var(--md-sys-color-surface-container-low);
   color: var(--md-sys-color-on-surface-variant);
-  font-size: 12.5px;
 }
 .gx-note-icon { font-size: 18px; color: var(--md-sys-color-on-surface-variant); }
 
@@ -159,7 +156,5 @@ details[open] > .gx-item-row .gx-item-expand { transform: rotate(180deg); }
   padding: 4px 16px 18px 52px;
   white-space: pre-line;
   color: var(--md-sys-color-on-surface-variant);
-  font-size: 12.5px;
-  line-height: 1.6;
 }
 .gx-item--flat { cursor: default; }

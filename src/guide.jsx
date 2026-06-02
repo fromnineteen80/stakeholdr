@@ -9,6 +9,14 @@ import '@material/web/divider/divider.js';
 import '@material/web/chips/chip-set.js';
 import '@material/web/chips/assist-chip.js';
 import '@material/web/progress/linear-progress.js';
+// Official MD3 typescale: adopt the stylesheet so .md-typescale-* classes work.
+// Fonts come from our --md-ref-typeface-plain (Inter) / -brand (Newsreader) tokens,
+// not Roboto. display/headline -> brand (Newsreader); title/body/label -> plain (Inter).
+import { styles as typescaleStyles } from '@material/web/typography/md-typescale-styles.js';
+if (typeof document !== 'undefined' && typescaleStyles?.styleSheet
+    && !document.adoptedStyleSheets.includes(typescaleStyles.styleSheet)) {
+  document.adoptedStyleSheets = [...document.adoptedStyleSheets, typescaleStyles.styleSheet];
+}
 
 // guide.jsx — Stakeholdr BUILD GUIDE.
 // 100% plug-and-play Material Design 3 (Material Web) — no hand-rolled spans, no custom
@@ -61,6 +69,25 @@ WEB FONTS LOADED (Google Fonts) — ONLY: Inter 400;500;600;700 · Newsreader op
 ICONS: MD3 icon set = Material Symbols, rendered via <md-icon> (the icon ligature name as its text content, e.g. <md-icon>search</md-icon>) — NEVER hand-rolled span glyphs, NEVER @mui/icons-material. Axis settings: FILL 0, wght 300–400, GRAD 0, opsz 20; size 1em, never larger than its label.
 
 ICON VOCABULARY (semantic name → Material Symbols ligature, verbatim — preserve the meaning): search→search · plus→add · filter→filter_list · sort→swap_vert · download→download · close→close · target→map · grid→settings · work→work · table→table_rows · category→category · cases→cases · language→language · beenhere→beenhere · apartment→apartment · check→check · content_copy→content_copy · user→person · users→groups · help→help · map→map · sliders→thumb_up · plan→description · lock→lock · message→chat · expand→open_in_full · logout→logout · edit→edit · chevron→expand_more · chevronUp→expand_less · layers→layers · community→favorite · drag→drag_indicator · chevron-left→chevron_left · chevron-right→chevron_right · double-left→keyboard_double_arrow_left · double-right→keyboard_double_arrow_right · sparkle→auto_awesome · brandmark→id_card · build→build · clock→history · mail→mail · phone→call` },
+      { t: "MD3 component availability — drop-in vs labs vs build-to-spec (Material Web is in maintenance mode)", d:
+`THE HARD FACT — Google Material Web (@material/web) is in MAINTENANCE MODE. Its roadmap states, verbatim, there is "no current work planned for new features or components." So components it never shipped, it will NOT ship. Every build map must classify each UI element into one of the buckets below and NEVER reach for a component that does not exist.
+
+OFFICIAL SETUP (from the Material Web getting-started, adapted — Inter/Newsreader, not their Roboto):
+• Components: import per-component side-effect modules (e.g. import '@material/web/button/filled-button.js') — or '@material/web/all.js' for everything.
+• Typescale: import { styles as typescaleStyles } from '@material/web/typography/md-typescale-styles.js'; then document.adoptedStyleSheets.push(typescaleStyles.styleSheet). Use the .md-typescale-<scale>-<size> classes (e.g. .md-typescale-headline-medium, .md-typescale-body-large).
+• Fonts: their sample uses Roboto as the default; WE OVERRIDE with --md-ref-typeface-plain = Inter (drives title/body/label) and --md-ref-typeface-brand = Newsreader (drives display/headline). No Roboto.
+• Icons: Material Symbols is the MD3 icon set; <md-icon> renders the ligature (font-family "Material Symbols Outlined", axes FILL 0 / wght 400 / GRAD 0 / opsz 20). The font is loaded in index.html.
+• Theme: all color/shape via --md-sys-* tokens at :root (single source).
+
+BUCKET 1 — STABLE drop-in (@material/web/*): md-elevated/filled/filled-tonal/outlined/text-button, md-icon-button, md-fab; md-checkbox, md-radio, md-switch, md-slider; md-chip-set + md-assist/filter/input/suggestion-chip; md-dialog; md-list + md-list-item; md-menu + md-menu-item + md-sub-menu; md-outlined/filled-select + md-select-option; md-outlined/filled-text-field; md-tabs + md-primary/secondary-tab; md-divider, md-elevation, md-icon, md-linear/circular-progress, md-ripple, md-focus-ring.
+
+BUCKET 2 — LABS / experimental drop-in (@material/web/labs/*): cards (released Q4 2023), navigation bar, navigation drawer, navigation tab, segmented button, badge, item. Usable, but flagged experimental (APIs less stable) — verify against the repo before relying on one.
+
+BUCKET 3 — IN THE MD3 SPEC but NOT in Material Web → BUILD TO THE PUBLISHED MD3 SPEC with tokens (faithful MD3, traceable to m3.material.io anatomy/measurements/states — not freelance CSS): top app bar, BOTTOM APP BAR (≈ our app footer), date picker, time picker, search, snackbar, tooltip, banner, bottom sheet.
+
+BUCKET 4 — NOT IN MD3 AT ALL → MD3-TOKENED COMPOSITION (semantic HTML + inline SVG, tokens only): the DATA TABLE (Lists) and the CHART/scatter (Map). No design system ships these.
+
+RULE FOR EVERY BUILD MAP: name the element, state its bucket, and for buckets 3/4 cite the MD3 spec it follows. Compositions use ONLY MD3 tokens (color/shape/typescale/spacing) — never magic numbers, never per-component CSS hacks, never MUI.` },
       { t: "This build guide is the only thing rendered on the .io", done: true },
       { t: "APP_SPEC.md — exhaustive functional spec committed", done: true },
       { t: "CLAUDE.md — engineering discipline + Material-only rule", done: true },
@@ -360,7 +387,7 @@ export function Guide() {
     <div className="gx-shell">
       <header className="gx-appbar">
         <md-icon class="gx-appbar-icon">checklist</md-icon>
-        <h1 className="gx-appbar-title">Stakeholdr — Build Guide</h1>
+        <h1 className="gx-appbar-title md-typescale-headline-small">Stakeholdr — Build Guide</h1>
         <md-assist-chip label={`${doneCount}/${allIds.length} · ${pct}%`}></md-assist-chip>
         <md-linear-progress class="gx-appbar-progress" value={pct / 100}></md-linear-progress>
       </header>
@@ -387,13 +414,13 @@ export function Guide() {
       </nav>
 
       <main className="gx-main">
-        <p className="gx-eyebrow">Phase</p>
-        <h2 className="gx-phase-title">{phase.label}</h2>
-        <p className="gx-phase-blurb">{phase.blurb}</p>
+        <p className="gx-eyebrow md-typescale-label-medium">Phase</p>
+        <h2 className="gx-phase-title md-typescale-headline-medium">{phase.label}</h2>
+        <p className="gx-phase-blurb md-typescale-body-medium">{phase.blurb}</p>
         <md-assist-chip class="gx-phase-count" label={`${phaseDone}/${phase.items.length} in this phase`}></md-assist-chip>
         <div className="gx-note" role="note">
           <md-icon class="gx-note-icon">info</md-icon>
-          <span>We confirm every item together before checking it off and before moving to the next phase.</span>
+          <span className="md-typescale-body-small">We confirm every item together before checking it off and before moving to the next phase.</span>
         </div>
 
         <section className="gx-items">
@@ -413,17 +440,17 @@ export function Guide() {
                 <details className="gx-item" key={id}>
                   <summary className="gx-item-row">
                     {check}
-                    <span className="gx-item-title">{it.t}</span>
+                    <span className="gx-item-title md-typescale-body-large">{it.t}</span>
                     <md-icon className="gx-item-expand">expand_more</md-icon>
                   </summary>
-                  <div className="gx-item-detail">{it.d}</div>
+                  <div className="gx-item-detail md-typescale-body-medium">{it.d}</div>
                 </details>
               );
             }
             return (
               <label className="gx-item gx-item-row gx-item--flat" key={id}>
                 {check}
-                <span className="gx-item-title">{it.t}</span>
+                <span className="gx-item-title md-typescale-body-large">{it.t}</span>
               </label>
             );
           })}
