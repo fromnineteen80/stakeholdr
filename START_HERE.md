@@ -4,6 +4,28 @@ You are inheriting this project mid-flight. The previous session failed by **vib
 producing shallow, labeled, half-finished work**. Do the exact opposite: exhaustive,
 source-true, and **baby-stepped**.
 
+## What went wrong here (read plainly — this is why you must work differently)
+The previous session (Claude) failed, repeatedly and avoidably:
+- It **vibed** — produced plausible, shallow output instead of exhaustive, source-true work.
+- It wrote **bullets and labels instead of lossless content** — *naming* things ("Community —
+  every field") instead of writing the actual fields, values, rules, and behavior.
+- It **talked and meta-debated instead of doing the work**, and kept **agreeing it had failed
+  without ever changing**.
+- It **rebelled against the actual task**: getting the checklist on the `.io` **organized and
+  filled with lossless research and writing to be our single source of truth.** That — not new
+  features — is THE job, and it was avoided turn after turn.
+- It **invented things the user never authorized** (inserted IBM Plex and Newsreader fonts; the
+  user only authorized **Inter**).
+- It worked in **big unverified batches** and broke the organization (app-knowledge dumped under
+  "Assemble the foundation").
+
+## The current state — there are MASSIVE problems
+Assume the app is **broken and incomplete**. The `.io` shows a half-built, disorganized build
+guide; earlier attempts to rebuild pages were reverted; only a couple of guide items have real
+detail; the organization is wrong; unauthorized fonts were added. **Your job is to fix it the
+right way:** build the lossless single source of truth in the guide first, then rebuild from it
+— in baby steps the user confirms.
+
 ## The job, in one sentence
 Capture the ENTIRE existing app as a **lossless spec written into the build guide on the
 .io** (`src/guide.jsx`), box by box — then rebuild the app fresh on MUI **from that
@@ -61,6 +83,22 @@ source**; define a token once → every component inherits it; never style a com
 - `CLAUDE.md` — fuller mandate (auto-loads each session).
 - `APP_SPEC.md` — functional spec. `chats/chat1.md` — design rationale + full roadmap.
 - `src/*` (old app) and `project/*` (`db.js` schema, `HANDOFF.md`, etc.) — the research oracle.
+
+## When the research is COMPLETE — what the old code becomes, and what you build FROM / WITH
+Once the lossless capture is **verified complete** (every page, field, value, rule, and
+behavior written into the guide as actual content):
+1. **THEN — and only then — the old code goes away:** move all of `src/` (except `main.jsx`
+   + `guide.jsx`) into `archive/src/` (move, do NOT delete). It served as the oracle; it must
+   no longer be read or imported. The rebuild is genuinely fresh-eyes.
+2. **You build FROM:** the **single source of truth** — the captured boxes in `src/guide.jsx`,
+   plus the book and `APP_SPEC.md`. **Not** the old code.
+3. **You build WITH:** **MUI, only.** Standard Material Design components (the full library;
+   the exact component + variant named for each element) assembled into the app, themed by
+   **one MUI theme** (`createTheme`: `palette` = the grey/ink tokens above; `typography.fontFamily`
+   = **Inter**). No custom CSS, no non-MUI elements, no fonts beyond Inter.
+
+In one line: **research → lossless single source of truth in the guide → old code archived away
+→ rebuild the whole app from that capture, with MUI + the Inter/palette theme.**
 
 ## First actions in the new session
 1. Read this file + `CLAUDE.md` fully; skim `APP_SPEC.md`.
