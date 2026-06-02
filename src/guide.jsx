@@ -391,7 +391,37 @@ ENERGY:
 • ES — Environmental Stewardship: expectations/contributions toward environmental protection. (I as above, IC = Innovation Collaboration here.)
 
 Each factor's definition above is the source-of-truth tooltip/help text for that factor in the plan UI.` },
-      { t: "Plan — every section, field, validation, review mode" },
+      { t: "Plan page — sections, fields, exists/fix/create (blends the example + the old code)", d:
+`WHAT IT IS — a Plan is a structured engagement document scoped to ONE workspace, produced after the team PICKS a plan algorithm (industry sector + plan type; basic default). The page has three surfaces: a LANDING grid of the workspace's plans, a full-page EDITOR, and a READ/REVIEW view. NAMING RULE: never say "SEP" anywhere user-facing — it is "the plan algorithm" and "relationship recommendation." (The old code's SepExplain/sepScore/SEP_* names must be renamed.)
+
+STATE OF THE OLD CODE — ~25% correct, ~50% of sections missing. Existing editor sections: Scenario, Aligning With Organizational Goals, Stakeholders, Tactics, Measurement. The full plan needs the sections below.
+
+PLAN DATA MODEL (existing fields, keep + extend): id · workspaceId · title · sectorModel · goalModel (the picked algorithm) · owners · status · summary · scenarioSolves/scenarioApproach/scenarioOutcome · goals (inherited snapshot) · goalNotes{goal→text} · issues · team[{userId, role}] · strategies[{id,title,how,timing,ownerId}] · communityIds · priorityOverrides{shId→band} · measurement. ADD: sponsors[{first,last,email}] · consultants[{first,last,org,email}] · tactics as sub-tasks under each strategy with assignee (teammate OR partner-stakeholder) · per-stakeholder {involvement,risk,opportunity} · predictions · keyMessages[] · feedback[{shId,body,at,by}].
+
+THE SECTIONS —
+1) SCENARIO & CONTEXT [EXISTS] — the situation narrative: what it solves / approach / outcome (scenarioSolves/Approach/Outcome). Multiline text.
+2) SUMMARY OF ISSUE & STAKEHOLDER CONCERNS [CREATE] — a condensed summary of the issue and the spread of stakeholder reactions. Multiline text. (From the example; confirm.)
+3) ORGANIZATION GOALS + ALIGNMENT [EXISTS, keep] — INHERITED from the org goals managers set in Settings (ORG_GOALS). For EACH inherited goal, the team writes how THIS plan aligns with / furthers it (goalNotes[goal]). Read-only goal text + a note field per goal.
+4) STRATEGY & TACTICS [FIX] — strategies, each with sub-tasks called TACTICS. A tactic is ASSIGNED to a teammate OR to a stakeholder who is a partner. Tactics MUST NOT overlap other numbered sections — they may reference/point to them, never duplicate. (Old code has flat strategies with one teammate owner → restructure to strategy → tactics[] with assignee = teammate|partner-stakeholder.) Each: title, how, timing, assignee.
+5) TEAM & SPONSORS [CREATE] — the workspace TEAM (auto, with roles) + EXECUTIVE SPONSORS written in (first name, last name, email) + optional OUTSIDE CONSULTANTS not in the workspace (first name, last name, organization, email). Add/remove rows; email captured for sponsors/consultants.
+6) PRIORITY STAKEHOLDERS + RELATIONSHIP RECOMMENDATIONS [FIX] — first the PRIORITY stakeholders (by the stakeholder's existing manual Priority, high first), THEN stakeholders whose RELATIONSHIP RECOMMENDATION aligns with the picked plan algorithm. (This is the "alignment" piece — define deliberately; do not surface the word SEP.) Plus the free-add paths from the algorithm box: add any workspace stakeholder, any Master stakeholder, or create-new (→ added to plan + workspace).
+7) INVOLVEMENT / RISK / OPPORTUNITY [CREATE] — per priority stakeholder, three short fields: Involvement, Risk, Opportunity. BUILD CAREFULLY so it does NOT burden the user (light, optional, inline; not heavy data entry).
+8) POLLING [PREMIUM — LATER] — survey questions + results. Paid add-on; stub with a locked affordance, do not build now.
+9) PERSONAS BY CATEGORY [PREMIUM — LATER] — one persona per stakeholder category (demographics, awareness/concerns, perspective, engagement willingness) from polling + listening. Paid add-on; stub locked.
+10) EXECUTION CHECKLIST [CREATE] — actionable steps to execute the engagement strategy. Checklist items. (From the example; confirm.)
+11) COMMUNITY INVESTMENT PLAN [CREATE] — focus areas; LINKS to the Community module (communityIds). (From the example; confirm.)
+12) PREDICTIONS [CREATE] — anticipated reaction per stakeholder/group ("Predictions & Stakeholder Reactions").
+13) KEY MESSAGES [CREATE] — the communication piece: key messages that may come FROM polling OR be custom, added by the team. List of messages.
+14) FEEDBACK [CREATE] — captures feedback FROM stakeholders; EACH feedback entry BECOMES A NEW NOTE on that stakeholder's profile (the record.stakeholder page, built later) — i.e. writes into the stakeholder's notesHistory. Per-entry: stakeholder, body, timestamp, author.
+MEASUREMENT & REPORTING [EXISTS] — quarterly review of tactics/feedback/community/coalition tied to the fiscal calendar; reports sentiment shifts + map movement each quarter. Keep.
+
+THE ALGORITHM'S ROLE — the picked sector + plan type CLASSIFY the plan and DICTATE CUSTOM PARTS of the page (e.g. which factors/recommendations show). The algorithm is set in plan setup (two selectors; basic default preselected). See the "Plan algorithm" + "FACTOR KEY" boxes.
+
+VALIDATION / COMPLETENESS — the editor flags missing required sections (old code already flags e.g. "Tactics" when empty); extend to the new required sections. Review mode renders the completed plan read-only.
+
+UI KIND (components built later, NO hand-built CSS): landing = a list/table of plans with type chip + tactic count; editor = a sectioned long-form with text fields, per-goal note fields, a strategy/tactics list with an assignee picker (teammate or stakeholder), sponsor/consultant row editors (name/email/org), a stakeholder table (priority-ordered) with light Involvement/Risk/Opportunity inputs, a key-messages list, a feedback composer, and locked add-on panels for Polling/Personas; review = read-only rendering. Exact components come from the universal kit after the full spec.
+
+SCOPE — this is app-knowledge for the plan page; precise field validation rules and the final recommendation-alignment formula are refined when we build the page. Items marked "(confirm)" are example-derived and await your confirmation.` },
       { t: "Community — every section, field, value score, votes, FY budget rollups" },
       { t: "Workspaces & Settings — fields, sub-panes, manager gating, propagation" },
       { t: "Messaging — conversations/messages model, @ / # / $ mention links" },
