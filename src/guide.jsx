@@ -550,7 +550,12 @@ UI KIND (components later, NO hand-built CSS) — a docked sidebar panel + a ful
 
 REALITY CHECK (do NOT assume the old code is done) — the single-boundary above is the DESIGN/intent. In the OLD code the per-feature linkage to it was done MANUALLY, feature by feature, and was STOPPED partway — so it is FAR FROM COMPLETE: not every entity/mutation actually routes cleanly through usePersistentState/Store, and the row-level + auth/RLS work below was never done. The rebuild's job is to wire EVERY entity through the one boundary UNIFORMLY FROM THE START (a fresh build does this cleanly in one pass) — never re-create the old partial, hand-wired state. Treat store.js/db.js/BACKEND_TODO as the BLUEPRINT, not as finished plumbing.
 
-REAL-TIME BACKEND CHOICE — SUPABASE (Postgres + Supabase Realtime). It delivers the multi-browser / multi-device / multi-user live sync the product needs (the "Firestore idea"): postgres_changes = row sync to every client; Presence = who's online (drives the real avatar stack); Broadcast = ephemeral signals. WHY Supabase over Firebase/Firestore: Stakeholdr's data is RELATIONAL (joins, the stakeholderWorkspaces join, FY rollups, ON DELETE CASCADE, row-level security) — Postgres is its home; Firestore's document model would force a re-modeling for no gain. The schema (db.js) and the { table, value } event shape are already drafted for Supabase, so it is both the right fit AND the least-effort path. Auth via Supabase Auth (email/SSO).
+REAL-TIME BACKEND CHOICE — SUPABASE (Postgres + Supabase Realtime). It delivers the multi-browser / multi-device / multi-user live sync the product needs (the "Firestore idea"): postgres_changes = row sync to every client; Presence = who's online (drives the real avatar stack); Broadcast = ephemeral signals. WHY Supabase over Firebase/Firestore: Stakeholdr's data is RELATIONAL (joins, the stakeholderWorkspaces join, FY rollups, ON DELETE CASCADE, row-level security) — Postgres is its home; Firestore's document model would force a re-modeling for no gain. Auth via Supabase Auth (email/SSO).
+
+TWO STATES + THE SWITCH (how the app actually ships) — the rebuild starts from scratch (these source files won't exist), so build the Store to run in TWO interchangeable states behind the one usePersistentState API:
+• STATE A — DEMO (default, no cost, what the client reviews): the Store uses localStorage + BroadcastChannel, seeded from demo data. No accounts, no network. (Demo is single-device / multi-tab; true cross-device sync needs State B.)
+• STATE B — SUPABASE (flip when the client approves and Supabase is paid + enabled): the SAME Store, transport swapped to Supabase (Postgres + Realtime + Auth).
+• THE SWITCH = ONE config flag, never a rewrite: if the Supabase env is present (e.g. VITE_SUPABASE_URL + anon key), the Store routes load/save/subscribe to Supabase (from().select / upsert / delete + a postgres_changes channel per table) and Auth is required; if absent, it uses the localStorage demo transport with seed data. usePersistentState and EVERY component are byte-identical in both states. Flipping on = set env + run the schema SQL (see "Database schema" box) + enable RLS + remove the demo auto-manager. This two-state requirement is the WHOLE reason the boundary must be single + generic.
 
 THE STORE TODAY [BUILT] — window.Store over localStorage + BroadcastChannel:
 • Namespace PREFIX "hpsm:"; SCHEMA_VERSION ("v9") stamped at "hpsm:__schema" — bump it to wipe ONLY our namespace on a breaking change.
@@ -565,7 +570,7 @@ THE STORE TODAY [BUILT] — window.Store over localStorage + BroadcastChannel:
 
 SYNCED ENTITIES (each = one usePersistentState table = one Supabase table) — stakeholders · scores · team · workspaces · stakeholderWorkspaces (join) · users · conversations · messages · community · plans · appConfig. PER-DEVICE, NOT synced: currentUser (this tab's session) and the column-order preference. Exact shapes live in their domain boxes; scores = { [stakeholderId]: { [teamMemberId]: {x,y,createdAt,updatedAt} } }; stakeholderWorkspaces = { [stakeholderId]: [workspaceId,…] }; messages = { [conversationId]: [{id,from,body,at,kind?}] }; appConfig = { appName, accent, brand, brandIcon, fiscalStartMonth, fiscalStartDay, issues[], functions[], sites[] }. Every mutable record carries createdAt + updatedAt.
 
-THE SUPABASE SWAP (one file: the Store) — save → supabase.from(table).upsert(changedRow); delete → supabase.from(table).delete().eq('id', id); subscribe → a per-table postgres_changes channel whose callback fires the SAME (table, value=row) shape; apply the incoming ROW into the in-memory collection BY ID (merge — never replace the whole array). The React layer does not change at all. db.js holds the full SQL: tables, columns, FKs with ON DELETE CASCADE, and drafted RLS.
+THE SUPABASE SWAP (one file: the Store) — save → supabase.from(table).upsert(changedRow); delete → supabase.from(table).delete().eq('id', id); subscribe → a per-table postgres_changes channel whose callback fires the SAME (table, value=row) shape; apply the incoming ROW into the in-memory collection BY ID (merge — never replace the whole array). The React layer does not change at all. The full SQL schema + RLS + the realtime-swap snippet live in the "Database schema" box IN THIS GUIDE (the old store.js/db.js/BACKEND_TODO files are archived at rebuild — the .io is the only source).
 
 ⚠️ TRAP #1 — ROW-LEVEL WRITES (the easy-to-forget killer). TODAY save() persists the WHOLE collection array, which is last-write-wins across users (A edits sh-03, B edits sh-07 at once → second save clobbers the first). When wiring Supabase, EVERY mutation must write only the CHANGED ROW (upsert/delete by id), not the array. Scores: write only the one (stakeholder × teammate) row that changed (PK = stakeholder_id + team_member_id) — never the whole scores object. Use updatedAt for last-modified-wins or a version check for stricter merge. Affected updaters (must each become row-scoped): updateStakeholder, updateWorkspace, updateCommunityApp, updatePlan, updateScore, updateTeam, addStakeholder, addWorkspace, addTeamMember, removeWorkspace, removeUser, removeTeamMember, and the messaging/conversation writers.
 
@@ -574,6 +579,127 @@ THE SUPABASE SWAP (one file: the Store) — save → supabase.from(table).upsert
 OTHER BACKEND-PHASE ITEMS (captured here, owned by their areas) — COUNTRY LIST: replace the static COUNTRIES snapshot with ISO-3166 (REST Countries API or a countries table); keep the site rule { id, city, state?, country } with US sites forcing country="United States". PRESENCE: the online-avatar stack + People sidebar must be REAL (Supabase Realtime Presence or a last_seen heartbeat), with a TRUE +N overflow, excluding the system bot — not the static presence seed. (The universal custom dropdown is a UI item, captured in the component vocabulary, not persistence.)
 
 REALTIME UX — a change in one place (e.g. a message sent in the sidebar) appears live everywhere (the page, other tabs, other users) because every consumer subscribes to its table. Same code path local or via Supabase.` },
+      { t: "Database schema (Supabase) — full SQL + RLS + realtime swap (captured here; source files vanish at rebuild)", d:
+`The complete Postgres schema for STATE B (Supabase). Captured verbatim into the .io because db.js will not exist at rebuild — this guide is the only source. Column case: SQL is snake_case; the in-memory/JSON is camelCase (map at the transport boundary). Every mutable table has created_at/updated_at (timestamptz default now()).
+
+create table users (
+  id uuid primary key, name text not null, first_name text, last_name text,
+  title text, function text, markets text[] default '{}', regions text[] default '{}',
+  email text unique, avatar_color text, avatar_url text,
+  role text not null default 'member' check (role in ('manager','member','system')) );
+
+create table workspaces (
+  id uuid primary key default gen_random_uuid(), name text not null,
+  segment text not null, business_unit text not null,
+  owners uuid[] not null default '{}',
+  created_by uuid references users(id), created_at timestamptz default now() );
+
+create table stakeholders (
+  id uuid primary key default gen_random_uuid(), is_person bool default false,
+  title text, title_other text, first_name text, last_name text, name text, org text,
+  url text, photo text, email text, phone text, x_account text,
+  country text, state text, city text, zip text,
+  category text, type text, market text, region text, geography text,
+  issues text[] default '{}', priority text, status text, tags text[] default '{}',
+  owners uuid[] not null default '{}',
+  notes text, notes_history jsonb default '[]', history jsonb default '[]',
+  created_by uuid references users(id), created_at timestamptz default now(), last_contact date );
+
+create table stakeholder_workspaces (
+  stakeholder_id uuid references stakeholders(id) on delete cascade,
+  workspace_id   uuid references workspaces(id)   on delete cascade,
+  primary key (stakeholder_id, workspace_id) );
+
+create table team_members (
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid references workspaces(id) on delete cascade,
+  user_id uuid references users(id) on delete cascade,
+  weight numeric not null default 1.0, unique (workspace_id, user_id) );
+
+create table scores (
+  stakeholder_id uuid references stakeholders(id) on delete cascade,
+  team_member_id uuid references team_members(id) on delete cascade,
+  x numeric not null check (x between -10 and 10),
+  y numeric not null check (y between -10 and 10),
+  created_at timestamptz default now(), updated_at timestamptz default now(),
+  primary key (stakeholder_id, team_member_id) );
+
+create table conversations (
+  id uuid primary key default gen_random_uuid(),
+  kind text not null, participants uuid[] not null, title text );
+
+create table messages (
+  id uuid primary key default gen_random_uuid(),
+  conversation_id uuid references conversations(id) on delete cascade,
+  from_user uuid references users(id), body text, kind text, at timestamptz default now() );
+
+create table app_config (
+  id int primary key default 1,
+  app_name text, accent text, brand text, brand_icon text,
+  fiscal_start_month int, fiscal_start_day int,
+  issues text[], functions text[],
+  segments jsonb,    -- { [segment]: [business unit, …] }  (manager-editable)
+  categories jsonb,  -- { [category]: [audience type, …] } (manager-editable)
+  invite_code text   -- org join code STKH-XXXX-XXXX (regen = support request) );
+
+create table community_applications (
+  id uuid primary key default gen_random_uuid(),
+  name text not null, kind text, stage text,
+  summary text, description text, rationale text,
+  submitter uuid references users(id), submitter_role text, date_submitted date,
+  represented_stakeholder uuid references stakeholders(id),
+  recipient text, linked_stakeholders uuid[] default '{}',
+  markets text[] default '{}', regions text[] default '{}', issues text[] default '{}',
+  ask_type text, amount numeric, unit text, recurrence text, years int,
+  giving_mode text,                 -- Monetary | In-Kind | Mix (Corporate Giving)
+  timeline text, decision_deadline date, date_approved date,
+  budget jsonb default '{}', approved_amount numeric,
+  license_to_operate int, relationship_impact int,
+  risk jsonb default '{}', attachments jsonb default '[]',
+  owners uuid[] default '{}', created_by uuid references users(id), created_at timestamptz default now() );
+  -- NOTE: extend per the Community box — currency per amount, monetized hours/in-kind value,
+  -- committed_fx_rate + committed_fx_date (historic-rate lock), approver_id + approved_at (manager).
+
+create table community_votes (
+  application_id uuid references community_applications(id) on delete cascade,
+  user_id uuid references users(id) on delete cascade,
+  choice text check (choice in ('for','against','abstain')),
+  primary key (application_id, user_id) );
+
+create table plans (
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid references workspaces(id) on delete cascade,
+  title text, sector_model text, goal_model text, market text, region text,
+  owners jsonb, summary text, status text,
+  scenario_solves text, scenario_approach text, scenario_outcome text,
+  goals jsonb, issues jsonb, goal_notes jsonb, team jsonb,
+  strategies jsonb,        -- extend to tactics[]/phases[] per the Plan box
+  community_ids jsonb, priority_overrides jsonb, measurement text, updated_at date );
+  -- NOTE: extend per the Plan box — sponsors, consultants, tactic assignees (teammate/
+  -- stakeholder/consultant), phases w/ timeframes, per-stakeholder involvement/risk/
+  -- opportunity, predictions, key_messages, feedback (-> stakeholder note).
+
+ROW-LEVEL SECURITY (mirrors the UI gates; client gating is cosmetic, RLS is real) —
+• scores: a user may write only rows whose team_member belongs to them:
+    create policy "score yourself" on scores for all using (
+      exists (select 1 from team_members tm where tm.id = team_member_id and tm.user_id = auth.uid()));
+• workspaces: delete restricted to created_by OR role='manager'.
+• app_config + users.role: writable only by role='manager'.
+• plans / community: writes scoped to owners/team.
+
+REALTIME SWAP (inside the Store, State B) —
+  for (const table of TABLES) {
+    supabase.channel('rt:' + table)
+      .on('postgres_changes', { event: '*', schema: 'public', table }, payload => notify(table, payload.new))
+      .subscribe();
+  }
+  Store.save(table, row) -> await supabase.from(table).upsert(row); delete -> .delete().eq('id', id).
+notify(table, row) is the SAME callback the demo's BroadcastChannel uses — merge the incoming row by id.
+
+DISCREPANCIES TO RESOLVE (schema-draft vs current app — decide at build) —
+1. TEAM SCOPE: this schema drafts team_members PER WORKSPACE (workspace_id FK), but the current app uses ONE GLOBAL team + one global score-set per stakeholder (see Scoring box). Decide: global (as captured/working) vs per-workspace (as drafted). If global, drop workspace_id from team_members (or make scores key on a global team).
+2. PLANS PER WORKSPACE: an earlier schema draft had workspace_id UNIQUE (one plan per workspace), but the Plans landing shows MULTIPLE plans. Captured here WITHOUT unique (many plans per workspace). Confirm.
+3. COMMUNITY: votes are a separate community_votes table (normalized) vs the in-memory votes{} object — the transport maps between them.` },
       { t: "Catalogs — categories/types · markets/regions · segments/BUs · issues · kinds/stages/ask-types" },
       { t: "Design refs — element→MD3 (Material Web) component map · Material Symbols map · Inter/Newsreader" },
       { t: "INDEX — manifest + traceability (feature → spec → MD3 component → verification)" },
