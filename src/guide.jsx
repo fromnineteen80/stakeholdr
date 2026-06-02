@@ -526,8 +526,11 @@ STATUS — concept + requirements captured; the design and the URL-embed API are
       { t: "Messaging — conversations, threads, @ / # / $ / mention links (built + developer-inferred)", d:
 `WHAT IT IS — app-wide team messaging: a right-edge SIDEBAR (quick) and a full MESSAGES PAGE (list left, thread right). Conversations are DIRECT, GROUP, or SYSTEM. Lighter sibling to the Whiteboard (Messages = chat; Whiteboard = advanced collaboration — boundary to confirm). Not workspace-scoped — conversations are app-wide between users.
 
-DATA MODEL [BUILT] — conversation: { id, kind: "direct"|"group"|"system", participants: [userId], title (null for direct; set for group; "Reminders" for system) }. messages: { conversationId → [ { id, from: userId, body, at: ISO } ] }. The SYSTEM conversation (c-system, the "Reminders" bot u-system) includes all non-system users and is read-only (the bot posts scoring reminders; users don't reply).
+DATA MODEL [BUILT] — conversation: { id, kind: "direct"|"group"|"system", participants: [userId], title (null for direct; set for group; "Reminders" for system) }. messages: { conversationId → [ { id, from: userId, body, at: ISO, kind? } ] } — a message may carry an optional kind (e.g. "scoring-needed") for system/typed posts; normal messages omit it. The SYSTEM conversation (c-system, the "Reminders" bot u-system) includes all non-system users and is read-only (the bot posts scoring reminders; users don't reply).
 conversationTitle [BUILT]: system → "Reminders"; direct → the OTHER participant's name; group → its title.
+CONVERSATION-LIST ITEM [BUILT] — each row: participant avatars (ConversationAvatars), the title, a last-message PREVIEW (conversationPreview = the most recent message body, truncated), and its time. Direct rows read "Direct message"; group rows read "{n} people · group".
+
+MENTION DESTINATIONS — openMention(type, id) opens the record's READ-ONLY page by type: stk → stakeholder profile (record.stakeholder.view); wsp → workspace; pln → plan (record.plan.view); cmy → community record. Chips are colored per type.
 
 THREAD RENDER [BUILT] — per message: avatar + author + time; CONSECUTIVE messages from the same author within 60s are GROUPED (avatar/meta hidden); own messages styled "mine"; body run through renderMentions; auto-scroll to newest; empty state "No messages yet."
 
@@ -535,7 +538,7 @@ MENTIONS [BUILT render, compose partial] — FOUR triggers typed in the composer
 
 SEND / START [BUILT] — sendMessage(conversationId, body) appends { id, from: currentUser, body, at: now }. startConversation(participantIds, title) creates a conversation (DM = single participant, no title; group = participants + title) via a New-Conversation modal.
 
-UNREAD [BROKEN — DESIGN] — the message badge currently shows unreadCount = the UNSCORED-stakeholder count, NOT real unread messages (a placeholder hack). REPLACE with genuine unread: store per-user-per-conversation lastReadAt (or lastReadMessageId); unread = messages with at > lastReadAt and from ≠ me; badge = Σ across conversations; opening a conversation marks it read. The Reminders/system thread's "needs scoring" count can remain a separate signal, not the message unread.
+UNREAD [BROKEN — DESIGN, my developer call to confirm] — the message badge currently shows unreadCount = the UNSCORED-stakeholder count, NOT real unread messages (a placeholder hack). REPLACE with genuine unread: store per-user-per-conversation lastReadAt (or lastReadMessageId); unread = messages with at > lastReadAt and from ≠ me; badge = Σ across conversations; opening a conversation marks it read. The Reminders/system thread's "needs scoring" count can remain a separate signal, not the message unread. (This shape is my design, not in the old code — confirm.)
 
 REAL-TIME / PERSISTENCE [BUILT local; DESIGN backend] — messages persist via the Store (localStorage + BroadcastChannel) so a message sent in the sidebar appears on the page live across tabs; the Supabase swap (postgres_changes) is the later transport (see Persistence box).
 
