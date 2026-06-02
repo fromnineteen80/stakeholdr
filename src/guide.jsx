@@ -1,145 +1,197 @@
 import { useState, useMemo } from 'react';
 import {
-  ThemeProvider, createTheme, CssBaseline, Box, AppBar, Toolbar, Typography,
-  Drawer, List, ListItemButton, ListItemIcon, ListItemText, Checkbox,
-  LinearProgress, Chip, Divider, Paper, Alert
+  CssBaseline, Box, AppBar, Toolbar, Typography, Drawer, List, ListItemButton,
+  ListItemIcon, ListItemText, Checkbox, LinearProgress, Chip, Divider, Paper, Alert,
+  Accordion, AccordionSummary, AccordionDetails
 } from '@mui/material';
+import Inventory2Icon from '@mui/icons-material/Inventory2';
+import InventoryIcon from '@mui/icons-material/Inventory';
+import FoundationIcon from '@mui/icons-material/Foundation';
+import PaletteIcon from '@mui/icons-material/Palette';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import TableViewIcon from '@mui/icons-material/TableView';
+import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
+import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
+import DnsIcon from '@mui/icons-material/Dns';
+import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
+import ChecklistIcon from '@mui/icons-material/Checklist';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 // guide.jsx — Stakeholdr BUILD GUIDE.
-// A Material Design guidebook (AppBar + permanent Drawer + main content) that is
-// the single source we follow to rebuild the app, in order, checking items off
-// and confirming each step together. This is intentionally the ONLY thing on the
-// .io until the rebuild is underway; later it becomes a Settings → Guide page we
-// retire. Built with MUI (standard Material Design components) + Inter + Material
-// Symbols — the locked component/type/icon set for everything going forward.
+// 100% plug-and-play Material Design (MUI) — no hand-rolled spans, no custom
+// styling yet (that arrives via the Settings → Design page in Phase 3). This is
+// the single source we follow to rebuild the app, in order. Each item carries
+// the inferred detail captured "as the Anthropic dev"; the user reviews on the
+// .io and we seal each handshake by committing the check (done:true) into source.
 
-const DRAWER = 340;
+const DRAWER = 360;
 const STORAGE = "stakeholdr_guide_checks_v1";
 
-const Msym = ({ name, sx }) => (
-  <Box component="span" className="msym" aria-hidden
-    sx={{ fontFamily: '"Material Symbols Outlined"', fontWeight: 'normal', fontSize: 22, lineHeight: 1, ...sx }}>
-    {name}
-  </Box>
-);
-
-// ── The build, in order. Each phase = a sidebar entry; items = checklist. ──
+// d: optional inferred detail rendered in an expandable panel under the item.
 const PHASES = [
   {
-    id: "p0", icon: "inventory_2", label: "0 · Assemble the foundation",
+    id: "p0", Icon: Inventory2Icon, label: "0 · Assemble the foundation",
     blurb: "Gather everything we need before a single feature is rebuilt — the component kit, the type/icons, and the complete written knowledge layer. Capture first, code later.",
     items: [
       { t: "Material Design installed (MUI) — the only component kit going forward", done: true },
-      { t: "Inter wired as the type; Google Material Symbols wired as the icons", done: true },
+      { t: "Inter (type) + Google Material Symbols (icons) available", done: true },
       { t: "This build guide is the only thing rendered on the .io", done: true },
-      { t: "ECOSYSTEM.md — how it all connects (Master↔workspace↔stakeholder; score→position→prioritize→plan→fund→measure; persistence/realtime; roles)" },
-      { t: "Per-page specs — one doc per page (Login, Lists, Scoring, Map, Plans, Community, Workspaces, Settings, Help, Messages, profiles, record scaffold, workHQ, palette, + future pages)" },
-      { t: "Per-module specs — one doc per source module" },
-      { t: "UX.md — every flow + the why/value behind each decision" },
-      { t: "Content docs — HELP_CONTENT, MAP_GUIDE, RELATIONSHIP_ZONES (colors + recommendations), SCORING_MATH, SEP_ALGORITHMS, TABLE_COLUMNS, CATALOGS" },
-      { t: "Design references — design/MATERIAL_DESIGN (element→MUI map), design/MATERIAL_SYMBOLS (name→glyph map), design/INTER (weights/loading)" },
-      { t: "INDEX.md — master manifest (every doc + page + module + roadmap item, with status)" },
-      { t: "VERIFICATION.md — the per-step acceptance checklist (renders · no console errors · matches spec · Material-only · review on .io)" },
-      { t: "APP_SPEC.md — exhaustive functional spec (already committed)", done: true },
-      { t: "CLAUDE.md — engineering discipline + Material-only rule + links to INDEX/ECOSYSTEM/APP_SPEC", done: true },
+      { t: "APP_SPEC.md — exhaustive functional spec committed", done: true },
+      { t: "CLAUDE.md — engineering discipline + Material-only rule", done: true },
+      { t: "Ecosystem — how it all connects (expand to read the full capture)", d:
+`ENTITIES (11 synced tables): stakeholders · scores · team · workspaces · stakeholderWorkspaces (join) · users · conversations · messages · community · plans · appConfig. Each persists via usePersistentState(table, seed) → Store (localStorage + BroadcastChannel now; Supabase upsert + postgres_changes later). Per-device, NOT synced: currentUser (this tab's session) and the column-order preference.
+
+MASTER ↔ WORKSPACES ↔ STAKEHOLDERS
+• A stakeholder exists ONCE in the pool. stakeholderWorkspaces[stakeholderId] = [workspaceId,…] is the many-to-many join.
+• MASTER (id __master, immovable first tab) = the union of ALL stakeholders — the org-wide overview.
+• A workspace = segment + business unit + owners; it shows ONLY stakeholders whose join includes its id.
+• Create from a workspace → auto-assigned there; create from Master → unassigned. A "Reminders" system message posts "New stakeholder added… please score them."
+• Scoping per view: Lists/Scoring/Map filter to the active workspace (all on Master); Plans are one-per-workspace; Community + Map can aggregate. Scoring is DISABLED on Master (a workspace collaboration act) → redirects to Map.
+
+THE CORE LOOP (the moat — single-sourced, reused everywhere)
+1) SCORE — each teammate places a stakeholder on a 2-axis grid: x = alignment/support (−10..10), y = influence/importance (−10..10). You edit only YOUR column; others are read-only. team[].weight weights each rater.
+2) POSITION — weightedCoord(id, scores, team) = Σ(score·weight)/Σweight per axis → the blended {x,y}. statusFor(x,y) maps it to one of 14 relationship ZONES (each with a color + strategy + action). Drives the table's _x/_y/_status, the map dot, and the profile.
+3) PRIORITIZE — in a Plan, sepScore(stakeholder, sector, goal, ctx) turns position + issue-overlap + community-ties into a 0–100 priority (High/Med/Low), weighted by the plan's sector + goal models. Advisory; a manager overrides per-plan (priorityOverrides); ✦ marks suggestions.
+4) PLAN — a per-workspace engagement doc: scenario · org-goal alignment · the SEP-ranked stakeholder table · tactics (lead/timing) · measurement; links community investments.
+5) FUND — Community applications (philanthropy / corporate giving / PAC / sustainability / social impact) tie to stakeholders (represented + linked), carry a value score = (license-to-operate + relationship-impact)/2, team votes (for/against/abstain), budgets; FY-aware rollups (requested / approved / annual / 3-yr) compute committed spend.
+6) MEASURE — quarterly score snapshots (stakeholder.history) show map movement over time; plans measure against fiscal cadence; community rollups track committed value.
+
+CROSS-LINKS (ids resolved by shared helpers, never forked): affiliatedCommunity (via representedStakeholderId + linkedStakeholders) · stakeholderCumulativeUSD · communityEntryAmount · getWorkspacesForStakeholder · plan.communityIds. Message mentions (@ stakeholder, # plan, …) link back to records.
+
+ROLES: manager (edit anything; delete any workspace; edit config + roles; override SEP) · member (own records; delete only workspaces they created) · system (bots e.g. Reminders; never in pickers/online lists). UI gates on role today; RLS enforces server-side later.
+
+PERSISTENCE / REALTIME: every mutation → Store.save → localStorage + a BroadcastChannel("hpsm-sync") {table,value} that other tabs apply live (storage-event fallback). SCHEMA_VERSION wipes the namespace on breaking changes. The Supabase swap lives ONLY in store.js: save→upsert(row), broadcast→postgres_changes; the UI never changes.` },
+      { t: "Relationship engine — axes · zone grid · recommendations (expand: verbatim from source)", d:
+`AXES & LOOKUP — statusFor(x,y), inputs clamped to ±10.
+y → row:  y>5→0 · 2.5<y≤5→1 · 0<y≤2.5→2 · -2.5<y≤0→3 · -5<y≤-2.5→4 · y≤-5→5
+x → col:  x<-5→0 · -5≤x<0→1 · 0≤x<5→2 · x≥5→3   → returns GRID[row][col]
+X_BOUNDS=[-10,-5,0,5,10] · Y_BOUNDS=[10,5,2.5,0,-2.5,-5,-10]
+Position: weightedCoord(id,scores,team) = Σ(score·weight)/Σweight per axis over raters who scored (weight≤0 skipped); {0,0} if none.
+
+THE 14 ZONES — cells (x / y) · tone · color / text / border · STRATEGY → action (verbatim):
+1 Proactively Defend — x<-5, y>5 · negative · #D26A6A / #FFF / #7a2424 · Address Key Influencer → Launch plan to neutralize a major threat to the industry or company's license to operate; leverage reputation, resources, SMEs, and allied stakeholders to win. Measure and report often.
+2 Defend — {-5..0, y>5} + {x<-5, 2.5<y≤5} · negative · #E29A9A / #7a2424 · Neutralize Threat → Defend license to operate; defend reputation against regular attacks from high-influence stakeholders unlikely to move to support; discredit message/position. Measure & report often.
+3 Protect — {-5..0, 2.5<y≤5} + {x<-5, -2.5<y≤2.5} · negative · #EFBEBE / #7a2424 · Mobilize Defense → Act with internal resources and strategy; defend reputation against regular attacks; manage expectations for changing dynamics/influence. Measure & report regularly.
+4 Respond — {-5≤x<0, -2.5<y≤2.5} · negative · #F4D6D6 / #7a2424 · Challenge Stakeholder → Challenge misinformation; reduce the stakeholder's ability to destabilize the business or challenge brand identity and reputation.
+5 Identify — {x<0, -5<y≤-2.5} · negative · #F8E4E4 / #7a2424 · React To Issues Or Conflict → Neutralize threat; educate; resolve/minimize ability or willingness to maintain conflict. Assign staff/team/working group to execute response.
+6 Monitor — {x<0, y≤-5} · neutral-low · #F4DBB0 / #7a4a14 · Plan Ahead, Listen → Map stakeholder and plan to respond on change; assign staff/team to execute if needed.
+7 Maintain — {0≤x<5, y≤-5} · neutral-low · #F9E4BD / #7a4a14 · Take Steps To Introduce Our Vision And Values → Simple steps to engage; educate/create awareness; look to grow alignment and influence over time.
+8 Connect — {x≥5, y≤-5} · neutral-low · #FCEFD1 / #7a4a14 · Prioritize Resources Elsewhere → No action; prioritize elsewhere but monitor for negative alignment shifts or improved influence over time.
+9 Commit — {x≥0, -5<y≤-2.5} · neutral-low · #FAEACA / #7a4a14 · Understand Needs, Work Towards Common Purpose → Build understanding; pursue continued education/alignment that could lead to collaboration or affinity.
+10 Cooperate — {0≤x<5, -2.5<y≤2.5} · positive · #DDE7C2 / #2f5a26 · Existing Alignment Produces Some Favorable Outcomes → Value already exists; continue at moderate commitment; maintain the relationship.
+11 Collaborate — {0..5, 2.5<y≤5} + {x≥5, -2.5<y≤2.5} · positive · #C2D9A4 / #2f5a26 · Investing In Relationship Will Improve Our Business Or Reputation → Establish opportunities to work together for mutual benefit; leverage influence to increase reputation.
+12 Valuable Relationship — {0≤x<5, y>5} · positive · #B1CF92 / #2f5a26 · Stakeholder Important To Our Business Success → Important surrogate/ally/partner; grow proactively to support and defend the business and increase reputation; prioritize engagement strategies.
+13 High Value Relationship — {x≥5, 2.5<y≤5} · positive · #97C57A / #2f5a26 · Shared Value Introduced → Moderate shared value; grow to produce value and reputation; engage often to meet business and advocacy goals.
+14 Strategic Partner — {x≥5, y>5} · positive · #74B556 / #FFF / #1f3f17 · Shared Value Created → Formalize a working relationship/partnership to produce and measure shared value; grows the business, increases reputation, produces solutions.
+
+STATUS_ORDER (spectrum, most-negative→positive): Proactively Defend · Defend · Protect · Respond · Identify · Monitor · Maintain · Connect · Commit · Cooperate · Collaborate · Valuable Relationship · High Value Relationship · Strategic Partner.` },
+      { t: "Scoring & weighting — grid layout, edit-only-your-column, weightedCoord, score outcomes" },
+      { t: "Lists table — every column: source field · edit mechanism (inline/modal/computed) · MUI component" },
+      { t: "SEP algorithm — base signals, factor→signal map, sector/goal models, bands, manager override" },
+      { t: "Plan — every section, field, validation, review mode" },
+      { t: "Community — every section, field, value score, votes, FY budget rollups" },
+      { t: "Workspaces & Settings — fields, sub-panes, manager gating, propagation" },
+      { t: "Messaging — conversations/messages model, @ / # / $ mention links" },
+      { t: "Persistence / realtime — entities + exact shapes, Store, Supabase swap" },
+      { t: "Catalogs — categories/types · markets/regions · segments/BUs · issues · kinds/stages/ask-types" },
+      { t: "Design refs — element→MUI-component map · Material Symbols map · Inter" },
+      { t: "INDEX — manifest + traceability (feature → spec → MUI component → verification)" },
     ]
   },
   {
-    id: "p1", icon: "inventory", label: "1 · Archive the old .io",
-    blurb: "With the foundation assembled, ARCHIVE the old app — bundle every legacy page/feature module into a parked folder excluded from the build, so nothing can interact with what we build on main. Nothing is deleted; it's parked for reference. CONFIRM before moving.",
+    id: "p1", Icon: InventoryIcon, label: "1 · Archive the old .io",
+    blurb: "Bundle every legacy page/feature module into a parked folder excluded from the build, so nothing can interact with what we build on main. Nothing is deleted — it's parked for reference. CONFIRM before moving.",
     items: [
       { t: "Confirm the foundation (Phase 0) is complete with the user" },
-      { t: "Archive the old app: move the legacy page/feature modules into a parked /archive folder excluded from the Vite build (app, sheet, sheet-modals, scoring, map, plan, community, community-modal, setup, settings, help, messaging, profiles, profile-page, record, intel, palette, landing, tweaks-panel)" },
-      { t: "Keep in src/: guide.jsx, data.js (seed/catalogs/math), store.js (persistence), db.js (schema), components.jsx if reused; keep all docs" },
+      { t: "Move legacy page/feature modules into a parked /archive folder excluded from the Vite build" },
+      { t: "Keep in src/: guide.jsx, data.js, store.js, db.js; keep all docs" },
       { t: "App entry renders only the guide → the .io is this guide on a clean slate" },
-      { t: "Verify the archived code is fully out of the build graph and the guide still renders; commit" },
+      { t: "Verify archived code is out of the build graph and the guide still renders; commit" },
     ]
   },
   {
-    id: "p2", icon: "foundation", label: "2 · Material foundation & theme",
+    id: "p2", Icon: FoundationIcon, label: "2 · Material foundation & theme",
     blurb: "Stand up the neutral, token-driven Material theme everything renders through. Design is a layer, not baked in.",
     items: [
-      { t: "MUI ThemeProvider + CssBaseline at the app root" },
-      { t: "Theme tokens (palette, typography=Inter, shape, spacing) sourced from CSS variables so the Design page can re-skin live" },
+      { t: "MUI theme tokens sourced from CSS variables so the Design page can re-skin live" },
       { t: "Neutral defaults now; no Claude-specific styling yet" },
-      { t: "App shell scaffold: AppBar + (collapsible) Drawer + main content region as MUI components" },
+      { t: "App shell scaffold (AppBar + Drawer + main) from standard MUI components" },
       { t: "Verify: renders, no console errors, Material-only" },
     ]
   },
   {
-    id: "p3", icon: "palette", label: "3 · Settings → Design page",
-    blurb: "Build the page that controls every design token live, with subtext on each control describing the Claude endgame. This is how the look comes back without me ever vibing it.",
+    id: "p3", Icon: PaletteIcon, label: "3 · Settings → Design page",
+    blurb: "The page that controls every design token live, with subtext describing the Claude endgame. This is how the look comes back without vibing.",
     items: [
-      { t: "Design settings UI (MUI) — controls for color tokens, type scale, density, radius, surfaces" },
+      { t: "Design controls (MUI) for color tokens, type scale, density, radius, surfaces" },
       { t: "Writes tokens to :root CSS variables (live re-theme, no reload)" },
-      { t: "Each control carries subtext describing the Claude-ward target value" },
+      { t: "Each control carries subtext describing the Claude-ward target" },
       { t: "Persists to appConfig; defaults remain neutral Material" },
     ]
   },
   {
-    id: "p4", icon: "dashboard", label: "4 · App shell",
-    blurb: "The frame every page lives in — built from standard Material components.",
+    id: "p4", Icon: DashboardIcon, label: "4 · App shell",
+    blurb: "The frame every page lives in — standard Material components only.",
     items: [
-      { t: "Brand bar / AppBar (app icon + name + workspace selector + people + profile)" },
-      { t: "Primary navigation (Lists · Scoring · Map · Plans · Community · Workspaces · Help) — Material nav" },
-      { t: "Workspace scoping (Master vs workspace) + workspace tabs" },
+      { t: "Brand bar / AppBar (icon + name + workspace selector + people + profile)" },
+      { t: "Primary nav (Lists · Scoring · Map · Plans · Community · Workspaces · Help)" },
+      { t: "Workspace scoping (Master vs workspace) + tabs" },
       { t: "Context-aware create (+), command palette (⌘K), footer, login gate" },
-      { t: "Verify against ECOSYSTEM.md + shell spec" },
     ]
   },
   {
-    id: "p5", icon: "table_view", label: "5 · Pages (in order)",
-    blurb: "Rebuild each page from standard Material components, strictly to its spec. Confirm each before moving on.",
+    id: "p5", Icon: TableViewIcon, label: "5 · Pages (in order)",
+    blurb: "Rebuild each page from standard Material components, strictly to its spec. Confirm each before the next.",
     items: [
-      { t: "Lists / workspace table (every column + inline-edit/modal/computed per TABLE_COLUMNS) — Material data table" },
+      { t: "Lists / workspace table (every column + edit mode per TABLE_COLUMNS)" },
       { t: "Scoring (grid: stakeholders × team; edit only your column; weights)" },
-      { t: "Map (zones, dots, drag-rescores-all, history, density) per MAP_GUIDE + RELATIONSHIP_ZONES" },
-      { t: "Plans — landing + record (SEP ranking + override) per SEP_ALGORITHMS" },
+      { t: "Map (zones, dots, drag-rescores-all, history) per MAP_GUIDE + RELATIONSHIP_ZONES" },
+      { t: "Plans — landing + record (SEP ranking + override)" },
       { t: "Community — landing + record (rollups, votes, value score)" },
       { t: "Workspaces (Setup) + workspace record" },
-      { t: "Settings (all sub-panes) + the Design page from Phase 3" },
-      { t: "Help (12-step framework + zone legend) from HELP_CONTENT" },
+      { t: "Settings (all sub-panes) + the Design page" },
+      { t: "Help (12-step framework + zone legend)" },
       { t: "Messages (sidebar + page) + @ / # mention links" },
       { t: "Profiles — stakeholder + user" },
     ]
   },
   {
-    id: "p6", icon: "view_sidebar", label: "6 · Record scaffold & workHQ",
+    id: "p6", Icon: ViewSidebarIcon, label: "6 · Record scaffold & workHQ",
     blurb: "The universal read/edit shell all record types pour through, and the workspace intelligence strip.",
     items: [
       { t: "RecordShell on Material (sub-page nav · content · metadata · footer; read↔edit parity)" },
       { t: "record.[type].view/.edit for stakeholder · plan · community · workspace · setting" },
       { t: "Tables inside records embed the real table component verbatim" },
       { t: "Map-in-scaffold (right-rail scorecard)" },
-      { t: "workHQ — the workspace intelligence strip (define scope with user, then build)" },
+      { t: "workHQ — workspace intelligence strip (define scope with user, then build)" },
     ]
   },
   {
-    id: "p7", icon: "rocket_launch", label: "7 · Demo features (client-side)",
+    id: "p7", Icon: RocketLaunchIcon, label: "7 · Demo features (client-side)",
     blurb: "Everything buildable now without a backend.",
     items: [
       { t: "Import offline stakeholder lists (CSV/Excel → column-map → preview → commit)" },
       { t: "Export plans to Word/PDF (client-side)" },
       { t: "Onboarding product tour (coachmarks, replay in profile menu)" },
       { t: "Settings → Integrations shell (LegiScan, Quorum, CRM, marketing, Drive)" },
-      { t: "Empty states · blank-org vs demo-data seed · bulk actions · universal validation · soft-delete/archive" },
+      { t: "Empty states · blank-org vs demo-data seed · bulk actions · validation · soft-delete/archive" },
       { t: "Mobile companion (stakeholder quick-view · add-note · messages)" },
     ]
   },
   {
-    id: "p8", icon: "dns", label: "8 · Backend (Supabase)",
+    id: "p8", Icon: DnsIcon, label: "8 · Backend (Supabase)",
     blurb: "Multi-user, real-time, secure — the transport swap inside store.js plus the required fixes.",
     items: [
       { t: "Row-level writes (per-row upsert/delete; replace whole-array last-write-wins)" },
       { t: "Supabase Auth + org access-code signup + RLS mirroring the UI gates" },
       { t: "Realtime (postgres_changes) + real presence" },
-      { t: "File storage (logos, photos, attachments) · email (invites, rescore reminders, digests)" },
+      { t: "File storage · email (invites, rescore reminders, digests)" },
       { t: "Fiscal-rollover jobs · activity log / audit trail" },
       { t: "Country list via ISO-3166 API · custom listbox replacing native selects" },
     ]
   },
   {
-    id: "p9", icon: "workspace_premium", label: "9 · Paid add-ons",
+    id: "p9", Icon: WorkspacePremiumIcon, label: "9 · Paid add-ons",
     blurb: "The monetized layer, gated.",
     items: [
       { t: "Personas (persona modeling from polling/listening)" },
@@ -149,19 +201,12 @@ const PHASES = [
   },
 ];
 
-const theme = createTheme({
-  palette: { mode: "light", primary: { main: "#024AD8" }, background: { default: "#FAFAFA" } },
-  typography: { fontFamily: '"Inter","Helvetica","Arial",sans-serif', h5: { fontWeight: 600 }, h6: { fontWeight: 600 } },
-  shape: { borderRadius: 10 },
-});
-
 export function Guide() {
   const allIds = useMemo(() => PHASES.flatMap(p => p.items.map((_, i) => p.id + "-" + i)), []);
   const [active, setActive] = useState(PHASES[0].id);
   const [checks, setChecks] = useState(() => {
     let saved = {};
     try { saved = JSON.parse(localStorage.getItem(STORAGE) || "{}"); } catch {}
-    // Seed any item flagged done:true if not already recorded.
     PHASES.forEach(p => p.items.forEach((it, i) => { const id = p.id + "-" + i; if (it.done && !(id in saved)) saved[id] = true; }));
     return saved;
   });
@@ -177,69 +222,69 @@ export function Guide() {
   const phaseDone = phase.items.filter((_, i) => checks[phase.id + "-" + i]).length;
 
   return (
-    <ThemeProvider theme={theme}>
+    <Box sx={{ display: "flex" }}>
       <CssBaseline />
-      <Box sx={{ display: "flex", minHeight: "100vh" }}>
-        <AppBar position="fixed" elevation={0} sx={{ zIndex: t => t.zIndex.drawer + 1, bgcolor: "#fff", color: "text.primary", borderBottom: "1px solid", borderColor: "divider" }}>
-          <Toolbar sx={{ gap: 1.5 }}>
-            <Msym name="checklist" sx={{ color: "primary.main", fontSize: 26 }} />
-            <Typography variant="h6" noWrap sx={{ flex: 1 }}>Stakeholdr — Build Guide</Typography>
-            <Chip size="small" label={`${doneCount}/${allIds.length} · ${pct}%`} color={pct === 100 ? "success" : "default"} />
-          </Toolbar>
-          <LinearProgress variant="determinate" value={pct} sx={{ height: 3 }} />
-        </AppBar>
+      <AppBar position="fixed" sx={{ zIndex: (t) => t.zIndex.drawer + 1 }}>
+        <Toolbar>
+          <ChecklistIcon sx={{ mr: 1.5 }} />
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>Stakeholdr — Build Guide</Typography>
+          <Chip label={`${doneCount}/${allIds.length} · ${pct}%`} color={pct === 100 ? "success" : "default"} />
+        </Toolbar>
+        <LinearProgress variant="determinate" value={pct} />
+      </AppBar>
 
-        <Drawer variant="permanent" sx={{ width: DRAWER, flexShrink: 0, "& .MuiDrawer-paper": { width: DRAWER, boxSizing: "border-box", borderColor: "divider" } }}>
-          <Toolbar />
-          <Box sx={{ overflow: "auto" }}>
-            <List>
-              {PHASES.map(p => {
-                const total = p.items.length;
-                const done = p.items.filter((_, i) => checks[p.id + "-" + i]).length;
-                return (
-                  <ListItemButton key={p.id} selected={p.id === active} onClick={() => setActive(p.id)} sx={{ alignItems: "flex-start", py: 1.25 }}>
-                    <ListItemIcon sx={{ minWidth: 40, mt: 0.25 }}><Msym name={p.icon} sx={{ color: p.id === active ? "primary.main" : "text.secondary" }} /></ListItemIcon>
-                    <ListItemText primary={p.label} secondary={`${done}/${total} complete`} primaryTypographyProps={{ fontWeight: p.id === active ? 600 : 500, fontSize: 14 }} />
-                  </ListItemButton>
-                );
-              })}
-            </List>
-          </Box>
-        </Drawer>
-
-        <Box component="main" sx={{ flexGrow: 1, p: { xs: 3, md: 5 }, maxWidth: 960 }}>
-          <Toolbar />
-          <Typography variant="overline" color="text.secondary">Phase</Typography>
-          <Typography variant="h5" gutterBottom>{phase.label}</Typography>
-          <Typography color="text.secondary" sx={{ mb: 2, maxWidth: 720, lineHeight: 1.7 }}>{phase.blurb}</Typography>
-          <Chip size="small" variant="outlined" label={`${phaseDone}/${phase.items.length} in this phase`} sx={{ mb: 3 }} />
-          <Alert severity="info" icon={<Msym name="handshake" sx={{ fontSize: 20 }} />} sx={{ mb: 3 }}>
-            We confirm every item together before checking it off and before moving to the next phase.
-          </Alert>
-          <Paper variant="outlined">
-            <List disablePadding>
-              {phase.items.map((it, i) => {
-                const id = phase.id + "-" + i;
-                const on = !!checks[id];
-                return (
-                  <Box key={id}>
-                    {i > 0 && <Divider component="li" />}
-                    <ListItemButton onClick={() => toggle(id)} sx={{ alignItems: "flex-start", py: 1.5 }}>
-                      <ListItemIcon sx={{ minWidth: 44 }}>
-                        <Checkbox edge="start" checked={on} tabIndex={-1} disableRipple />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={it.t}
-                        primaryTypographyProps={{ sx: { textDecoration: on ? "line-through" : "none", color: on ? "text.disabled" : "text.primary", lineHeight: 1.5 } }}
-                      />
-                    </ListItemButton>
-                  </Box>
-                );
-              })}
-            </List>
-          </Paper>
+      <Drawer variant="permanent" sx={{ width: DRAWER, flexShrink: 0, [`& .MuiDrawer-paper`]: { width: DRAWER, boxSizing: "border-box" } }}>
+        <Toolbar />
+        <Box sx={{ overflow: "auto" }}>
+          <List>
+            {PHASES.map(p => {
+              const total = p.items.length;
+              const done = p.items.filter((_, i) => checks[p.id + "-" + i]).length;
+              const PhaseIcon = p.Icon;
+              return (
+                <ListItemButton key={p.id} selected={p.id === active} onClick={() => setActive(p.id)}>
+                  <ListItemIcon><PhaseIcon color={p.id === active ? "primary" : "action"} /></ListItemIcon>
+                  <ListItemText primary={p.label} secondary={`${done}/${total} complete`} />
+                </ListItemButton>
+              );
+            })}
+          </List>
         </Box>
+      </Drawer>
+
+      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+        <Toolbar />
+        <Typography variant="overline" color="text.secondary">Phase</Typography>
+        <Typography variant="h5" gutterBottom>{phase.label}</Typography>
+        <Typography color="text.secondary" paragraph>{phase.blurb}</Typography>
+        <Chip variant="outlined" label={`${phaseDone}/${phase.items.length} in this phase`} sx={{ mb: 2 }} />
+        <Alert severity="info" sx={{ mb: 2 }}>We confirm every item together before checking it off and before moving to the next phase.</Alert>
+        <Paper variant="outlined">
+          <List disablePadding>
+            {phase.items.map((it, i) => {
+              const id = phase.id + "-" + i;
+              const on = !!checks[id];
+              const head = (
+                <ListItemButton onClick={() => toggle(id)}>
+                  <ListItemIcon><Checkbox edge="start" checked={on} tabIndex={-1} disableRipple /></ListItemIcon>
+                  <ListItemText primary={it.t} />
+                </ListItemButton>
+              );
+              return (
+                <Box key={id}>
+                  {i > 0 && <Divider component="li" />}
+                  {it.d ? (
+                    <Accordion disableGutters elevation={0} square>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>{head}</AccordionSummary>
+                      <AccordionDetails><Typography variant="body2" color="text.secondary" sx={{ pl: 7, pb: 1, whiteSpace: "pre-line" }}>{it.d}</Typography></AccordionDetails>
+                    </Accordion>
+                  ) : head}
+                </Box>
+              );
+            })}
+          </List>
+        </Paper>
       </Box>
-    </ThemeProvider>
+    </Box>
   );
 }
