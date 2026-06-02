@@ -33,37 +33,42 @@ const PHASES = [
     id: "p0", Icon: Inventory2Icon, label: "Foundation · setup only",
     blurb: "The build laws and tooling that must exist before anything is rebuilt — the component kit, the type/icon system, and the meta docs. SETUP ONLY; all app knowledge lives in the Capture section below.",
     items: [
-      { t: "Material Design (MUI) is the ONLY component kit — the law for every element", done: true, d:
-`Every UI element is a standard Material Design (MUI) component or a composition of them; never a hand-rolled element.
+      { t: "Material Design 3 (Material Web) is the ONLY component kit — the law for every element", done: true, d:
+`Every UI element is a standard Material Design 3 component from Google's Material Web (@material/web), or a composition of them; never a hand-rolled element, and NEVER MUI or any other third-party kit.
 
-INSTALLED (verbatim): @mui/material@^6 · @emotion/react · @emotion/styled (styling engine) · @mui/icons-material@^6 (icons). Build: React 18.3.1 + react-dom 18.3.1, Vite 5 + @vitejs/plugin-react, deployed to GitHub Pages via Actions.
+THE KIT (verbatim): Google Material Web (@material/web), the official MD3 web-components. Design language + tokens from m3.material.io. NOT MUI / @mui/material — that was a wrong turn and is being removed everywhere. Build: React 18 + Vite, deployed to GitHub Pages. Material Web ships as custom elements (<md-*>) imported per component (e.g. import '@material/web/button/filled-button.js') and rendered directly in JSX; props are attributes, and events are standard DOM events (bound via refs/addEventListener since React 18 does not natively bind custom-element events/props for all cases).
 
-USE THE FULL LIBRARY (never bare-minimum): every element names its specific MUI component + variant + key props as the right tool — e.g. Autocomplete (searchable/large/multi) vs Select+MenuItem (short fixed sets); DataGrid (sort/filter/reorder/virtualize) for the Lists table vs Table (simple static); Button variant contained|outlined|text vs IconButton vs Fab vs ToggleButtonGroup. Structure: AppBar, Drawer, Dialog, Popover, Menu, Accordion, Card, Tabs, Snackbar/Alert, Tooltip, Stepper, Badge, LinearProgress; layout: Box/Stack/Grid. If a standard component does the job, use it unchanged; otherwise compose MUI primitives — never invent a custom element.
+USE THE FULL KIT (never bare-minimum) — name the specific md-* element + variant for each element: buttons md-filled-button / md-outlined-button / md-text-button / md-elevated-button / md-filled-tonal-button, md-icon-button, md-fab; selection md-outlined-select|md-filled-select + md-select-option (short fixed sets), md-menu + md-menu-item (action menus), md-checkbox, md-radio, md-switch, md-slider; chips md-chip-set + md-assist/filter/input/suggestion-chip; inputs md-outlined-text-field / md-filled-text-field; structure md-dialog, md-list + md-list-item, md-tabs + md-primary-tab/md-secondary-tab, md-divider, md-elevation, md-linear-progress / md-circular-progress; md-icon for icons; md-ripple / md-focus-ring for interaction states.
 
-CHANGES TOO: when we later modify something, the change is made with OTHER MUI components — recompose standard Material, never a custom hack.
+NO DATA TABLE, NO CHART IN MD3 — Material Web deliberately ships neither a data grid nor a chart. The Lists table and the Map plot are therefore COMPOSED from MD3 primitives (md-list, md-outlined-select, md-icon-button, md-chip, etc.) plus semantic HTML for tabular structure and inline SVG for the plot, styled SOLELY with MD3 design tokens — never a third-party table/chart library, never MUI. This is the single sanctioned place we compose beyond stock components, and it stays 100% MD3-tokened.
 
-FORBIDDEN: span/div as UI primitives, ad-hoc/inline styling, !important, stray/duplicated/patch CSS, premature visual customization. Plug-and-play only.
+CHANGES TOO: when we later modify something, the change is made with OTHER MD3 / Material Web components — recompose standard MD3, never a custom hack and never MUI.
 
-THEMING = single source, MUI native API, NOT custom code: createTheme({ palette, typography, shape, components }) + ThemeProvider. Define a token once → every component inherits it everywhere → change it once → it updates everywhere. Never style a component one-off. Re-skinning later (toward Claude) = changing tokens only.
+FORBIDDEN: MUI / @mui/* anywhere; non-MD3 UI libraries; raw span/div as UI primitives (allowed only as layout/SVG containers); ad-hoc/inline styling; !important; stray/duplicated/patch CSS; premature visual customization.
 
-PALETTE START-STATE (theme tokens): surfaces light→dark #FFFFFF · #FEFDFC · #FCFBF9 · #F8F7F3 · #F4F3ED · #F0EEE6 · #E8E6DE; ink text.primary #666361 · text.secondary #ABA9A4 · text.disabled #DFDDD6. Small clean type, modest weights, no oversized headings; tight-but-airy spacing; readability/ease/pleasure are the bar.
+THEMING = single source, MD3 tokens as CSS custom properties, NOT per-component code: set --md-sys-color-*, --md-sys-typescale-*, and --md-ref-typeface-* once at :root; every md-* element inherits automatically; change a token once → it updates everywhere. Never style a component one-off. Re-skinning later (toward Claude) = changing tokens only.
 
-DONE = (1) every element is standard MUI; (2) renders, zero console errors; (3) no spans-as-UI, no !important, no bespoke styling; (4) all look comes from theme tokens.` },
-      { t: "Type & Icon system — Inter / Newsreader / IBM Plex Mono + Material Symbols", done: true, d:
-`Three type roles + one icon set, loaded as web fonts, applied via theme tokens (createTheme typography) — never per-component.
+PALETTE START-STATE mapped to MD3 color tokens: surfaces light→dark #FFFFFF · #FEFDFC · #FCFBF9 · #F8F7F3 · #F4F3ED · #F0EEE6 · #E8E6DE → --md-sys-color-surface and the --md-sys-color-surface-container(-low/-high/-highest) ramp + --md-sys-color-surface-dim/-bright; ink → --md-sys-color-on-surface #666361, --md-sys-color-on-surface-variant #ABA9A4, --md-sys-color-outline / outline-variant #DFDDD6. Small clean type, modest weights, no oversized headings; tight-but-airy spacing; readability/ease/pleasure are the bar.
+
+DONE = (1) every element is a standard Material Web md-* component (or sanctioned MD3-tokened composition for table/plot); (2) renders, zero console errors; (3) zero MUI, no spans-as-UI, no !important, no bespoke styling; (4) all look comes from MD3 :root tokens.` },
+      { t: "Type & Icon system — Inter (body/UI) + Newsreader (titles) + Material Symbols icons", done: true, d:
+`TWO type roles only + the MD3 icon set, loaded as web fonts, applied via MD3 typeface/typescale tokens at :root — never per-component. ONLY Inter and Newsreader are authorized; NO IBM Plex Mono, no Roboto, no other family (the previous session wrongly added IBM Plex Mono / extra fonts — removed).
 
 TYPE STACKS (verbatim):
-serif: "Newsreader","Source Serif Pro","Charter","Iowan Old Style",Georgia,serif
-sans:  "Inter","Söhne","Helvetica Neue",Helvetica,Arial,sans-serif
-mono:  "IBM Plex Mono","SF Mono",ui-monospace,Menlo,Consolas,monospace
+plain (body + all UI): "Inter","Helvetica Neue",Helvetica,Arial,sans-serif
+brand (titles only):   "Newsreader","Source Serif Pro","Charter",Georgia,serif
 
-ROLES: Sans (Inter) = body + all UI; base 13px, color = ink, font-feature-settings "ss01","cv11","tnum" (tabular numerals). This is theme.typography.fontFamily. Serif (Newsreader) = display: page titles, section headings. Mono (IBM Plex Mono) = labels/eyebrows/numbers: UPPERCASE, letter-spaced ~0.07–0.09em, ~10–11px, muted ink.
+ROLES, mapped to MD3 typeface tokens:
+• --md-ref-typeface-plain = the Inter stack → drives all body/label/title-small UI text. Base ~13px, color = on-surface ink, font-feature-settings "ss01","cv11","tnum" (tabular numerals).
+• --md-ref-typeface-brand = the Newsreader stack → drives DISPLAY + HEADLINE typescale roles only: page titles and section headings. No oversized headings; hierarchy from role + weight, not size bloat.
+• There is NO monospace role. Numbers/eyebrows that were formerly mono use Inter with tnum tabular figures.
+MD3 typescale tokens (--md-sys-typescale-{display,headline,title,body,label}-{large,medium,small}-{font,size,line-height,weight}) inherit these typefaces automatically; we set the -font tokens to brand for display/headline and plain for everything else.
 
-WEB FONTS LOADED (Google Fonts, verbatim axes): Inter 400;500;600;700 · Newsreader opsz,wght@6..72,400;500;600 · IBM Plex Mono 400;500 · Material Symbols Outlined opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200. (preconnect fonts.googleapis.com + fonts.gstatic.com, two stylesheet links.) Fallback stacks render before fonts load (and in a sandbox where Google Fonts are blocked: Georgia / Helvetica-Arial / Menlo).
+WEB FONTS LOADED (Google Fonts) — ONLY: Inter 400;500;600;700 · Newsreader opsz,wght@6..72,400;500;600 · Material Symbols Outlined opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200. (preconnect fonts.googleapis.com + fonts.gstatic.com.) Fallback stacks render before fonts load (and in a sandbox where Google Fonts are blocked: Helvetica/Arial · Georgia).
 
-ICONS: build rule = MUI icon components from @mui/icons-material (one import per icon, e.g. import ChecklistIcon from '@mui/icons-material/Checklist') — NEVER hand-rolled span glyphs. Material Symbols axis settings for parity: FILL 0, wght 300–400, GRAD 0, opsz 20; size 1em, never larger than its label; re-enable font-feature-settings 'liga' on the icon class.
+ICONS: MD3 icon set = Material Symbols, rendered via <md-icon> (the icon ligature name as its text content, e.g. <md-icon>search</md-icon>) — NEVER hand-rolled span glyphs, NEVER @mui/icons-material. Axis settings: FILL 0, wght 300–400, GRAD 0, opsz 20; size 1em, never larger than its label.
 
-ICON VOCABULARY (semantic name → glyph, verbatim — preserve the meaning when choosing the MUI icon): search→search · plus→add · filter→filter_list · sort→swap_vert · download→download · close→close · target→map · grid→settings · work→work · table→table_rows · category→category · cases→cases · language→language · beenhere→beenhere · apartment→apartment · check→check · content_copy→content_copy · user→person · users→groups · help→help · map→map · sliders→thumb_up · plan→description · lock→lock · message→chat · expand→open_in_full · logout→logout · edit→edit · chevron→expand_more · chevronUp→expand_less · layers→layers · community→favorite · drag→drag_indicator · chevron-left→chevron_left · chevron-right→chevron_right · double-left→keyboard_double_arrow_left · double-right→keyboard_double_arrow_right · sparkle→auto_awesome · brandmark→id_card · build→build · clock→history · mail→mail · phone→call` },
+ICON VOCABULARY (semantic name → Material Symbols ligature, verbatim — preserve the meaning): search→search · plus→add · filter→filter_list · sort→swap_vert · download→download · close→close · target→map · grid→settings · work→work · table→table_rows · category→category · cases→cases · language→language · beenhere→beenhere · apartment→apartment · check→check · content_copy→content_copy · user→person · users→groups · help→help · map→map · sliders→thumb_up · plan→description · lock→lock · message→chat · expand→open_in_full · logout→logout · edit→edit · chevron→expand_more · chevronUp→expand_less · layers→layers · community→favorite · drag→drag_indicator · chevron-left→chevron_left · chevron-right→chevron_right · double-left→keyboard_double_arrow_left · double-right→keyboard_double_arrow_right · sparkle→auto_awesome · brandmark→id_card · build→build · clock→history · mail→mail · phone→call` },
       { t: "This build guide is the only thing rendered on the .io", done: true },
       { t: "APP_SPEC.md — exhaustive functional spec committed", done: true },
       { t: "CLAUDE.md — engineering discipline + Material-only rule", done: true },
