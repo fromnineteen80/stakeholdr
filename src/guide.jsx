@@ -155,23 +155,23 @@ STATUS_ORDER (spectrum, most-negative→positive): Proactively Defend · Defend 
     ]
   },
   {
-    id: "p3", Icon: PaletteIcon, label: "3 · Settings → Design page",
-    blurb: "The page that controls every design token live, with subtext describing the Claude endgame. This is how the look comes back without vibing.",
-    items: [
-      { t: "Design controls (MUI) for color tokens, type scale, density, radius, surfaces" },
-      { t: "Writes tokens to :root CSS variables (live re-theme, no reload)" },
-      { t: "Each control carries subtext describing the Claude-ward target" },
-      { t: "Persists to appConfig; defaults remain neutral Material" },
-    ]
-  },
-  {
-    id: "p4", Icon: DashboardIcon, label: "4 · App shell",
-    blurb: "The frame every page lives in — standard Material components only.",
+    id: "p4", Icon: DashboardIcon, label: "App shell",
+    blurb: "The frame every page lives in — standard Material components only. Built before the Design page, because you can't re-skin a shell that doesn't exist yet.",
     items: [
       { t: "Brand bar / AppBar (icon + name + workspace selector + people + profile)" },
       { t: "Primary nav (Lists · Scoring · Map · Plans · Community · Workspaces · Help)" },
       { t: "Workspace scoping (Master vs workspace) + tabs" },
       { t: "Context-aware create (+), command palette (⌘K), footer, login gate" },
+    ]
+  },
+  {
+    id: "p3", Icon: PaletteIcon, label: "Settings → Design page",
+    blurb: "The page that controls every design token live, with subtext describing the Claude endgame. This is how the look comes back without vibing — and it comes after the shell exists to re-skin.",
+    items: [
+      { t: "Design controls (MUI) for color tokens, type scale, density, radius, surfaces" },
+      { t: "Writes tokens to :root CSS variables (live re-theme, no reload)" },
+      { t: "Each control carries subtext describing the Claude-ward target" },
+      { t: "Persists to appConfig; defaults remain neutral Material" },
     ]
   },
   {
