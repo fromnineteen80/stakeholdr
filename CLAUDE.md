@@ -120,8 +120,13 @@ assistant committing `done:true` into the guide source. Build the control with M
   text/border/strategy/action verbatim), `STATUS_ORDER`, white-text rule — written into
   `src/guide.jsx` as the "Relationship engine" item's detail, verbatim from `data.js`.
 - **Book:** `docs/STAKEHOLDR_BOOK.md` has Parts I–II in prose; Part III+ pending.
-- **NEXT:** continue at **Box 2**, in order from the top of the guide, to the lossless
-  standard above.
+- **NEXT (DO FIRST): CLEAN UP & REORGANIZE `src/guide.jsx`.** The user reports it looks
+  disorganized/"vibed" on the `.io`: inconsistent items, only 2 rows (Ecosystem,
+  Relationship engine) carry longform — the rest are bare bullets. Make it a clean,
+  consistent MUI structure (clear phases; every box expands to its own longform `d`;
+  apply the palette/type start-state via `createTheme`). THEN port Box 1 (MUI law) and
+  Box 2 (Type & Icon) in as longform, and continue in order. The `.io` must look clean
+  and every row must have real detail — never bullets-only.
 
 ## Engineering discipline
 Work in the code, fix at the source, single-source, replace-don't-duplicate, verify it
