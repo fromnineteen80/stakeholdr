@@ -33,8 +33,37 @@ const PHASES = [
     id: "p0", Icon: Inventory2Icon, label: "0 · Assemble the foundation",
     blurb: "Gather everything we need before a single feature is rebuilt — the component kit, the type/icons, and the complete written knowledge layer. Capture first, code later.",
     items: [
-      { t: "Material Design installed (MUI) — the only component kit going forward", done: true },
-      { t: "Inter (type) + Google Material Symbols (icons) available", done: true },
+      { t: "Material Design (MUI) is the ONLY component kit — the law for every element", done: true, d:
+`Every UI element is a standard Material Design (MUI) component or a composition of them; never a hand-rolled element.
+
+INSTALLED (verbatim): @mui/material@^6 · @emotion/react · @emotion/styled (styling engine) · @mui/icons-material@^6 (icons). Build: React 18.3.1 + react-dom 18.3.1, Vite 5 + @vitejs/plugin-react, deployed to GitHub Pages via Actions.
+
+USE THE FULL LIBRARY (never bare-minimum): every element names its specific MUI component + variant + key props as the right tool — e.g. Autocomplete (searchable/large/multi) vs Select+MenuItem (short fixed sets); DataGrid (sort/filter/reorder/virtualize) for the Lists table vs Table (simple static); Button variant contained|outlined|text vs IconButton vs Fab vs ToggleButtonGroup. Structure: AppBar, Drawer, Dialog, Popover, Menu, Accordion, Card, Tabs, Snackbar/Alert, Tooltip, Stepper, Badge, LinearProgress; layout: Box/Stack/Grid. If a standard component does the job, use it unchanged; otherwise compose MUI primitives — never invent a custom element.
+
+CHANGES TOO: when we later modify something, the change is made with OTHER MUI components — recompose standard Material, never a custom hack.
+
+FORBIDDEN: span/div as UI primitives, ad-hoc/inline styling, !important, stray/duplicated/patch CSS, premature visual customization. Plug-and-play only.
+
+THEMING = single source, MUI native API, NOT custom code: createTheme({ palette, typography, shape, components }) + ThemeProvider. Define a token once → every component inherits it everywhere → change it once → it updates everywhere. Never style a component one-off. Re-skinning later (toward Claude) = changing tokens only.
+
+PALETTE START-STATE (theme tokens): surfaces light→dark #FFFFFF · #FEFDFC · #FCFBF9 · #F8F7F3 · #F4F3ED · #F0EEE6 · #E8E6DE; ink text.primary #666361 · text.secondary #ABA9A4 · text.disabled #DFDDD6. Small clean type, modest weights, no oversized headings; tight-but-airy spacing; readability/ease/pleasure are the bar.
+
+DONE = (1) every element is standard MUI; (2) renders, zero console errors; (3) no spans-as-UI, no !important, no bespoke styling; (4) all look comes from theme tokens.` },
+      { t: "Type & Icon system — Inter / Newsreader / IBM Plex Mono + Material Symbols", done: true, d:
+`Three type roles + one icon set, loaded as web fonts, applied via theme tokens (createTheme typography) — never per-component.
+
+TYPE STACKS (verbatim):
+serif: "Newsreader","Source Serif Pro","Charter","Iowan Old Style",Georgia,serif
+sans:  "Inter","Söhne","Helvetica Neue",Helvetica,Arial,sans-serif
+mono:  "IBM Plex Mono","SF Mono",ui-monospace,Menlo,Consolas,monospace
+
+ROLES: Sans (Inter) = body + all UI; base 13px, color = ink, font-feature-settings "ss01","cv11","tnum" (tabular numerals). This is theme.typography.fontFamily. Serif (Newsreader) = display: page titles, section headings. Mono (IBM Plex Mono) = labels/eyebrows/numbers: UPPERCASE, letter-spaced ~0.07–0.09em, ~10–11px, muted ink.
+
+WEB FONTS LOADED (Google Fonts, verbatim axes): Inter 400;500;600;700 · Newsreader opsz,wght@6..72,400;500;600 · IBM Plex Mono 400;500 · Material Symbols Outlined opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200. (preconnect fonts.googleapis.com + fonts.gstatic.com, two stylesheet links.) Fallback stacks render before fonts load (and in a sandbox where Google Fonts are blocked: Georgia / Helvetica-Arial / Menlo).
+
+ICONS: build rule = MUI icon components from @mui/icons-material (one import per icon, e.g. import ChecklistIcon from '@mui/icons-material/Checklist') — NEVER hand-rolled span glyphs. Material Symbols axis settings for parity: FILL 0, wght 300–400, GRAD 0, opsz 20; size 1em, never larger than its label; re-enable font-feature-settings 'liga' on the icon class.
+
+ICON VOCABULARY (semantic name → glyph, verbatim — preserve the meaning when choosing the MUI icon): search→search · plus→add · filter→filter_list · sort→swap_vert · download→download · close→close · target→map · grid→settings · work→work · table→table_rows · category→category · cases→cases · language→language · beenhere→beenhere · apartment→apartment · check→check · content_copy→content_copy · user→person · users→groups · help→help · map→map · sliders→thumb_up · plan→description · lock→lock · message→chat · expand→open_in_full · logout→logout · edit→edit · chevron→expand_more · chevronUp→expand_less · layers→layers · community→favorite · drag→drag_indicator · chevron-left→chevron_left · chevron-right→chevron_right · double-left→keyboard_double_arrow_left · double-right→keyboard_double_arrow_right · sparkle→auto_awesome · brandmark→id_card · build→build · clock→history · mail→mail · phone→call` },
       { t: "This build guide is the only thing rendered on the .io", done: true },
       { t: "APP_SPEC.md — exhaustive functional spec committed", done: true },
       { t: "CLAUDE.md — engineering discipline + Material-only rule", done: true },
