@@ -10,15 +10,17 @@ html {
       tertiary: mat.$blue-palette,
     ),
     typography: (
-      plain-family: ('Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif),
-      brand-family: ('Newsreader', 'Source Serif Pro', Charter, Georgia, serif),
+      plain-family: 'Inter',
+      brand-family: 'Newsreader',
     ),
-    density: 0,
+    density: -1,
   ));
 }
 
-// Start-state palette: override MD3 system color tokens (single source).
+// Start-state palette: override MD3 system color tokens to our restrained greys
+// (single source). Neutralizes the default azure primary so nothing is loud.
 :root {
+  // Surfaces
   --mat-sys-surface: #FFFFFF;
   --mat-sys-surface-container-lowest: #FFFFFF;
   --mat-sys-surface-container-low: #FCFBF9;
@@ -28,11 +30,27 @@ html {
   --mat-sys-surface-dim: #F0EEE6;
   --mat-sys-surface-bright: #FFFFFF;
   --mat-sys-background: #FCFBF9;
+  // Ink
   --mat-sys-on-surface: #666361;
   --mat-sys-on-surface-variant: #ABA9A4;
   --mat-sys-on-background: #666361;
   --mat-sys-outline: #DFDDD6;
   --mat-sys-outline-variant: #E8E6DE;
+  // Restrained, neutral accents (no blue). Re-skinned later via the Design page.
+  --mat-sys-primary: #666361;
+  --mat-sys-on-primary: #FFFFFF;
+  --mat-sys-primary-container: #F0EEE6;
+  --mat-sys-on-primary-container: #666361;
+  --mat-sys-secondary: #8A8782;
+  --mat-sys-on-secondary: #FFFFFF;
+  --mat-sys-secondary-container: #F4F3ED;
+  --mat-sys-on-secondary-container: #666361;
+  --mat-sys-tertiary: #666361;
+  --mat-sys-on-tertiary: #FFFFFF;
+  --mat-sys-tertiary-container: #F0EEE6;
+  --mat-sys-on-tertiary-container: #666361;
+  --mat-sys-error: #B3261E;
+  --mat-sys-on-error: #FFFFFF;
 }
 
 html, body { height: 100%; }
