@@ -208,7 +208,7 @@ TOOLBAR (above the table) — Search (matches displayName/name/org/type/notes/ta
 
 SORT DEFAULT (no explicit sort) — unscored stakeholders FIRST, then by most-recent lastContact (descending).
 
-FOOTER — "{filtered} of {total} stakeholders"; Avg x and Avg y over the filtered rows (1 decimal); Export CSV (a fixed column set — Stakeholder, Organization, Category, Type, Market, Region, Geography, Issues, Priority, Tags, Owners(resolved to names), Last contact, Status, x, y, Relationship, Website, Notes — with proper quote/comma/newline escaping; filename from the workspace label).
+PAGE FOOTER (the page-level footer that sits at the bottom of THIS page; distinct from the always-bottom APP footer, which is a shell element captured in the App-shell box) — "{filtered} of {total} stakeholders"; Avg x and Avg y over the filtered rows (1 decimal); Export CSV (a fixed column set — Stakeholder, Organization, Category, Type, Market, Region, Geography, Issues, Priority, Tags, Owners(resolved to names), Last contact, Status, x, y, Relationship, Website, Notes — with proper quote/comma/newline escaping; filename from the workspace label).
 
 INTERACTIONS — clicking a row selects it (selection lifts to the page; shared with Map/Scoring); double-clicking the name (or the edit icon) opens the full record; the notes cell opens the Notes modal. Horizontal scroll with a left-edge shadow once scrolled; frozen columns auto-size to content and their sticky offsets are measured after layout so they stack deterministically.
 
@@ -217,7 +217,7 @@ MD3 BUILD MAP (Material Web — MD3 has NO data grid AND NO date picker, so this
 • Dropdown cells (Category/Type/Market/Region/Geography/State/Site/Status): md-outlined-select + md-select-option (intrinsic-width so columns autofit).
 • Text cell (Organization): md-outlined-text-field (no label, dense).
 • Date cell (Last contact): a tokened calendar composition opened from an md-icon-button/field inside an md-menu — MD3 ships no date picker, so this is composed from md-* + tokens (same sanctioned exception as the table).
-• Relationship / Priority: md-assist-chip (zone- or priority-tokened via the single-sourced --zone-* / priority custom properties — no inline literals). Issues/Tags/Community: md-chip-set + md-assist-chip. Owners: overlapping avatars. Email/Phone/X/Website: semantic anchors.
+• Relationship (the SCORED zone — computed from the team's scores via statusFor, and it follows the stakeholder everywhere): md-assist-chip, background/text from the single-sourced --zone-* tokens. Priority (a SEPARATE, manually-set High/Medium/Low field): a distinct md-assist-chip with its own priority tokens. Two different fields — relationship is derived from scoring, priority is set by hand. Issues/Tags/Community: md-chip-set + md-assist-chip. Owners: overlapping avatars. Email/Phone/X/Website: semantic anchors.
 • Edit icon + reorder grips: md-icon-button (person/groups, drag_indicator). Column reorder = pointer-DnD composition (MD3 has no DnD).
 • Toolbar: search = md-outlined-text-field with a leading search md-icon; Filter/Sort/Categories/Sites = md-outlined-button (or md-icon-button) opening an md-menu of md-menu-items with md-checkboxes for multi-select (or an md-dialog for the richer multi-field filter panel); impact bands = md-filter-chip set (selected = active filter).
 • Footer: MD3 label/body text + an Export CSV md-text-button (download md-icon). Computed x/y tone via on-surface vs error/positive tokens.
