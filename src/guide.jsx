@@ -18,7 +18,7 @@ import ChecklistIcon from '@mui/icons-material/Checklist';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 // guide.jsx — Stakeholdr BUILD GUIDE.
-// 100% plug-and-play Material Design (MUI) — no hand-rolled spans, no custom
+// 100% plug-and-play Material Design 3 (Material Web) — no hand-rolled spans, no custom
 // styling yet (that arrives via the Settings → Design page in Phase 3). This is
 // the single source we follow to rebuild the app, in order. Each item carries
 // the inferred detail captured "as the Anthropic dev"; the user reviews on the
@@ -133,26 +133,27 @@ DATA MODEL — the team and the scores are GLOBAL, NOT per-workspace. There is O
 THE CELL — each cell is one teammate's rating of one stakeholder: a pair (x, y), each an INTEGER from -10 to 10. x = alignment/support (negative = opposed, positive = supportive); y = influence/importance (negative = low, positive = high). These are the two axes the Relationship engine reads.
 
 EDIT-ONLY-YOUR-COLUMN — a teammate may edit ONLY their own column (the column whose teammate is the logged-in user). Every other column is READ-ONLY. This is deliberate: a position is a blend of independent judgments, so you never overwrite a colleague's read on a stakeholder. Your column is visually distinguished as "mine".
-• Your editable cell: two numeric inputs labelled x and y — MUI TextField type="number", size small, inputProps {min:-10, max:10, step:1}, each with +/- stepper IconButtons (ExpandLess/ExpandMore) that increment/decrement by 1 and CLAMP to [-10,10]. Clamp rule: a non-numeric entry becomes 0; anything out of range snaps to the nearest bound.
+• Your editable cell: two numeric inputs labelled x and y — md-outlined-text-field type="number" (min -10/max 10/step 1), each with +/- stepper md-icon-buttons (expand_less/expand_more) that increment/decrement by 1 and CLAMP to [-10,10]. Clamp rule: a non-numeric entry becomes 0; anything out of range snaps to the nearest bound.
 • A read-only (teammate) cell: shows their x and y values as static text (Typography), with a Tooltip "{teammate name}'s score".
 • UNSCORED ≠ (0,0): a cell a teammate has never scored renders EMPTY (an em-dash "—" placeholder), NOT a fake 0/0, and is EXCLUDED from the weighted average. A real 0,0 is stored only when that teammate deliberately enters it. (Correction from the old build, which showed unscored cells as 0/0 and made "no opinion" indistinguishable from "dead-centre".)
 
 SCORE RECORD (persisted shape) — scores[stakeholderId][teamMemberId] = { x, y, createdAt, updatedAt }. createdAt is stamped on the FIRST score for that cell; updatedAt is restamped on EVERY change. Stored in the synced "scores" table. Removing a teammate deletes that teammate's entry from every stakeholder's row (their column of scores is purged).
 
 THE TEAM BAR (top of page) — one Card per teammate, in this order: (1) the logged-in user first, (2) then workspace owners in their listed order, (3) then everyone else in original order. Each card shows: Avatar + name + title; a WEIGHT control; a derived "% of team" readout.
-• WEIGHT — MUI Slider, min 0.0, max 2.0, step 0.1, baseline 1.0 marked with a tick (Slider marks at 1.0). Value displayed as "1.0x" (mono). Weight 0.0 is a DELIBERATE, legal choice: it keeps the teammate on the workspace but takes their scores OUT of the blend (a "don't weight this person right now" without removing them). Removing a teammate is a separate action (see below).
-• % OF TEAM — that teammate's weight / sum of all weights, shown as a percentage (Chip or Typography). Recomputes live as any weight changes.
-• REMOVE (x) — IconButton (CloseIcon). GATED: only a manager OR a workspace owner may remove or hand off a teammate; for a plain member the control is hidden/disabled. (Correction: the old build had this gate torn out, leaving removal open to anyone.)
+• WEIGHT — md-slider, min 0.0, max 2.0, step 0.1, baseline 1.0 (a tick mark at 1.0). Value displayed as "1.0x" (Inter, tnum figures). Weight 0.0 is a DELIBERATE, legal choice: it keeps the teammate on the workspace but takes their scores OUT of the blend (a "don't weight this person right now" without removing them). Removing a teammate is a separate action (see below).
+• % OF TEAM — that teammate's weight / sum of all weights, shown as a percentage (md-assist-chip or plain MD3-typescale text). Recomputes live as any weight changes.
+• REMOVE (x) — md-icon-button with the close icon. PERMISSIONS: a MANAGER may remove ANY teammate; a teammate may remove THEMSELVES (leave the workspace). A plain member cannot remove other members. The control is shown only when the current user is a manager or it is their own card.
+• SOLE-MEMBER LEAVE — if the only remaining teammate tries to remove themselves (leave), the action is intercepted by the ONE shared confirm/cancel dialog used app-wide (see "Shared confirm/cancel"), warning that leaving CLOSES the workspace; confirm = close the workspace, cancel = abort. No path silently leaves a workspace teamless.
 
-ADD A TEAMMATE — a Dialog with an Autocomplete listing users NOT already on the team and excluding the system bot ("Reminders"); a chosen user is added at weight 1.0 (baseline). Duplicate adds are guarded (a user already on the team is skipped). Also reachable from the context-aware create (+) when the active page is Scoring.
+ADD A TEAMMATE — an md-dialog containing a searchable picker (md-outlined-text-field as a typeahead filtering an md-list of users, or an md-menu of candidates) listing users NOT already on the team and excluding the system bot ("Reminders"); a chosen user is added at weight 1.0 (baseline). Duplicate adds are guarded (a user already on the team is skipped). Also reachable from the context-aware create (+) when the active page is Scoring.
 
-LAST-TEAMMATE GUARD — a workspace cannot have zero teammates. Attempting to remove the final teammate opens a Dialog that forces a choice: HAND OFF to a replacement teammate (Select of eligible users) — which adds the replacement then removes the last member — OR DELETE THE WORKSPACE entirely (destructive Button). No path leaves a workspace teamless.
+LAST-TEAMMATE / WORKSPACE-CLOSURE — a workspace cannot have zero teammates. A manager removing the final teammate, or the sole teammate leaving, routes through the shared confirm/cancel dialog (closure warning). Optionally the dialog offers HAND OFF to a replacement (an md-outlined-select of eligible users) which adds the replacement then removes the last member; otherwise confirming closes (deletes) the workspace. The destructive confirm uses md-filled-button with error-color tokens.
 
-THE MATH — weightedCoord(stakeholderId, scores, team): for each teammate who HAS scored this stakeholder and whose weight > 0, accumulate sx += x*weight, sy += y*weight, totalW += weight; result = { x: sx/totalW, y: sy/totalW }. Two independent reasons a teammate drops out of the blend for a given stakeholder: (a) they have NOT scored that stakeholder (no record) — always excluded, regardless of weight; (b) their weight is 0.0 (weight <= 0 is skipped) — a deliberate exclusion that still leaves them on the team. If the surviving total weight is 0 (nobody scored, or everyone who scored is at weight 0), the position is { x: 0, y: 0 }. The "Weighted (x, y)" column renders each axis to ONE decimal, colored positive/negative; "Relationship" runs statusFor(x,y) and shows the resulting zone as a StatusPill (rebuilt as an MUI Chip themed by the zone's color/text from STATUSES).
+THE MATH — weightedCoord(stakeholderId, scores, team): for each teammate who HAS scored this stakeholder and whose weight > 0, accumulate sx += x*weight, sy += y*weight, totalW += weight; result = { x: sx/totalW, y: sy/totalW }. Two independent reasons a teammate drops out of the blend for a given stakeholder: (a) they have NOT scored that stakeholder (no record) — always excluded, regardless of weight; (b) their weight is 0.0 (weight <= 0 is skipped) — a deliberate exclusion that still leaves them on the team. If the surviving total weight is 0 (nobody scored, or everyone who scored is at weight 0), the position is { x: 0, y: 0 }. The "Weighted (x, y)" column renders each axis to ONE decimal, colored positive/negative; "Relationship" runs statusFor(x,y) and shows the resulting zone as a StatusPill (rebuilt as an md-assist-chip, or a tokened MD3 label, colored by the zone's color/text from STATUSES).
 
 SCOPING — Scoring is a PER-WORKSPACE collaboration act and is DISABLED on Master: if the active workspace is Master, the Scoring nav item is hidden, and navigating to Scoring on Master redirects to the Map. (Master is the read-only org-wide union; you score within a workspace, not across the whole org.)
 
-MUI BUILD MAP — matrix: DataGrid (sticky first "Stakeholder" column, virtualized rows, custom cell renderers for editable vs read-only) or a composed Table for the simpler case; editable x/y cell: two TextField type="number" small + stepper IconButtons; weight: Slider (marks, min 0.1/max 2.0/step 0.1); % of team: Chip; teammate card: Card + Avatar + Typography + IconButton; add-teammate: Dialog + Autocomplete; last-teammate: Dialog + Select + destructive Button; relationship: Chip (zone-themed). Stakeholder name cell is a clickable link (ButtonBase) opening that stakeholder's profile.` },
+MD3 BUILD MAP (Material Web — verified component set; MD3 has NO data grid, so the matrix is a tokened composition) — matrix: a semantic table/CSS-grid structure styled only with MD3 surface/outline tokens (sticky-left "Stakeholder" column via position:sticky, the rest horizontally scrollable), NOT a third-party grid. Each editable x/y cell: two small md-outlined-text-field type="number" (min -10/max 10/step 1) each paired with two md-icon-button steppers (expand_less/expand_more, ±1 clamped); read-only teammate cells: MD3-typescale text. Weight: md-slider (0.0–2.0 step 0.1, tick at 1.0). % of team: md-assist-chip. Teammate card: a tokened surface-container card (md-elevation + layout) holding the avatar (image or initials), name/title text, the md-slider, and the remove md-icon-button. Add-teammate: md-dialog + md-outlined-text-field typeahead over an md-list. Sole-member-leave / closure: the shared confirm/cancel md-dialog. Relationship cell: md-assist-chip (zone-tokened). Stakeholder name cell: an md-text-button (or tokened clickable) opening that stakeholder's profile.` },
       { t: "Scoring cadence & re-score reminders — fiscal quarters, unscored detection, the Reminders bot", done: true, d:
 `WHY THIS EXISTS — the stakeholder pool can be enormous (potentially hundreds of thousands). A workspace deliberately FOCUSES the team on the limited set of stakeholders with enough influence to impact the brand, operations, or goals at hand. Re-scoring on a fixed cadence keeps each focused set's positions current without asking anyone to score the whole universe.
 
@@ -166,7 +167,7 @@ THE REMINDERS BOT — a system user u-system named "Reminders" (role "system"; n
 
 QUARTERLY RE-SCORE CYCLE — at each quarter close (per the fiscal anchor above), the cycle is: (1) snapshot each stakeholder's current weighted position into stakeholder.history as { quarter: "FY## Q#", x, y, recordedAt: ISO-date } — these snapshots are exactly what the Map's history trail draws; (2) notify the relevant workspace's team members (via the Reminders bot) to re-score that workspace's stakeholders for the new quarter. LIVE vs DEFERRED, stated honestly: the unscored detection, the Reminders bot, the new-stakeholder prompt, and the fiscal-quarter math all exist/are configurable now; the AUTOMATED quarter-rollover that performs the snapshot + bulk re-score prompt is the fiscal-rollover job captured with the backend — but it is driven entirely by the Settings fiscal anchor, not invented.
 
-MUI BUILD MAP — fiscal controls (on the Settings page): Select for month + Select/TextField(number) for day, with a quarters PREVIEW as a small Table or List; gated to managers. Reminder surfaces: a Badge on the Scoring nav item, and the Reminders thread inside Messaging (system conversation). (Full Settings and Messaging components are captured in their own boxes.)` },
+MD3 BUILD MAP — fiscal controls (on the Settings page): md-outlined-select for month + md-outlined-select (or md-outlined-text-field type="number") for day, with a quarters PREVIEW as a tokened md-list; gated to managers. Reminder surfaces: a small count indicator on the Scoring nav item (tokened badge composition), and the Reminders thread inside Messaging (system conversation) using md-list/md-list-item. (Full Settings and Messaging components are captured in their own boxes.)` },
       { t: "Map — coordinate→pixel translation, dots, zones, read-only positions, history trail, scorecard", done: true, d:
 `WHAT IT IS — the Map is the visual face of the Relationship engine: a 4-column x 6-row zone grid with one DOT per (visible) stakeholder, positioned by that stakeholder's weighted (x, y). It is READ-ONLY: it displays positions; it does NOT edit them. All scoring/rescoring happens on the Scoring page (per the quarterly cadence); the Map simply reflects the resulting weighted positions. (The old build allowed dragging a dot to rewrite everyone's scores — that drag-to-rescore behavior is REMOVED.) Rows = the same workspace-filtered visibleStakeholders as everywhere else; team + scores are global (see Scoring). Unlike Scoring, the Map IS available on Master (it is the org-wide overview Master redirects Scoring to).
 
@@ -184,19 +185,21 @@ HISTORY / MOVEMENT OVER TIME — a stakeholder carries history: an array of past
 
 THE SCORECARD (right rail) — a collapsible detail panel. EMPTY STATE: a prompt ("Click any dot... or drag a dot to move it") and a "Recently scored" shortlist of the first six stakeholders (each selectable). SELECTED STATE: display name + org; optional website link; the history toggle (if any history); a large StatusPill plus the live "({x.toFixed(1)}, {y.toFixed(1)})"; a STRATEGY card colored by the zone showing zone.strategy (bold) and zone.action; then metadata rows — Category, Type, Market, Region, Geography, Issues (as tag chips), Priority (PriorityPill), Owner (owner avatars), Last contact, Status (status dot), Tags; and the LATEST NOTE (newest of notesHistory by timestamp, falling back to the plain notes field) with its date. The panel can be closed to a thin reopen affordance.
 
-DISPLAY OPTIONS (from the old Tweaks panel; in the rebuild these become MUI Settings/Design controls, not ad-hoc): mapStyle = classic | halo | density (density shades each cell by count via a color-mix toward a neutral; halo adds a soft ring around each dot); showLabels (always show dot names); showZoneLabels (show zone names in cells); dotSize (px; initials appear at >= 22). These are presentational only and never change positions or scores.
+DISPLAY OPTIONS (from the old Tweaks panel; in the rebuild these become MD3 Settings/Design controls, not ad-hoc): mapStyle = classic | halo | density (density shades each cell by count via a color-mix toward a neutral; halo adds a soft ring around each dot); showLabels (always show dot names); showZoneLabels (show zone names in cells); dotSize (px; initials appear at >= 22). These are presentational only and never change positions or scores.
 
-MUI BUILD MAP (verified against the MUI X Charts v6 API — Axis, Composition, and Hooks pages — not from memory) — the Map is built on MUI X Charts ScatterChart via its COMPOSITION API, so the real axis scales drive every custom layer and the coordinate translation above is handled by the chart, not by hand-rolled percentages.
-• Chart container & axes: ChartContainer / ChartsDataProvider with one linear xAxis and one linear yAxis, each { min: -10, max: 10, scaleType: "linear" }. Force the exact ticks with tickInterval (accepts any[]): xAxis tickInterval = every integer or chosen set; yAxis tickInterval = [-10,-7.5,-5,-2.5,0,2.5,5,7.5,10] (the 2.5/5/7.5/10 ticks you require — confirmed supported). Render the axes with ChartsXAxis / ChartsYAxis.
-• Zone grid (behind the points): a custom SVG layer inside the chart that reads useXScale(), useYScale(), and useDrawingArea(); draw 24 <rect>s, one per GRID cell, with x/width from the X_BOUNDS pair run through the x-scale and y/height from the Y_BOUNDS pair run through the y-scale, filled with STATUSES[status].color (pulled from the theme, not inline literals). Optional zone label = a <text>/Typography; cell count = a small Chip/Badge positioned at the cell centre.
-• Dots: the ScatterChart series provides hit-testing/tooltip, but the markers are bespoke, so render dots as a custom layer too — a <g> per stakeholder positioned via xScale(_x)/yScale(_y); each dot a circle filled with the zone color, stroked with zone.border||zone.text (accent when selected), showing 2-letter initials (abbrev) above a size threshold; a name label when labels are on or selected. Selection via the series onItemClick (single click → select + open scorecard + exit history); double-click handler → open full profile.
-• Tooltip: ChartsTooltip with a custom slot rendering "{name} · {zone} · ({x.toFixed(1)}, {y.toFixed(1)})".
-• History trail: another custom SVG layer — dashed <polyline>/<path> through xScale/yScale of each { x, y } snapshot ending at the current point, plus dashed history-dot circles labelled by quarter; shown only in history mode (selected stakeholder only).
-• Axis legend strip (under the stage): plain Typography ("← Works against you", "↑ Greater community influence · ↓ Less", "Works with you →").
-• Scorecard (right rail): a persistent right Drawer (or a Paper side panel) holding Stack + Typography rows; status as Chip size large; issues/tags as Chip; owners as AvatarGroup; "Show history" as a ToggleButton; collapse/expand via IconButton (ChevronRight/ChevronLeft). Empty state lists six recent stakeholders as Buttons.
+MD3 BUILD MAP (Material Web — MD3 ships NO chart component, so the plot is hand-built with inline SVG + HTML, styled SOLELY with MD3 tokens; the resize-proof proportional approach from the old build is reproduced on purpose, not borrowed from any chart lib).
+• Stage: a tokened surface container (md-elevation on a surface-container token) holding the plot area; the plot area is a proportional box (max-width capped, centered, min-0 flex parents) so it scales cleanly on resize — exactly the invariants that made the old map never break.
+• Coordinate space: implement coordToPct directly — left% = ((x+10)/20)*100, top% = ((10-y)/20)*100 (positive y renders UP, origin centre). The zone grid, dots, ticks, and trail all share this one transform.
+• Zone grid (behind the points): either a CSS grid encoding the non-uniform bands as fr ratios (columns 1fr 1fr 1fr 1fr; rows 2fr 1fr 1fr 1fr 1fr 2fr = the 5/2.5/2.5/2.5/2.5/5 heights) OR 24 inline-SVG <rect>s placed from the X_BOUNDS/Y_BOUNDS pairs; each cell filled with STATUSES[status].color via a CSS custom property (no inline literals, no !important). Zone label = MD3 label-typescale text; cell count = a tokened badge at the cell centre.
+• Dots: absolutely-positioned elements (or SVG <g>) at coordToPct(_x,_y), translate(-50%,-50%) to centre on the point; each a circle filled with the zone color, outlined with zone.border||zone.text (md-sys-color-primary/accent when selected), showing 2-letter initials (abbrev) above a size threshold; name label when labels on or selected. Hover/focus via md-ripple/md-focus-ring on a focusable wrapper. Single click → select + open scorecard + exit history; double-click → open full profile. READ-ONLY (no dragging).
+• Tooltip: a tokened MD3 surface popup (composition; MD3 has no tooltip component) rendering "{name} · {zone} · ({x.toFixed(1)}, {y.toFixed(1)})".
+• Axis ticks: y ticks [10,7.5,5,2.5,0,-2.5,-5,-7.5,-10] outside the plot left; x ticks every integer -10..10 below — MD3 label-typescale text positioned by the same transform.
+• History trail: inline-SVG dashed <polyline>/<path> through coordToPct of each { x, y, recordedAt } snapshot ending at the current point, plus dashed history-dot circles labelled by quarter; shown only in history mode (selected stakeholder only).
+• Axis legend strip (under the stage): MD3 label text ("← Works against you", "↑ Greater community influence · ↓ Less", "Works with you →").
+• Scorecard (right rail): a tokened surface-container side panel (md-list/md-list-item rows); status as md-assist-chip (zone-tokened); issues/tags as md-chip-set chips; owners as overlapping avatars; "Show history" as an md-filter-chip or md-text-button toggle; collapse/expand via md-icon-button (chevron_right/chevron_left). Empty state lists six recent stakeholders as md-text-buttons.
 • Display options (mapStyle/showLabels/showZoneLabels/dotSize) come from the Settings/Design controls, read as props — never ad-hoc.
 • Selection state lifts to the page so Scoring/Lists/Map share the selected stakeholder.` },
-      { t: "Lists table — every column: source field · edit mechanism (inline/modal/computed) · MUI component" },
+      { t: "Lists table — every column: source field · edit mechanism (inline/modal/computed) · MD3 component" },
       { t: "SEP algorithm — base signals, factor→signal map, sector/goal models, bands, manager override" },
       { t: "Plan — every section, field, validation, review mode" },
       { t: "Community — every section, field, value score, votes, FY budget rollups" },
@@ -204,8 +207,8 @@ MUI BUILD MAP (verified against the MUI X Charts v6 API — Axis, Composition, a
       { t: "Messaging — conversations/messages model, @ / # / $ mention links" },
       { t: "Persistence / realtime — entities + exact shapes, Store, Supabase swap" },
       { t: "Catalogs — categories/types · markets/regions · segments/BUs · issues · kinds/stages/ask-types" },
-      { t: "Design refs — element→MUI-component map · Material Symbols map · Inter" },
-      { t: "INDEX — manifest + traceability (feature → spec → MUI component → verification)" },
+      { t: "Design refs — element→MD3 (Material Web) component map · Material Symbols map · Inter/Newsreader" },
+      { t: "INDEX — manifest + traceability (feature → spec → MD3 component → verification)" },
     ]
   },
   {
@@ -221,12 +224,12 @@ MUI BUILD MAP (verified against the MUI X Charts v6 API — Axis, Composition, a
   },
   {
     id: "p2", Icon: FoundationIcon, label: "2 · Material foundation & theme",
-    blurb: "Stand up the neutral, token-driven Material theme everything renders through. Design is a layer, not baked in.",
+    blurb: "Stand up the neutral, token-driven MD3 theme everything renders through. Design is a layer, not baked in.",
     items: [
-      { t: "MUI theme tokens sourced from CSS variables so the Design page can re-skin live" },
+      { t: "MD3 :root design tokens (--md-sys-color-* / --md-sys-typescale-* / --md-ref-typeface-*) so the Design page can re-skin live" },
       { t: "Neutral defaults now; no Claude-specific styling yet" },
-      { t: "App shell scaffold (AppBar + Drawer + main) from standard MUI components" },
-      { t: "Verify: renders, no console errors, Material-only" },
+      { t: "App shell scaffold (top bar + nav + main) composed from Material Web md-* components" },
+      { t: "Verify: renders, no console errors, MD3-only (zero MUI)" },
     ]
   },
   {
@@ -243,7 +246,7 @@ MUI BUILD MAP (verified against the MUI X Charts v6 API — Axis, Composition, a
     id: "p3", Icon: PaletteIcon, label: "Settings → Design page",
     blurb: "The page that controls every design token live, with subtext describing the Claude endgame. This is how the look comes back without vibing — and it comes after the shell exists to re-skin.",
     items: [
-      { t: "Design controls (MUI) for color tokens, type scale, density, radius, surfaces" },
+      { t: "Design controls (MD3 / Material Web) for color tokens, type scale, density, radius, surfaces" },
       { t: "Writes tokens to :root CSS variables (live re-theme, no reload)" },
       { t: "Each control carries subtext describing the Claude-ward target" },
       { t: "Persists to appConfig; defaults remain neutral Material" },
@@ -251,7 +254,7 @@ MUI BUILD MAP (verified against the MUI X Charts v6 API — Axis, Composition, a
   },
   {
     id: "p5", Icon: TableViewIcon, label: "5 · Pages (in order)",
-    blurb: "Rebuild each page from standard Material components, strictly to its spec. Confirm each before the next.",
+    blurb: "Rebuild each page from standard MD3 (Material Web) components, strictly to its spec. Confirm each before the next.",
     items: [
       { t: "Lists / workspace table (every column + edit mode per TABLE_COLUMNS)" },
       { t: "Scoring (grid: stakeholders × team; edit only your column; weights)" },
