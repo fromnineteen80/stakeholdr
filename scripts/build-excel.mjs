@@ -11,7 +11,7 @@ import { unzipSync, zipSync, strToU8, strFromU8 } from "fflate";
 import { writeFileSync } from "node:fs";
 
 // ─────────────────────────────────────────────────────────────────────────
-// DATA SNAPSHOT (verbatim from project/data.js — data.js wins)
+// DATA SNAPSHOT (verbatim from project/data.js - data.js wins)
 // ─────────────────────────────────────────────────────────────────────────
 const CATEGORIES = {
   "Communities": ["Charity Organization","Church","Community Alliance","Higher Education","K-12 Educator","Local Business","Media","Military Branch","Neighbor","NGO","Tribes","Veterans","Youth Program","Activist Organization","Activist Member","General Public"],
@@ -156,7 +156,7 @@ const wsMap   = wb.addWorksheet("Map");
 const wsRef   = wb.addWorksheet("Reference", { state:"hidden" });
 
 // ─────────────────────────────────────────────────────────────────────────
-// 5) REFERENCE (hidden) — build first so names exist for validations
+// 5) REFERENCE (hidden) - build first so names exist for validations
 // ─────────────────────────────────────────────────────────────────────────
 const catNames = Object.keys(CATEGORIES);
 // A: CategoryList
@@ -190,15 +190,15 @@ fillNamed(14, WS_STATUSES, "Statuses");     // N
 for(let r=0;r<6;r++) for(let c=0;c<4;c++){ wsRef.getCell(r+1, 16+c).value = GRID[r][c]; }
 wb.definedNames.add("Reference!$P$1:$S$6", "ZoneGrid");
 
-// U..V rows 1..14: RecTable (zone → "strategy — action")
+// U..V rows 1..14: RecTable (zone → "strategy - action")
 STATUS_ORDER.forEach((z,i)=>{
   wsRef.getCell(i+1,21).value = z;                                  // U
-  wsRef.getCell(i+1,22).value = `${STATUSES[z].strategy} — ${STATUSES[z].action}`; // V
+  wsRef.getCell(i+1,22).value = `${STATUSES[z].strategy}: ${STATUSES[z].action}`; // V
 });
 wb.definedNames.add("Reference!$U$1:$V$14", "RecTable");
 
 // ─────────────────────────────────────────────────────────────────────────
-// 2) SCORING — editable weight tool
+// 2) SCORING - editable weight tool
 // ─────────────────────────────────────────────────────────────────────────
 // columns: A=#, B=name, then per teammate x/y pairs C/D, E/F, G/H, I/J, K/L, M=WeightedX, N=WeightedY
 const tmCols = TEAM.map((_,i)=>3+i*2); // C,E,G,I,K  (x col of each teammate; y = +1)
@@ -215,7 +215,7 @@ TEAM.forEach((tm,i)=>{
 wsScore.getCell(1,WX).value = "Weighted X";
 wsScore.getCell(1,WY).value = "Weighted Y";
 
-// Row 2 — editable weights (merged per teammate over their 2 cols) + Sum w
+// Row 2 - editable weights (merged per teammate over their 2 cols) + Sum w
 TEAM.forEach((tm,i)=>{
   const c = tmCols[i];
   const cell = wsScore.getCell(2,c);
@@ -234,7 +234,7 @@ wsScore.getCell(2,WX).font = { ...FONT, italic:true, color:{argb:ARGB(T.mute)} }
 const sumW = tmCols.map(c=>`${wsScore.getColumn(c).letter}2`).join("+");
 wsScore.getCell(2,WY).value = { formula:`=${sumW}` };
 
-// Row 3 — x/y subheaders
+// Row 3 - x/y subheaders
 TEAM.forEach((tm,i)=>{
   const c = tmCols[i];
   wsScore.getCell(3,c).value = "x";
@@ -243,7 +243,7 @@ TEAM.forEach((tm,i)=>{
 wsScore.getCell(3,1).value = "#";
 wsScore.getCell(3,2).value = "Stakeholder";
 
-// Rows 4.. — name mirrors Workspace; scores; weighted formulas referencing weight cells
+// Rows 4.. - name mirrors Workspace; scores; weighted formulas referencing weight cells
 const sumWNoEq = sumW; // C2+E2+...
 for(let i=0;i<N_ROWS;i++){
   const sr = 4+i;            // scoring row
@@ -259,7 +259,7 @@ for(let i=0;i<N_ROWS;i++){
       wsScore.getCell(sr,c+1).value = sc[1];
     });
   }
-  // Weighted X / Y — reference the editable weight cells (C$2 etc.), not numbers
+  // Weighted X / Y - reference the editable weight cells (C$2 etc.), not numbers
   const wxNum = TEAM.map((tm,ti)=>{ const xc=wsScore.getColumn(tmCols[ti]).letter; const wc=wsScore.getColumn(tmCols[ti]).letter; return `${xc}${sr}*${wc}$2`; }).join("+");
   const wyNum = TEAM.map((tm,ti)=>{ const yc=wsScore.getColumn(tmCols[ti]+1).letter; const wc=wsScore.getColumn(tmCols[ti]).letter; return `${yc}${sr}*${wc}$2`; }).join("+");
   wsScore.getCell(sr,WX).value = { formula:`=IF(Workspace!B${wr}="","",(${wxNum})/(${sumWNoEq}))` };
@@ -274,7 +274,7 @@ TEAM.forEach((_,i)=>{ wsScore.getColumn(tmCols[i]).width=6; wsScore.getColumn(tm
 wsScore.getColumn(WX).width=12; wsScore.getColumn(WY).width=12; wsScore.getColumn(1).width=4;
 
 // ─────────────────────────────────────────────────────────────────────────
-// 3) WORKSPACE — main universal table
+// 3) WORKSPACE - main universal table
 // ─────────────────────────────────────────────────────────────────────────
 const WCOLS = ["#","Stakeholder","Organization","Category","Type","Market","Region","Geography","State","Site","Priority","x","y","Relationship","Status","Notes"];
 // A..P (1..16), Q=17 xBand(hidden), R=18 yBand(hidden)
@@ -322,7 +322,7 @@ for(let i=0;i<N_ROWS;i++){
   wsWork.getCell(r,15).dataValidation = { type:"list", allowBlank:true, formulae:["Statuses"] };
 }
 
-// Relationship coloring — (a) direct on seeded rows
+// Relationship coloring - (a) direct on seeded rows
 for(let i=0;i<N_STK;i++){
   const r = FIRST+i;
   const wc = weightedCoord(i);
@@ -332,7 +332,7 @@ for(let i=0;i<N_STK;i++){
   cell.fill = { type:"pattern", pattern:"solid", fgColor:{argb:ARGB(meta.color)} };
   cell.font = { ...FONT, bold:true, color:{argb:ARGB(meta.text)} };
 }
-// (b) CF rules — one per zone over the whole Relationship column (exact match)
+// (b) CF rules - one per zone over the whole Relationship column (exact match)
 const relRange = `N${FIRST}:N${FIRST+N_ROWS-1}`;
 const relRules = STATUS_ORDER.map((z,i)=>{
   const meta = STATUSES[z];
@@ -353,7 +353,7 @@ wsWork.getColumn(17).hidden=true; wsWork.getColumn(18).hidden=true;
 wsWork.getColumn(12).numFmt="0.0"; wsWork.getColumn(13).numFmt="0.0";
 
 // ─────────────────────────────────────────────────────────────────────────
-// 4) MAP — heat grid + scatter (injected) + labels bar + scorecard
+// 4) MAP - heat grid + scatter (injected) + labels bar + scorecard
 // ─────────────────────────────────────────────────────────────────────────
 wsMap.getCell(1,1).value = "STAKEHOLDR MAP";
 wsMap.getCell(1,1).font = { name:"Newsreader", size:18, bold:true, color:{argb:ARGB(T.strong)} };
@@ -397,7 +397,10 @@ for(let r=0;r<6;r++){
     cell.border = thinBorder();
   }
 }
-for(let r=0;r<6;r++) wsMap.getRow(GRID_R0+r).height = 54;
+// row heights PROPORTIONAL to the real coordinate bands (y splits at 5,2.5,0,-2.5,-5):
+// top band (y 5..10) and bottom band (y -10..-5) span 5 units; the middle four span 2.5 each.
+const bandHeights = [64, 32, 32, 32, 32, 64]; // ratio 2:1:1:1:1:2
+for(let r=0;r<6;r++) wsMap.getRow(GRID_R0+r).height = bandHeights[r];
 wsMap.getColumn(1).width=4; wsMap.getColumn(2).width=11;
 [3,4,5,6].forEach(c=>wsMap.getColumn(c).width=22);
 
@@ -411,7 +414,7 @@ wsMap.getCell(BAR,6).value = "Works with you →";
 wsMap.getCell(BAR,6).alignment = { horizontal:"right" };
 [3,4,6].forEach(c=>{ wsMap.getCell(BAR,c).font={...FONT,italic:true,color:{argb:ARGB(T.mute)}}; });
 
-// (D) scorecard — right of the grid, columns H..L
+// (D) scorecard - right of the grid, columns H..L
 const SC = 8; // H
 const scHdr = ["Stakeholder","x","y","Relationship","Recommendation"];
 scHdr.forEach((h,i)=>{ const cell=wsMap.getCell(GRID_TOP,SC+i); cell.value=h; cell.font={...FONT,bold:true,color:{argb:ARGB(T.strong)}}; cell.fill=headerFill(); cell.border=thinBorder(); });
@@ -435,27 +438,186 @@ wsMap.addConditionalFormatting({
 wsMap.getColumn(SC).width=26; wsMap.getColumn(SC+1).width=6; wsMap.getColumn(SC+2).width=6;
 wsMap.getColumn(SC+3).width=20; wsMap.getColumn(SC+4).width=60;
 
+// Focus picker (Excel has no hover; pick one stakeholder to isolate its recommendation)
+wsMap.mergeCells(1, SC, 1, SC+4);
+wsMap.getCell(1,SC).value = "Focus a stakeholder (Excel can't hover the map, so pick one here to isolate its zone and recommendation):";
+wsMap.getCell(1,SC).font = { ...FONT, italic:true, color:{argb:ARGB(T.mute)} };
+wsMap.getCell(1,SC).alignment = { wrapText:true, vertical:"middle" };
+const focusCell = wsMap.getCell(2,SC);
+focusCell.value = STAKEHOLDERS[0].name;
+wsMap.mergeCells(2,SC,2,SC+1);
+focusCell.dataValidation = { type:"list", allowBlank:true, formulae:[`Workspace!$B$2:$B$${FIRST+N_ROWS-1}`] };
+focusCell.font = { ...FONT, bold:true, color:{argb:ARGB(T.accent)} };
+const med = { style:"medium", color:{argb:ARGB(T.accent)} };
+focusCell.border = { top:med,left:med,bottom:med,right:med };
+const mRow = `MATCH($${wsMap.getColumn(SC).letter}$2,Workspace!$B$2:$B$${FIRST+N_ROWS-1},0)`;
+const xV = `INDEX(Workspace!$L$2:$L$${FIRST+N_ROWS-1},${mRow})`;
+const yV = `INDEX(Workspace!$M$2:$M$${FIRST+N_ROWS-1},${mRow})`;
+const relV = `INDEX(Workspace!$N$2:$N$${FIRST+N_ROWS-1},${mRow})`;
+wsMap.mergeCells(2,SC+2,2,SC+3);
+wsMap.getCell(2,SC+2).value = { formula:`=IFERROR("x "&TEXT(${xV},"0.0")&"     y "&TEXT(${yV},"0.0"),"")` };
+wsMap.getCell(2,SC+2).font = { ...FONT, color:{argb:ARGB(T.ink)} };
+const focusRelCell = wsMap.getCell(2,SC+4);
+focusRelCell.value = { formula:`=IFERROR(${relV},"")` };
+focusRelCell.font = { ...FONT, bold:true };
+focusRelCell.alignment = { horizontal:"center" };
+// color the focus relationship cell by zone (relationship thing -> zone colors)
+const frL = wsMap.getColumn(SC+4).letter;
+wsMap.addConditionalFormatting({
+  ref:`${frL}2`,
+  rules: STATUS_ORDER.map((z,i)=>{ const meta=STATUSES[z]; return { type:"expression", formulae:[`$${frL}$2="${z}"`], priority:i+1, style:{ fill:{type:"pattern",pattern:"solid",bgColor:{argb:ARGB(meta.color)}}, font:{color:{argb:ARGB(meta.text)},bold:true} } }; })
+});
+wsMap.mergeCells(3,SC,3,SC+4);
+wsMap.getCell(3,SC).value = { formula:`=IFERROR("Recommendation:  "&VLOOKUP(${relV},RecTable,2,FALSE),"")` };
+wsMap.getCell(3,SC).font = { ...FONT, color:{argb:ARGB(T.ink)} };
+wsMap.getCell(3,SC).alignment = { wrapText:true, vertical:"top" };
+wsMap.getRow(1).height = 30; wsMap.getRow(3).height = 44;
+
 // ─────────────────────────────────────────────────────────────────────────
-// INTRO — all eight Help blocks (a–h)
+// INTRO - all eight Help blocks (a-h)
 // ─────────────────────────────────────────────────────────────────────────
+// Styled to echo the app's Help page: restrained, generous whitespace, the
+// app's own type roles (Newsreader titles / Inter body). Tone accents
+// (neg/neu/pos) and the amber funnel are the Help page's own colors; ZONE
+// colors appear ONLY on relationship things (spectrum, zones grid, strategy
+// reference). No invented palettes, no em dashes.
+const TONE = { negative:"#B33C3C", "neutral-low":"#B07E1F", positive:"#3E7A2E" };
+const toneLabel = { negative:"Negative", "neutral-low":"Winnable", positive:"Positive" };
 let R = 1;
-const setIntro = (row,col,val,opts={})=>{ const cell=wsIntro.getCell(row,col); cell.value=val; cell.font={...FONT,...(opts.font||{})}; if(opts.fill)cell.fill=opts.fill; if(opts.align)cell.alignment=opts.align; if(opts.fillColor)cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:ARGB(opts.fillColor)}}; return cell; };
-const title = (row,t)=>{ const cell=wsIntro.getCell(row,1); cell.value=t; cell.font={name:"Newsreader",size:14,bold:true,color:{argb:ARGB(T.strong)}}; };
-wsIntro.getColumn(1).width=4;
-for(let c=2;c<=8;c++) wsIntro.getColumn(c).width=24;
+// layout: A = gutter, B..H = seven content columns
+wsIntro.getColumn(1).width = 3;
+for(let c=2;c<=8;c++) wsIntro.getColumn(c).width = 21;
+wsIntro.views = [{ showGridLines:false }];
+const sectionTitle = (t)=>{ const cell=wsIntro.getCell(R,2); cell.value=t; cell.font={name:"Newsreader",size:16,color:{argb:ARGB(T.strong)}}; wsIntro.mergeCells(R,2,R,8); R+=2; };
+const bodyP = (t,h=null)=>{ const cell=wsIntro.getCell(R,2); cell.value=t; cell.font={...FONT,color:{argb:ARGB(T.ink)}}; cell.alignment={wrapText:true,vertical:"top"}; wsIntro.mergeCells(R,2,R,8); if(h)wsIntro.getRow(R).height=h; R+=1; };
 
-// (a) Title
-setIntro(R,1,"STAKEHOLDR",{font:{name:"Newsreader",size:24,bold:true,color:{argb:ARGB(T.strong)}}}); R+=2;
+// Title
+const tCell = wsIntro.getCell(R,2); tCell.value="STAKEHOLDR";
+tCell.font={name:"Newsreader",size:28,bold:true,color:{argb:ARGB(T.strong)}};
+wsIntro.mergeCells(R,2,R,8); wsIntro.getRow(R).height=38; R+=2;
 
-// (b) Categories & audience types table — 6 colored category headers, types beneath
-title(R,"Categories & audience types"); R++;
+// Prelude quote
+const q = wsIntro.getCell(R,2);
+q.value = "Stakeholders exist in a public square where ideas are exchanged, your credibility is won or lost, and value is created, shared, or squandered.";
+q.font = { name:"Newsreader", size:14, italic:true, color:{argb:ARGB(T.ink)} };
+wsIntro.mergeCells(R,2,R,8); q.alignment={wrapText:true,vertical:"middle"}; wsIntro.getRow(R).height=40; R+=2;
+
+// How to plan for and engage stakeholders -> the Purpose/Plan/Execute funnel
+sectionTitle("How to plan for and engage stakeholders");
+const funnel = [
+  { phase:"Purpose", color:"#E2A85F", items:["1. Set goals for your organization","2. Issue identification","3. Stakeholder identification","4. Stakeholder prioritization"] },
+  { phase:"Plan",    color:"#F0C988", items:["5. Landscape analysis","6. Cross-functional teams alignment","7. Research and listening sessions","8. Early stakeholder analysis and modeling"] },
+  { phase:"Execute", color:"#F8E2B0", items:["9. Launch campaign","10. Ongoing stakeholder analysis","11. Collaborate with stakeholders","12. Realize shared value where possible"] }
+];
+funnel.forEach((f,fi)=>{
+  const col = 2 + fi*2;
+  const hc = wsIntro.getCell(R, col);
+  hc.value=f.phase.toUpperCase();
+  hc.font={ name:"Inter", size:11, bold:true, color:{argb:ARGB("#7a4a14")} };
+  hc.fill={ type:"pattern", pattern:"solid", fgColor:{argb:ARGB(f.color)} };
+  hc.alignment={horizontal:"center",vertical:"middle"};
+  wsIntro.mergeCells(R,col,R,col+1); wsIntro.getRow(R).height=22;
+  f.items.forEach((it,ii)=>{ const cell=wsIntro.getCell(R+1+ii,col); cell.value=it; cell.font={...FONT,color:{argb:ARGB(T.ink)}}; wsIntro.mergeCells(R+1+ii,col,R+1+ii,col+1); cell.alignment={wrapText:true,vertical:"top"}; });
+});
+R += 1 + 4 + 1;
+
+// How to read the stakeholder map + the two axes
+sectionTitle("How to read the stakeholder map");
+const ax1 = wsIntro.getCell(R,2); ax1.value="X  Impact on the business:    Negative impact ◀ ▶ Positive impact";
+ax1.font={...FONT,bold:true,color:{argb:ARGB(T.strong)}}; wsIntro.mergeCells(R,2,R,8); R+=1;
+const ax2 = wsIntro.getCell(R,2); ax2.value="Y  Influence in the community:    Less influence ▼ ▲ Greater influence";
+ax2.font={...FONT,bold:true,color:{argb:ARGB(T.strong)}}; wsIntro.mergeCells(R,2,R,8); R+=2;
+
+// Spectrum strip (most negative -> most positive). Relationship thing -> zone colors.
+const spec1 = R;
+STATUS_ORDER.forEach((z,i)=>{
+  const meta=STATUSES[z];
+  const row = spec1 + Math.floor(i/7);
+  const col = 2 + (i%7);
+  const cell = wsIntro.getCell(row,col);
+  cell.value=z; cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:ARGB(meta.color)}};
+  cell.font={ name:"Inter", size:9, bold:true, color:{argb:ARGB(meta.text)} };
+  cell.alignment={horizontal:"center",vertical:"middle",wrapText:true};
+});
+wsIntro.getRow(spec1).height=26; wsIntro.getRow(spec1+1).height=26;
+R = spec1 + 2 + 1;
+
+// Three impact cards (Help page styling: paper card, tone title + tone tick, no zone fills)
+const cards = [
+  { title:"Negative impact on organization", tone:"negative", align:"left",   bullets:["Defend license to operate","Challenge misinformation","Plan for their influence in community","Identify their reputation with audiences","“Influencer”"] },
+  { title:"The winnable middle",             tone:"neutral-low", align:"center", bullets:["Dispel myths and misperceptions","Appeal to their priorities","Identify shared value to move them our way","Invest in relationship where possible","Identify our reputation with them"] },
+  { title:"Positive impact on organization", tone:"positive", align:"right",  bullets:["Maximize shared value","Maintain relationship","Champion their cause","Recruit as public surrogates","Communicate often","“Influencer”"] }
+];
+const cardHdr = R;
+const cardRows = Math.max(...cards.map(c=>c.bullets.length));
+cards.forEach((cd,ci)=>{
+  const col = 2 + ci*2;
+  const toneC = TONE[cd.tone];
+  const hc = wsIntro.getCell(cardHdr,col);
+  hc.value=cd.title.toUpperCase();
+  hc.font={ name:"Inter", size:10, bold:true, color:{argb:ARGB(toneC)} };
+  hc.fill={type:"pattern",pattern:"solid",fgColor:{argb:ARGB(T.paper||"#F8F7F3")}};
+  hc.alignment={wrapText:true,horizontal:cd.align,vertical:"middle"};
+  wsIntro.mergeCells(cardHdr,col,cardHdr,col+1); wsIntro.getRow(cardHdr).height=26;
+  for(let bi=0; bi<cardRows; bi++){
+    const cell=wsIntro.getCell(cardHdr+1+bi,col);
+    cell.value = cd.bullets[bi]!=null ? cd.bullets[bi] : "";
+    cell.font={...FONT,color:{argb:ARGB(T.ink)}};
+    cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:ARGB("#F8F7F3")}};
+    cell.alignment={wrapText:true,horizontal:cd.align,vertical:"top"};
+    // tone tick on the leading edge of each card column
+    cell.border = { left:{ style:"medium", color:{argb:ARGB(toneC)} } };
+  }
+  // tone tick on header too
+  hc.border = { left:{ style:"medium", color:{argb:ARGB(toneC)} }, top:{style:"thin",color:{argb:ARGB(toneC)}} };
+});
+R = cardHdr + 1 + cardRows + 1;
+
+// The 14 zones at a glance (the GRID figure) -> zone colors
+sectionTitle("The 14 zones at a glance");
+bodyP("Stakeholders are plotted on a two-axis grid: x measures impact on the business (do they work with you or against you?), y measures their influence in the community. The combination determines the relationship strategy.", 30);
+const gfTop = R;
+for(let r=0;r<6;r++){
+  for(let c=0;c<4;c++){
+    const meta=STATUSES[GRID[r][c]];
+    const cell=wsIntro.getCell(gfTop+r, 2+c);
+    cell.value=GRID[r][c];
+    cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:ARGB(meta.color)}};
+    cell.font={ name:"Inter", size:10, bold:true, color:{argb:ARGB(meta.text)} };
+    cell.alignment={horizontal:"center",vertical:"middle",wrapText:true};
+  }
+  wsIntro.getRow(gfTop+r).height=26;
+}
+// axis legend strip under the figure
+const legRow = gfTop+6;
+const lL = wsIntro.getCell(legRow,2); lL.value="← Works against you"; lL.font={...FONT,italic:true,color:{argb:ARGB(T.mute)}};
+wsIntro.mergeCells(legRow,3,legRow,4);
+const lC = wsIntro.getCell(legRow,3); lC.value="↑ Greater community influence   ·   ↓ Less community influence"; lC.font={...FONT,italic:true,color:{argb:ARGB(T.mute)}}; lC.alignment={horizontal:"center"};
+const lR = wsIntro.getCell(legRow,5); lR.value="Works with you →"; lR.font={...FONT,italic:true,color:{argb:ARGB(T.mute)}}; lR.alignment={horizontal:"right"};
+R = legRow + 2;
+
+// Strategy reference -> 14 rows. Zone color appears ONLY on the zone swatch cell.
+sectionTitle("Strategy reference");
+bodyP("For every zone, a stakeholder's position on the map returns a recommended posture and suggested immediate actions your team can take.", 28);
+const zHdr = R;
+const zHeads = [["Zone",2,2],["Tone",3,3],["Strategy and recommended action",4,8]];
+zHeads.forEach(([h,a,b])=>{ const cell=wsIntro.getCell(zHdr,a); cell.value=h; cell.font={...FONT,bold:true,color:{argb:ARGB(T.strong)}}; cell.fill=headerFill(); cell.border=thinBorder(); wsIntro.mergeCells(zHdr,a,zHdr,b); });
+STATUS_ORDER.forEach((z,i)=>{
+  const r = zHdr+1+i; const meta=STATUSES[z];
+  const zc = wsIntro.getCell(r,2); zc.value=z; zc.fill={type:"pattern",pattern:"solid",fgColor:{argb:ARGB(meta.color)}}; zc.font={...FONT,bold:true,color:{argb:ARGB(meta.text)}}; zc.alignment={vertical:"middle",wrapText:true}; zc.border=thinBorder();
+  const tc = wsIntro.getCell(r,3); tc.value=toneLabel[meta.tone]; tc.font={...FONT,color:{argb:ARGB(TONE[meta.tone])},bold:true}; tc.alignment={vertical:"middle"}; tc.border=thinBorder();
+  const ac = wsIntro.getCell(r,4); ac.value=`${meta.strategy}. ${meta.action}`; ac.font={...FONT,color:{argb:ARGB(T.ink)}}; ac.alignment={wrapText:true,vertical:"top"}; wsIntro.mergeCells(r,4,r,8); ac.border=thinBorder();
+  wsIntro.getRow(r).height=34;
+});
+R = zHdr + 1 + STATUS_ORDER.length + 2;
+
+// Categories and audience types (restrained grey headers, no invented colors)
+sectionTitle("Categories and audience types");
 const catHeaderRow = R;
 catNames.forEach((c,ci)=>{
   const cell = wsIntro.getCell(catHeaderRow, 2+ci);
   cell.value = c;
-  // pick a representative zone-ish color per category for the header chip
-  const palette = ["#C2D9A4","#97C57A","#F4DBB0","#B1CF92","#DDE7C2","#EFBEBE"];
-  cell.fill = { type:"pattern", pattern:"solid", fgColor:{argb:ARGB(palette[ci%palette.length])} };
+  cell.fill = headerFill();
   cell.font = { ...FONT, bold:true, color:{argb:ARGB(T.strong)} };
   cell.alignment = { horizontal:"center" };
   cell.border = thinBorder();
@@ -464,75 +626,20 @@ const maxTypes = Math.max(...catNames.map(c=>CATEGORIES[c].length));
 for(let t=0;t<maxTypes;t++){
   catNames.forEach((c,ci)=>{
     const v = CATEGORIES[c][t];
-    if(v!=null){ const cell=wsIntro.getCell(catHeaderRow+1+t, 2+ci); cell.value=v; cell.font={...FONT,color:{argb:ARGB(T.ink)}}; cell.border=thinBorder(); }
+    if(v!=null){ const cell=wsIntro.getCell(catHeaderRow+1+t, 2+ci); cell.value=v; cell.font={...FONT,color:{argb:ARGB(T.ink)}}; cell.border={ bottom:{style:"thin",color:{argb:ARGB(T.lightborder)}} }; }
   });
 }
-R = catHeaderRow + 1 + maxTypes + 1;
+R = catHeaderRow + 1 + maxTypes + 2;
 
-// (c) Prelude quote
-const q = wsIntro.getCell(R,1);
-q.value = "Stakeholders exist in a public square where ideas are exchanged, your credibility is won or lost, and value is created, shared, or squandered.";
-q.font = { name:"Newsreader", size:13, italic:true, color:{argb:ARGB(T.ink)} };
-wsIntro.mergeCells(R,1,R,8); q.alignment={wrapText:true,vertical:"middle"}; wsIntro.getRow(R).height=34; R+=2;
-
-// (d) Engagement funnel — Purpose / Plan / Execute, 12 steps in three columns
-title(R,"How to plan for and engage stakeholders"); R++;
-const funnel = [
-  { phase:"Purpose", items:["1. Set goals for your organization","2. Issue identification","3. Stakeholder identification","4. Stakeholder prioritization"] },
-  { phase:"Plan",    items:["5. Landscape analysis","6. Cross-functional teams alignment","7. Research & listening sessions","8. Early stakeholder analysis & modeling"] },
-  { phase:"Execute", items:["9. Launch campaign","10. Ongoing stakeholder analysis","11. Collaborate with stakeholders","12. Realize shared value where possible"] }
-];
-funnel.forEach((f,fi)=>{
-  const col = 2 + fi*2; // spread across pairs of columns
-  const hc = wsIntro.getCell(R, col);
-  hc.value=f.phase; hc.font={...FONT,bold:true,color:{argb:ARGB(T.strong)}}; hc.fill=headerFill(); hc.alignment={horizontal:"center"}; hc.border=thinBorder();
-  wsIntro.mergeCells(R,col,R,col+1);
-  f.items.forEach((it,ii)=>{ const cell=wsIntro.getCell(R+1+ii,col); cell.value=it; cell.font={...FONT}; wsIntro.mergeCells(R+1+ii,col,R+1+ii,col+1); cell.alignment={wrapText:true}; });
-});
-R += 1 + 4 + 1;
-
-// (e) How to read the map + the two axes
-title(R,"How to read the stakeholder map"); R++;
-setIntro(R,1,"X — Impact on the business:   Negative impact ◀ ▶ Positive impact",{font:{bold:true}}); wsIntro.mergeCells(R,1,R,8); R++;
-setIntro(R,1,"Y — Influence in the community:   Less influence ▼ ▲ Greater influence",{font:{bold:true}}); wsIntro.mergeCells(R,1,R,8); R+=2;
-
-// (f) Three impact cards with bullet lists (verbatim from help.jsx)
-const cards = [
-  { title:"Negative impact on organization", color:"#EFBEBE", bullets:["Defend license to operate","Challenge misinformation","Plan for their influence in community","Identify their reputation with audiences","\"Influencer\""] },
-  { title:"The winnable middle", color:"#F9E4BD", bullets:["Dispel myths and misperceptions","Appeal to their priorities","Identify shared value to move them our way","Invest in relationship where possible","Identify our reputation with them"] },
-  { title:"Positive impact on organization", color:"#C2D9A4", bullets:["Maximize shared value","Maintain relationship","Champion their cause","Recruit as public surrogates","Communicate often","\"Influencer\""] }
-];
-const cardHdr = R;
-cards.forEach((cd,ci)=>{
-  const col = 2 + ci*2;
-  const hc = wsIntro.getCell(cardHdr,col);
-  hc.value=cd.title; hc.font={...FONT,bold:true,color:{argb:ARGB(T.strong)}}; hc.fill={type:"pattern",pattern:"solid",fgColor:{argb:ARGB(cd.color)}}; hc.alignment={wrapText:true,horizontal:"center"}; hc.border=thinBorder();
-  wsIntro.mergeCells(cardHdr,col,cardHdr,col+1);
-  cd.bullets.forEach((b,bi)=>{ const cell=wsIntro.getCell(cardHdr+1+bi,col); cell.value="• "+b; cell.font={...FONT}; wsIntro.mergeCells(cardHdr+1+bi,col,cardHdr+1+bi,col+1); cell.alignment={wrapText:true}; });
-});
-R = cardHdr + 1 + Math.max(...cards.map(c=>c.bullets.length)) + 1;
-
-// (g) Each zone: strategy & recommended action — 14 rows, zone-colored, with tone
-title(R,"Each zone: strategy & recommended action"); R++;
-const zHdr = R;
-["Zone","Tone","Strategy — recommended action"].forEach((h,i)=>{ const cols=[[2,2],[3,3],[4,8]][i]; const cell=wsIntro.getCell(zHdr,cols[0]); cell.value=h; cell.font={...FONT,bold:true,color:{argb:ARGB(T.strong)}}; cell.fill=headerFill(); cell.border=thinBorder(); wsIntro.mergeCells(zHdr,cols[0],zHdr,cols[1]); });
-const toneLabel = { "negative":"Negative", "neutral-low":"Winnable", "positive":"Positive" };
-STATUS_ORDER.forEach((z,i)=>{
-  const r = zHdr+1+i; const meta=STATUSES[z];
-  const zc = wsIntro.getCell(r,2); zc.value=z; zc.fill={type:"pattern",pattern:"solid",fgColor:{argb:ARGB(meta.color)}}; zc.font={...FONT,bold:true,color:{argb:ARGB(meta.text)}}; zc.border=thinBorder();
-  const tc = wsIntro.getCell(r,3); tc.value=toneLabel[meta.tone]; tc.font={...FONT}; tc.border=thinBorder();
-  const ac = wsIntro.getCell(r,4); ac.value=`${meta.strategy} — ${meta.action}`; ac.font={...FONT}; ac.alignment={wrapText:true}; wsIntro.mergeCells(r,4,r,8);
-});
-R = zHdr + 1 + STATUS_ORDER.length + 1;
-
-// (h) How scores become coordinates
-title(R,"How scores become coordinates"); R++;
-const expl = wsIntro.getCell(R,1);
-expl.value = "On the Scoring tab, every teammate rates each stakeholder on x and y from −10 to 10. Each teammate also has a weight. The final coordinate is the weighted average of their scores. A teammate with weight 1.5 counts 1.5 times more than one with weight 1.0.";
-expl.font={...FONT}; wsIntro.mergeCells(R,1,R,8); expl.alignment={wrapText:true,vertical:"top"}; wsIntro.getRow(R).height=46; R+=1;
-const formula = wsIntro.getCell(R,1);
-formula.value = "final.x = Σ (member.x × member.weight) / Σ member.weight    |    final.y = Σ (member.y × member.weight) / Σ member.weight    |    zone = lookup(final.x, final.y)";
-formula.font={ name:"Inter", size:11, color:{argb:ARGB(T.ink)} }; wsIntro.mergeCells(R,1,R,8); formula.alignment={wrapText:true}; formula.fill={type:"pattern",pattern:"solid",fgColor:{argb:ARGB(T.lightgrey)}}; wsIntro.getRow(R).height=30;
+// How scores become coordinates
+sectionTitle("How scores become coordinates");
+bodyP("On the Scoring tab, every teammate rates each stakeholder on x and y from minus 10 to 10. Each teammate also has a weight. The final coordinate is the weighted average of their scores. A teammate with weight 1.5 counts 1.5 times more than one with weight 1.0.", 44);
+R+=1;
+const formula = wsIntro.getCell(R,2);
+formula.value = "final.x = sum(member.x × member.weight) / sum(member.weight)      final.y = sum(member.y × member.weight) / sum(member.weight)      zone = lookup(final.x, final.y)";
+formula.font={ name:"Inter", size:11, color:{argb:ARGB(T.ink)} };
+wsIntro.mergeCells(R,2,R,8); formula.alignment={wrapText:true,vertical:"middle"};
+formula.fill={type:"pattern",pattern:"solid",fgColor:{argb:ARGB(T.lightgrey)}}; wsIntro.getRow(R).height=30;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // WRITE + INJECT SCATTER CHART via fflate
@@ -598,7 +705,7 @@ if(!sheetXml.includes("<drawing ")){
 }
 files[SHEET] = strToU8(sheetXml);
 
-// content types — register chart + drawing parts
+// content types - register chart + drawing parts
 let ct = strFromU8(files["[Content_Types].xml"]);
 ct = ct.replace("</Types>",
   `<Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>`
