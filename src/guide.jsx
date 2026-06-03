@@ -948,6 +948,20 @@ MOBILE COMPANION (the one mobile surface) — a modal/responsive view: stakehold
 INTEGRATIONS SHELL — the Settings → Integrations pane (embed/FX/country/connectors) — shell now, live wiring in State B.
 
 UI KIND (built later; blocks + tokens) — import = a Dialog/wizard (upload dropzone, column-map table, validation/preview table with row flags, commit button) from shadcn + TanStack; template = generated XLSX with data-validation dropdowns + a hidden lookup sheet for cascades. Visual cues per the Design system + scaffold.` },
+      { t: "Paid add-ons — Polling, Personas, AI Message Generator, billing & gating", d:
+`The monetized layer, gated per org entitlement. Locked (with an upgrade affordance) until enabled; once on, they appear in their host surfaces.
+
+POLLING (plan element 8) — stakeholder surveys: a question set posed to N recipients + results as insight themes (see Plan worked-example reference for the starter questions/results pattern). Feeds Personas + the Plan-Fit signals. Premium.
+
+PERSONAS (plan element 9) — persona modeling per stakeholder CATEGORY, built from polling + listening sessions + consumer data: one named archetype per category, each with Demographics · Awareness & Concerns · Perspective on the org · Engagement Willingness (see worked-example reference). Sharpens the relationship-recommendation signals. Premium.
+
+AI MESSAGE GENERATOR — takes a FINISHED plan → generates KEY MESSAGES (plan element 13). Server-side (Claude API), with a curated PRE-PROMPT (org/plan context), METERED usage. Output is editable + added by the team (key messages can also be custom; the generator just seeds them). Honest note: this is the only server-side AI feature; it requires State B (backend) + metering; gate + rate-limit it.
+
+BILLING & GATING — Stripe per-seat subscriptions + plan tiers; per-org ENTITLEMENTS turn add-ons on/off; usage METERING for metered features (AI generator). Entitlements checked server-side (RLS/edge), not just UI. Managers manage billing in Settings (admin). See Enterprise architecture pillar 17.
+
+DEPENDENCIES — all require STATE B (Supabase/backend) + the relevant integrations (polling capture, AI API, Stripe). In the demo they appear as LOCKED affordances (the lock chip already used in the Plan editor), never functional.
+
+UI KIND (built later; blocks + tokens) — locked panels with an upgrade CTA where the feature would live (Plan elements 8/9, the Key Messages element); a billing/entitlements admin section in Settings; metered-usage indicators. Visual cues per the Design system; no functional build in the demo.` },
       { t: "INDEX — manifest + traceability (feature → spec → MD3 component → verification)" },
     ]
   },
