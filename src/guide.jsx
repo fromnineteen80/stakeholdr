@@ -849,13 +849,21 @@ USAGE — every dropdown/filter/chip pulls from these. Editable catalogs render 
 • LEFT collapsed → the words disappear, leaving the LINK ICONS plus an OPEN (expand) icon. Expanded → icons + labels.
 • RIGHT collapsed → only the OPEN icon. Expanded → its full content.
 
+TOP SCAFFOLD BAR (spans ABOVE the left sidebar + main + right sidebar) —
+• LEFT-justified: a BACK control — back to the LANDING page, or (when in .edit) back to .view.
+• RIGHT-justified, each an icon: SEARCH · SORT · FILTER · and EDIT/SAVE (Edit in .view → Save in .edit). SEARCH has a "K" keyboard shortcut that opens a POPUP with a BLURRED (backdrop-blur) background, letting you search different SETS of things (the searchable sets are TBD — zeroed in later).
+
+SIDEBAR WIDTHS — industry-normal widths both OPENED and COLLAPSED.
+
 MAIN CONTENT [always WHITE] — the page body is ALWAYS white; FIELDS in the main content are ALWAYS white too (distinct from SIDEBAR fields, which are lighter-than-the-sidebar but NOT white). It houses SECTIONS stacked DOWN THE PAGE; each section is FULL-WIDTH or TWO-COLUMN, with industry-standard spacing between sections. Sections hold the decisions, collaboration, content creation, and fields.
 
-LEFT SIDEBAR — the SECTION / ELEMENT navigation for this record (by NAME, no numbers): clicking a name jumps to / opens that section in the main content (sub-page feel). For record.plan these are the PLAN ELEMENTS (see Plan box). Collapses to the icon rail.
+LEFT SIDEBAR — header: the PAGE TITLE always sits at the TOP of the left sidebar, with the OPEN (collapse) control on the SAME LINE, right-justified. Below it: the SECTION / ELEMENT navigation for this record (by NAME, no numbers); clicking a name jumps to / opens that section in the main content (sub-page feel). For record.plan these are the PLAN ELEMENTS (see Plan box). COLLAPSE behavior: clicking OPEN collapses the sidebar so ONLY the icons show, CENTERED in the (narrower) collapsed rail; clicking again expands it back to icons + labels.
 
 RIGHT SIDEBAR — the record's COLLABORATION + METADATA: the TEAMMATES on this record, an ADD-TEAMMATE control, an OPEN-WHITEBOARD control, NOTES the user can take about this plan/community/stakeholder, and METADATA (created date, last-updated date, owner, etc.). Collapses to the open icon.
 
-view ↔ edit PARITY — every record type has record.[type].view (read) and record.[type].edit (fill in), same shell, same sections; links switch between them (also surfaced in landing-card footers, below).
+view ↔ edit PARITY — every record type has record.[type].view (read) and record.[type].edit (fill in), same shell, same sections; the top-bar Edit/Save toggles between them (also surfaced in landing-card footers + the top-bar Back).
+
+EDITING = AUTOSAVE — record.[type].edit AUTO-SAVES the modern way (debounced, per-field/section), so you always see the LATEST when saved; show a "Saved"/"Saving…" state. No manual save-or-lose; closing/navigating keeps changes. (Persistence: per the three-tier model — column-level writes, optimistic, realtime; see Persistence box.)
 
 PER RECORD TYPE —
 • record.plan — LEFT: the plan elements as section links. MAIN: the element sections with the fields to fill in. RIGHT: team/whiteboard/notes/metadata. (Full plan structure in the Plan box.)
