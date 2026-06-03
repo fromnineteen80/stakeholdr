@@ -881,6 +881,20 @@ PAGE-SHELL VARIANTS —
 COLOR / LAYOUT RULES (start-state) — main + main-fields = white; sidebars = a darker surface-container (never white); sidebar fields = lighter-than-sidebar, not white; no shadows/gradients; no hover/active background swap on nav links (state by ink weight/color); collapse behavior = Claude-style (left → icon rail; right → open icon).
 
 UI KIND (built later with shadcn + design.md tokens; NO hand-built CSS) — a Shell/RecordShell composition: collapsible left rail (section nav), a flexible white main with stacked full-width/two-column Sections + white fields, a collapsible right rail (TeammatesPanel + AddTeammate + OpenWhiteboard + NotesPanel + Metadata). Landing = a sortable/filterable Card grid with view/edit footer links. Help/Settings = the shell minus the right rail. All from the universal kit; the look comes from docs/design tokens.` },
+      { t: "Help — the engagement framework + how to read the map + zone key/strategy reference", d:
+`WHAT IT IS — a reference/education page that teaches the method. Uses the page shell MINUS the right sidebar (see Record scaffold). Four sections:
+
+1. HOW TO PLAN FOR & ENGAGE STAKEHOLDERS — the 12-STEP ENGAGEMENT FRAMEWORK as a Purpose → Plan → Execute funnel (PLAN_STEPS): PURPOSE: 1 Set goals for your organization · 2 Issue identification · 3 Stakeholder identification · 4 Stakeholder prioritization. PLAN: 5 Landscape analysis · 6 Cross-functional teams alignment · 7 Research & listening sessions · 8 Early stakeholder analysis & modeling. EXECUTE: 9 Launch campaign · 10 Ongoing stakeholder analysis · 11 Collaborate with stakeholders · 12 Realize shared value where possible. (Same framework as the Plan-algorithm box; single source.)
+
+2. HOW TO READ THE STAKEHOLDER MAP — a KEY/legend of all 14 relationship ZONES, each rendered in its own color (STATUS_ORDER, colored by STATUSES[zone].color/text), grouped into three bands with guidance: NEGATIVE impact (Proactively Defend … Identify), the WINNABLE MIDDLE (Monitor/Maintain/Connect/Commit), POSITIVE impact (Cooperate … Strategic Partner). Explains x = impact/alignment, y = influence/importance.
+
+3. THE ZONES AT A GLANCE — the 4×6 GRID figure showing all zones in position (the same GRID/STATUSES as the Map), each cell labeled + colored, with the axis legend strip (x impact, y influence). NOTE: it is 24 CELLS mapping to 14 DISTINCT zones (several cells share a zone). [BUILD: render this as the tokened SVG/CSS composition used by the Map box — NOT old CSS-grid divs; reuse the Relationship-engine zone data so the key, the grid, and the live Map are one source.]
+
+4. STRATEGY REFERENCE — for every zone, the recommended POSTURE + suggested immediate ACTIONS (the strategy/action text from the 14 STATUSES). Single source = the Relationship-engine box (verbatim color/strategy/action).
+
+DATA SOURCES (no duplication) — the 12 steps = PLAN_STEPS (Plan-algorithm box); the zones/colors/strategies = the Relationship-engine box; the grid = the Map box's GRID. Help just presents them.
+
+UI KIND (built later, shadcn + design.md tokens; NO hand CSS) — page shell without the right sidebar; a funnel/stepper for the 12 steps; a zone KEY (chips/swatches per zone, zone-tokened); the 4×6 grid as tokened SVG (Map-consistent) + axis labels; a per-zone strategy list. From the universal kit.` },
       { t: "Design refs — element→MD3 (Material Web) component map · Material Symbols map · Inter/Newsreader" },
       { t: "INDEX — manifest + traceability (feature → spec → MD3 component → verification)" },
     ]
