@@ -895,7 +895,30 @@ UI KIND (built later with shadcn + design.md tokens; NO hand-built CSS) — a Sh
 DATA SOURCES (no duplication) — the 12 steps = PLAN_STEPS (Plan-algorithm box); the zones/colors/strategies = the Relationship-engine box; the grid = the Map box's GRID. Help just presents them.
 
 UI KIND (built later, shadcn + design.md tokens; NO hand CSS) — page shell without the right sidebar; a funnel/stepper for the 12 steps; a zone KEY (chips/swatches per zone, zone-tokened); the 4×6 grid as tokened SVG (Map-consistent) + axis labels; a per-zone strategy list. From the universal kit.` },
-      { t: "Design refs — element→MD3 (Material Web) component map · Material Symbols map · Inter/Newsreader" },
+      { t: "Design system — Soapbox tokens + shadcn/ui + Tailwind (the go-forward design; from docs/design)", d:
+`THE DESIGN COMES FROM THE DESIGN SYSTEM, NOT THE OLD CODE. Sources (saved in the repo, survive rebuild): docs/design/design.md (the Soapbox token spec) + docs/design/interfacelibrary.html (the visual target). Built with shadcn/ui (Radix + Tailwind) skinned by these tokens. The old code contributed behavior only; ZERO of its CSS/styling carries forward.
+
+TOKENS (the single source; design.md) —
+• SURFACES (7, light→dark): canvas #FFFFFF · app #FEFDFC · field #FCFBF9 · container #F8F7F3 · container-high #F4F3ED · border-subtle #F0EEE6 · border-strong #E8E6DE.
+• INK (3): text-primary #666361 · text-muted #ABA9A4 · border-divider #DFDDD6.
+• ACCENT: #D96B43 (terracotta) + accent-muted #F3DCD3. [DECISION: confirm this is THE brand accent; ensure it never collides with the 14 relationship-zone colors, which stay separate/semantic.]
+• SPACING: 4px base — xs 2 · sm 6 · md 12 · lg 18 · xl 24 (override Tailwind defaults; don't drift).
+• RADIUS: none 0 · xs 4 · sm 8 · md 12 · lg 16 · full 9999 (--radius default 4px / xs).
+• TYPE: body = Inter 14px. [DECISION: titles = Newsreader (your authorized brand) — design.md currently says Georgia; treat Georgia as fallback. mono = JetBrains Mono — [DECISION: allow mono for numbers/IDs/code, or Inter-tnum only?].]
+
+LAYOUT DEPTH RULES (design.md) — sidebars/rails/top-nav = container / container-high (NEVER white); main runway = app (#FEFDFC); record papers/tables/cards = canvas (#FFFFFF, pop clean); MAIN-content fields = white; SIDEBAR fields = field (#FCFBF9, recessed, lighter-than-sidebar, not white). Matches the scaffold + start-state rules.
+
+THEMES (re-skin = swap the token set, never touch components) — Soapbox/Editorial (warm beige, default) · Undecideds (true greyscale) · Night Shift (dark, warm charcoal). Driven by a class/token swap; controlled by Settings → Design dashboard.
+
+⚠️ DECISION — SHADOWS/GRADIENTS: design.md/interface use subtle sb-elevation-1/2/3 shadows; the start-state rule said "no shadows/gradients ever." RESOLVE: allow subtle elevation-1 on cards/modals only, or ban all. (Pending your call.)
+
+shadcn/ui IMPLEMENTATION (real shadcn, not hand-rolled Radix) — setup at BUILD time: npx shadcn@latest init (configures Tailwind + the cn() util + CSS-variable tokens + installs clsx/tailwind-merge/cva/lucide-react), then npx shadcn@latest add <component> (each pulls its own Radix dep). THEMING: map the Soapbox palette → shadcn's semantic HSL tokens (--background #FEFDFC, --card/--popover #FFFFFF, --primary #D96B43, --muted #F8F7F3, --border #F0EEE6, --input/--foreground/--muted-foreground per design.md HSL) + ADD extra custom tokens for the surface steps shadcn lacks (--surface-container-high, --field, second border). Components reference SEMANTIC tokens only — one namespace, standard/updatable. Production Tailwind via Vite/PostCSS (NOT the CDN).
+
+COMPONENT VOCABULARY (element → implementation) — buttons → shadcn Button (default/secondary/outline/ghost; icon); inputs → Input/Textarea; select → Select; searchable → Combobox (Command); checkbox/radio/switch/slider/tabs/badge/chip/card/dialog/dropdown-menu/popover/tooltip/avatar → the matching shadcn components; command palette (⌘/K) → Command + Dialog (blurred backdrop); DATA TABLE → TanStack Table (headless: sort/filter/paginate/virtualize/inline-edit) styled with tokens (no shadcn datagrid exists); RELATIONSHIP MAP + PIVOT HEATMAP → tokened inline SVG (no chart lib); icons → lucide-react. The scaffold (top bar + collapsible sidebars + white main) composes from these.
+
+ZONE & PRIORITY COLORS — the 14 relationship-zone colors (Relationship-engine box) and priority colors are SEPARATE semantic tokens layered on the system, applied by data-attribute/class (single-sourced), reused by Map + Lists + Help + scorecard — never inline literals, never colliding with the accent.
+
+BUILD RULE — every value is a token (no magic numbers, no hand-CSS, no inline styles, no !important); the guard enforces it. design.md is the source; the Settings → Design dashboard tunes the tokens; nothing restyles a component one-off.` },
       { t: "INDEX — manifest + traceability (feature → spec → MD3 component → verification)" },
     ]
   },
