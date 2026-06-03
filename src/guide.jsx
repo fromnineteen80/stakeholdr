@@ -896,7 +896,7 @@ DATA SOURCES (no duplication) — the 12 steps = PLAN_STEPS (Plan-algorithm box)
 
 UI KIND (built later, shadcn + design.md tokens; NO hand CSS) — page shell without the right sidebar; a funnel/stepper for the 12 steps; a zone KEY (chips/swatches per zone, zone-tokened); the 4×6 grid as tokened SVG (Map-consistent) + axis labels; a per-zone strategy list. From the universal kit.` },
       { t: "Design system — Soapbox tokens + shadcn/ui + Tailwind (the go-forward design; from docs/design)", d:
-`THE DESIGN COMES FROM THE DESIGN SYSTEM, NOT THE OLD CODE. Sources (saved in the repo, survive rebuild): docs/design/design.md (the Soapbox token spec) + docs/design/interfacelibrary.html (the visual target). Built with shadcn/ui (Radix + Tailwind) skinned by these tokens. The old code contributed behavior only; ZERO of its CSS/styling carries forward.
+`THE DESIGN COMES FROM THE DESIGN SYSTEM, NOT THE OLD CODE. Sources (saved in the repo, survive rebuild): docs/design/design.md (the Soapbox token spec) + docs/design/interfacelibrary.html (the BUILDING BLOCKS — the canonical component primitives + exactly how tokens are applied to them; NOT a mockup of any app screen; it exists to stop vibing by giving known-good pieces to assemble from). The app SCREENS come from the captured .io (scaffold, records, landings, pages) COMPOSED FROM those blocks and skinned by the tokens. Built with shadcn/ui (Radix + Tailwind). The old code contributed behavior only; ZERO of its CSS/styling carries forward.
 
 TOKENS (the single source; design.md) —
 • SURFACES (7, light→dark): canvas #FFFFFF · app #FEFDFC · field #FCFBF9 · container #F8F7F3 · container-high #F4F3ED · border-subtle #F0EEE6 · border-strong #E8E6DE.
