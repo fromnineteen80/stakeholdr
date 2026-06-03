@@ -523,6 +523,31 @@ RELATION TO MESSAGES — Messaging is the lighter conversation form; the Whitebo
 
 STATUS — concept + requirements captured; the design and the URL-embed API are OPEN. To be designed deliberately.` },
       { t: "Settings — org config + the start-state & design-customization dashboard (separate from Workspaces)" },
+      { t: "Users & People — user model, roles, presence, avatars/stack/profile, removeUser cascade", d:
+`THE PEOPLE LAYER — the org's users, shown as avatars/stacks across the app, with roles, presence, and profiles. App-wide (an org's user pool), referenced by owners, team, votes, mentions, messaging.
+
+USER MODEL — id · name · firstName · lastName · title · function · markets[] · regions[] · email (unique) · avatarColor · avatarUrl (optional uploaded photo) · presence (online|away|offline) · role (manager|member|system) · createdAt · updatedAt. [Per the universal record envelope.]
+
+ROLES — manager (org/app admin: edit config, roles, segments/categories, fiscal, delete workspaces, approve community, override priority), member (own records; delete only workspaces they created), system (bots, e.g. the "Reminders" u-system — NEVER shown in pickers, online lists, or the people stack). The workspace LEAD vs app MANAGER distinction is OPEN (see Workspaces box).
+
+⚠️ DEMO AUTO-MANAGER BUG [FIX] — logIn currently PROMOTES every login to role:"manager" (app.jsx). REMOVE for production: roles come from the users table / Supabase Auth metadata, never granted on login (see Enterprise/Persistence). Client role-gating is cosmetic; RLS is the real enforcement.
+
+PRESENCE [STATIC NOW → REAL] — the presence field drives the avatar online dot and the People list. TODAY it is static seed data; it MUST become real (Supabase Realtime Presence or a last_seen heartbeat): online when a live session exists, away/offline by heartbeat age. The avatar stack's "+N" overflow must be the TRUE remaining online count (excluding the system bot), not a hardcoded number.
+
+PEOPLE UI [BUILT] (kind only; components later) —
+• Avatar: a circle showing the uploaded photo (avatarUrl) or avatarColor + initials; optional online dot; optional ring; tooltip "{name} · {title}".
+• UserStack: the top-right stack of up to 3 non-system users (excludes current user + system) with overflow "+N" → opens the People list.
+• People list popup ("People · N"): the other users (excl system) with avatar + name + title + live online status + a "message" action → opens a DM.
+• ProfileMenu (current user): avatar, name, title, email, manager badge; items View profile · Messages · Settings (managers only) · Log out.
+• Edit-profile: name, title, email, photo, plus firstName/lastName/function/markets/regions.
+• Login gate (demo): name + title + email + optional photo creates/logs in a user. In production this is Supabase Auth (email/SSO/MFA).
+• Manager indicator: a star / amber "Manager" pill.
+• Owner picker: choose stakeholder/plan/community owners from the user pool.
+• record.user profile page (built later): the full user profile (their stakeholders, activity, community cumulative, etc.).
+
+removeUser CASCADE [BUILT — captured so it's not lost] — deleting a user strips them from EVERYWHERE: workspace.owners, stakeholder.owners, community.owners AND community.votes (delete their vote), plan.owners + plan.team + plan.strategies ownerId (cleared to ""), and team members. In production this is handled by FK ON DELETE CASCADE / SET NULL server-side (not fragile client code), and SOFT-DELETE is preferred (deleted_at/by) so the person is recoverable and history is preserved.
+
+CROSS-LINKS — users are referenced by: stakeholder/plan/community owners, scoring team (team[].userId), community votes + submitter + approver, message from/participants, mention author, plan team + sponsors (sponsors/consultants are NON-users with name+email). Presence + roles feed RLS and the enterprise model.` },
       { t: "Messaging — conversations, threads, @ / # / $ / mention links (built + developer-inferred)", d:
 `WHAT IT IS — app-wide team messaging: a right-edge SIDEBAR (quick) and a full MESSAGES PAGE (list left, thread right). Conversations are DIRECT, GROUP, or SYSTEM. Lighter sibling to the Whiteboard (Messages = chat; Whiteboard = advanced collaboration — boundary to confirm). Not workspace-scoped — conversations are app-wide between users.
 
