@@ -924,6 +924,30 @@ NO MOCKUPS EXIST (the hard reality) — there are NO designed visuals/screens an
 RULE (binds every box + any future session): the .io is the SOLE build source. EVERY box must carry its VISUAL CUES — naming the interfacelibrary building block(s), the design.md token(s), the arrangement/spacing, and the states — enough to build the screen with no mockup. If a visual cue isn't in the .io, it doesn't exist at build. Never weight a screenshot of the old (broken) design; never ask for one.
 
 TOKENS ARE A START — design.md is the seed; the set GROWS as the .io finalizes. Already known to add: the 14 relationship-ZONE colors + PRIORITY/STATUS colors (semantic, single-sourced), the extra SURFACE tokens shadcn lacks, the pivot-heatmap scale, and any element-specific tokens surfaced during capture. COVERAGE CHECK (part of the INDEX/manifest): every captured UI element must map to a building block + the tokens it needs; anything missing from interfacelibrary.html / design.md is a GAP to close BEFORE build.` },
+      { t: "Demo features (client-side) — Excel import + template, export, onboarding, mobile companion", d:
+`Buildable in STATE A (demo, no backend), seeded with sample users + stakeholders, full capability, add dummy AND real people.
+
+IMPORT STAKEHOLDERS FROM EXCEL/CSV (+ DOWNLOADABLE TEMPLATE) —
+• DOWNLOAD TEMPLATE: an Excel/CSV with EVERY stakeholder/table column as a header (the 26 Lists columns — Stakeholder, Organization, Category, Type, Market, Region, Geography, State, Sites, Issues, Priority, Tags, Owner, Email, Phone, X account, Last contact, Status, Notes, Website, Community, etc.).
+• COLUMN BEHAVIOR IN THE TEMPLATE (this is what prevents breakage):
+  - CHOICE-LIMITED columns (values restricted to one of OUR catalogs) MUST be DROPDOWNS (Excel data validation), so the user can't misspell, re-capitalize, or reformat a value: Category, Type, Market, Region, Geography, State, Site, Priority, Status, Issues, Tags, Owner. Values come from the Catalogs.
+  - CASCADING dropdowns where a column is a CHILD of a parent: Type depends on Category; Region depends on Market; Site→State. The template enforces dependent validation (child options follow the chosen parent) — exactly the in-app cascades.
+  - COMPUTED / LINKED columns (filled by linkage in-app, not a dropdown) — Relationship/zone, x, y, Community investment, and audit fields — carry an INSTRUCTION: "LEAVE BLANK — computed in the app." On re-import these blanks are IGNORED and must NOT interrupt/abort the import.
+  - FREE-TEXT columns (Stakeholder, Organization, Email, Phone, X, Website, Notes) accept entry with format hints (email, phone (xxx) xxx-xxxx). Multi-value (Issues/Tags/Owners) use a clear delimiter (e.g. semicolon), each value validated against its catalog.
+• WHY: dropdowns + cascades + blank-computed rules eliminate the misspellings, inconsistent casing/wording, and number/format drift that otherwise break the app on import.
+• FLOW: download template → fill → upload → auto column-map (match headers) → VALIDATE (every dropdown value matches a catalog; cascades valid; dates/numbers parse; computed columns ignored) → PREVIEW (flag any invalid rows) → COMMIT (creates stakeholders; if imported from a workspace, auto-assigns to it; mints UUIDs + audit fields). Invalid catalog values are rejected/flagged pre-commit, never silently coerced.
+
+EXPORT — plan → single Word/PDF (see Plan box); table → CSV (see Lists box); the template above is the import counterpart.
+
+ONBOARDING TOUR — coachmarks on first run; replayable from the profile menu.
+
+EMPTY / SEED STATES — blank-org vs demo-data seed; empty states per page; bulk actions; soft-delete/archive (per Enterprise model).
+
+MOBILE COMPANION (the one mobile surface) — a modal/responsive view: stakeholder quick-view · add-note · messages. (Earmarked mobile; everything else is desktop-web.)
+
+INTEGRATIONS SHELL — the Settings → Integrations pane (embed/FX/country/connectors) — shell now, live wiring in State B.
+
+UI KIND (built later; blocks + tokens) — import = a Dialog/wizard (upload dropzone, column-map table, validation/preview table with row flags, commit button) from shadcn + TanStack; template = generated XLSX with data-validation dropdowns + a hidden lookup sheet for cascades. Visual cues per the Design system + scaffold.` },
       { t: "INDEX — manifest + traceability (feature → spec → MD3 component → verification)" },
     ]
   },
