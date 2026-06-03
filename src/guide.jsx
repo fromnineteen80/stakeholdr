@@ -522,7 +522,27 @@ LAYOUT (preference) — it clicks OUT of workHQ into a TWO-PANE, SIDE-BY-SIDE SP
 RELATION TO MESSAGES — Messaging is the lighter conversation form; the Whiteboard is the advanced collaboration/whiteboarding surface. (How they relate or merge: to confirm.)
 
 STATUS — concept + requirements captured; the design and the URL-embed API are OPEN. To be designed deliberately.` },
-      { t: "Settings — org config + the start-state & design-customization dashboard (separate from Workspaces)" },
+      { t: "Settings — manager-only org config hub (9 panes) + the design-customization dashboard", d:
+`WHAT IT IS — the org's configuration hub, a single page with a LEFT-NAV of panes. MANAGER-ONLY (the Settings nav item shows only for role=manager; non-managers never reach it). Most values persist to appConfig (one synced row); this is where the org's CATALOGS, brand, time model, fiscal calendar, roles, and theme are set. Separate from Workspaces.
+
+THE 9 PANES (left nav) —
+1. APP SETTINGS (identity) — appName · brand · brandIcon · ACCENT (swatch picker; current swatches #000000/#1976D2/#E64A19/#AD1457/#388E3C/#00897B/#BF360C). PLUS the THEME picker and TIME ZONE (below). [appConfig: appName, brand, brandIcon, accent]
+2. FISCAL CALENDAR — fiscalStartMonth + fiscalStartDay → a live four-quarter preview. This is THE source for the fiscal year + quarters (drives community rollups, scoring cadence, history snapshots, FY## Q# labels — see Cadence + Enterprise-state boxes). [appConfig: fiscalStartMonth, fiscalStartDay]
+3. STAKEHOLDERS — Categories & Audience Types: manager edits the CATEGORIES → audience-type map. [appConfig.categories; see Catalogs box]
+4. YOUR STRUCTURE — Organizational Goals (the ORG_GOALS list every Plan inherits — see Plan box) · Segments & Business Units (the segment→BU map for workspaces) · Individual Functions (the functions list for users). [appConfig: goals/org-goals, segments, functions]
+5. GEOGRAPHY — Markets & Regions (the market→region map) · Sites (operating sites {id, city, state?, country}; US sites force country=United States). [appConfig.sites; Catalogs box]
+6. ISSUES — the company issues list (reused by stakeholders, plans, community). [appConfig.issues]
+7. TAGS — the company tags list (reused by stakeholders). [appConfig tags/companyTags]
+8. TEAM MANAGEMENT — INVITE CODE (org join code STKH-XXXX-XXXX; share to onboard; REGENERATE invalidates the old) · ROLES table (per user: manager ↔ user toggle; you CANNOT demote yourself — ask another manager; remove user → the removeUser cascade). Shows manager/user counts. "Managers see every workspace, delete workspaces, manage roles, edit app identity, access Settings. Users only see workspaces they're a member of and score/engage stakeholders there." [users.role; appConfig.inviteCode]
+9. CONTACT — support / org contact info.
+
+THEME = THE DESIGN-CUSTOMIZATION DASHBOARD (in pane 1, expands later) — current theme choices: Soapbox (warm beige) · Undecideds (true greyscale) · Night Shift (warm charcoal); plus AUTO NIGHT SHIFT (autoNightShift on/off + nightShiftAt time). These map to the design-system themes (Editorial / Grayscale / Night Shift) in docs/design — re-skin = swapping the token set, never touching components. THE FULL design-customization dashboard (the start-state token tuning: surfaces, ink, type scale, density, radius, accent — per design.md) is the EXPANSION of this pane: it writes the design tokens that every component inherits. [appConfig: theme, accent, autoNightShift, nightShiftAt]
+
+TIME ZONE [pane 1] — appConfig.timeZone (default America/Los_Angeles). Rule (Enterprise state model): store UTC, DISPLAY in this zone — "Created, updated, and approved timestamps are recorded in this time zone." [appConfig.timeZone]
+
+RELATIONSHIPS — Settings is the EDIT surface for the Catalogs (categories/types, segments/BUs, markets/regions, sites, issues, tags, functions, org goals) which ship as seeded defaults and become manager-editable here (stored in appConfig). It owns the fiscal + timezone (enterprise time model), roles + invite (Users/Auth), and the theme (design system). Everything here is manager-gated by RLS in production, not just UI.
+
+UI KIND (components later, NO hand-built CSS) — a settings shell: left pane-nav + a content pane per section; text fields, selects (month/day, timezone), swatch/theme pickers, editable list editors (add/remove rows for catalogs/issues/tags/goals/segments/sites), the invite-code field + regenerate, and the roles table with per-row role toggle + remove. The design dashboard uses token controls (color/type/density/radius) writing the theme tokens. From the universal kit, post-capture.` },
       { t: "Users & People — user model, roles, presence, avatars/stack/profile, removeUser cascade", d:
 `THE PEOPLE LAYER — the org's users, shown as avatars/stacks across the app, with roles, presence, and profiles. App-wide (an org's user pool), referenced by owners, team, votes, mentions, messaging.
 
