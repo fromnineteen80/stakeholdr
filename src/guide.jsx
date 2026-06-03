@@ -918,7 +918,11 @@ COMPONENT VOCABULARY (element → implementation) — buttons → shadcn Button 
 
 ZONE & PRIORITY COLORS — the 14 relationship-zone colors (Relationship-engine box) and priority colors are SEPARATE semantic tokens layered on the system, applied by data-attribute/class (single-sourced), reused by Map + Lists + Help + scorecard — never inline literals, never colliding with the accent.
 
-BUILD RULE — every value is a token (no magic numbers, no hand-CSS, no inline styles, no !important); the guard enforces it. design.md is the source; the Settings → Design dashboard tunes the tokens; nothing restyles a component one-off.` },
+BUILD RULE — every value is a token (no magic numbers, no hand-CSS, no inline styles, no !important); the guard enforces it. design.md is the source; the Settings → Design dashboard tunes the tokens; nothing restyles a component one-off.
+
+NO MOCKUPS EXIST (the hard reality) — there are NO designed visuals/screens anywhere. After the old code+design is archived, the rebuild has ONLY: (1) the lossless .io notes (structure + behavior), (2) interfacelibrary.html (the building-block kit), (3) design.md (the tokens). Screens are CONSTRUCTED from the .io layout boxes, assembled from the blocks, skinned by the tokens — built blind, no picture to copy. So the layout boxes must stay precise, and the kit + tokens must COVER every captured element.
+
+TOKENS ARE A START — design.md is the seed; the set GROWS as the .io finalizes. Already known to add: the 14 relationship-ZONE colors + PRIORITY/STATUS colors (semantic, single-sourced), the extra SURFACE tokens shadcn lacks, the pivot-heatmap scale, and any element-specific tokens surfaced during capture. COVERAGE CHECK (part of the INDEX/manifest): every captured UI element must map to a building block + the tokens it needs; anything missing from interfacelibrary.html / design.md is a GAP to close BEFORE build.` },
       { t: "INDEX — manifest + traceability (feature → spec → MD3 component → verification)" },
     ]
   },
