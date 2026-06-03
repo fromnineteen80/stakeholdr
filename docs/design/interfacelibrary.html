@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soapbox Interface Library</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['Georgia', 'ui-serif', 'serif'],
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'monospace']
+          },
+          borderRadius: {
+            'sb-shape-none': '0px',
+            'sb-shape-xs': '4px',
+            'sb-shape-sm': '8px',
+            'sb-shape-md': '12px',
+            'sb-shape-lg': '16px',
+            'sb-shape-full': '9999px',
+          },
+          boxShadow: {
+            'sb-elevation-0': 'none',
+            'sb-elevation-1': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+            'sb-elevation-2': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+            'sb-elevation-3': '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      /* Mapped 7 Surface Steps from DESIGN.md */
+      --sb-bg-canvas: #FFFFFF;
+      --sb-bg-app: #FEFDFC;
+      --sb-bg-field: #FCFBF9;
+      --sb-bg-container: #F8F7F3;
+      --sb-bg-container-high: #F4F3ED;
+      --sb-border-subtle: #F0EEE6;
+      --sb-border-strong: #E8E6DE;
+
+      /* Mapped 3 Ink Steps from DESIGN.md */
+      --sb-text-primary: #666361;
+      --sb-text-muted: #ABA9A4;
+      --sb-border-divider: #DFDDD6;
+
+      /* Core Accent Anchors */
+      --sb-accent: #D96B43;
+      --sb-accent-muted: #F3DCD3;
+      --sb-accent-rgb: 217, 107, 67;
+
+      /* Spacing Scale tokens matching DESIGN.md */
+      --space-xs: 2px;
+      --space-sm: 6px;
+      --space-md: 12px;
+      --space-lg: 18px;
+      --space-xl: 24px;
+    }
+
+    .theme-grayscale {
+      --sb-bg-canvas: #FFFFFF;
+      --sb-bg-app: #FFFFFF;
+      --sb-bg-field: #FAFAFA;
+      --sb-bg-container: #F5F5F5;
+      --sb-bg-container-high: #E5E5E5;
+      --sb-border-subtle: #E5E5E5;
+      --sb-border-strong: #CCCCCC;
+      --sb-text-primary: #111111;
+      --sb-text-muted: #666666;
+      --sb-border-divider: #E5E5E5;
+      --sb-accent: #111111;
+      --sb-accent-muted: #F5F5F5;
+      --sb-accent-rgb: 17, 17, 17;
+    }
+
+    .theme-nightshift {
+      --sb-bg-app: #141312;
+      --sb-bg-canvas: #1C1A18;
+      --sb-bg-field: #22201E;
+      --sb-bg-container: #262421;
+      --sb-bg-container-high: #33302B;
+      --sb-border-subtle: #33302B;
+      --sb-border-strong: #45413B;
+      --sb-text-primary: #F2EFEA;
+      --sb-text-muted: #A6A095;
+      --sb-border-divider: #33302B;
+      --sb-accent: #E28762;
+      --sb-accent-muted: #402D26;
+      --sb-accent-rgb: 226, 135, 98;
+    }
+
+    .sb-theme-bound {
+      background-color: var(--sb-bg-app);
+      color: var(--sb-text-primary);
+    }
+
+    /* Architectural Ripple Overlay (Lifted from material-web md-ripple specs) */
+    .sb-ripple {
+      position: relative;
+      overflow: hidden;
+    }
+    .sb-ripple::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: currentColor;
+      opacity: 0;
+      transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+    }
+    .sb-ripple:hover::after {
+      opacity: 0.06;
+    }
+    .sb-ripple:active::after {
+      opacity: 0.16;
+    }
+
+    /* Accessible Focus Rings (Lifted from material-web md-focus-ring specifications) */
+    .sb-focusable {
+      position: relative;
+      outline: none;
+    }
+    .sb-focusable-ring {
+      position: absolute;
+      inset: -4px;
+      border: 2px solid var(--sb-accent);
+      border-radius: inherit;
+      opacity: 0;
+      transform: scale(0.92);
+      transition: opacity 0.15s ease, transform 0.15s cubic-bezier(0, 0, 0.2, 1);
+      pointer-events: none;
+    }
+    .sb-focusable:focus-visible .sb-focusable-ring {
+      opacity: 1;
+      transform: scale(1);
+    }
+  </style>
+</head>
+<body class="sb-theme-bound font-sans text-sm antialiased transition-colors duration-200">
+
+  <header class="w-full h-14 bg-[var(--sb-bg-canvas)] border-b border-[var(--sb-border-subtle)] px-6 flex items-center justify-between z-40 relative">
+    <div class="flex items-center gap-3">
+      <span class="font-serif text-lg font-bold tracking-tight text-[var(--sb-text-primary)]">Soapbox Design Engine</span>
+      <span class="text-xs px-2 py-0.5 bg-[var(--sb-bg-container)] text-[var(--sb-text-muted)] rounded border border-[var(--sb-border-subtle)] font-mono">v1.0.0-sb</span>
+    </div>
+    
+    <div class="flex items-center gap-4">
+      <div class="flex bg-[var(--sb-bg-container)] p-1 rounded-sb-shape-xs border border-[var(--sb-border-subtle)] text-xs">
+        <button onclick="setTheme('classic')" id="btn-theme-classic" class="px-3 py-1 font-medium rounded-sb-shape-xs transition-all bg-[var(--sb-bg-canvas)] text-[var(--sb-text-primary)] shadow-sb-elevation-1">Soapbox Editorial</button>
+        <button onclick="setTheme('grayscale')" id="btn-theme-grayscale" class="px-3 py-1 font-medium rounded-sb-shape-xs transition-all text-[var(--sb-text-muted)]">Grayscale</button>
+        <button onclick="setTheme('nightshift')" id="btn-theme-nightshift" class="px-3 py-1 font-medium rounded-sb-shape-xs transition-all text-[var(--sb-text-muted)]">Night Shift</button>
+      </div>
+
+      <div class="flex bg-[var(--sb-bg-container)] p-1 rounded-sb-shape-xs border border-[var(--sb-border-subtle)] text-xs">
+        <button onclick="setLayout('dual')" id="btn-layout-dual" class="px-3 py-1 font-medium rounded-sb-shape-xs transition-all bg-[var(--sb-bg-canvas)] text-[var(--sb-text-primary)] shadow-sb-elevation-1">Dual Sidebar</button>
+        <button onclick="setLayout('left')" id="btn-layout-left" class="px-3 py-1 font-medium rounded-sb-shape-xs transition-all text-[var(--sb-text-muted)]">Left Sidebar</button>
+        <button onclick="setLayout('single')" id="btn-layout-single" class="px-3 py-1 font-medium rounded-sb-shape-xs transition-all text-[var(--sb-text-muted)]">Single Column</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="w-full h-[calc(100vh-3.5rem)] flex overflow-hidden relative" id="layout-root">
+    
+    <aside id="left-sidebar" class="h-full w-64 border-r border-[var(--sb-border-subtle)] bg-[var(--sb-bg-container)] flex flex-col transition-all duration-200 overflow-hidden flex-shrink-0 z-20">
+      <div class="p-4 border-b border-[var(--sb-border-subtle)] flex flex-col gap-2">
+        <h2 class="font-serif text-sm font-semibold text-[var(--sb-text-primary)]">UI Catalog Token Space</h2>
+        <p class="text-xs text-[var(--sb-text-muted)]">Visual primitives specified via project root DESIGN.md for clean AI code iterations.</p>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-3 flex flex-col gap-1">
+        <button onclick="scrollToSection('sec-buttons')" class="w-full text-left px-3 py-1.5 rounded-sb-shape-xs hover:bg-[var(--sb-bg-container-high)] text-xs font-medium text-[var(--sb-text-primary)] flex items-center justify-between sb-ripple">
+          <span>Buttons & Actions</span>
+          <span class="font-mono text-[10px] text-[var(--sb-text-muted)]">Primitives</span>
+        </button>
+        <button onclick="scrollToSection('sec-inputs')" class="w-full text-left px-3 py-1.5 rounded-sb-shape-xs hover:bg-[var(--sb-bg-container-high)] text-xs font-medium text-[var(--sb-text-primary)] flex items-center justify-between sb-ripple">
+          <span>Forms & Selection</span>
+          <span class="font-mono text-[10px] text-[var(--sb-text-muted)]">Controls</span>
+        </button>
+        <button onclick="scrollToSection('sec-datatable')" class="w-full text-left px-3 py-1.5 rounded-sb-shape-xs hover:bg-[var(--sb-bg-container-high)] text-xs font-medium text-[var(--sb-text-primary)] flex items-center justify-between sb-ripple">
+          <span>High-Density Grid</span>
+          <span class="font-mono text-[10px] text-[var(--sb-text-muted)]">Data View</span>
+        </button>
+        <button onclick="scrollToSection('sec-pivot')" class="w-full text-left px-3 py-1.5 rounded-sb-shape-xs hover:bg-[var(--sb-bg-container-high)] text-xs font-medium text-[var(--sb-text-primary)] flex items-center justify-between sb-ripple">
+          <span>Pivot Heatmap Matrix</span>
+          <span class="font-mono text-[10px] text-[var(--sb-text-muted)]">Matrix</span>
+        </button>
+        <button onclick="scrollToSection('sec-analytics')" class="w-full text-left px-3 py-1.5 rounded-sb-shape-xs hover:bg-[var(--sb-bg-container-high)] text-xs font-medium text-[var(--sb-text-primary)] flex items-center justify-between sb-ripple">
+          <span>Analytical Coordinates</span>
+          <span class="font-mono text-[10px] text-[var(--sb-text-muted)]">Scatter Canvas</span>
+        </button>
+        <button onclick="scrollToSection('sec-embed')" class="w-full text-left px-3 py-1.5 rounded-sb-shape-xs hover:bg-[var(--sb-bg-container-high)] text-xs font-medium text-[var(--sb-text-primary)] flex items-center justify-between sb-ripple">
+          <span>Embed Protection</span>
+          <span class="font-mono text-[10px] text-[var(--sb-text-muted)]">Isolated Context</span>
+        </button>
+      </div>
+
+      <div class="p-3 border-t border-[var(--sb-border-subtle)] bg-[var(--sb-bg-container-high)]/50">
+        <button onclick="openModal()" class="w-full py-2 bg-[var(--sb-text-primary)] text-[var(--sb-bg-canvas)] text-xs font-medium rounded-sb-shape-xs hover:opacity-90 transition-all flex items-center justify-center gap-2 sb-ripple sb-focusable">
+          <div class="sb-focusable-ring"></div>
+          <span>⚡ Trigger Diagnostic System</span>
+        </button>
+      </div>
+    </aside>
+
+    <main class="flex-1 h-full overflow-y-auto bg-[var(--sb-bg-app)] p-6 flex flex-col gap-8 scroll-smooth" id="main-content">
+      
+      <section class="p-6 bg-[var(--sb-bg-canvas)] border border-[var(--sb-border-subtle)] rounded-sb-shape-sm shadow-sb-elevation-1 flex flex-col gap-3">
+        <h1 class="font-serif text-2xl tracking-tight text-[var(--sb-text-primary)]">The Soapbox Design Paradigm</h1>
+        <p class="text-sm text-[var(--sb-text-muted)] leading-relaxed max-w-2xl">
+          By compressing structural vertical grids and enforcing systematic, high-contrast type scales, this engine builds elegant, publication-grade web views natively.
+        </p>
+      </section>
+
+      <section id="sec-buttons" class="flex flex-col gap-4">
+        <h3 class="font-serif text-lg font-semibold border-b border-[var(--sb-border-divider)] pb-2 text-[var(--sb-text-primary)]">Action Tokens & Floating Utilities</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <div class="p-4 bg-[var(--sb-bg-canvas)] border border-[var(--sb-border-subtle)] rounded-sb-shape-sm shadow-sb-elevation-1 flex flex-col gap-3">
+            <span class="text-xs uppercase font-mono tracking-wider text-[var(--sb-text-muted)]">Action Primitives</span>
+            <div class="flex flex-wrap gap-2">
+              <button class="h-10 px-5 rounded-sb-shape-xs bg-[var(--sb-text-primary)] text-[var(--sb-bg-canvas)] font-medium text-xs hover:bg-[var(--sb-bg-container-high)] hover:text-[var(--sb-text-primary)] active:scale-[0.98] transition-all sb-ripple sb-focusable">
+                <div class="sb-focusable-ring"></div>
+                Filled Primary
+              </button>
+              <button class="h-10 px-5 rounded-sb-shape-xs bg-transparent border border-[var(--sb-border-strong)] text-[var(--sb-text-primary)] text-xs font-medium hover:bg-[var(--sb-bg-container-high)] transition-all sb-ripple sb-focusable">
+                <div class="sb-focusable-ring"></div>
+                Outlined Neutral
+              </button>
+              <button class="h-10 px-5 rounded-sb-shape-xs bg-[var(--sb-bg-container)] text-[var(--sb-text-primary)] text-xs font-medium hover:bg-[var(--sb-bg-container-high)] transition-all sb-ripple sb-focusable">
+                <div class="sb-focusable-ring"></div>
+                Tonal Base
+              </button>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button class="w-9 h-9 rounded-sb-shape-xs bg-[var(--sb-text-primary)] text-[var(--sb-bg-canvas)] flex items-center justify-center text-sm font-medium hover:opacity-90 sb-ripple">⌥</button>
+              <button class="w-9 h-9 rounded-sb-shape-xs border border-[var(--sb-border-strong)] text-[var(--sb-text-primary)] flex items-center justify-center text-sm font-medium hover:bg-[var(--sb-bg-container)] sb-ripple">⌂</button>
+              <button class="h-10 px-3 rounded-sb-shape-xs text-[var(--sb-text-primary)] text-xs font-medium hover:underline bg-transparent">Hyperlink Context Anchor</button>
+            </div>
+          </div>
+
+          <div class="p-4 bg-[var(--sb-bg-canvas)] border border-[var(--sb-border-subtle)] rounded-sb-shape-sm shadow-sb-elevation-1 flex flex-col justify-between relative min-h-[140px] overflow-hidden">
+            <div>
+              <span class="text-xs uppercase font-mono tracking-wider text-[var(--sb-text-muted)]">Interactive Floating Expansion</span>
+              <p class="text-xs text-[var(--sb-text-muted)] mt-1">Hover the trigger anchor below to cleanly expand system sub-routines.</p>
+            </div>
+            
+            <div class="absolute bottom-4 right-4 flex flex-col items-center gap-2 group/dial z-10">
+              <div class="flex flex-col items-center gap-1.5 opacity-0 scale-90 translate-y-2 pointer-events-none group-hover/dial:opacity-100 group-hover/dial:scale-100 group-hover/dial:translate-y-0 group-hover/dial:pointer-events-auto transition-all duration-150">
+                <button title="Print Stack Trace" class="w-8 h-8 rounded-full bg-[var(--sb-bg-canvas)] border border-[var(--sb-border-strong)] text-[var(--sb-text-primary)] flex items-center justify-center shadow-sb-elevation-1 hover:bg-[var(--sb-bg-container)] text-xs sb-ripple">⎙</button>
+                <button title="Dismiss Workspace State" class="w-8 h-8 rounded-full bg-[var(--sb-bg-canvas)] border border-[var(--sb-border-strong)] text-[var(--sb-text-primary)] flex items-center justify-center shadow-sb-elevation-1 hover:bg-[var(--sb-bg-container)] text-xs sb-ripple">⎋</button>
+              </div>
+              <button class="w-10 h-10 rounded-full bg-[var(--sb-text-primary)] text-[var(--sb-bg-canvas)] flex items-center justify-center shadow-sb-elevation-2 hover:opacity-90 transform active:scale-95 transition-all sb-ripple">
+                <span class="text-base font-medium font-sans">+</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <section id="sec-inputs" class="flex flex-col gap-4">
+        <h3 class="font-serif text-lg font-semibold border-b border-[var(--sb-border-divider)] pb-2 text-[var(--sb-text-primary)]">Control Input Structures & Exclusivity Knobs</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
+          <div class="p-4 bg-[var(--sb-bg-canvas)] border border-[var(--sb-border-subtle)] rounded-sb-shape-sm shadow-sb-elevation-1 flex flex-col gap-3">
+            <label class="text-xs font-semibold text-[var(--sb-text-primary)]">Structured Text Entry</label>
+            <div class="w-full relative sb-focusable">
+              <input type="text" placeholder="Specify system metrics target..." class="w-full h-10 rounded-sb-shape-xs border border-[var(--sb-border-strong)] bg-[var(--sb-bg-field)] px-3 text-sm text-[var(--sb-text-primary)] focus:outline-none focus:border-[var(--sb-text-primary)] focus:bg-[var(--sb-bg-canvas)] transition-all placeholder:text-[var(--sb-text-muted)]/50" />
+              <div class="sb-focusable-ring"></div>
+            </div>
+            <span class="text-[10px] text-[var(--sb-text-muted)]">Preserves space parameters cleanly for system labeling.</span>
+          </div>
+
+          <div class="p-4 bg-[var(--sb-bg-canvas)] border border-[var(--sb-border-subtle)] rounded-sb-shape-sm shadow-sb-elevation-1 flex flex-col gap-3">
+            <label class="text-xs font-semibold text-[var(--sb-text-primary)]">State Flags</label>
+            <div class="flex items-center gap-4 py-1">
+              <label class="flex items-center gap-2 text-xs text-[var(--sb-text-primary)] cursor-pointer">
+                <input type="checkbox" checked class="w-[18px] h-[18px] rounded-sb-shape-none border border-[var(--sb-text-primary)] bg-[var(--sb-bg-canvas)] checked:bg-[var(--sb-text-primary)] text-[var(--sb-bg-canvas)] cursor-pointer" />
+                <span>Instance Verified</span>
+              </label>
+              <label class="flex items-center gap-2 text-xs text-[var(--sb-text-primary)] cursor-pointer">
+                <input type="radio" checked class="w-[18px] h-[18px] rounded-full border border-[var(--sb-text-primary)] bg-[var(--sb-bg-canvas)] flex items-center justify-center cursor-pointer accent-[var(--sb-text-primary)]" />
+                <span>Primary Routing Key</span>
+              </label>
+            </div>
+            
+            <div class="flex items-center justify-between border-t border-[var(--sb-border-subtle)] pt-2">
+              <span class="text-xs text-[var(--sb-text-muted)]">Adaptive Node State Tracker</span>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" class="sr-only peer" checked>
+                <div class="w-10 h-5 bg-[var(--sb-bg-container-high)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[var(--sb-bg-canvas)] after:border-[var(--sb-border-subtle)] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--sb-text-primary)]"></div>
+              </label>
+            </div>
+          </div>
+
+          <div class="p-4 bg-[var(--sb-bg-canvas)] border border-[var(--sb-border-subtle)] rounded-sb-shape-sm shadow-sb-elevation-1 flex flex-col gap-3 justify-between">
+            <label class="text-xs font-semibold text-[var(--sb-text-primary)]">Segmented Component Split Toggles</label>
+            <div class="flex bg-[var(--sb-bg-container)] p-0.5 rounded-sb-shape-xs border border-[var(--sb-border-subtle)]">
+              <div class="flex-1 h-8 flex items-center justify-center text-xs font-medium rounded-sb-shape-xs bg-[var(--sb-bg-canvas)] text-[var(--sb-text-primary)] shadow-sb-elevation-1 cursor-pointer sb-ripple">Cluster_A</div>
+              <div class="flex-1 h-8 flex items-center justify-center text-xs font-medium rounded-sb-shape-xs text-[var(--sb-text-muted)] hover:text-[var(--sb-text-primary)] cursor-pointer sb-ripple">Cluster_B</div>
+            </div>
+            <span class="text-[10px] text-[var(--sb-text-muted)]">Guarantees isolated execution scope visualization.</span>
+          </div>
+
+        </div>
+      </section>
+
+      <section id="sec-datatable" class="flex flex-col gap-4">
+        <h3 class="font-serif text-lg font-semibold border-b border-[var(--sb-border-divider)] pb-2 text-[var(--sb-text-primary)]">High-Density Object Grid Structures</h3>
+        <div class="w-full bg-[var(--sb-bg-canvas)] border border-[var(--sb-border-strong)] rounded-sb-shape-sm overflow-hidden flex flex-col shadow-sb-elevation-1">
+          
+          <div class="w-full flex bg-[var(--sb-bg-container)] border-b border-[var(--sb-border-divider)] font-semibold text-xs text-[var(--sb-text-primary)]">
+            <div class="w-12 p-2.5 flex items-center justify-center border-r border-[var(--sb-border-subtle)]"><input type="checkbox" class="w-3.5 h-3.5"></div>
+            <div class="flex-1 p-2.5 border-r border-[var(--sb-border-subtle)] flex items-center justify-between">
+              <span>System Node Identifier</span>
+              <span class="text-[10px] text-[var(--sb-text-muted)]">▲</span>
+            </div>
+            <div class="w-40 p-2.5 border-r border-[var(--sb-border-subtle)]">Deployment Sub-Region</div>
+            <div class="w-32 p-2.5 border-r border-[var(--sb-border-subtle)] text-right">Metrics Target</div>
+            <div class="w-24 p-2.5 text-center">Status</div>
+          </div>
+
+          <div class="flex flex-col divide-y divide-[var(--sb-border-subtle)] text-xs text-[var(--sb-text-primary)]">
+            <div class="w-full flex items-center bg-[var(--sb-bg-canvas)] hover:bg-[var(--sb-bg-container-high)] transition-colors sb-ripple">
+              <div class="w-12 p-2.5 flex items-center justify-center border-r border-[var(--sb-border-subtle)]"><input type="checkbox" class="w-3.5 h-3.5"></div>
+              <div class="flex-1 p-2.5 border-r border-[var(--sb-border-subtle)] font-mono font-medium">sb-cluster-instance-alpha</div>
+              <div class="w-40 p-2.5 border-r border-[var(--sb-border-subtle)]">us-east-1a</div>
+              <div class="w-32 p-2.5 border-r border-[var(--sb-border-subtle)] text-right font-mono font-semibold">1,248.80 ms</div>
+              <div class="w-24 p-2.5 text-center">
+                <span class="px-2 py-0.5 rounded-full text-[10px] bg-[var(--sb-accent-muted)] text-[var(--sb-accent)] font-medium">Active</span>
+              </div>
+            </div>
+
+            <div class="w-full flex items-center bg-[var(--sb-accent-muted)]/40 hover:bg-[var(--sb-accent-muted)]/60 transition-colors sb-ripple">
+              <div class="w-12 p-2.5 flex items-center justify-center border-r border-[var(--sb-border-subtle)]"><input type="checkbox" checked class="w-3.5 h-3.5"></div>
+              <div class="flex-1 p-2.5 border-r border-[var(--sb-border-subtle)] font-mono font-medium">sb-cluster-instance-beta</div>
+              <div class="w-40 p-2.5 border-r border-[var(--sb-border-subtle)]">us-west-2b</div>
+              <div class="w-32 p-2.5 border-r border-[var(--sb-border-subtle)] text-right font-mono font-semibold">942.15 ms</div>
+              <div class="w-24 p-2.5 text-center">
+                <span class="px-2 py-0.5 rounded-full text-[10px] bg-[var(--sb-bg-container-high)] text-[var(--sb-text-muted)] font-medium">Inactive</span>
+              </div>
+            </div>
+            
+            <div class="w-full flex items-center bg-[var(--sb-bg-field)] hover:bg-[var(--sb-bg-container-high)] transition-colors sb-ripple">
+              <div class="w-12 p-2.5 flex items-center justify-center border-r border-[var(--sb-border-subtle)]"><input type="checkbox" class="w-3.5 h-3.5"></div>
+              <div class="flex-1 p-2.5 border-r border-[var(--sb-border-subtle)] font-mono font-medium">sb-cluster-instance-gamma</div>
+              <div class="w-40 p-2.5 border-r border-[var(--sb-border-subtle)]">eu-central-1</div>
+              <div class="w-32 p-2.5 border-r border-[var(--sb-border-subtle)] text-right font-mono font-semibold">210.45 ms</div>
+              <div class="w-24 p-2.5 text-center">
+                <span class="px-2 py-0.5 rounded-full text-[10px] bg-[var(--sb-accent-muted)] text-[var(--sb-accent)] font-medium">Active</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="w-full h-11 bg-[var(--sb-bg-container)] border-t border-[var(--sb-border-divider)] flex items-center justify-between px-4 text-xs text-[var(--sb-text-muted)]">
+            <span>Viewing 1-3 of 57 active workspace objects</span>
+            <div class="flex items-center gap-2">
+              <button class="px-2 py-1 border border-[var(--sb-border-strong)] rounded bg-[var(--sb-bg-canvas)] hover:bg-[var(--sb-bg-container-high)] sb-ripple">◀ Revise</button>
+              <button class="px-2 py-1 border border-[var(--sb-border-strong)] rounded bg-[var(--sb-bg-canvas)] hover:bg-[var(--sb-bg-container-high)] sb-ripple">Proceed ▶</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="sec-pivot" class="flex flex-col gap-4">
+        <h3 class="font-serif text-lg font-semibold border-b border-[var(--sb-border-divider)] pb-2 text-[var(--sb-text-primary)]">Data Density Pivot Heatmap Matrix</h3>
+        <div class="w-full overflow-x-auto border border-[var(--sb-border-strong)] rounded-sb-shape-none bg-[var(--sb-bg-canvas)]">
+          <table class="w-full text-xs text-left border-collapse select-none">
+            <thead>
+              <tr class="bg-[var(--sb-bg-container)] border-b border-[var(--sb-border-strong)]">
+                <th class="p-2 min-w-[150px] border-r-2 border-[var(--sb-border-strong)] text-[var(--sb-text-primary)] font-semibold">Workspace Execution Pipeline Node</th>
+                <th class="p-2 border-r border-[var(--sb-border-subtle)] text-center text-[var(--sb-text-primary)]">Interval_01</th>
+                <th class="p-2 border-r border-[var(--sb-border-subtle)] text-center text-[var(--sb-text-primary)]">Interval_02</th>
+                <th class="p-2 border-r border-[var(--sb-border-subtle)] text-center text-[var(--sb-text-primary)]">Interval_03</th>
+                <th class="p-2 text-center text-[var(--sb-text-primary)]">Interval_04</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[var(--sb-border-subtle)] font-mono">
+              <tr class="bg-[var(--sb-bg-canvas)]">
+                <td class="p-2 border-r-2 border-[var(--sb-border-strong)] bg-[var(--sb-bg-container)] font-semibold text-[var(--sb-text-primary)] flex items-center gap-1">
+                  <span>▼ Node_Alpha_Group</span>
+                </td>
+                <td class="p-2 border-r border-[var(--sb-border-subtle)] text-center bg-[rgba(var(--sb-accent-rgb),0.4)] text-[var(--sb-text-primary)] font-bold">85.4%</td>
+                <td class="p-2 border-r border-[var(--sb-border-subtle)] text-center bg-[rgba(var(--sb-accent-rgb),0.2)] text-[var(--sb-text-primary)]">42.1%</td>
+                <td class="p-2 border-r border-[var(--sb-border-subtle)] text-center bg-[rgba(var(--sb-accent-rgb),0.1)] text-[var(--sb-text-primary)]">18.5%</td>
+                <td class="p-2 text-center bg-[rgba(var(--sb-accent-rgb),0.45)] text-[var(--sb-text-primary)] font-bold">94.2%</td>
+              </tr>
+              <tr class="bg-[var(--sb-bg-field)]">
+                <td class="p-2 border-r-2 border-[var(--sb-border-strong)] bg-[var(--sb-bg-container)] font-semibold text-[var(--sb-text-primary)] flex items-center gap-1 pl-6">
+                  <span>• Service_Variant_1</span>
+                </td>
+                <td class="p-2 border-r border-[var(--sb-border-subtle)] text-center bg-[rgba(var(--sb-accent-rgb),0.15)] text-[var(--sb-text-primary)]">32.8%</td>
+                <td class="p-2 border-r border-[var(--sb-border-subtle)] text-center bg-[rgba(var(--sb-accent-rgb),0.35)] text-[var(--sb-text-primary)] font-bold">78.0%</td>
+                <td class="p-2 border-r border-[var(--sb-border-subtle)] text-center bg-[rgba(var(--sb-accent-rgb),0.05)] text-[var(--sb-text-primary)]">9.4%</td>
+                <td class="p-2 text-center bg-[rgba(var(--sb-accent-rgb),0.3)] text-[var(--sb-text-primary)]">61.5%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="sec-analytics" class="flex flex-col gap-4">
+        <h3 class="font-serif text-lg font-semibold border-b border-[var(--sb-border-divider)] pb-2 text-[var(--sb-text-primary)]">Analytical Coordinate Mapping Canvas</h3>
+        <div class="w-full h-72 p-4 rounded-sb-shape-sm bg-[var(--sb-bg-canvas)] border border-[var(--sb-border-subtle)] shadow-sb-elevation-1 relative flex flex-col justify-between">
+          <span class="text-xs font-mono text-[var(--sb-text-muted)] absolute top-4 left-4">Data Plane Representation (Conversion Index vs Volume Metrics)</span>
+          
+          <svg class="w-full h-full min-h-0 overflow-visible select-none mt-6" viewBox="0 0 500 200">
+            <line x1="0" y1="50" x2="500" y2="50" class="stroke-[var(--sb-border-subtle)] opacity-40 stroke-1" stroke-dasharray="4" />
+            <line x1="0" y1="100" x2="500" y2="100" class="stroke-[var(--sb-border-subtle)] opacity-40 stroke-1" stroke-dasharray="4" />
+            <line x1="0" y1="150" x2="500" y2="150" class="stroke-[var(--sb-border-subtle)] opacity-40 stroke-1" stroke-dasharray="4" />
+            <line x1="0" y1="190" x2="500" y2="190" class="stroke-[var(--sb-border-strong)] stroke-1" />
+
+            <circle cx="80" cy="140" r="6" class="fill-[var(--sb-accent)] stroke-[var(--sb-bg-canvas)] stroke-2 cursor-pointer hover:r-8 transition-all" />
+            <circle cx="180" cy="80" r="7" class="fill-[var(--sb-text-primary)] stroke-[var(--sb-bg-canvas)] stroke-2 cursor-pointer hover:r-8 transition-all" />
+            <circle cx="320" cy="110" r="5" class="fill-[var(--sb-text-muted)] stroke-[var(--sb-bg-canvas)] stroke-2 cursor-pointer hover:r-8 transition-all" />
+            <circle cx="410" cy="40" r="8" class="fill-[var(--sb-accent)] stroke-[var(--sb-bg-canvas)] stroke-2 cursor-pointer hover:r-10 transition-all" />
+
+            <text x="5" y="185" class="fill-[var(--sb-text-muted)] font-mono text-[10px]">Volume: Minimum</text>
+            <text x="420" y="185" class="fill-[var(--sb-text-muted)] font-mono text-[10px]">Volume: Critical Max</text>
+          </svg>
+        </div>
+      </section>
+
+      <section id="sec-embed" class="flex flex-col gap-4">
+        <h3 class="font-serif text-lg font-semibold border-b border-[var(--sb-border-divider)] pb-2 text-[var(--sb-text-primary)]">Third-Party Component Sandbox Isolation</h3>
+        <div class="w-full p-4 bg-[var(--sb-bg-container-high)] rounded-sb-shape-sm border border-dashed border-[var(--sb-border-divider)]">
+          <p class="text-xs text-[var(--sb-text-muted)] mb-3 font-mono">// Outside Environment CSS Reset Validation Scope Context Container Frame:</p>
+          
+          <div class="sb-embed block w-full h-auto text-[var(--sb-text-primary)] bg-[var(--sb-bg-canvas)] border border-[var(--sb-border-subtle)] rounded-sb-shape-sm overflow-hidden antialiased text-left m-0 p-0 box-border shadow-sb-elevation-1">
+            <div class="w-full h-10 px-4 bg-[var(--sb-bg-container)] border-b border-[var(--sb-border-subtle)] flex items-center justify-between text-xs font-semibold">
+              <span>Isolated Analytic Metric Frame Widget</span>
+              <span class="font-mono text-[10px] text-[var(--sb-text-muted)]">Encapsulated Space</span>
+            </div>
+            <div class="p-4 flex flex-col gap-2">
+              <p class="text-xs text-[var(--sb-text-primary)] leading-relaxed">
+                This context wrapper guarantees style safety inside dirty host systems by isolating design runtime definitions safely.
+              </p>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="inline-block w-2.5 h-2.5 bg-[var(--sb-accent)] rounded-full animate-pulse"></span>
+                <span class="font-mono text-[10px] text-[var(--sb-text-muted)]">Token Constraint System Verified</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <aside id="right-sidebar" class="h-full w-80 border-l border-[var(--sb-border-subtle)] bg-[var(--sb-bg-container)] flex flex-col transition-all duration-200 overflow-hidden flex-shrink-0 z-20">
+      <div class="p-4 border-b border-[var(--sb-border-subtle)] bg-[var(--sb-bg-container-high)]">
+        <h3 class="font-serif text-sm font-semibold text-[var(--sb-text-primary)]">System Context Drawer</h3>
+      </div>
+      <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+        
+        <div class="p-3 bg-[var(--sb-bg-canvas)] border border-[var(--sb-border-strong)] rounded-sb-shape-xs shadow-sb-elevation-1 flex flex-col gap-2">
+          <span class="text-[10px] uppercase font-mono tracking-wider text-[var(--sb-text-muted)]">Active Workspace Rules</span>
+          <p class="text-xs text-[var(--sb-text-primary)] leading-normal">
+            Component preview grids seamlessly pull configuration metadata directly from runtime custom design tokens. Swap variants globally to check structural alignment rules.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <span class="text-[10px] uppercase font-mono tracking-wider text-[var(--sb-text-muted)]">Notes Summary</span>
+          <div class="w-full relative sb-focusable">
+            <textarea placeholder="Add a note..." class="w-full h-24 p-3 bg-[var(--sb-bg-field)] border border-[var(--sb-border-divider)] rounded-sb-shape-xs font-sans text-xs text-[var(--sb-text-primary)] focus:outline-none focus:border-[var(--sb-text-primary)] focus:bg-[var(--sb-bg-canvas)] placeholder:text-[var(--sb-text-muted)]/50 transition-all resize-none"></textarea>
+            <div class="sb-focusable-ring"></div>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+  </div>
+
+  <div id="diagnostic-modal" class="fixed inset-0 z-50 bg-black/30 backdrop-blur-xs hidden items-center justify-center p-6 transition-all duration-200">
+    <div class="w-full max-w-xl bg-[var(--sb-bg-canvas)] border-2 border-[var(--sb-text-primary)] rounded-sb-shape-sm shadow-sb-elevation-3 flex flex-col overflow-hidden transform scale-95 transition-transform duration-200" id="modal-panel">
+      
+      <header class="w-full h-12 bg-[var(--sb-bg-container)] border-b border-[var(--sb-border-subtle)] px-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-2.5 h-2.5 rounded-full bg-[var(--sb-accent)] animate-pulse"></div>
+          <h3 class="font-serif text-sm font-semibold text-[var(--sb-text-primary)]">System Diagnostics Matrix Log</h3>
+        </div>
+        <button onclick="closeModal()" class="w-6 h-6 rounded hover:bg-[var(--sb-bg-container-high)] flex items-center justify-center text-[var(--sb-text-muted)]">✕</button>
+      </header>
+
+      <div class="p-6 flex flex-col gap-4 overflow-y-auto max-h-[70vh]">
+        <div class="flex flex-col gap-1.5">
+          <h4 class="text-xs font-semibold text-[var(--sb-text-muted)] uppercase tracking-wider">Root Execution Fault Trace</h4>
+          <p class="text-xs text-[var(--sb-text-primary)] leading-relaxed">
+            Compilation failed due to parameters breaching strict layout boundaries defined inside your design tokens engine.
+          </p>
+        </div>
+
+        <div class="w-full bg-[var(--sb-bg-container)] border border-[var(--sb-border-subtle)] p-3 rounded font-mono text-[11px] text-[var(--sb-text-primary)] overflow-x-auto">
+          <span class="text-[var(--sb-text-muted)]">// System Exception Stack Stream Trace Log:</span><br/>
+          <span class="text-[var(--sb-accent)]">FATAL: Array element assignment parameter boundaries out of design bounds.</span>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <h4 class="text-xs font-semibold text-[var(--sb-text-muted)] uppercase tracking-wider">Automated Workspace Resolution</h4>
+          <div class="w-full p-3 bg-[var(--sb-bg-canvas)] border border-[var(--sb-text-primary)] rounded flex items-start gap-3 hover:bg-[var(--sb-bg-container)] cursor-pointer">
+            <input type="radio" checked name="remedy-select" class="mt-0.5 accent-[var(--sb-text-primary)]" />
+            <div class="flex flex-col gap-0.5">
+              <span class="text-xs font-semibold text-[var(--sb-text-primary)]">Apply Systematic Clamp Constraints Force Wrapper</span>
+              <span class="text-[10px] text-[var(--sb-text-muted)]">Instruct the compilation engine to cleanly keep children bound within native design layouts automatically.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="w-full h-12 bg-[var(--sb-bg-container)] border-t border-[var(--sb-border-subtle)] px-4 flex items-center justify-between">
+        <span class="font-mono text-[10px] text-[var(--sb-text-muted)]">Confidence Metric: 99.1%</span>
+        <div class="flex items-center gap-2">
+          <button onclick="closeModal()" class="h-8 px-4 border border-[var(--sb-border-subtle)] rounded bg-[var(--sb-bg-canvas)] text-xs font-medium hover:bg-[var(--sb-bg-container-high)] sb-ripple">Dismiss</button>
+          <button onclick="closeModal()" class="h-8 px-4 rounded bg-[var(--sb-text-primary)] text-[var(--sb-bg-canvas)] text-xs font-medium hover:opacity-90 sb-ripple">Inject Solution</button>
+        </div>
+      </footer>
+
+    </div>
+  </div>
+
+  <script>
+    function setTheme(theme) {
+      const body = document.body;
+      body.classList.remove('theme-grayscale', 'theme-nightshift');
+      
+      document.getElementById('btn-theme-classic').className = "px-3 py-1 font-medium rounded-sb-shape-xs transition-all text-[var(--sb-text-muted)]";
+      document.getElementById('btn-theme-grayscale').className = "px-3 py-1 font-medium rounded-sb-shape-xs transition-all text-[var(--sb-text-muted)]";
+      document.getElementById('btn-theme-nightshift').className = "px-3 py-1 font-medium rounded-sb-shape-xs transition-all text-[var(--sb-text-muted)]";
+
+      if (theme === 'grayscale') {
+        body.classList.add('theme-grayscale');
+        document.getElementById('btn-theme-grayscale').className = "px-3 py-1 font-medium rounded-sb-shape-xs transition-all bg-[var(--sb-bg-canvas)] text-[var(--sb-text-primary)] shadow-sb-elevation-1";
+      } else if (theme === 'nightshift') {
+        body.classList.add('theme-nightshift');
+        document.getElementById('btn-theme-nightshift').className = "px-3 py-1 font-medium rounded-sb-shape-xs transition-all bg-[var(--sb-bg-canvas)] text-[var(--sb-text-primary)] shadow-sb-elevation-1";
+      } else {
+        document.getElementById('btn-theme-classic').className = "px-3 py-1 font-medium rounded-sb-shape-xs transition-all bg-[var(--sb-bg-canvas)] text-[var(--sb-text-primary)] shadow-sb-elevation-1";
+      }
+    }
+
+    function setLayout(layout) {
+      const leftSidebar = document.getElementById('left-sidebar');
+      const rightSidebar = document.getElementById('right-sidebar');
+
+      document.getElementById('btn-layout-dual').className = "px-3 py-1 font-medium rounded-sb-shape-xs transition-all text-[var(--sb-text-muted)]";
+      document.getElementById('btn-layout-left').className = "px-3 py-1 font-medium rounded-sb-shape-xs transition-all text-[var(--sb-text-muted)]";
+      document.getElementById('btn-layout-single').className = "px-3 py-1 font-medium rounded-sb-shape-xs transition-all text-[var(--sb-text-muted)]";
+
+      if (layout === 'left') {
+        leftSidebar.style.width = "16rem"; 
+        rightSidebar.style.width = "0px";
+        document.getElementById('btn-layout-left').className = "px-3 py-1 font-medium rounded-sb-shape-xs transition-all bg-[var(--sb-bg-canvas)] text-[var(--sb-text-primary)] shadow-sb-elevation-1";
+      } else if (layout === 'single') {
+        leftSidebar.style.width = "0px";
+        rightSidebar.style.width = "0px";
+        document.getElementById('btn-layout-single').className = "px-3 py-1 font-medium rounded-sb-shape-xs transition-all bg-[var(--sb-bg-canvas)] text-[var(--sb-text-primary)] shadow-sb-elevation-1";
+      } else {
+        leftSidebar.style.width = "16rem";
+        rightSidebar.style.width = "20rem"; 
+        document.getElementById('btn-layout-dual').className = "px-3 py-1 font-medium rounded-sb-shape-xs transition-all bg-[var(--sb-bg-canvas)] text-[var(--sb-text-primary)] shadow-sb-elevation-1";
+      }
+    }
+
+    function scrollToSection(sectionId) {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    function openModal() {
+      const modal = document.getElementById('diagnostic-modal');
+      const panel = document.getElementById('modal-panel');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      setTimeout(() => {
+        panel.classList.remove('scale-95');
+        panel.classList.add('scale-100');
+      }, 50);
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('diagnostic-modal');
+      const panel = document.getElementById('modal-panel');
+      panel.classList.remove('scale-100');
+      panel.classList.add('scale-95');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }, 150);
+    }
+  </script>
+</body>
+</html>
