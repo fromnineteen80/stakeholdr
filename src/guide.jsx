@@ -809,7 +809,41 @@ DISCREPANCIES TO RESOLVE (schema-draft vs current app — decide at build) —
 1. TEAM SCOPE: this schema drafts team_members PER WORKSPACE (workspace_id FK), but the current app uses ONE GLOBAL team + one global score-set per stakeholder (see Scoring box). Decide: global (as captured/working) vs per-workspace (as drafted). If global, drop workspace_id from team_members (or make scores key on a global team).
 2. PLANS PER WORKSPACE: an earlier schema draft had workspace_id UNIQUE (one plan per workspace), but the Plans landing shows MULTIPLE plans. Captured here WITHOUT unique (many plans per workspace). Confirm.
 3. COMMUNITY: votes are a separate community_votes table (normalized) vs the in-memory votes{} object — the transport maps between them.` },
-      { t: "Catalogs — categories/types · markets/regions · segments/BUs · issues · kinds/stages/ask-types" },
+      { t: "Catalogs — the shared option lists (verbatim) + which are manager-editable", d:
+`The shared taxonomies every module draws from. Captured verbatim (the .io is the only source). Most ship as SEEDED DEFAULTS and become MANAGER-EDITABLE via Settings (persisted to appConfig); a few are FIXED enums.
+
+CATEGORIES → AUDIENCE TYPES [EDITABLE: appConfig.categories; Settings → Stakeholders] —
+• Communities: Charity Organization · Church · Community Alliance · Higher Education · K-12 Educator · Local Business · Media · Military Branch · Neighbor · NGO · Tribes · Veterans · Youth Program · Activist Organization · Activist Member · General Public
+• Government: Agency (Inspector) · Agency (Permit Writer) · City Council Member · City Government · County Government · County Supervisor · Governor's Office · Judicial · Mayor · Regulator (Federal) · Regulator (State) · Regulator (Local) · State Representative · State Senate · US Congress · US Senate
+• Our People: Community Outreach Lead · Diversity & Inclusion Lead · Executive · General Employee · Former Employee · Contractor · Operations Manager · Marketing Manager · Sales Manager · Retiree
+• Industry: Competition · Supply Chain · Trade Association · Channel Partners · Industry Analysts · Business Coalition · Economic Development · Labor Union
+• Consumers: Industry Consumers · Current Customers · Future Customers · Lost Customers
+• Investors: Board Member · Shareholder · Activist Shareholder · General Public Investor
+(Cascade: choosing a Category sets the Type options to that category's list.)
+
+MARKETS → REGIONS [EDITABLE; Settings → Geography] — Americas: United States · Canada · Mexico | LATAM: Brazil · Other Countries | EMEA: Europe · Middle East · Africa | APJ: Emerging APAC · Japan. (Cascade: Market sets Region options.)
+
+GEOGRAPHIES [FIXED enum] — National (all) · Federal · State · Local.
+
+SEGMENTS → BUSINESS UNITS [EDITABLE: appConfig.segments; Settings → Your Structure] — Personal Systems: Commercial PCs & Laptops · Consumer PCs · Other Products · Services | Printing: Hardware · Supplies · Graphics & 3D Printing | Corporate Investments: Poly · HyperX | Corporate Functions: Marketing · Communications · Legal / GA&PP · HP Foundation · Supply Chain · SLED. (A workspace picks one (segment, BU) pair.)
+
+ISSUES [EDITABLE: appConfig.issues] — Procurement Reform · Sustainability · AI · Education · Taxation · Site Operations · Supply Chain. (Reused by stakeholders, plans, community.)
+
+TAGS [EDITABLE: appConfig tags] — public-official · key-influencer · coalition · ally · press · skeptical · workforce · federal · activist · environmental · regulator · education · partner · faith · veterans · board · health · investor · internal · exec · sovereign · cultural · local-gov · eu · ngo · industry · recycling · supplies.
+
+FUNCTIONS [EDITABLE: appConfig.functions; Settings → Your Structure] — Operations · Human Resources · Strategy · Research · Site Management · Sales · Marketing · Communications · Legal · Government Affairs · Community Relations · Intern. (User function field.)
+
+PRIORITY [FIXED enum] — High · Medium · Low. STAKEHOLDER STATUS [FIXED enum] — Active · Watch · Dormant.
+
+COMMUNITY [FIXED enums] — KINDS: Philanthropy · Volunteering · Corporate Giving · Political Action (PAC) · Sustainability · Social Impact. STAGES: Idea · Proposed · Under Review · Approved · Active · Complete · Declined. ASK TYPES: Funding · Volunteer hours · Endorsement · In-kind · Political contribution. RECURRENCE: One-time · Annual · Multi-year. GIVING MODES (Corporate Giving): Monetary · In-Kind · Mix.
+
+SITES [EDITABLE: appConfig.sites; Settings → Geography] — operating sites { id, city, state? (US only), country }; US sites force country = "United States". Seed: Palo Alto/CA · Houston/TX · Corvallis/OR · Vancouver/WA · Washington/DC.
+
+LOCATION LISTS — US_STATES (ISO 3166-2:US), MX_STATES, CA_PROVINCES (static, fine) and COUNTRIES [REPLACE: static 2026 snapshot → ISO-3166-1 via API/table at production — see Persistence/Integrations]. Stakeholder/site location: non-US uses country; US uses state/city/zip.
+
+ELSEWHERE (not re-listed here) — the 14 RELATIONSHIP ZONES (color/strategy/action) live in the Relationship-engine box; the PLAN ALGORITHM models + FACTORS live in the Plan-algorithm + Factor-key boxes.
+
+USAGE — every dropdown/filter/chip pulls from these. Editable catalogs render as add/remove list editors in Settings; fixed enums are constants. In the build, expose ONE typed catalog module = appConfig (editable) + constants (fixed).` },
       { t: "Design refs — element→MD3 (Material Web) component map · Material Symbols map · Inter/Newsreader" },
       { t: "INDEX — manifest + traceability (feature → spec → MD3 component → verification)" },
     ]
