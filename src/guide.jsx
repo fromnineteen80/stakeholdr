@@ -844,6 +844,35 @@ LOCATION LISTS — US_STATES (ISO 3166-2:US), MX_STATES, CA_PROVINCES (static, f
 ELSEWHERE (not re-listed here) — the 14 RELATIONSHIP ZONES (color/strategy/action) live in the Relationship-engine box; the PLAN ALGORITHM models + FACTORS live in the Plan-algorithm + Factor-key boxes.
 
 USAGE — every dropdown/filter/chip pulls from these. Editable catalogs render as add/remove list editors in Settings; fixed enums are constants. In the build, expose ONE typed catalog module = appConfig (editable) + constants (fixed).` },
+      { t: "Record scaffold, landing pages & page shells — the universal layout (LAYOUT IS CRUCIAL)", d:
+`THE UNIVERSAL PAGE SHELL — three regions: LEFT SIDEBAR · MAIN CONTENT · RIGHT SIDEBAR. The record is FLEXIBLE WIDTH (fills the space). Both sidebars CONTRAST with the main content (a surface-container step darker — NEVER white) and COLLAPSE/EXPAND like Claude:
+• LEFT collapsed → the words disappear, leaving the LINK ICONS plus an OPEN (expand) icon. Expanded → icons + labels.
+• RIGHT collapsed → only the OPEN icon. Expanded → its full content.
+
+MAIN CONTENT [always WHITE] — the page body is ALWAYS white; FIELDS in the main content are ALWAYS white too (distinct from SIDEBAR fields, which are lighter-than-the-sidebar but NOT white). It houses SECTIONS stacked DOWN THE PAGE; each section is FULL-WIDTH or TWO-COLUMN, with industry-standard spacing between sections. Sections hold the decisions, collaboration, content creation, and fields.
+
+LEFT SIDEBAR — the SECTION / ELEMENT navigation for this record (by NAME, no numbers): clicking a name jumps to / opens that section in the main content (sub-page feel). For record.plan these are the PLAN ELEMENTS (see Plan box). Collapses to the icon rail.
+
+RIGHT SIDEBAR — the record's COLLABORATION + METADATA: the TEAMMATES on this record, an ADD-TEAMMATE control, an OPEN-WHITEBOARD control, NOTES the user can take about this plan/community/stakeholder, and METADATA (created date, last-updated date, owner, etc.). Collapses to the open icon.
+
+view ↔ edit PARITY — every record type has record.[type].view (read) and record.[type].edit (fill in), same shell, same sections; links switch between them (also surfaced in landing-card footers, below).
+
+PER RECORD TYPE —
+• record.plan — LEFT: the plan elements as section links. MAIN: the element sections with the fields to fill in. RIGHT: team/whiteboard/notes/metadata. (Full plan structure in the Plan box.)
+• record.community — the SAME layout as plan (left section links + main fields + right sidebar), with COMMUNITY content: everything captured in the Community box (project overview, the ask, beneficiary & relationships, value score, budget/FX, risk, votes, owners, etc.) laid into sections.
+• record.stakeholder — sections like plan/community showing EVERYTHING about a stakeholder that appears as a row in a workspace (identity/contact, category/type, market/region/geography, issues, priority, relationship/zone, tags, owners, notes & history, community ties, score history). A PROFILE IMAGE sits at the TOP-LEFT of the main content. RIGHT sidebar same (team/whiteboard/notes/metadata).
+• record.workspace — everything you need to learn about a workspace (name, segment/BU, owners/members, its stakeholders, plans, and workspace-level settings).
+
+LANDING PAGES (plan + community) — FULL-WIDTH grids of DESIGNED ENTRY CARDS that SORT and FILTER. The plan and community landings DIFFER in card content but share the pattern. CLICKING a card → record.[type].view. Each card's FOOTER carries VIEW and EDIT links → record.[type].view / .edit.
+
+PAGE-SHELL VARIANTS —
+• Records (plan/community/stakeholder/workspace): the full three-region shell (left + main + right).
+• HELP: styled the same but NO RIGHT SIDEBAR (left + main only).
+• SETTINGS: also NO RIGHT SIDEBAR (its left is the pane-nav; main is the pane content).
+
+COLOR / LAYOUT RULES (start-state) — main + main-fields = white; sidebars = a darker surface-container (never white); sidebar fields = lighter-than-sidebar, not white; no shadows/gradients; no hover/active background swap on nav links (state by ink weight/color); collapse behavior = Claude-style (left → icon rail; right → open icon).
+
+UI KIND (built later with shadcn + design.md tokens; NO hand-built CSS) — a Shell/RecordShell composition: collapsible left rail (section nav), a flexible white main with stacked full-width/two-column Sections + white fields, a collapsible right rail (TeammatesPanel + AddTeammate + OpenWhiteboard + NotesPanel + Metadata). Landing = a sortable/filterable Card grid with view/edit footer links. Help/Settings = the shell minus the right rail. All from the universal kit; the look comes from docs/design tokens.` },
       { t: "Design refs — element→MD3 (Material Web) component map · Material Symbols map · Inter/Newsreader" },
       { t: "INDEX — manifest + traceability (feature → spec → MD3 component → verification)" },
     ]
