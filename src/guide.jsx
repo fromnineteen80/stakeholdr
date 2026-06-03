@@ -522,10 +522,10 @@ LAYOUT (preference) — it clicks OUT of workHQ into a TWO-PANE, SIDE-BY-SIDE SP
 RELATION TO MESSAGES — Messaging is the lighter conversation form; the Whiteboard is the advanced collaboration/whiteboarding surface. (How they relate or merge: to confirm.)
 
 STATUS — concept + requirements captured; the design and the URL-embed API are OPEN. To be designed deliberately.` },
-      { t: "Settings — manager-only org config hub (9 panes) + the design-customization dashboard", d:
+      { t: "Settings — manager-only org config hub (10 panes incl. Integrations) + the design-customization dashboard", d:
 `WHAT IT IS — the org's configuration hub, a single page with a LEFT-NAV of panes. MANAGER-ONLY (the Settings nav item shows only for role=manager; non-managers never reach it). Most values persist to appConfig (one synced row); this is where the org's CATALOGS, brand, time model, fiscal calendar, roles, and theme are set. Separate from Workspaces.
 
-THE 9 PANES (left nav) —
+THE 10 PANES (left nav) —
 1. APP SETTINGS (identity) — appName · brand · brandIcon · ACCENT (swatch picker; current swatches #000000/#1976D2/#E64A19/#AD1457/#388E3C/#00897B/#BF360C). PLUS the THEME picker and TIME ZONE (below). [appConfig: appName, brand, brandIcon, accent]
 2. FISCAL CALENDAR — fiscalStartMonth + fiscalStartDay → a live four-quarter preview. This is THE source for the fiscal year + quarters (drives community rollups, scoring cadence, history snapshots, FY## Q# labels — see Cadence + Enterprise-state boxes). [appConfig: fiscalStartMonth, fiscalStartDay]
 3. STAKEHOLDERS — Categories & Audience Types: manager edits the CATEGORIES → audience-type map. [appConfig.categories; see Catalogs box]
@@ -535,6 +535,7 @@ THE 9 PANES (left nav) —
 7. TAGS — the company tags list (reused by stakeholders). [appConfig tags/companyTags]
 8. TEAM MANAGEMENT — INVITE CODE (org join code STKH-XXXX-XXXX; share to onboard; REGENERATE invalidates the old) · ROLES table (per user: manager ↔ user toggle; you CANNOT demote yourself — ask another manager; remove user → the removeUser cascade). Shows manager/user counts. "Managers see every workspace, delete workspaces, manage roles, edit app identity, access Settings. Users only see workspaces they're a member of and score/engage stakeholders there." [users.role; appConfig.inviteCode]
 9. CONTACT — support / org contact info.
+10. INTEGRATIONS (manager-only) — the org's connected services + keys. SUPPORTS THE WHITEBOARD: the URL link-unfurl / oEmbed / page-metadata service that turns a pasted URL (news article or stakeholder social post) into a beautiful embed (outlet name + headline + preview, or an embedded post) — configured/enabled here, with EMBED-SAFETY policy (allowed/blocked domains, content guard). Also houses: Community's real-time FX-conversion API; the ISO-3166 COUNTRY source; and the connector roadmap (LegiScan · Quorum · CRM · marketing platforms · Google Drive · social feeds). Optional WHITEBOARD GOVERNANCE (if desired): who can create whiteboards, default visibility, retention/archival; and a whiteboard label/idea-status catalog (if ideas use a fixed set). Secrets live in a vault, never inline (see Enterprise architecture · Integrations). Cross-links: Whiteboard box (embed), Community box (FX), Catalogs/Persistence (country API).
 
 THEME = THE DESIGN-CUSTOMIZATION DASHBOARD (in pane 1, expands later) — current theme choices: Soapbox (warm beige) · Undecideds (true greyscale) · Night Shift (warm charcoal); plus AUTO NIGHT SHIFT (autoNightShift on/off + nightShiftAt time). These map to the design-system themes (Editorial / Grayscale / Night Shift) in docs/design — re-skin = swapping the token set, never touching components. THE FULL design-customization dashboard (the start-state token tuning: surfaces, ink, type scale, density, radius, accent — per design.md) is the EXPANSION of this pane: it writes the design tokens that every component inherits. [appConfig: theme, accent, autoNightShift, nightShiftAt]
 
