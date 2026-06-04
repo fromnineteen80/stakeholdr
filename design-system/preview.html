@@ -6,38 +6,8 @@
   <title>Canonical UI — Component Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Newsreader:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./tokens.css" />
-
-  <!-- Real components — each a self-contained module, styled only by --ui-sys-* tokens -->
-  <script type="module" src="./components/button.js"></script>
-  <script type="module" src="./components/icon-button.js"></script>
-  <script type="module" src="./components/fab.js"></script>
-  <script type="module" src="./components/text-field.js"></script>
-  <script type="module" src="./components/checkbox.js"></script>
-  <script type="module" src="./components/radio.js"></script>
-  <script type="module" src="./components/switch.js"></script>
-  <script type="module" src="./components/slider.js"></script>
-  <script type="module" src="./components/select.js"></script>
-  <script type="module" src="./components/menu.js"></script>
-  <script type="module" src="./components/chips.js"></script>
-  <script type="module" src="./components/autocomplete.js"></script>
-  <script type="module" src="./components/list.js"></script>
-  <script type="module" src="./components/tabs.js"></script>
-  <script type="module" src="./components/divider.js"></script>
-  <script type="module" src="./components/dialog.js"></script>
-  <script type="module" src="./components/tooltip.js"></script>
-  <script type="module" src="./components/snackbar.js"></script>
-  <script type="module" src="./components/progress.js"></script>
-  <script type="module" src="./components/data-table.js"></script>
-  <script type="module" src="./components/chart.js"></script>
-  <script type="module" src="./components/app-bar.js"></script>
-  <script type="module" src="./components/nav-rail.js"></script>
-  <script type="module" src="./components/nav-drawer.js"></script>
-  <script type="module" src="./components/sheet.js"></script>
-  <script type="module" src="./components/bottom-bar.js"></script>
-  <script type="module" src="./components/date-picker.js"></script>
-  <script type="module" src="./components/stakeholder-table.js"></script>
-  <script type="module" src="./components/stakeholder-map.js"></script>
+  <!-- Single entry: token contract + all components, bundled as one Vite entry. -->
+  <script type="module" src="./entry.js"></script>
 
   <style>
     /* Page chrome reads --ui-sys-* tokens too — proving the cascade is total. */
