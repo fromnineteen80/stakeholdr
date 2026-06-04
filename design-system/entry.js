@@ -5,6 +5,11 @@
  */
 import "./tokens.css";
 
+import "./components/icon.js";
+import "./components/app-shell.js";
+import "./components/sidebar.js";
+import "./components/inspector.js";
+import "./components/status-bar.js";
 import "./components/button.js";
 import "./components/icon-button.js";
 import "./components/fab.js";

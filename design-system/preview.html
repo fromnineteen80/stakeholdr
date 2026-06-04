@@ -80,6 +80,10 @@
     <input type="range" min="0" max="20" value="4" oninput="document.documentElement.style.setProperty('--ui-sys-shape-control', this.value + 'px')" />
 
     <nav class="toc">
+      <span class="grp">Foundations</span>
+      <a href="#icon">ui-icon (sizes)</a>
+      <span class="grp">Scaffolding</span>
+      <a href="./wireframes.html">→ app shell / sidebars / inspector</a>
       <span class="grp">Domain — Stakeholdr</span>
       <a href="#stakeholder-table">ui-stakeholder-table</a>
       <a href="#stakeholder-map">ui-stakeholder-map</a>
@@ -123,6 +127,18 @@
     <h1>Canonical UI — component gallery</h1>
     <p class="hint"><a href="./wireframes.html" style="color:var(--ui-sys-on-surface)">→ See the wireframes</a> (components composed into real screens).</p>
     <p class="hint">29 real, un-branded custom elements. Each its own module, shadow DOM, keyboard + ARIA, styled only by <code>--ui-sys-*</code> tokens. Click, hover, drag, tab through them — then re-skin everything from the token editor.</p>
+
+    <!-- ========================= FOUNDATIONS ========================= -->
+    <h2>Foundations</h2>
+    <section id="icon">
+      <h3>ui-icon <span class="hint">— one icon-sizing scale (sm / md / lg / xl); the only place icon px live</span></h3>
+      <div class="row" style="align-items:flex-end">
+        <span style="display:inline-flex;flex-direction:column;align-items:center;gap:4px"><ui-icon size="sm"><svg viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></ui-icon><span class="hint">sm 18</span></span>
+        <span style="display:inline-flex;flex-direction:column;align-items:center;gap:4px"><ui-icon size="md"><svg viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></ui-icon><span class="hint">md 20</span></span>
+        <span style="display:inline-flex;flex-direction:column;align-items:center;gap:4px"><ui-icon size="lg"><svg viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></ui-icon><span class="hint">lg 24</span></span>
+        <span style="display:inline-flex;flex-direction:column;align-items:center;gap:4px"><ui-icon size="xl"><svg viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></ui-icon><span class="hint">xl 32</span></span>
+      </div>
+    </section>
 
     <!-- ========================= DOMAIN ========================= -->
     <h2>Domain — Stakeholdr <span class="hint">(our table &amp; our map, canonical, token-driven)</span></h2>
