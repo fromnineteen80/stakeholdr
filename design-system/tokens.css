@@ -1,0 +1,99 @@
+/* ============================================================================
+ * CANONICAL TOKEN CONTRACT  —  the ONLY legal visual surface in this system.
+ *
+ * Two tiers, frozen:
+ *   --ui-ref-*  raw values (palette, typefaces, scale primitives). Set once.
+ *   --ui-sys-*  semantic roles. Components read THESE and nothing else.
+ *
+ * There is deliberately NO third styling surface. No component stylesheet, no
+ * utility classes, no inline colors. If a look can't be expressed by changing a
+ * --ui-sys-* token, that is a signal — not a license to hand-roll CSS.
+ *
+ * Re-skinning the whole system later = editing --ui-sys-* (and, rarely, --ui-ref-*).
+ * Every component re-skins at once because they all inherit from here.
+ * ==========================================================================*/
+
+:root {
+  /* ---- TIER 1: REFERENCE (raw, un-semantic) ------------------------------ */
+
+  /* Neutral ramp, light -> dark. Claude-like, restrained. */
+  --ui-ref-neutral-0:  #FFFFFF;  /* content / cards (lightest) */
+  --ui-ref-neutral-1:  #FEFDFC;  /* app window runway */
+  --ui-ref-neutral-2:  #FCFBF9;  /* idle fields */
+  --ui-ref-neutral-3:  #F8F7F3;  /* panels, rails, headers */
+  --ui-ref-neutral-4:  #F4F3ED;  /* hovers, active cells */
+  --ui-ref-neutral-5:  #F0EEE6;  /* subtle section outlines */
+  --ui-ref-neutral-6:  #E8E6DE;  /* structural borders */
+
+  /* Ink */
+  --ui-ref-ink-strong: #666361;  /* primary text */
+  --ui-ref-ink-muted:  #ABA9A4;  /* secondary text / captions */
+  --ui-ref-ink-faint:  #DFDDD6;  /* dividers / disabled */
+
+  /* Typefaces — Inter (body) + Newsreader (titles). No mono, no others. */
+  --ui-ref-typeface-body:  Inter, ui-sans-serif, system-ui, sans-serif;
+  --ui-ref-typeface-title: Newsreader, ui-serif, Georgia, serif;
+
+  /* Scale primitives (4px base rhythm). */
+  --ui-ref-unit: 4px;
+
+  /* Radius primitives. */
+  --ui-ref-radius-xs: 4px;
+  --ui-ref-radius-sm: 8px;
+  --ui-ref-radius-md: 12px;
+  --ui-ref-radius-full: 9999px;
+
+  /* Motion primitives. */
+  --ui-ref-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ui-ref-duration-fast: 120ms;
+  --ui-ref-duration-base: 200ms;
+
+
+  /* ---- TIER 2: SYSTEM (semantic roles — the component contract) ---------- */
+
+  /* Surfaces (recessed -> raised) */
+  --ui-sys-surface:            var(--ui-ref-neutral-1);
+  --ui-sys-surface-card:       var(--ui-ref-neutral-0);
+  --ui-sys-surface-field:      var(--ui-ref-neutral-2);
+  --ui-sys-surface-container:  var(--ui-ref-neutral-3);
+  --ui-sys-surface-hover:      var(--ui-ref-neutral-4);
+
+  /* On-surface (text/icon roles) */
+  --ui-sys-on-surface:         var(--ui-ref-ink-strong);
+  --ui-sys-on-surface-muted:   var(--ui-ref-ink-muted);
+  --ui-sys-on-surface-faint:   var(--ui-ref-ink-faint);
+
+  /* Lines */
+  --ui-sys-outline:            var(--ui-ref-neutral-6);
+  --ui-sys-outline-subtle:     var(--ui-ref-neutral-5);
+  --ui-sys-divider:            var(--ui-ref-ink-faint);
+
+  /* Primary action role (filled emphasis). Ink-as-accent, Claude-restrained. */
+  --ui-sys-primary:            var(--ui-ref-ink-strong);
+  --ui-sys-on-primary:         var(--ui-ref-neutral-0);
+
+  /* Focus + state layers */
+  --ui-sys-focus-ring:         var(--ui-ref-ink-strong);
+  --ui-sys-state-hover-opacity: 0.06;
+  --ui-sys-state-pressed-opacity: 0.10;
+
+  /* Typography roles (role -> size/line/weight/family) */
+  --ui-sys-font-body:    400 13px/1.45 var(--ui-ref-typeface-body);
+  --ui-sys-font-label:   500 13px/1.2  var(--ui-ref-typeface-body);
+  --ui-sys-font-title:   500 18px/1.3  var(--ui-ref-typeface-title);
+
+  /* Shape roles */
+  --ui-sys-shape-control: var(--ui-ref-radius-xs);
+  --ui-sys-shape-card:    var(--ui-ref-radius-md);
+  --ui-sys-shape-pill:    var(--ui-ref-radius-full);
+
+  /* Spacing roles (the only spacing vocabulary components may use) */
+  --ui-sys-space-1: calc(var(--ui-ref-unit) * 1);  /* 4 */
+  --ui-sys-space-2: calc(var(--ui-ref-unit) * 2);  /* 8 */
+  --ui-sys-space-3: calc(var(--ui-ref-unit) * 3);  /* 12 */
+  --ui-sys-space-4: calc(var(--ui-ref-unit) * 4);  /* 16 */
+  --ui-sys-space-6: calc(var(--ui-ref-unit) * 6);  /* 24 */
+
+  /* Motion roles */
+  --ui-sys-motion-control: var(--ui-ref-duration-fast) var(--ui-ref-easing-standard);
+}
