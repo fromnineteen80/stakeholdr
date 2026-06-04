@@ -137,4 +137,39 @@
 
   /* Control sizing role (consistent control height across the kit) */
   --ui-sys-control-height: 36px;
+
+  /* ---- DOMAIN: relationship-status spectrum (the Stakeholdr engine) -------
+     14 zones, negative (red) → neutral (amber) → positive (green), verbatim
+     from the original engine. The map heatmap, scatter bubbles, and table
+     status/coord cells all read THESE — never a hardcoded hex. */
+  --ui-sys-zone-proactively-defend:    #D26A6A;
+  --ui-sys-zone-defend:                #E29A9A;
+  --ui-sys-zone-protect:               #EFBEBE;
+  --ui-sys-zone-respond:               #F4D6D6;
+  --ui-sys-zone-identify:              #F8E4E4;
+  --ui-sys-zone-monitor:               #F4DBB0;
+  --ui-sys-zone-maintain:              #F9E4BD;
+  --ui-sys-zone-commit:                #FAEACA;
+  --ui-sys-zone-connect:               #FCEFD1;
+  --ui-sys-zone-cooperate:             #DDE7C2;
+  --ui-sys-zone-collaborate:           #C2D9A4;
+  --ui-sys-zone-valuable-relationship: #B1CF92;
+  --ui-sys-zone-high-value-relationship: #97C57A;
+  --ui-sys-zone-strategic-partner:     #74B556;
+
+  /* Zone ink (text on a zone fill), by band */
+  --ui-sys-zone-ink-on-strong: #FFFFFF; /* on the two darkest extremes */
+  --ui-sys-zone-ink-negative:  #7a2424;
+  --ui-sys-zone-ink-neutral:   #7a4a14;
+  --ui-sys-zone-ink-positive:  #2f5a26;
+  --ui-sys-zone-border-negative: #7a2424;
+  --ui-sys-zone-border-positive: #1f3f17;
+
+  /* Heatmap empty-mix base (density tint floor) */
+  --ui-sys-zone-density-base: #F2EFE7;
+
+  /* Coordinate / valence tones (positive, negative, brand accent) */
+  --ui-sys-pos:    #3E7A2E;
+  --ui-sys-neg:    #B33C3C;
+  --ui-sys-accent: #B5552C;
 }

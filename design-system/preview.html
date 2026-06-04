@@ -42,7 +42,7 @@
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      background: var(--ui-sys-surface);
+      background: var(--ui-sys-surface-container);
       color: var(--ui-sys-on-surface);
       font: var(--ui-sys-font-body);
       display: grid;
@@ -55,7 +55,7 @@
       align-self: start;
       height: 100vh;
       overflow-y: auto;
-      background: var(--ui-sys-surface-container);
+      background: var(--ui-sys-surface-container-high);
       border-right: 1px solid var(--ui-sys-outline);
       padding: var(--ui-sys-space-6) var(--ui-sys-space-4);
     }
@@ -80,6 +80,7 @@
       background: var(--ui-sys-surface-card);
       border: 1px solid var(--ui-sys-outline-subtle);
       border-radius: var(--ui-sys-shape-card);
+      box-shadow: var(--ui-sys-elevation-1);
       padding: var(--ui-sys-space-4);
       margin-bottom: var(--ui-sys-space-4);
       scroll-margin-top: var(--ui-sys-space-4);
