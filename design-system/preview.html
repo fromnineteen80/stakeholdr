@@ -3,13 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Canonical UI — Skeleton Preview</title>
+  <title>Canonical UI — Component Gallery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Newsreader:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./tokens.css" />
+
+  <!-- Real components — each a self-contained module, styled only by --ui-sys-* tokens -->
   <script type="module" src="./components/button.js"></script>
+  <script type="module" src="./components/icon-button.js"></script>
+  <script type="module" src="./components/fab.js"></script>
+  <script type="module" src="./components/text-field.js"></script>
+  <script type="module" src="./components/checkbox.js"></script>
+  <script type="module" src="./components/radio.js"></script>
+  <script type="module" src="./components/switch.js"></script>
+  <script type="module" src="./components/slider.js"></script>
+  <script type="module" src="./components/select.js"></script>
+  <script type="module" src="./components/menu.js"></script>
+  <script type="module" src="./components/chips.js"></script>
+  <script type="module" src="./components/autocomplete.js"></script>
+  <script type="module" src="./components/list.js"></script>
+  <script type="module" src="./components/tabs.js"></script>
+  <script type="module" src="./components/divider.js"></script>
+  <script type="module" src="./components/dialog.js"></script>
+  <script type="module" src="./components/tooltip.js"></script>
+  <script type="module" src="./components/snackbar.js"></script>
+  <script type="module" src="./components/progress.js"></script>
+  <script type="module" src="./components/data-table.js"></script>
+  <script type="module" src="./components/chart.js"></script>
+  <script type="module" src="./components/app-bar.js"></script>
+  <script type="module" src="./components/nav-rail.js"></script>
+  <script type="module" src="./components/nav-drawer.js"></script>
+  <script type="module" src="./components/sheet.js"></script>
+  <script type="module" src="./components/bottom-bar.js"></script>
+  <script type="module" src="./components/date-picker.js"></script>
+
   <style>
-    /* PAGE chrome only reads --ui-sys-* tokens too — proving the cascade. */
+    /* Page chrome reads --ui-sys-* tokens too — proving the cascade is total. */
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       background: var(--ui-sys-surface);
@@ -20,66 +50,462 @@
       min-height: 100vh;
     }
     aside {
+      position: sticky;
+      top: 0;
+      align-self: start;
+      height: 100vh;
+      overflow-y: auto;
       background: var(--ui-sys-surface-container);
       border-right: 1px solid var(--ui-sys-outline);
       padding: var(--ui-sys-space-6) var(--ui-sys-space-4);
     }
-    main { padding: var(--ui-sys-space-6); }
-    h1 { font: var(--ui-sys-font-title); margin: 0 0 var(--ui-sys-space-2); }
-    h2 { font: var(--ui-sys-font-title); font-size: 14px; margin: var(--ui-sys-space-6) 0 var(--ui-sys-space-3); color: var(--ui-sys-on-surface-muted); }
-    .row { display: flex; gap: var(--ui-sys-space-3); flex-wrap: wrap; align-items: center; margin-bottom: var(--ui-sys-space-4); }
-    .card {
+    main { padding: var(--ui-sys-space-6); max-width: 1100px; }
+    h1 { font: var(--ui-sys-font-headline); margin: 0 0 var(--ui-sys-space-2); }
+    h2 {
+      font: var(--ui-sys-font-title);
+      margin: var(--ui-sys-space-6) 0 var(--ui-sys-space-3);
+      padding-bottom: var(--ui-sys-space-2);
+      border-bottom: 1px solid var(--ui-sys-outline-subtle);
+    }
+    h3 { font: var(--ui-sys-font-label); margin: 0 0 var(--ui-sys-space-3); color: var(--ui-sys-on-surface); }
+    .editor-title { font: var(--ui-sys-font-title); margin: 0 0 var(--ui-sys-space-2); }
+    .hint { color: var(--ui-sys-on-surface-muted); font: var(--ui-sys-font-caption); }
+    label.tok { display: block; font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted); margin: var(--ui-sys-space-3) 0 var(--ui-sys-space-1); }
+    input[type="color"], input[type="range"] { width: 100%; }
+    nav.toc { margin-top: var(--ui-sys-space-6); display: flex; flex-direction: column; gap: 2px; }
+    nav.toc a { color: var(--ui-sys-on-surface-muted); text-decoration: none; font: var(--ui-sys-font-caption); padding: var(--ui-sys-space-1) var(--ui-sys-space-2); border-radius: var(--ui-sys-shape-control); }
+    nav.toc a:hover { background: var(--ui-sys-surface-hover); color: var(--ui-sys-on-surface); }
+    nav.toc .grp { font: var(--ui-sys-font-label); color: var(--ui-sys-on-surface); margin-top: var(--ui-sys-space-3); }
+    section {
       background: var(--ui-sys-surface-card);
       border: 1px solid var(--ui-sys-outline-subtle);
       border-radius: var(--ui-sys-shape-card);
       padding: var(--ui-sys-space-4);
+      margin-bottom: var(--ui-sys-space-4);
+      scroll-margin-top: var(--ui-sys-space-4);
     }
-    label { display: block; font: var(--ui-sys-font-label); color: var(--ui-sys-on-surface-muted); margin-bottom: var(--ui-sys-space-1); }
-    input[type="color"], input[type="range"] { width: 100%; margin-bottom: var(--ui-sys-space-3); }
-    .hint { color: var(--ui-sys-on-surface-muted); font-size: 12px; }
+    .row { display: flex; gap: var(--ui-sys-space-3); flex-wrap: wrap; align-items: center; margin-bottom: var(--ui-sys-space-3); }
+    .col { display: flex; flex-direction: column; gap: var(--ui-sys-space-3); max-width: 360px; }
+    .frame { border: 1px solid var(--ui-sys-outline-subtle); border-radius: var(--ui-sys-shape-card); overflow: hidden; }
+    .phone { max-width: 380px; border: 1px solid var(--ui-sys-outline); border-radius: var(--ui-sys-shape-card); overflow: hidden; position: relative; }
   </style>
 </head>
 <body>
   <aside>
-    <h1>Token editor</h1>
-    <p class="hint">Change a token → every component below re-skins at once. This is the whole point: one surface, no patchwork.</p>
+    <div class="editor-title">Token editor</div>
+    <p class="hint">Change a token → every component re-skins at once. One surface, no patchwork.</p>
 
-    <label>--ui-sys-primary</label>
+    <label class="tok">--ui-sys-primary</label>
     <input type="color" value="#666361" oninput="document.documentElement.style.setProperty('--ui-sys-primary', this.value)" />
-
-    <label>--ui-sys-surface</label>
+    <label class="tok">--ui-sys-surface</label>
     <input type="color" value="#FEFDFC" oninput="document.documentElement.style.setProperty('--ui-sys-surface', this.value)" />
-
-    <label>--ui-ref-unit (spacing rhythm)</label>
+    <label class="tok">--ui-sys-error</label>
+    <input type="color" value="#B3261E" oninput="document.documentElement.style.setProperty('--ui-sys-error', this.value)" />
+    <label class="tok">--ui-ref-unit (spacing rhythm)</label>
     <input type="range" min="3" max="6" value="4" oninput="document.documentElement.style.setProperty('--ui-ref-unit', this.value + 'px')" />
-
-    <label>--ui-sys-shape-control (radius)</label>
+    <label class="tok">--ui-sys-shape-control (radius)</label>
     <input type="range" min="0" max="20" value="4" oninput="document.documentElement.style.setProperty('--ui-sys-shape-control', this.value + 'px')" />
+
+    <nav class="toc">
+      <span class="grp">Actions</span>
+      <a href="#button">ui-button</a>
+      <a href="#icon-button">ui-icon-button</a>
+      <a href="#fab">ui-fab</a>
+      <span class="grp">Forms</span>
+      <a href="#text-field">ui-text-field</a>
+      <a href="#checkbox">ui-checkbox</a>
+      <a href="#radio">ui-radio</a>
+      <a href="#switch">ui-switch</a>
+      <a href="#slider">ui-slider</a>
+      <span class="grp">Selection</span>
+      <a href="#select">ui-select</a>
+      <a href="#menu">ui-menu</a>
+      <a href="#chips">ui-chip</a>
+      <a href="#autocomplete">ui-autocomplete</a>
+      <span class="grp">Structure & feedback</span>
+      <a href="#list">ui-list</a>
+      <a href="#tabs">ui-tabs</a>
+      <a href="#divider">ui-divider</a>
+      <a href="#dialog">ui-dialog</a>
+      <a href="#tooltip">ui-tooltip</a>
+      <a href="#snackbar">ui-snackbar</a>
+      <a href="#progress">ui-progress</a>
+      <span class="grp">Gap-fill: data</span>
+      <a href="#data-table">ui-data-table</a>
+      <a href="#chart">ui-chart</a>
+      <span class="grp">Gap-fill: layout & mobile</span>
+      <a href="#app-bar">ui-app-bar</a>
+      <a href="#nav-rail">ui-nav-rail</a>
+      <a href="#nav-drawer">ui-nav-drawer</a>
+      <a href="#sheet">ui-sheet</a>
+      <a href="#bottom-bar">ui-bottom-bar</a>
+      <a href="#date-picker">ui-date-picker</a>
+    </nav>
   </aside>
 
   <main>
-    <h1>Canonical UI — skeleton preview</h1>
-    <p class="hint">Real custom elements. Un-branded. Styled only by --ui-sys-* tokens. One reference component shown; the rest clone this bar.</p>
+    <h1>Canonical UI — component gallery</h1>
+    <p class="hint">27 real, un-branded custom elements. Each its own module, shadow DOM, keyboard + ARIA, styled only by <code>--ui-sys-*</code> tokens. Click, hover, drag, tab through them — then re-skin everything from the token editor.</p>
 
-    <h2>ui-button — variants</h2>
-    <div class="card">
+    <!-- ========================= ACTIONS ========================= -->
+    <h2>Actions</h2>
+
+    <section id="button">
+      <h3>ui-button</h3>
       <div class="row">
         <ui-button variant="filled">Filled</ui-button>
         <ui-button variant="tonal">Tonal</ui-button>
         <ui-button variant="outlined">Outlined</ui-button>
         <ui-button variant="text">Text</ui-button>
-      </div>
-      <div class="row">
         <ui-button variant="filled" disabled>Disabled</ui-button>
-        <ui-button variant="outlined" disabled>Disabled</ui-button>
       </div>
-      <p class="hint">Hover / focus (Tab) / press each — state layer + focus ring are token-driven, not hand-coded per button.</p>
-    </div>
+    </section>
 
-    <h2>Coming (gap-fill, same bar)</h2>
-    <div class="card hint">
-      data-table · chart · app-bar · nav-rail · tooltip · snackbar · autocomplete · date-picker · mobile-sheet · mobile-bottom-bar — each a real component fanned out via agents once this contract is blessed.
-    </div>
+    <section id="icon-button">
+      <h3>ui-icon-button</h3>
+      <div class="row">
+        <ui-icon-button variant="standard" aria-label="Search"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M12.5 12.5L16.5 16.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></ui-icon-button>
+        <ui-icon-button variant="filled" aria-label="Add"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></ui-icon-button>
+        <ui-icon-button variant="tonal" aria-label="More"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="4" cy="10" r="1.4" fill="currentColor"/><circle cx="10" cy="10" r="1.4" fill="currentColor"/><circle cx="16" cy="10" r="1.4" fill="currentColor"/></svg></ui-icon-button>
+        <ui-icon-button variant="outlined" aria-label="Bookmark" selected aria-pressed="true"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 3h10v14l-5-3.5L5 17V3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></ui-icon-button>
+        <ui-icon-button variant="filled" disabled aria-label="Disabled"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></ui-icon-button>
+      </div>
+    </section>
+
+    <section id="fab">
+      <h3>ui-fab</h3>
+      <div class="row">
+        <ui-fab size="small" variant="primary" aria-label="Add"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></ui-fab>
+        <ui-fab aria-label="Compose"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></ui-fab>
+        <ui-fab size="large" variant="surface" aria-label="Navigate"><svg width="32" height="32" viewBox="0 0 36 36" fill="none"><path d="M18 6l12 24-12-6-12 6 12-24z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></ui-fab>
+        <ui-fab label="New stakeholder"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></ui-fab>
+      </div>
+    </section>
+
+    <!-- ========================= FORMS ========================= -->
+    <h2>Forms</h2>
+
+    <section id="text-field">
+      <h3>ui-text-field</h3>
+      <div class="col">
+        <ui-text-field label="Full name"></ui-text-field>
+        <ui-text-field label="Email" value="user@example.com" type="email"></ui-text-field>
+        <ui-text-field label="Password" type="password" error supporting-text="Must be at least 8 characters"></ui-text-field>
+        <ui-text-field label="Read-only field" value="Cannot edit" disabled></ui-text-field>
+      </div>
+    </section>
+
+    <section id="checkbox">
+      <h3>ui-checkbox</h3>
+      <div class="row">
+        <ui-checkbox>Unchecked</ui-checkbox>
+        <ui-checkbox checked>Checked</ui-checkbox>
+        <ui-checkbox indeterminate>Indeterminate</ui-checkbox>
+        <ui-checkbox checked disabled>Locked</ui-checkbox>
+      </div>
+    </section>
+
+    <section id="radio">
+      <h3>ui-radio</h3>
+      <div class="row">
+        <ui-radio name="plan" value="free" checked>Free</ui-radio>
+        <ui-radio name="plan" value="pro">Pro</ui-radio>
+        <ui-radio name="plan" value="ent">Enterprise</ui-radio>
+        <ui-radio name="plan" value="legacy" disabled>Legacy</ui-radio>
+      </div>
+    </section>
+
+    <section id="switch">
+      <h3>ui-switch</h3>
+      <div class="row">
+        <ui-switch>Off</ui-switch>
+        <ui-switch selected>On</ui-switch>
+        <ui-switch disabled>Disabled</ui-switch>
+        <ui-switch selected disabled>On, locked</ui-switch>
+      </div>
+    </section>
+
+    <section id="slider">
+      <h3>ui-slider</h3>
+      <div class="col">
+        <ui-slider min="0" max="100" step="1" value="40"></ui-slider>
+        <ui-slider min="0" max="10" step="2" value="6"></ui-slider>
+        <ui-slider min="0" max="100" value="30" disabled></ui-slider>
+      </div>
+    </section>
+
+    <!-- ========================= SELECTION ========================= -->
+    <h2>Selection</h2>
+
+    <section id="select">
+      <h3>ui-select</h3>
+      <div class="row">
+        <ui-select label="Status">
+          <ui-option value="active">Active</ui-option>
+          <ui-option value="pending">Pending</ui-option>
+          <ui-option value="archived">Archived</ui-option>
+        </ui-select>
+        <ui-select label="Priority" value="high">
+          <ui-option value="low">Low</ui-option>
+          <ui-option value="medium">Medium</ui-option>
+          <ui-option value="high">High</ui-option>
+        </ui-select>
+        <ui-select label="Region" disabled>
+          <ui-option value="us">United States</ui-option>
+          <ui-option value="eu">Europe</ui-option>
+        </ui-select>
+      </div>
+    </section>
+
+    <section id="menu">
+      <h3>ui-menu</h3>
+      <div class="row">
+        <ui-button id="menu-trigger-1" variant="outlined">Actions</ui-button>
+        <ui-menu anchor="menu-trigger-1">
+          <ui-menu-item>Open</ui-menu-item>
+          <ui-menu-item>Edit</ui-menu-item>
+          <ui-menu-item disabled>Archive</ui-menu-item>
+          <ui-menu-item>Delete</ui-menu-item>
+        </ui-menu>
+      </div>
+    </section>
+
+    <section id="chips">
+      <h3>ui-chip</h3>
+      <div class="row"><ui-chip-set>
+        <ui-chip variant="assist">Help me write</ui-chip>
+        <ui-chip variant="assist" disabled>Unavailable</ui-chip>
+      </ui-chip-set></div>
+      <div class="row"><ui-chip-set>
+        <ui-chip variant="filter" selected>Active</ui-chip>
+        <ui-chip variant="filter">Pending</ui-chip>
+        <ui-chip variant="filter">Archived</ui-chip>
+      </ui-chip-set></div>
+      <div class="row"><ui-chip-set>
+        <ui-chip variant="input">Colin Maynard</ui-chip>
+        <ui-chip variant="input">Design team</ui-chip>
+      </ui-chip-set></div>
+    </section>
+
+    <section id="autocomplete">
+      <h3>ui-autocomplete</h3>
+      <div class="col">
+        <ui-autocomplete id="demo-ac" label="Assign stakeholder" placeholder="Type to search…"></ui-autocomplete>
+      </div>
+    </section>
+
+    <!-- ========================= STRUCTURE & FEEDBACK ========================= -->
+    <h2>Structure &amp; feedback</h2>
+
+    <section id="list">
+      <h3>ui-list</h3>
+      <div class="frame" style="max-width:420px">
+        <ui-list>
+          <ui-list-item>
+            <span slot="leading">★</span>Primary text<span slot="supporting">Supporting line</span><span slot="trailing">12:30</span>
+          </ui-list-item>
+          <ui-list-item interactive>Clickable row</ui-list-item>
+          <ui-list-item interactive disabled>Disabled interactive</ui-list-item>
+        </ui-list>
+      </div>
+    </section>
+
+    <section id="tabs">
+      <h3>ui-tabs</h3>
+      <ui-tabs>
+        <ui-tab active>Overview</ui-tab>
+        <ui-tab>Details</ui-tab>
+        <ui-tab>History</ui-tab>
+        <ui-tab disabled>Disabled</ui-tab>
+      </ui-tabs>
+    </section>
+
+    <section id="divider">
+      <h3>ui-divider</h3>
+      <p class="hint" style="margin:0">Above full-width</p>
+      <ui-divider></ui-divider>
+      <p class="hint" style="margin:0">Above inset</p>
+      <ui-divider inset></ui-divider>
+      <div style="display:flex;align-items:center;height:32px;gap:8px;margin-top:8px">
+        <span>Left</span><ui-divider vertical></ui-divider><span>Right</span>
+      </div>
+    </section>
+
+    <section id="dialog">
+      <h3>ui-dialog</h3>
+      <div class="row">
+        <ui-button variant="filled" onclick="this.nextElementSibling.show()">Open dialog</ui-button>
+        <ui-dialog>
+          <span slot="headline">Confirm action</span>
+          <p>This will permanently delete the record. Are you sure?</p>
+          <span slot="actions">
+            <ui-button variant="text" onclick="this.closest('ui-dialog').close()">Cancel</ui-button>
+            <ui-button variant="filled" onclick="this.closest('ui-dialog').close()">Delete</ui-button>
+          </span>
+        </ui-dialog>
+      </div>
+    </section>
+
+    <section id="tooltip">
+      <h3>ui-tooltip</h3>
+      <div class="row">
+        <ui-tooltip>
+          <ui-button variant="outlined">Hover me</ui-button>
+          <span slot="content">Inline tooltip via wrapping</span>
+        </ui-tooltip>
+      </div>
+    </section>
+
+    <section id="snackbar">
+      <h3>ui-snackbar</h3>
+      <div class="row">
+        <ui-button variant="outlined" onclick="this.nextElementSibling.show('File saved successfully.')">Show snackbar</ui-button>
+        <ui-snackbar timeout="4000">
+          <ui-button slot="action" variant="text" onclick="this.closest('ui-snackbar').removeAttribute('open')">Undo</ui-button>
+        </ui-snackbar>
+      </div>
+    </section>
+
+    <section id="progress">
+      <h3>ui-linear-progress / ui-circular-progress</h3>
+      <div class="col">
+        <ui-linear-progress value="0.4"></ui-linear-progress>
+        <ui-linear-progress indeterminate></ui-linear-progress>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <ui-circular-progress value="0.65"></ui-circular-progress>
+        <ui-circular-progress indeterminate></ui-circular-progress>
+      </div>
+    </section>
+
+    <!-- ========================= GAP-FILL: DATA ========================= -->
+    <h2>Gap-fill: data <span class="hint">(MD3 shipped neither)</span></h2>
+
+    <section id="data-table">
+      <h3>ui-data-table</h3>
+      <ui-data-table id="demo-table" selectable></ui-data-table>
+    </section>
+
+    <section id="chart">
+      <h3>ui-chart</h3>
+      <div class="row" style="align-items:flex-start">
+        <ui-chart id="chart-bar" type="bar" style="max-width:320px"></ui-chart>
+        <ui-chart id="chart-line" type="line" style="max-width:320px"></ui-chart>
+        <ui-chart id="chart-area" type="area" style="max-width:320px"></ui-chart>
+      </div>
+    </section>
+
+    <!-- ========================= GAP-FILL: LAYOUT & MOBILE ========================= -->
+    <h2>Gap-fill: layout &amp; mobile <span class="hint">(dropped from MD3 web)</span></h2>
+
+    <section id="app-bar">
+      <h3>ui-app-bar</h3>
+      <div class="frame">
+        <ui-app-bar variant="elevated">
+          <ui-icon-button slot="leading" variant="standard" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></ui-icon-button>
+          Stakeholdr
+          <ui-icon-button slot="trailing" variant="standard" aria-label="Search"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M12.5 12.5L16.5 16.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></ui-icon-button>
+        </ui-app-bar>
+      </div>
+    </section>
+
+    <section id="nav-rail">
+      <h3>ui-nav-rail</h3>
+      <div class="frame" style="height:220px;display:flex">
+        <ui-nav-rail>
+          <ui-nav-item active href="#"><span slot="icon">⌂</span><span slot="label">Home</span></ui-nav-item>
+          <ui-nav-item href="#"><span slot="icon">⌕</span><span slot="label">Search</span></ui-nav-item>
+          <ui-nav-item href="#"><span slot="icon">⚙</span><span slot="label">Settings</span></ui-nav-item>
+        </ui-nav-rail>
+        <div style="flex:1;padding:16px" class="hint">Content area</div>
+      </div>
+    </section>
+
+    <section id="nav-drawer">
+      <h3>ui-nav-drawer</h3>
+      <div class="row">
+        <ui-button variant="outlined" onclick="document.getElementById('nd2').toggle()">Open modal drawer</ui-button>
+      </div>
+      <ui-nav-drawer id="nd2" modal>
+        <div style="padding:16px">
+          <div style="font-weight:500;margin-bottom:8px">Navigation</div>
+          <ui-list>
+            <ui-list-item interactive onclick="document.getElementById('nd2').close()">Home</ui-list-item>
+            <ui-list-item interactive onclick="document.getElementById('nd2').close()">Projects</ui-list-item>
+            <ui-list-item interactive onclick="document.getElementById('nd2').close()">Settings</ui-list-item>
+          </ui-list>
+        </div>
+      </ui-nav-drawer>
+    </section>
+
+    <section id="sheet">
+      <h3>ui-sheet <span class="hint">(mobile bottom sheet)</span></h3>
+      <div class="row">
+        <ui-button variant="outlined" onclick="document.getElementById('sh1').show()">Open bottom sheet</ui-button>
+      </div>
+      <ui-sheet id="sh1">
+        <div style="font-weight:500;margin-bottom:12px">Sheet title</div>
+        <p class="hint" style="margin:0 0 16px">Swipe down, tap the scrim, or press Esc to dismiss.</p>
+        <ui-button variant="filled" onclick="document.getElementById('sh1').close()">Dismiss</ui-button>
+      </ui-sheet>
+    </section>
+
+    <section id="bottom-bar">
+      <h3>ui-bottom-bar <span class="hint">(mobile)</span></h3>
+      <div class="phone">
+        <ui-bottom-bar>
+          <ui-bottom-item active href="#"><span slot="icon">⌂</span><span slot="label">Home</span></ui-bottom-item>
+          <ui-bottom-item href="#"><span slot="icon">⌕</span><span slot="label">Explore</span></ui-bottom-item>
+          <ui-bottom-item href="#"><span slot="icon">✉</span><span slot="label">Inbox</span></ui-bottom-item>
+          <ui-bottom-item href="#"><span slot="icon">◯</span><span slot="label">Profile</span></ui-bottom-item>
+        </ui-bottom-bar>
+      </div>
+    </section>
+
+    <section id="date-picker">
+      <h3>ui-date-picker</h3>
+      <div class="row">
+        <ui-date-picker label="Start date"></ui-date-picker>
+        <ui-date-picker label="End date" value="2026-06-15"></ui-date-picker>
+      </div>
+    </section>
   </main>
+
+  <!-- Seed data for property-driven gap-fill components -->
+  <script type="module">
+    customElements.whenDefined('ui-data-table').then(() => {
+      const t = document.getElementById('demo-table');
+      t.columns = [
+        { key: 'name',   label: 'Stakeholder', sortable: true },
+        { key: 'role',   label: 'Role',        sortable: true },
+        { key: 'impact', label: 'Impact',      sortable: true, align: 'right', type: 'number' },
+        { key: 'status', label: 'Status',      sortable: false, align: 'center' },
+      ];
+      t.data = [
+        { name: 'Jordan Lee',   role: 'Sponsor',     impact: 92, status: 'Champion' },
+        { name: 'Alex Rivera',  role: 'Manager',     impact: 78, status: 'Supportive' },
+        { name: 'Sam Okafor',   role: 'Analyst',     impact: 45, status: 'Neutral' },
+        { name: 'Casey Wu',     role: 'Advisor',     impact: 61, status: 'Supportive' },
+        { name: 'Morgan Blake', role: 'Stakeholder', impact: 33, status: 'Skeptic' },
+      ];
+    });
+    const series = [
+      { label: 'Q1', value: 42 }, { label: 'Q2', value: 68 }, { label: 'Q3', value: 55 },
+      { label: 'Q4', value: 81 }, { label: 'Q5', value: 37 }, { label: 'Q6', value: 73 },
+    ];
+    customElements.whenDefined('ui-chart').then(() => {
+      for (const id of ['chart-bar', 'chart-line', 'chart-area']) {
+        const c = document.getElementById(id); if (c) c.data = series;
+      }
+    });
+    customElements.whenDefined('ui-autocomplete').then(() => {
+      const ac = document.getElementById('demo-ac');
+      ac.options = [
+        { label: 'Alex Rivera', value: 'alex' }, { label: 'Casey Patel', value: 'casey' },
+        { label: 'Jordan Kim', value: 'jordan' }, { label: 'Morgan Lee', value: 'morgan' },
+        { label: 'Sam Okafor', value: 'sam' }, { label: 'Taylor Okonjo', value: 'taylor' },
+      ];
+    });
+  </script>
 </body>
 </html>
