@@ -6,20 +6,8 @@
   <title>Canonical UI — Wireframes</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Newsreader:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./tokens.css" />
-
-  <!-- Only the components these screens compose from -->
-  <script type="module" src="./components/button.js"></script>
-  <script type="module" src="./components/icon-button.js"></script>
-  <script type="module" src="./components/fab.js"></script>
-  <script type="module" src="./components/tabs.js"></script>
-  <script type="module" src="./components/chips.js"></script>
-  <script type="module" src="./components/list.js"></script>
-  <script type="module" src="./components/app-bar.js"></script>
-  <script type="module" src="./components/nav-rail.js"></script>
-  <script type="module" src="./components/bottom-bar.js"></script>
-  <script type="module" src="./components/stakeholder-table.js"></script>
-  <script type="module" src="./components/stakeholder-map.js"></script>
+  <!-- Single entry: token contract + all components, bundled as one Vite entry. -->
+  <script type="module" src="./entry.js"></script>
 
   <style>
     * { box-sizing: border-box; }
