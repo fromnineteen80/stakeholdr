@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Canonical UI — Skeleton Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Newsreader:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./tokens.css" />
+  <script type="module" src="./components/button.js"></script>
+  <style>
+    /* PAGE chrome only reads --ui-sys-* tokens too — proving the cascade. */
+    body {
+      margin: 0;
+      background: var(--ui-sys-surface);
+      color: var(--ui-sys-on-surface);
+      font: var(--ui-sys-font-body);
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 100vh;
+    }
+    aside {
+      background: var(--ui-sys-surface-container);
+      border-right: 1px solid var(--ui-sys-outline);
+      padding: var(--ui-sys-space-6) var(--ui-sys-space-4);
+    }
+    main { padding: var(--ui-sys-space-6); }
+    h1 { font: var(--ui-sys-font-title); margin: 0 0 var(--ui-sys-space-2); }
+    h2 { font: var(--ui-sys-font-title); font-size: 14px; margin: var(--ui-sys-space-6) 0 var(--ui-sys-space-3); color: var(--ui-sys-on-surface-muted); }
+    .row { display: flex; gap: var(--ui-sys-space-3); flex-wrap: wrap; align-items: center; margin-bottom: var(--ui-sys-space-4); }
+    .card {
+      background: var(--ui-sys-surface-card);
+      border: 1px solid var(--ui-sys-outline-subtle);
+      border-radius: var(--ui-sys-shape-card);
+      padding: var(--ui-sys-space-4);
+    }
+    label { display: block; font: var(--ui-sys-font-label); color: var(--ui-sys-on-surface-muted); margin-bottom: var(--ui-sys-space-1); }
+    input[type="color"], input[type="range"] { width: 100%; margin-bottom: var(--ui-sys-space-3); }
+    .hint { color: var(--ui-sys-on-surface-muted); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <aside>
+    <h1>Token editor</h1>
+    <p class="hint">Change a token → every component below re-skins at once. This is the whole point: one surface, no patchwork.</p>
+
+    <label>--ui-sys-primary</label>
+    <input type="color" value="#666361" oninput="document.documentElement.style.setProperty('--ui-sys-primary', this.value)" />
+
+    <label>--ui-sys-surface</label>
+    <input type="color" value="#FEFDFC" oninput="document.documentElement.style.setProperty('--ui-sys-surface', this.value)" />
+
+    <label>--ui-ref-unit (spacing rhythm)</label>
+    <input type="range" min="3" max="6" value="4" oninput="document.documentElement.style.setProperty('--ui-ref-unit', this.value + 'px')" />
+
+    <label>--ui-sys-shape-control (radius)</label>
+    <input type="range" min="0" max="20" value="4" oninput="document.documentElement.style.setProperty('--ui-sys-shape-control', this.value + 'px')" />
+  </aside>
+
+  <main>
+    <h1>Canonical UI — skeleton preview</h1>
+    <p class="hint">Real custom elements. Un-branded. Styled only by --ui-sys-* tokens. One reference component shown; the rest clone this bar.</p>
+
+    <h2>ui-button — variants</h2>
+    <div class="card">
+      <div class="row">
+        <ui-button variant="filled">Filled</ui-button>
+        <ui-button variant="tonal">Tonal</ui-button>
+        <ui-button variant="outlined">Outlined</ui-button>
+        <ui-button variant="text">Text</ui-button>
+      </div>
+      <div class="row">
+        <ui-button variant="filled" disabled>Disabled</ui-button>
+        <ui-button variant="outlined" disabled>Disabled</ui-button>
+      </div>
+      <p class="hint">Hover / focus (Tab) / press each — state layer + focus ring are token-driven, not hand-coded per button.</p>
+    </div>
+
+    <h2>Coming (gap-fill, same bar)</h2>
+    <div class="card hint">
+      data-table · chart · app-bar · nav-rail · tooltip · snackbar · autocomplete · date-picker · mobile-sheet · mobile-bottom-bar — each a real component fanned out via agents once this contract is blessed.
+    </div>
+  </main>
+</body>
+</html>

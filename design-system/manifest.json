@@ -1,0 +1,50 @@
+{
+  "$schema": "./manifest.schema.json",
+  "system": "Canonical UI — un-branded, token-driven web components",
+  "version": "0.1.0",
+  "law": [
+    "The ONLY legal visual surface is the --ui-sys-* token layer.",
+    "Assemble screens from the real components below; never reimplement one in markup/CSS.",
+    "A component reads only --ui-sys-* tokens. No component stylesheet, no utility classes, no inline color/size.",
+    "If a need isn't covered by a component or expressible via a token, that is a gap to add to this manifest — not a one-off hack."
+  ],
+  "tokenContract": "./tokens.css",
+  "coverage": {
+    "note": "Tracks parity with MD3's web surface (native) and the blanks MD3 left (gap-fill).",
+    "native": ["button", "icon-button", "fab", "select", "menu", "radio", "checkbox", "switch", "slider", "text-field", "chip", "dialog", "list", "tabs", "divider", "progress", "ripple", "focus-ring"],
+    "gapFill": ["data-table", "chart", "app-bar", "nav-rail", "nav-drawer", "tooltip", "snackbar", "autocomplete", "date-picker", "mobile-sheet", "mobile-bottom-bar"]
+  },
+  "components": {
+    "button": {
+      "tag": "ui-button",
+      "status": "built",
+      "category": "native",
+      "summary": "Primary action control. Real custom element, shadow DOM, ripple + focus-ring, keyboard/ARIA correct.",
+      "variants": {
+        "attribute": "variant",
+        "values": ["filled", "tonal", "outlined", "text"],
+        "default": "filled"
+      },
+      "props": [
+        { "name": "variant", "type": "enum", "values": ["filled", "tonal", "outlined", "text"], "default": "filled" },
+        { "name": "disabled", "type": "boolean", "default": false },
+        { "name": "type", "type": "enum", "values": ["button", "submit", "reset"], "default": "button", "note": "form participation via formAssociated" }
+      ],
+      "slots": [
+        { "name": "(default)", "accepts": "label text" },
+        { "name": "leading", "accepts": "icon element" }
+      ],
+      "states": ["enabled", "hover", "pressed", "focus-visible", "disabled"],
+      "tokensConsumed": [
+        "--ui-sys-primary", "--ui-sys-on-primary",
+        "--ui-sys-surface-container", "--ui-sys-on-surface",
+        "--ui-sys-outline", "--ui-sys-on-surface-faint",
+        "--ui-sys-focus-ring", "--ui-sys-state-hover-opacity", "--ui-sys-state-pressed-opacity",
+        "--ui-sys-font-label", "--ui-sys-shape-control",
+        "--ui-sys-space-2", "--ui-sys-space-4", "--ui-sys-motion-control"
+      ],
+      "a11y": ["role=button via native <button>", "disabled reflects to aria", "focus-visible ring", "Enter/Space activate natively"],
+      "import": "./components/button.js"
+    }
+  }
+}
