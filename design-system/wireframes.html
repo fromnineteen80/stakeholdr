@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Canonical UI — Wireframes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Newsreader:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./tokens.css" />
+
+  <!-- Only the components these screens compose from -->
+  <script type="module" src="./components/button.js"></script>
+  <script type="module" src="./components/icon-button.js"></script>
+  <script type="module" src="./components/fab.js"></script>
+  <script type="module" src="./components/tabs.js"></script>
+  <script type="module" src="./components/chips.js"></script>
+  <script type="module" src="./components/list.js"></script>
+  <script type="module" src="./components/app-bar.js"></script>
+  <script type="module" src="./components/nav-rail.js"></script>
+  <script type="module" src="./components/bottom-bar.js"></script>
+  <script type="module" src="./components/stakeholder-table.js"></script>
+  <script type="module" src="./components/stakeholder-map.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--ui-sys-surface-container);
+      color: var(--ui-sys-on-surface);
+      font: var(--ui-sys-font-body);
+      padding: var(--ui-sys-space-6);
+    }
+    header.page { max-width: 1180px; margin: 0 auto var(--ui-sys-space-6); }
+    h1 { font: var(--ui-sys-font-headline); margin: 0 0 var(--ui-sys-space-2); }
+    h2 { font: var(--ui-sys-font-title); margin: var(--ui-sys-space-6) 0 var(--ui-sys-space-3); }
+    .hint { color: var(--ui-sys-on-surface-muted); font: var(--ui-sys-font-caption); }
+    a.back { color: var(--ui-sys-on-surface-muted); text-decoration: none; font: var(--ui-sys-font-label); }
+    a.back:hover { color: var(--ui-sys-on-surface); }
+
+    /* A wireframe "screen" = a bordered, elevated device window */
+    .screen {
+      max-width: 1180px; margin: 0 auto var(--ui-sys-space-6);
+      border: 1px solid var(--ui-sys-outline);
+      border-radius: var(--ui-sys-shape-card);
+      box-shadow: var(--ui-sys-elevation-2);
+      overflow: hidden;
+      background: var(--ui-sys-surface);
+    }
+    .app { display: grid; grid-template-columns: auto 1fr; height: 640px; }
+    .rail-wrap { border-right: 1px solid var(--ui-sys-outline-subtle); }
+    .work { display: flex; flex-direction: column; min-width: 0; background: var(--ui-sys-surface); }
+    .work-tabs { padding: 0 var(--ui-sys-space-3); border-bottom: 1px solid var(--ui-sys-outline-subtle); }
+    .work-body { flex: 1; min-height: 0; padding: var(--ui-sys-space-3); overflow: auto; }
+    .work-toolbar { display: flex; gap: var(--ui-sys-space-2); align-items: center; padding: var(--ui-sys-space-2) var(--ui-sys-space-3); }
+    .spacer { flex: 1; }
+
+    /* Mobile frame */
+    .phone {
+      width: 390px; margin: 0 auto var(--ui-sys-space-6);
+      border: 1px solid var(--ui-sys-outline);
+      border-radius: 28px;
+      box-shadow: var(--ui-sys-elevation-3);
+      overflow: hidden;
+      background: var(--ui-sys-surface);
+      display: flex; flex-direction: column; height: 740px; position: relative;
+    }
+    .phone .screen-body { flex: 1; overflow: auto; padding: var(--ui-sys-space-3); }
+    .phone ui-fab { position: absolute; right: 16px; bottom: 84px; }
+    .card { background: var(--ui-sys-surface-card); border: 1px solid var(--ui-sys-outline-subtle); border-radius: var(--ui-sys-shape-card); box-shadow: var(--ui-sys-elevation-1); padding: var(--ui-sys-space-3); margin-bottom: var(--ui-sys-space-3); }
+    .card .meta { color: var(--ui-sys-on-surface-muted); font: var(--ui-sys-font-caption); }
+  </style>
+</head>
+<body>
+  <header class="page">
+    <a class="back" href="./preview.html">← Component gallery</a>
+    <h1>Wireframes</h1>
+    <p class="hint">The same canonical components composed into real Stakeholdr screens — so you can see layout and flow, not just parts. Every pixel here is a <code>&lt;ui-*&gt;</code> element reading <code>--ui-sys-*</code> tokens; no bespoke screen CSS.</p>
+  </header>
+
+  <!-- ============ SCREEN 1 — DESKTOP: LIST ============ -->
+  <h2 style="max-width:1180px;margin:0 auto">Desktop · List</h2>
+  <div class="screen">
+    <ui-app-bar variant="elevated">
+      <ui-icon-button slot="leading" variant="standard" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></ui-icon-button>
+      Stakeholdr — Cedarville Workspace
+      <ui-icon-button slot="trailing" variant="standard" aria-label="Account"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M4 17c0-3 2.7-5 6-5s6 2 6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></ui-icon-button>
+    </ui-app-bar>
+    <div class="app">
+      <div class="rail-wrap">
+        <ui-nav-rail>
+          <ui-nav-item active href="#"><span slot="icon">▤</span><span slot="label">List</span></ui-nav-item>
+          <ui-nav-item href="#"><span slot="icon">◴</span><span slot="label">Map</span></ui-nav-item>
+          <ui-nav-item href="#"><span slot="icon">▦</span><span slot="label">Scoring</span></ui-nav-item>
+          <ui-nav-item href="#"><span slot="icon">⚙</span><span slot="label">Setup</span></ui-nav-item>
+          <ui-nav-item href="#"><span slot="icon">?</span><span slot="label">Help</span></ui-nav-item>
+        </ui-nav-rail>
+      </div>
+      <div class="work">
+        <div class="work-tabs">
+          <ui-tabs>
+            <ui-tab active>All stakeholders</ui-tab>
+            <ui-tab>Government</ui-tab>
+            <ui-tab>Communities</ui-tab>
+          </ui-tabs>
+        </div>
+        <div class="work-body" style="padding:0">
+          <ui-stakeholder-table style="height:100%"></ui-stakeholder-table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 2 — DESKTOP: MAP ============ -->
+  <h2 style="max-width:1180px;margin:0 auto">Desktop · Map</h2>
+  <div class="screen">
+    <ui-app-bar variant="elevated">
+      <ui-icon-button slot="leading" variant="standard" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></ui-icon-button>
+      Stakeholder Map — Cedarville
+      <ui-icon-button slot="trailing" variant="standard" aria-label="Account"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M4 17c0-3 2.7-5 6-5s6 2 6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></ui-icon-button>
+    </ui-app-bar>
+    <div class="app">
+      <div class="rail-wrap">
+        <ui-nav-rail>
+          <ui-nav-item href="#"><span slot="icon">▤</span><span slot="label">List</span></ui-nav-item>
+          <ui-nav-item active href="#"><span slot="icon">◴</span><span slot="label">Map</span></ui-nav-item>
+          <ui-nav-item href="#"><span slot="icon">▦</span><span slot="label">Scoring</span></ui-nav-item>
+          <ui-nav-item href="#"><span slot="icon">⚙</span><span slot="label">Setup</span></ui-nav-item>
+          <ui-nav-item href="#"><span slot="icon">?</span><span slot="label">Help</span></ui-nav-item>
+        </ui-nav-rail>
+      </div>
+      <div class="work">
+        <div class="work-toolbar">
+          <ui-chip-set>
+            <ui-chip variant="filter" selected>Show labels</ui-chip>
+            <ui-chip variant="filter">Density</ui-chip>
+            <ui-chip variant="filter">History</ui-chip>
+          </ui-chip-set>
+          <div class="spacer"></div>
+          <ui-button variant="outlined">Export</ui-button>
+        </div>
+        <div class="work-body">
+          <ui-stakeholder-map style="height:100%"></ui-stakeholder-map>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 3 — MOBILE ============ -->
+  <h2 style="max-width:1180px;margin:0 auto">Mobile · List</h2>
+  <div class="phone">
+    <ui-app-bar variant="flat">
+      <ui-icon-button slot="leading" variant="standard" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></ui-icon-button>
+      Cedarville
+      <ui-icon-button slot="trailing" variant="standard" aria-label="Search"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M12.5 12.5L16.5 16.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></ui-icon-button>
+    </ui-app-bar>
+    <div class="screen-body">
+      <div class="card">
+        <div style="font-weight:500">Mayor Maria Chen</div>
+        <div class="meta">City of Cedarville · Government</div>
+        <div style="margin-top:8px"><ui-chip variant="assist">Valuable Relationship</ui-chip></div>
+      </div>
+      <div class="card">
+        <div style="font-weight:500">Cedarville Chamber</div>
+        <div class="meta">Chamber of Commerce · Industry</div>
+        <div style="margin-top:8px"><ui-chip variant="assist">Collaborate</ui-chip></div>
+      </div>
+      <div class="card">
+        <div style="font-weight:500">Riverside Tribune</div>
+        <div class="meta">Riverside Media · Communities</div>
+        <div style="margin-top:8px"><ui-chip variant="assist">Defend</ui-chip></div>
+      </div>
+    </div>
+    <ui-fab aria-label="Add stakeholder"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></ui-fab>
+    <ui-bottom-bar>
+      <ui-bottom-item active href="#"><span slot="icon">▤</span><span slot="label">List</span></ui-bottom-item>
+      <ui-bottom-item href="#"><span slot="icon">◴</span><span slot="label">Map</span></ui-bottom-item>
+      <ui-bottom-item href="#"><span slot="icon">▦</span><span slot="label">Scoring</span></ui-bottom-item>
+      <ui-bottom-item href="#"><span slot="icon">⚙</span><span slot="label">Setup</span></ui-bottom-item>
+    </ui-bottom-bar>
+  </div>
+</body>
+</html>

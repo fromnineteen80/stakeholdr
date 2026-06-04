@@ -36,13 +36,15 @@
   <script type="module" src="./components/sheet.js"></script>
   <script type="module" src="./components/bottom-bar.js"></script>
   <script type="module" src="./components/date-picker.js"></script>
+  <script type="module" src="./components/stakeholder-table.js"></script>
+  <script type="module" src="./components/stakeholder-map.js"></script>
 
   <style>
     /* Page chrome reads --ui-sys-* tokens too — proving the cascade is total. */
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      background: var(--ui-sys-surface);
+      background: var(--ui-sys-surface-container);
       color: var(--ui-sys-on-surface);
       font: var(--ui-sys-font-body);
       display: grid;
@@ -55,7 +57,7 @@
       align-self: start;
       height: 100vh;
       overflow-y: auto;
-      background: var(--ui-sys-surface-container);
+      background: var(--ui-sys-surface-container-high);
       border-right: 1px solid var(--ui-sys-outline);
       padding: var(--ui-sys-space-6) var(--ui-sys-space-4);
     }
@@ -80,6 +82,7 @@
       background: var(--ui-sys-surface-card);
       border: 1px solid var(--ui-sys-outline-subtle);
       border-radius: var(--ui-sys-shape-card);
+      box-shadow: var(--ui-sys-elevation-1);
       padding: var(--ui-sys-space-4);
       margin-bottom: var(--ui-sys-space-4);
       scroll-margin-top: var(--ui-sys-space-4);
@@ -107,6 +110,9 @@
     <input type="range" min="0" max="20" value="4" oninput="document.documentElement.style.setProperty('--ui-sys-shape-control', this.value + 'px')" />
 
     <nav class="toc">
+      <span class="grp">Domain — Stakeholdr</span>
+      <a href="#stakeholder-table">ui-stakeholder-table</a>
+      <a href="#stakeholder-map">ui-stakeholder-map</a>
       <span class="grp">Actions</span>
       <a href="#button">ui-button</a>
       <a href="#icon-button">ui-icon-button</a>
@@ -145,7 +151,23 @@
 
   <main>
     <h1>Canonical UI — component gallery</h1>
-    <p class="hint">27 real, un-branded custom elements. Each its own module, shadow DOM, keyboard + ARIA, styled only by <code>--ui-sys-*</code> tokens. Click, hover, drag, tab through them — then re-skin everything from the token editor.</p>
+    <p class="hint"><a href="./wireframes.html" style="color:var(--ui-sys-on-surface)">→ See the wireframes</a> (components composed into real screens).</p>
+    <p class="hint">29 real, un-branded custom elements. Each its own module, shadow DOM, keyboard + ARIA, styled only by <code>--ui-sys-*</code> tokens. Click, hover, drag, tab through them — then re-skin everything from the token editor.</p>
+
+    <!-- ========================= DOMAIN ========================= -->
+    <h2>Domain — Stakeholdr <span class="hint">(our table &amp; our map, canonical, token-driven)</span></h2>
+
+    <section id="stakeholder-table">
+      <h3>ui-stakeholder-table</h3>
+      <p class="hint" style="margin-top:0">The Soapbox sheet: frozen sticky columns, priority pills, toned x/y coords, relationship zone pills, band summary chips, footer averages + export.</p>
+      <ui-stakeholder-table style="height:520px"></ui-stakeholder-table>
+    </section>
+
+    <section id="stakeholder-map">
+      <h3>ui-stakeholder-map</h3>
+      <p class="hint" style="margin-top:0">The heat/scatter combo: the 4×6 relationship-zone grid (red→green) with stakeholders plotted by (x,y), zone counts, axis legend, and the strategy detail panel.</p>
+      <ui-stakeholder-map style="height:560px"></ui-stakeholder-map>
+    </section>
 
     <!-- ========================= ACTIONS ========================= -->
     <h2>Actions</h2>

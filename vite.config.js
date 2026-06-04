@@ -9,9 +9,10 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: 'index.html',
-        // Standalone, unencumbered design-system page. Shares no code with the
-        // guide app; emits to dist/design-system/preview.html → its own URL.
-        dsPreview: 'design-system/preview.html'
+        // Standalone, unencumbered design-system pages. Share no code with the
+        // guide app; each emits to its own URL under dist/design-system/.
+        dsPreview: 'design-system/preview.html',
+        dsWireframes: 'design-system/wireframes.html'
       }
     }
   }
