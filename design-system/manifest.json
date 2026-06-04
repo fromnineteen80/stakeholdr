@@ -1,7 +1,7 @@
 {
   "$schema": "./manifest.schema.json",
   "system": "Canonical UI — un-branded, token-driven web components",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "law": [
     "The ONLY legal visual surface is the --ui-sys-* token layer.",
     "Assemble screens from the real components below; never reimplement one in markup/CSS.",
@@ -9,42 +9,39 @@
     "If a need isn't covered by a component or expressible via a token, that is a gap to add to this manifest — not a one-off hack."
   ],
   "tokenContract": "./tokens.css",
+  "preview": "./preview.html",
   "coverage": {
-    "note": "Tracks parity with MD3's web surface (native) and the blanks MD3 left (gap-fill).",
-    "native": ["button", "icon-button", "fab", "select", "menu", "radio", "checkbox", "switch", "slider", "text-field", "chip", "dialog", "list", "tabs", "divider", "progress", "ripple", "focus-ring"],
-    "gapFill": ["data-table", "chart", "app-bar", "nav-rail", "nav-drawer", "tooltip", "snackbar", "autocomplete", "date-picker", "mobile-sheet", "mobile-bottom-bar"]
+    "note": "Parity with MD3's web surface (native) plus the blanks MD3 left (gapFill). All entries below are status:built.",
+    "native": ["button", "icon-button", "fab", "text-field", "checkbox", "radio", "switch", "slider", "select", "menu", "chip", "list", "tabs", "divider", "dialog", "tooltip", "snackbar", "linear-progress", "circular-progress"],
+    "gapFill": ["autocomplete", "data-table", "chart", "app-bar", "nav-rail", "nav-drawer", "sheet", "bottom-bar", "date-picker"]
   },
   "components": {
-    "button": {
-      "tag": "ui-button",
-      "status": "built",
-      "category": "native",
-      "summary": "Primary action control. Real custom element, shadow DOM, ripple + focus-ring, keyboard/ARIA correct.",
-      "variants": {
-        "attribute": "variant",
-        "values": ["filled", "tonal", "outlined", "text"],
-        "default": "filled"
-      },
-      "props": [
-        { "name": "variant", "type": "enum", "values": ["filled", "tonal", "outlined", "text"], "default": "filled" },
-        { "name": "disabled", "type": "boolean", "default": false },
-        { "name": "type", "type": "enum", "values": ["button", "submit", "reset"], "default": "button", "note": "form participation via formAssociated" }
-      ],
-      "slots": [
-        { "name": "(default)", "accepts": "label text" },
-        { "name": "leading", "accepts": "icon element" }
-      ],
-      "states": ["enabled", "hover", "pressed", "focus-visible", "disabled"],
-      "tokensConsumed": [
-        "--ui-sys-primary", "--ui-sys-on-primary",
-        "--ui-sys-surface-container", "--ui-sys-on-surface",
-        "--ui-sys-outline", "--ui-sys-on-surface-faint",
-        "--ui-sys-focus-ring", "--ui-sys-state-hover-opacity", "--ui-sys-state-pressed-opacity",
-        "--ui-sys-font-label", "--ui-sys-shape-control",
-        "--ui-sys-space-2", "--ui-sys-space-4", "--ui-sys-motion-control"
-      ],
-      "a11y": ["role=button via native <button>", "disabled reflects to aria", "focus-visible ring", "Enter/Space activate natively"],
-      "import": "./components/button.js"
-    }
+    "button": { "tag": "ui-button", "status": "built", "category": "native", "summary": "Primary action control; filled/tonal/outlined/text variants, state layer, focus ring, form-associated.", "props": [{"name":"variant","type":"enum","values":["filled","tonal","outlined","text"],"default":"filled"},{"name":"disabled","type":"boolean","default":false},{"name":"type","type":"enum","values":["button","submit","reset"],"default":"button"}], "states": ["enabled","hover","pressed","focus-visible","disabled"], "import": "./components/button.js" },
+    "icon-button": { "tag": "ui-icon-button", "status": "built", "category": "native", "summary": "Circular icon button; standard/filled/tonal/outlined variants, optional selected toggle (aria-pressed).", "props": [{"name":"variant","type":"enum","values":["standard","filled","tonal","outlined"],"default":"standard"},{"name":"selected","type":"boolean","default":false},{"name":"disabled","type":"boolean","default":false}], "states": ["selected","hover","pressed","focus-visible","disabled"], "import": "./components/icon-button.js" },
+    "fab": { "tag": "ui-fab", "status": "built", "category": "native", "summary": "Floating action button; small/medium/large sizes, primary/surface variants, extended via label, elevation-3.", "props": [{"name":"size","type":"enum","values":["small","medium","large"],"default":"medium"},{"name":"variant","type":"enum","values":["primary","surface"],"default":"primary"},{"name":"label","type":"string","default":""},{"name":"disabled","type":"boolean","default":false}], "states": ["hover","pressed","focus-visible","disabled"], "import": "./components/fab.js" },
+    "text-field": { "tag": "ui-text-field", "status": "built", "category": "native", "summary": "Outlined text input; floating label, leading/trailing slots, error state, supporting text, form-associated.", "props": [{"name":"label","type":"string","default":""},{"name":"value","type":"string","default":""},{"name":"placeholder","type":"string","default":""},{"name":"type","type":"string","default":"text"},{"name":"error","type":"boolean","default":false},{"name":"supporting-text","type":"string","default":""},{"name":"disabled","type":"boolean","default":false}], "states": ["default","focused","has-value","error","disabled"], "import": "./components/text-field.js" },
+    "checkbox": { "tag": "ui-checkbox", "status": "built", "category": "native", "summary": "Three-state checkbox (unchecked/checked/indeterminate), inline-SVG mark, form-associated.", "props": [{"name":"checked","type":"boolean","default":false},{"name":"indeterminate","type":"boolean","default":false},{"name":"disabled","type":"boolean","default":false}], "states": ["unchecked","checked","indeterminate","hover","pressed","focus-visible","disabled"], "import": "./components/checkbox.js" },
+    "radio": { "tag": "ui-radio", "status": "built", "category": "native", "summary": "Radio grouped by name; selecting unchecks siblings; arrow-key group navigation; form-associated.", "props": [{"name":"checked","type":"boolean","default":false},{"name":"name","type":"string","default":""},{"name":"value","type":"string","default":"on"},{"name":"disabled","type":"boolean","default":false}], "states": ["unchecked","checked","hover","pressed","focus-visible","disabled"], "import": "./components/radio.js" },
+    "switch": { "tag": "ui-switch", "status": "built", "category": "native", "summary": "Toggle switch; animated pill track + handle via track/handle tokens; form-associated.", "props": [{"name":"selected","type":"boolean","default":false},{"name":"disabled","type":"boolean","default":false}], "states": ["off","on","hover","pressed","focus-visible","disabled"], "import": "./components/switch.js" },
+    "slider": { "tag": "ui-slider", "status": "built", "category": "native", "summary": "Horizontal range slider; filled track + draggable handle; pointer + keyboard (arrows/Home/End); form-associated.", "props": [{"name":"min","type":"number","default":0},{"name":"max","type":"number","default":100},{"name":"step","type":"number","default":1},{"name":"value","type":"number","default":0},{"name":"disabled","type":"boolean","default":false}], "states": ["default","dragging","hover","focus-visible","disabled"], "import": "./components/slider.js" },
+    "select": { "tag": "ui-select", "status": "built", "category": "native", "summary": "Outlined dropdown for short fixed sets; paired with ui-option; token-styled popup; combobox/listbox ARIA.", "props": [{"name":"label","type":"string","default":""},{"name":"value","type":"string","default":""},{"name":"disabled","type":"boolean","default":false}], "states": ["open","has-value","focus-visible","disabled"], "import": "./components/select.js" },
+    "menu": { "tag": "ui-menu", "status": "built", "category": "native", "summary": "Action menu anchored to a trigger by id; paired with ui-menu-item (leading icon, disabled); full keyboard nav.", "props": [{"name":"anchor","type":"string","default":""},{"name":"open","type":"boolean","default":false}], "states": ["open","item-disabled","item-focus-visible"], "import": "./components/menu.js" },
+    "chip": { "tag": "ui-chip", "status": "built", "category": "native", "summary": "Chip variants assist/filter/input/suggestion; pill shape; filter toggles primary-container; input removable; paired with ui-chip-set.", "props": [{"name":"variant","type":"enum","values":["assist","filter","input","suggestion"],"default":"assist"},{"name":"selected","type":"boolean","default":false},{"name":"disabled","type":"boolean","default":false}], "states": ["selected","hover","pressed","focus-visible","disabled"], "import": "./components/chips.js" },
+    "list": { "tag": "ui-list", "status": "built", "category": "native", "summary": "Vertical list; ui-list-item with leading/supporting/trailing slots and interactive (button-like) mode.", "props": [{"name":"interactive","type":"boolean","default":false},{"name":"disabled","type":"boolean","default":false}], "states": ["default","interactive-hover","interactive-pressed","focus-visible","disabled"], "import": "./components/list.js" },
+    "tabs": { "tag": "ui-tabs", "status": "built", "category": "native", "summary": "Tab bar with animated active indicator; paired with ui-tab; arrow-key nav; emits change with index.", "props": [{"name":"active","type":"boolean","default":false},{"name":"disabled","type":"boolean","default":false}], "states": ["active","inactive","hover","focus-visible","disabled"], "import": "./components/tabs.js" },
+    "divider": { "tag": "ui-divider", "status": "built", "category": "native", "summary": "Thin separator; horizontal/vertical, optional inset; role=separator.", "props": [{"name":"inset","type":"boolean","default":false},{"name":"vertical","type":"boolean","default":false}], "states": ["horizontal","vertical","inset"], "import": "./components/divider.js" },
+    "dialog": { "tag": "ui-dialog", "status": "built", "category": "native", "summary": "Modal dialog; scrim, animated card, focus trap, Esc dismiss; headline/body/actions slots; show()/close().", "props": [{"name":"open","type":"boolean","default":false}], "states": ["open","closed"], "import": "./components/dialog.js" },
+    "tooltip": { "tag": "ui-tooltip", "status": "built", "category": "native", "summary": "Floating label on hover/focus; wraps a child or targets an anchor by id; aria-describedby wiring.", "props": [{"name":"for","type":"string","default":""}], "states": ["hidden","visible"], "import": "./components/tooltip.js" },
+    "snackbar": { "tag": "ui-snackbar", "status": "built", "category": "native", "summary": "Transient bottom-center message; optional action slot; auto-dismiss timeout; role=status live region; show().", "props": [{"name":"open","type":"boolean","default":false},{"name":"message","type":"string","default":""},{"name":"timeout","type":"number","default":5000}], "states": ["hidden","open"], "import": "./components/snackbar.js" },
+    "progress": { "tags": ["ui-linear-progress","ui-circular-progress"], "status": "built", "category": "native", "summary": "Determinate + indeterminate progress; linear bar and circular SVG; role=progressbar.", "props": [{"name":"value","type":"number","default":0},{"name":"indeterminate","type":"boolean","default":false}], "states": ["determinate","indeterminate"], "import": "./components/progress.js" },
+    "autocomplete": { "tag": "ui-autocomplete", "status": "built", "category": "gapFill", "summary": "Typeahead combobox; outlined field + filtered popup listbox; substring highlight; full keyboard nav. options set via property.", "props": [{"name":"options","type":"array","default":"sample","note":"set via JS property"},{"name":"label","type":"string","default":""},{"name":"placeholder","type":"string","default":""},{"name":"value","type":"string","default":""}], "states": ["open","option-hover","keyboard-active","match-highlight","no-results"], "import": "./components/autocomplete.js" },
+    "data-table": { "tag": "ui-data-table", "status": "built", "category": "gapFill", "summary": "Tokened semantic data grid (MD3 has none); sticky header, sortable columns, optional checkbox selection, comfortable/compact density. columns+data set via properties.", "props": [{"name":"columns","type":"array","default":"sample","note":"set via JS property"},{"name":"data","type":"array","default":"sample","note":"set via JS property"},{"name":"selectable","type":"boolean","default":false},{"name":"density","type":"enum","values":["comfortable","compact"],"default":"comfortable"}], "states": ["sortable-header","row-hover","selected-row","empty"], "import": "./components/data-table.js" },
+    "chart": { "tag": "ui-chart", "status": "built", "category": "gapFill", "summary": "Inline-SVG chart (MD3 has none); bar/line/area; grid + axis labels; re-skins via computed tokens. data set via property or values attr.", "props": [{"name":"type","type":"enum","values":["bar","line","area"],"default":"bar"},{"name":"data","type":"array","default":"sample","note":"set via JS property"},{"name":"values","type":"string","default":"","note":"comma-list fallback"},{"name":"label","type":"string","default":""}], "states": ["bar","line","area","empty"], "import": "./components/chart.js" },
+    "app-bar": { "tag": "ui-app-bar", "status": "built", "category": "gapFill", "summary": "Top app bar (dropped from MD3 web); leading/title/trailing slots; flat/elevated variant; role=banner.", "props": [{"name":"variant","type":"enum","values":["flat","elevated"],"default":"flat"}], "states": ["flat","elevated"], "import": "./components/app-bar.js" },
+    "nav-rail": { "tag": "ui-nav-rail", "status": "built", "category": "gapFill", "summary": "Vertical desktop side rail (dropped from MD3 web); ui-nav-item with pill active indicator; emits navigate.", "props": [{"name":"active","type":"boolean","default":false},{"name":"href","type":"string","default":""}], "states": ["active","hover","focus-visible"], "import": "./components/nav-rail.js" },
+    "nav-drawer": { "tag": "ui-nav-drawer", "status": "built", "category": "gapFill", "summary": "Slide-in nav drawer (dropped from MD3 web); modal adds scrim+elevation-3+Esc; toggle()/close().", "props": [{"name":"open","type":"boolean","default":false},{"name":"modal","type":"boolean","default":false}], "states": ["open","modal","closed"], "import": "./components/nav-drawer.js" },
+    "sheet": { "tag": "ui-sheet", "status": "built", "category": "gapFill", "summary": "Mobile bottom sheet (MD3 web has none); drag-handle, scrim, swipe-down/Esc/scrim-tap close; show()/close().", "props": [{"name":"open","type":"boolean","default":false}], "states": ["open","closed","dragging"], "import": "./components/sheet.js" },
+    "bottom-bar": { "tag": "ui-bottom-bar", "status": "built", "category": "gapFill", "summary": "Mobile bottom navigation (MD3 web has none); ui-bottom-item with pill active indicator; emits navigate.", "props": [{"name":"active","type":"boolean","default":false},{"name":"href","type":"string","default":""}], "states": ["active","hover","focus-visible"], "import": "./components/bottom-bar.js" },
+    "date-picker": { "tag": "ui-date-picker", "status": "built", "category": "gapFill", "summary": "Calendar date picker (dropped from MD3 web); outlined trigger + month popup; grid keyboard nav; emits change.", "props": [{"name":"value","type":"string","default":"","note":"ISO YYYY-MM-DD"},{"name":"label","type":"string","default":"Date"}], "states": ["open","closed","day-focused","day-selected","today"], "import": "./components/date-picker.js" }
   }
 }
