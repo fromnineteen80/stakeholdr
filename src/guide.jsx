@@ -19,10 +19,10 @@ if (typeof document !== 'undefined' && typescaleStyles?.styleSheet
 }
 
 // guide.jsx — Stakeholdr BUILD GUIDE.
-// 100% plug-and-play Material Design 3 (Material Web) — no hand-rolled spans, no custom
-// styling yet (that arrives via the Settings → Design page in Phase 3). This is
-// the single source we follow to rebuild the app, in order. Each item carries
-// the inferred detail captured "as the Anthropic dev"; the user reviews on the
+// This page renders with Material Web as a TEMPORARY SCRATCH SURFACE; the rebuilt
+// app's law is the Canonical UI design system (design-system/ — see Box 1, RULED
+// 2026-06-13). This guide is the single source we follow to rebuild the app, in
+// order. Each item carries the captured lossless detail; the user reviews on the
 // .io and we seal each handshake by committing the check (done:true) into source.
 
 const STORAGE = "stakeholdr_guide_checks_v1";
@@ -33,69 +33,71 @@ const PHASES = [
     id: "p0", icon: "inventory_2", label: "Foundation · setup only",
     blurb: "The build laws and tooling that must exist before anything is rebuilt — the component kit, the type/icon system, and the meta docs. SETUP ONLY; all app knowledge lives in the Capture section below.",
     items: [
-      { t: "Material Design 3 (Material Web) is the ONLY component kit — the law for every element", done: true, d:
-`Every UI element is a standard Material Design 3 component from Google's Material Web (@material/web), or a composition of them; never a hand-rolled element, and NEVER MUI or any other third-party kit.
+      { t: "Canonical UI (design-system/) is the ONLY component kit — the law for every element [RULED 2026-06-13; re-confirm]", d:
+`RULING (2026-06-13; supersedes the earlier "Material Web only" law — awaiting your re-confirmation on the .io): every UI element in the rebuilt app is a component from this repo's own CANONICAL UI design system (design-system/ — un-branded, token-driven web components, <ui-*> tags), or a composition of them. Never a hand-rolled element, NEVER MUI, never Tailwind utilities, never any third-party UI kit.
 
-THE KIT (verbatim): Google Material Web (@material/web), the official MD3 web-components. Design language + tokens from m3.material.io. NOT MUI / @mui/material — that was a wrong turn and is being removed everywhere. Build: React 18 + Vite, deployed to GitHub Pages. Material Web ships as custom elements (<md-*>) imported per component (e.g. import '@material/web/button/filled-button.js') and rendered directly in JSX; props are attributes, and events are standard DOM events (bound via refs/addEventListener since React 18 does not natively bind custom-element events/props for all cases).
+WHY CANONICAL UI WON (the 360 ruling — three directions coexisted in the repo):
+(1) Material Web (@material/web), the original law, is in MAINTENANCE MODE and ships no data grid, no date/time picker, no nav rail/drawer, no app bar, no tooltip, no snackbar, no autocomplete; the only official fill was adopting Angular + Angular Material — an entire framework pivot, two theming systems, just for the holes.
+(2) shadcn/ui + Tailwind was attempted (docs/design) and drifted into patchwork — utility classes are a thousand styling surfaces, the opposite of one token layer; nothing canonical for a build session to obey.
+(3) CANONICAL UI was built (PRs #1–#6) precisely to fix both: REAL custom elements (shadow DOM, real states + a11y); ONE styling surface (the --ui-sys-* token layer); and a BINDING machine-readable manifest so an AI build session ASSEMBLES instead of inventing. It is MD3 in philosophy — the same component vocabulary at full parity — with the holes filled natively and zero framework tax: plain web components hosted by the existing React 18 + Vite app, deployed to GitHub Pages.
 
-USE THE FULL KIT (never bare-minimum) — name the specific md-* element + variant for each element: buttons md-filled-button / md-outlined-button / md-text-button / md-elevated-button / md-filled-tonal-button, md-icon-button, md-fab; selection md-outlined-select|md-filled-select + md-select-option (short fixed sets), md-menu + md-menu-item (action menus), md-checkbox, md-radio, md-switch, md-slider; chips md-chip-set + md-assist/filter/input/suggestion-chip; inputs md-outlined-text-field / md-filled-text-field; structure md-dialog, md-list + md-list-item, md-tabs + md-primary-tab/md-secondary-tab, md-divider, md-elevation, md-linear-progress / md-circular-progress; md-icon for icons; md-ripple / md-focus-ring for interaction states.
+THE KIT (verbatim): components live in design-system/components/*.js; the registry is design-system/manifest.json (THE CONTRACT — every component, its tag, props, states, and the exact tokens it consumes); the token source is design-system/tokens.css (Tier 1 --ui-ref-* raw values + Tier 2 --ui-sys-* semantic roles; components read ONLY --ui-sys-*). 35 components, all status:built —
+• NATIVE (MD3 parity): ui-icon · ui-button (filled/tonal/outlined/text) · ui-icon-button (standard/filled/tonal/outlined; selected toggle) · ui-fab (small/medium/large; primary/surface; extended label) · ui-text-field · ui-checkbox (tri-state) · ui-radio · ui-switch · ui-slider · ui-select + ui-option · ui-menu + ui-menu-item · ui-chip (assist/filter/input/suggestion) + ui-chip-set · ui-list + ui-list-item · ui-tabs + ui-tab · ui-divider · ui-dialog · ui-tooltip · ui-snackbar · ui-linear-progress / ui-circular-progress.
+• GAP-FILL (what MD3's web kit never shipped): ui-autocomplete · ui-data-table (sticky header, sortable, selection, density) · ui-chart (bar/line/area inline SVG) · ui-app-bar · ui-nav-rail · ui-nav-drawer · ui-sheet (mobile bottom sheet) · ui-bottom-bar · ui-date-picker.
+• SCAFFOLD: ui-app-shell (CSS-grid host; header/nav/main/aside/footer slots; empty tracks auto-collapse) · ui-sidebar + ui-sidebar-item (248↔64px collapse, icon-only tooltips, active pill, aria-current) · ui-inspector (right detail rail ~320px, open/closed) · ui-status-bar (footer).
+• DOMAIN: ui-stakeholder-table (the Lists sheet — frozen sticky columns, sortable headers, search/filter/sort/band-chip toolbar, count/avg/export footer) · ui-stakeholder-map (4×6 zone heatmap + scatter via the captured coordToPct transform, statusFor lookup, zone labels/counts, strategy detail panel).
 
-HOLES — Material Web ships no data grid and no chart. The DATA TABLE (Lists) is built with ANGULAR MATERIAL (mat-table + Angular CDK), themed to the MD3 tokens. The MAP plot (no chart component exists anywhere) is the one sanctioned MD3-tokened SVG composition. Everything else is a Material Web md-* component. Never a third-party kit, never MUI.
+USE THE FULL KIT (never bare-minimum) — every spec box and every build step names the exact ui-* tag + variant + key props, chosen as the right tool from the manifest. "A button" / "a dropdown" is a shortcut and is NOT acceptable. CAPTURE-BOX TRANSLATION: wherever an already-written capture box says an md-* element or a shadcn block, read the equivalent ui-* component (md-filled-button→ui-button variant=filled · md-outlined-select→ui-select · md-assist-chip→ui-chip variant=assist · md-icon→ui-icon · mat-table/TanStack→ui-data-table or ui-stakeholder-table · mat-datepicker→ui-date-picker · Combobox→ui-autocomplete · lucide icons→ui-icon Material Symbols ligatures …); each box gets its build-map wording amended to ui-* as it is sealed.
 
-CHANGES TOO: when we later modify something, the change is made with OTHER MD3 / Material Web components — recompose standard MD3, never a custom hack and never MUI.
+GAPS: if a need is not covered by a manifest component or expressible via a token, that is a GAP — build the component/token INTO design-system/ (cloning the ui-button quality bar) and register it in manifest.json FIRST, then use it. Never a one-off hack in app markup/CSS. CHANGES TOO: later modifications recompose existing ui-* components or extend the system — never a custom patch.
 
-FORBIDDEN: MUI / @mui/* anywhere; non-MD3 UI libraries; raw span/div as UI primitives (allowed only as layout/SVG containers); ad-hoc/inline styling; !important; stray/duplicated/patch CSS; premature visual customization.
+FORBIDDEN: MUI / @mui/* anywhere; Tailwind / utility classes; @material/web in the REBUILT APP (this guide page itself still renders with Material Web as a temporary scratch surface — the guide is NOT the app and is rebuilt/retired later); raw span/div as UI primitives (allowed only as layout/SVG containers); ad-hoc/inline styling; !important; stray/duplicated/patch CSS; reimplementing any component in markup/CSS.
 
-THEMING = single source, MD3 tokens as CSS custom properties, NOT per-component code: set --md-sys-color-*, --md-sys-typescale-*, and --md-ref-typeface-* once at :root; every md-* element inherits automatically; change a token once → it updates everywhere. Never style a component one-off. Re-skinning later (toward Claude) = changing tokens only.
+THEMING = ONE SOURCE: design-system/tokens.css. The authorized design start-state is ALREADY ENCODED THERE VERBATIM — surfaces light→dark #FFFFFF (--ui-ref-neutral-0, content/cards) · #FEFDFC (-1, app runway) · #FCFBF9 (-2, idle fields) · #F8F7F3 (-3, panels/rails/headers) · #F4F3ED (-4, hovers/active cells) · #F0EEE6 (-5, subtle outlines) · #E8E6DE (-6, structural borders); ink #666361 (--ui-ref-ink-strong, primary text) · #ABA9A4 (-muted) · #DFDDD6 (-faint, dividers/disabled); the 14 relationship-zone colors + zone inks/borders as --ui-sys-zone-* (single-sourced for Map/Lists/Help/scorecard); valence tones --ui-sys-pos/-neg/-accent. Re-skinning later (Settings → Design page, toward the Claude aesthetic) = editing --ui-sys-* tokens ONLY; every component re-skins at once; components are never touched.
 
-PALETTE START-STATE mapped to MD3 color tokens: surfaces light→dark #FFFFFF · #FEFDFC · #FCFBF9 · #F8F7F3 · #F4F3ED · #F0EEE6 · #E8E6DE → --md-sys-color-surface and the --md-sys-color-surface-container(-low/-high/-highest) ramp + --md-sys-color-surface-dim/-bright; ink → --md-sys-color-on-surface #666361, --md-sys-color-on-surface-variant #ABA9A4, --md-sys-color-outline / outline-variant #DFDDD6. Small clean type, modest weights, no oversized headings; tight-but-airy spacing; readability/ease/pleasure are the bar.
+START-STATE DESIGN RULES (enforced via tokens + components, NEVER hand-built CSS):
+• NO GRADIENTS, EVER — solid surface tokens only. SHADOWS: the start-state rule said "no shadows ever"; tokens.css currently carries a subtle --ui-sys-elevation-1..3 ramp used by overlays (menus/dialogs/sheets). OPEN TOKEN DECISION for the Design-page step: flatten to none + stronger outlines, or keep the subtle ramp for floating overlays only. Either way it is a token edit, never component work.
+• LINKS / NAV ITEMS — no hover background and no current/active-page background swap; state via ink weight/color. (ui-sidebar-item's active pill reads --ui-sys-primary-container — tune that token at the Design pass to honor this rule.)
+• SIDEBARS — never white: --ui-sys-surface-container (#F8F7F3), one+ steps darker than content.
+• MAIN CONTENT — always white: --ui-sys-surface-card (#FFFFFF) on the #FEFDFC runway.
+• INPUT FIELDS ON A SIDEBAR — lighter than the rail but NOT white: --ui-sys-surface-field (#FCFBF9).
+• Small clean type, modest weights, no oversized headings (body 13px --ui-sys-font-body; titles via --ui-ref-typeface-title); tight-but-airy 4px rhythm (--ui-sys-space-*); readability/ease/pleasure are the bar.
 
-START-STATE DESIGN RULES (design intent — enforced via design tokens + components, NEVER hand-built CSS; toolkit-agnostic):
-• No shadows and no gradients, EVER — flat, solid surfaces only.
-• Links / nav items: no hover background and no current/active-page background change; show state via ink weight/color, not a background swap.
-• Sidebars are NEVER white — a surface one step darker than the main content.
-• Main content is ALWAYS white.
-• Input fields on a sidebar are lighter than the sidebar but NOT white, and use one of our palette colors.
+DONE = (1) every element is a manifest-registered design-system component (or the sanctioned token-only inline-SVG internals of ui-stakeholder-map/ui-chart); (2) renders, zero console errors; (3) zero MUI/Tailwind/hand-rolled UI, no !important, no inline colors/sizes, no gradients; (4) all look comes from --ui-sys-* tokens; (5) the start-state rules above are honored; (6) any new need landed as a manifest-registered component/token FIRST.` },
+      { t: "Type & Icon system — Inter (body/UI) + Newsreader (titles) + Material Symbols icons [AMENDED to design-system tokens; re-confirm]", d:
+`TWO type roles only + the Material Symbols icon set, loaded as web fonts, applied via the design-system typeface tokens at :root — never per-component. ONLY Inter and Newsreader are authorized; NO IBM Plex Mono, no Roboto, no other family (the previous session wrongly added IBM Plex Mono / extra fonts — removed). (AMENDED 2026-06-13: same substance as the sealed version, token mechanism retargeted from --md-* to the Canonical UI --ui-* contract.)
 
-START-STATE DESIGN RULES (all enforced via MD3 tokens / component theming — NEVER custom hand-built CSS):
-• NO SHADOWS, NO GRADIENTS, EVER — elevation tokens set to none/flat; backgrounds are solid surface tokens only.
-• LINKS / NAV ITEMS — no hover background and no current/active-page background change. State is shown by ink weight/color, never by a background swap.
-• SIDEBARS — never white. The sidebar uses a surface-container token darker than the main content (e.g. --md-sys-color-surface-container / -high), never --md-sys-color-surface (#FFFFFF).
-• MAIN CONTENT — always white (--md-sys-color-surface / #FFFFFF).
-• INPUT FIELDS ON A SIDEBAR — lighter than the sidebar but NOT white, and must use one of our palette colors (a surface-container step lighter than the rail, never #FFFFFF).
-• These map to surface tokens per region; the sidebar/app-bar regions that carry them come from layout components (or, where the kit has no layout component, the one sanctioned token-only layout layer — never ad-hoc styling).
+TYPE STACKS (verbatim; tokens.css):
+body (body + all UI):  Inter, ui-sans-serif, system-ui, sans-serif   → --ui-ref-typeface-body
+title (titles only):   Newsreader, ui-serif, Georgia, serif          → --ui-ref-typeface-title
 
-DONE = (1) every element is a standard Material Web md-* component, an Angular-Material hole-filler (table/datepicker/etc.), or the one MD3-tokened SVG map plot; (2) renders, zero console errors; (3) zero MUI, no spans-as-UI, no !important, no shadows/gradients, no bespoke styling; (4) all look comes from MD3 tokens; (5) start-state design rules above are honored.` },
-      { t: "Type & Icon system — Inter (body/UI) + Newsreader (titles) + Material Symbols icons", done: true, d:
-`TWO type roles only + the MD3 icon set, loaded as web fonts, applied via MD3 typeface/typescale tokens at :root — never per-component. ONLY Inter and Newsreader are authorized; NO IBM Plex Mono, no Roboto, no other family (the previous session wrongly added IBM Plex Mono / extra fonts — removed).
+ROLES, mapped to design-system type tokens (components read ONLY these):
+• --ui-ref-typeface-body (Inter) drives all UI text via the type roles --ui-sys-font-body (400 13px/1.45) · --ui-sys-font-body-lg (400 14px/1.5) · --ui-sys-font-label (500 13px/1.2) · --ui-sys-font-caption (400 12px/1.35). Color = --ui-sys-on-surface ink; numbers use Inter tnum tabular figures.
+• --ui-ref-typeface-title (Newsreader) drives TITLES ONLY via --ui-sys-font-title (500 18px/1.3) and --ui-sys-font-headline (500 22px/1.25): page titles and section headings. No oversized headings; hierarchy from role + weight, not size bloat.
+• There is NO monospace role (RESOLVED — design.md's JetBrains Mono is rejected). Numbers/eyebrows formerly mono use Inter with tnum.
 
-TYPE STACKS (verbatim):
-plain (body + all UI): "Inter","Helvetica Neue",Helvetica,Arial,sans-serif
-brand (titles only):   "Newsreader","Source Serif Pro","Charter",Georgia,serif
+WEB FONTS LOADED (Google Fonts, at document level) — ONLY: Inter 400;500(;600;700 as needed) · Newsreader opsz,wght@6..72,400;500 · Material Symbols Outlined opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200. (preconnect fonts.googleapis.com + fonts.gstatic.com.) Fallback stacks render before fonts load (and in a sandbox where Google Fonts are blocked: system-ui/sans · Georgia).
 
-ROLES, mapped to MD3 typeface tokens:
-• --md-ref-typeface-plain = the Inter stack → drives all body/label/title-small UI text. Base ~13px, color = on-surface ink, font-feature-settings "ss01","cv11","tnum" (tabular numerals).
-• --md-ref-typeface-brand = the Newsreader stack → drives DISPLAY + HEADLINE typescale roles only: page titles and section headings. No oversized headings; hierarchy from role + weight, not size bloat.
-• There is NO monospace role. Numbers/eyebrows that were formerly mono use Inter with tnum tabular figures.
-MD3 typescale tokens (--md-sys-typescale-{display,headline,title,body,label}-{large,medium,small}-{font,size,line-height,weight}) inherit these typefaces automatically; we set the -font tokens to brand for display/headline and plain for everything else.
-
-WEB FONTS LOADED (Google Fonts) — ONLY: Inter 400;500;600;700 · Newsreader opsz,wght@6..72,400;500;600 · Material Symbols Outlined opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200. (preconnect fonts.googleapis.com + fonts.gstatic.com.) Fallback stacks render before fonts load (and in a sandbox where Google Fonts are blocked: Helvetica/Arial · Georgia).
-
-ICONS: MD3 icon set = Material Symbols, rendered via <md-icon> (the icon ligature name as its text content, e.g. <md-icon>search</md-icon>) — NEVER hand-rolled span glyphs, NEVER @mui/icons-material. Axis settings: FILL 0, wght 300–400, GRAD 0, opsz 20; size 1em, never larger than its label.
+ICONS: Material Symbols, rendered via <ui-icon> (the ligature name as text content, e.g. <ui-icon>search</ui-icon>) — NEVER hand-rolled span glyphs, NEVER @mui/icons-material, never lucide. <ui-icon> is the ONE place icon px live: size sm|md|lg|xl → --ui-sys-icon-size-18/20/24/32 (md default); axis settings FILL 0 (filled attr flips to 1), wght 300–500 (default 400), GRAD 0; inherits currentColor; a slotted <svg> is the sanctioned fallback for custom marks. Icons stay modest — never larger than their label.
 
 ICON VOCABULARY (semantic name → Material Symbols ligature, verbatim — preserve the meaning): search→search · plus→add · filter→filter_list · sort→swap_vert · download→download · close→close · target→map · grid→settings · work→work · table→table_rows · category→category · cases→cases · language→language · beenhere→beenhere · apartment→apartment · check→check · content_copy→content_copy · user→person · users→groups · help→help · map→map · sliders→thumb_up · plan→description · lock→lock · message→chat · expand→open_in_full · logout→logout · edit→edit · chevron→expand_more · chevronUp→expand_less · layers→layers · community→favorite · drag→drag_indicator · chevron-left→chevron_left · chevron-right→chevron_right · double-left→keyboard_double_arrow_left · double-right→keyboard_double_arrow_right · sparkle→auto_awesome · brandmark→id_card · build→build · clock→history · mail→mail · phone→call` },
-      { t: "Component sourcing — Material Web (primary) + Angular Material for the holes", d:
-`THE STACK — Material Web (@material/web) is the PRIMARY MD3 kit; it gives the clean MD3 look. But Material Web is in MAINTENANCE MODE and ships no data grid, no date/time picker, no nav rail/drawer, no app bars, etc. Those HOLES are filled by ANGULAR MATERIAL + the Angular CDK (mat-table, mat-paginator, matSort, mat-datepicker, cdk-virtual-scroll, cdkDropList drag-drop, etc.). The real app is therefore built in ANGULAR, which hosts Material Web web-components (CUSTOM_ELEMENTS_SCHEMA) as the primary UI and Angular Material only for the holes. BOTH kits are themed from one MD3 token source. (This build-guide .io itself is a React + Material Web scratch surface — it has no table, so it needs no Angular; the architecture below is for the rebuilt app.)
+      { t: "Component sourcing — the design-system manifest is BINDING (native · gap-fill · scaffold · domain) [RULED 2026-06-13; re-confirm]", d:
+`THE STACK (RULED 2026-06-13; supersedes the "Material Web + Angular Material" plan — Angular is OFF the table): the rebuilt app stays REACT 18 + VITE and hosts the Canonical UI web components (design-system/components/*.js, <ui-*> custom elements; framework-agnostic — props are attributes/JS properties, events are standard DOM events bound via refs). ONE kit covers everything: MD3-parity natives, the gap-fills MD3's web kit never shipped, the app scaffold, and the two Stakeholdr domain components. One token source (design-system/tokens.css) themes all of it. (This build-guide .io itself is a temporary React + Material Web scratch surface — it is NOT the app and is rebuilt/retired later.)
 
-FONTS — Inter (body/UI) via --md-ref-typeface-plain; Newsreader for TITLES ONLY (display/headline roles) via --md-ref-typeface-brand; Material Symbols via <md-icon>. No Roboto, no IBM Plex, no other family.
-
-OFFICIAL MATERIAL WEB SETUP — components: import per-component side-effect modules (e.g. import '@material/web/button/filled-button.js') or '@material/web/all.js'. Typescale: import { styles as typescaleStyles } from '@material/web/typography/md-typescale-styles.js'; document.adoptedStyleSheets.push(typescaleStyles.styleSheet); use .md-typescale-<scale>-<size> classes. Theme: all color/shape via --md-sys-* tokens at :root (single source); Angular Material themed from the same palette via --mat-sys-*.
+THE THREE LAWS (from design-system/README + manifest.json, verbatim in spirit):
+1. REAL COMPONENTS — genuine custom elements (shadow DOM, real states + a11y). Screens are ASSEMBLED from them; a component is never reimplemented in markup/CSS.
+2. ONE STYLING SURFACE — the --ui-sys-* token layer is the only legal place a visual decision lives. No component stylesheet overrides, no utility classes, no inline color/size.
+3. THE MANIFEST IS BINDING — design-system/manifest.json is the machine-readable contract (every component, tag, props, states, consumed tokens). A build session reads the manifest and assembles real elements; there is no room to invent.
 
 SOURCING RULE (state it in every build map):
-• Material Web component EXISTS → use it: md-*-button, md-icon-button, md-fab; md-checkbox, md-radio, md-switch, md-slider; md-chip-set + chips; md-dialog; md-list + md-list-item; md-menu + md-menu-item; md-outlined/filled-select + md-select-option; md-outlined/filled-text-field; md-tabs + md-primary/secondary-tab; md-divider, md-elevation, md-icon, md-linear/circular-progress, md-ripple, md-focus-ring. (Labs, experimental: cards, navigation bar/drawer/tab, segmented button, badge.)
-• Material Web HOLE → Angular Material / CDK, themed to the MD3 tokens: DATA TABLE = mat-table + matSort + mat-paginator + cdk-virtual-scroll + cdkDropList; date/time = mat-datepicker; plus nav rail/drawer, app bars, snackbar, tooltip as needed.
-• No component in EITHER (only the relationship MAP scatter plot) → the one sanctioned MD3-tokened composition: semantic HTML + inline SVG, tokens only.
-NEVER: MUI, hand-rolled UI primitives, ad-hoc / !important CSS, a component that doesn't exist.` },
+• Manifest component EXISTS → use it. NATIVE: ui-button/ui-icon-button/ui-fab · ui-text-field · ui-checkbox/ui-radio/ui-switch/ui-slider · ui-select+ui-option · ui-menu+ui-menu-item · ui-chip(+set) · ui-list(+item) · ui-tabs(+tab) · ui-divider · ui-dialog · ui-tooltip · ui-snackbar · ui-linear/circular-progress · ui-icon. GAP-FILL: ui-autocomplete · ui-data-table · ui-chart · ui-app-bar · ui-nav-rail · ui-nav-drawer · ui-sheet · ui-bottom-bar · ui-date-picker. SCAFFOLD: ui-app-shell · ui-sidebar(+item) · ui-inspector · ui-status-bar. DOMAIN: ui-stakeholder-table · ui-stakeholder-map.
+• Component MISSING (or a token can't express a look) → that is a GAP: build it INTO design-system/ to the ui-button quality bar, register it in manifest.json, THEN use it. (Known upcoming candidates from the capture: avatar/avatar-stack, badge/count-indicator, drag-reorder grip, command-palette composition = ui-dialog + ui-autocomplete.)
+• Tokened inline SVG is sanctioned ONLY as the internals of ui-stakeholder-map / ui-chart — never as loose app markup.
+NEVER: MUI, Tailwind, Angular/Angular Material, @material/web in the app, hand-rolled UI primitives, ad-hoc / !important CSS, a component that doesn't exist.
+
+FONTS & ICONS — Inter (body/UI) via --ui-ref-typeface-body; Newsreader TITLES ONLY via --ui-ref-typeface-title; Material Symbols ligatures via <ui-icon>. Loaded at document level (Google Fonts links per the Type & Icon box). No Roboto, no IBM Plex, no other family.
+
+PREVIEW SURFACES — design-system/preview.html (full component gallery + live token editor) and design-system/wireframes.html (assembled screens) ship as standalone Pages entries (vite.config inputs) so every component and screen is reviewable on the .io before app assembly.` },
       { t: "This build guide is the only thing rendered on the .io", done: true },
       { t: "APP_SPEC.md — exhaustive functional spec committed", done: true },
       { t: "CLAUDE.md — engineering discipline + Material-only rule", done: true },
@@ -895,8 +897,11 @@ UI KIND (built later with shadcn + design.md tokens; NO hand-built CSS) — a Sh
 DATA SOURCES (no duplication) — the 12 steps = PLAN_STEPS (Plan-algorithm box); the zones/colors/strategies = the Relationship-engine box; the grid = the Map box's GRID. Help just presents them.
 
 UI KIND (built later, shadcn + design.md tokens; NO hand CSS) — page shell without the right sidebar; a funnel/stepper for the 12 steps; a zone KEY (chips/swatches per zone, zone-tokened); the 4×6 grid as tokened SVG (Map-consistent) + axis labels; a per-zone strategy list. From the universal kit.` },
-      { t: "Design system — Soapbox tokens + shadcn/ui + Tailwind (the go-forward design; from docs/design)", d:
-`THE DESIGN COMES FROM THE DESIGN SYSTEM, NOT THE OLD CODE. Sources (saved in the repo, survive rebuild): docs/design/design.md (the Soapbox token spec) + docs/design/interfacelibrary.html (the BUILDING BLOCKS — the canonical component primitives + exactly how tokens are applied to them; NOT a mockup of any app screen; it exists to stop vibing by giving known-good pieces to assemble from). The app SCREENS come from the captured .io (scaffold, records, landings, pages) COMPOSED FROM those blocks and skinned by the tokens. Built with shadcn/ui (Radix + Tailwind). The old code contributed behavior only; ZERO of its CSS/styling carries forward.
+      { t: "Design system — RULED: Canonical UI (design-system/) is the go-forward; shadcn/Tailwind plan superseded (history preserved)", d:
+`RULING (2026-06-13) — the go-forward design system is CANONICAL UI: this repo's design-system/ (un-branded ui-* web components + the --ui-ref-*/--ui-sys-* token contract + the binding manifest.json), built in PRs #1–#6 and previewable at design-system/preview.html + wireframes.html. It absorbed everything this box authorized: the Soapbox surface/ink palette is encoded verbatim in tokens.css (--ui-ref-neutral-0..6, --ui-ref-ink-strong/muted/faint); the layout depth rules (sidebars never white · main runway #FEFDFC · cards/papers #FFFFFF · sidebar fields #FCFBF9) map to --ui-sys-surface-container / -surface / -surface-card / -surface-field; the 14 zone + priority colors are first-class --ui-sys-zone-* tokens; themes (Soapbox/Undecideds/Night Shift) = token-set swaps via the Settings → Design dashboard. The shadcn/ui + Tailwind implementation plan below is SUPERSEDED (Tailwind utilities = a thousand styling surfaces; it drifted — see design-system/README) and is preserved for losslessness only. Its open DECISIONS resolve as: titles = Newsreader (encoded in tokens.css) · mono = REJECTED, Inter tnum only · accent = tokens.css ships --ui-sys-accent #B5552C vs design.md's #D96B43 — pick at the Design-page pass (token edit; must never collide with the zone colors) · shadows = tokens.css ships a subtle elevation ramp for overlays vs the "no shadows ever" start-state rule — pick at the Design-page pass (token edit). Component vocabulary translation: shadcn Button→ui-button · Input/Textarea→ui-text-field · Select→ui-select · Combobox/Command→ui-autocomplete (+ ui-dialog for the ⌘K palette) · TanStack Table→ui-data-table / ui-stakeholder-table · tooltips/popovers/dialogs/menus/tabs/chips/etc.→ the matching ui-* component · lucide-react→<ui-icon> Material Symbols. The rule that every box carries its VISUAL CUES still binds — cues now name ui-* components + --ui-sys-* tokens.
+
+——— HISTORY (superseded 2026-06-13; preserved losslessly) ———
+THE DESIGN COMES FROM THE DESIGN SYSTEM, NOT THE OLD CODE. Sources (saved in the repo, survive rebuild): docs/design/design.md (the Soapbox token spec) + docs/design/interfacelibrary.html (the BUILDING BLOCKS — the canonical component primitives + exactly how tokens are applied to them; NOT a mockup of any app screen; it exists to stop vibing by giving known-good pieces to assemble from). The app SCREENS come from the captured .io (scaffold, records, landings, pages) COMPOSED FROM those blocks and skinned by the tokens. Built with shadcn/ui (Radix + Tailwind). The old code contributed behavior only; ZERO of its CSS/styling carries forward.
 
 TOKENS (the single source; design.md) —
 • SURFACES (7, light→dark): canvas #FFFFFF · app #FEFDFC · field #FCFBF9 · container #F8F7F3 · container-high #F4F3ED · border-subtle #F0EEE6 · border-strong #E8E6DE.
@@ -962,7 +967,7 @@ BILLING & GATING — Stripe per-seat subscriptions + plan tiers; per-org ENTITLE
 DEPENDENCIES — all require STATE B (Supabase/backend) + the relevant integrations (polling capture, AI API, Stripe). In the demo they appear as LOCKED affordances (the lock chip already used in the Plan editor), never functional.
 
 UI KIND (built later; blocks + tokens) — locked panels with an upgrade CTA where the feature would live (Plan elements 8/9, the Key Messages element); a billing/entitlements admin section in Settings; metered-usage indicators. Visual cues per the Design system; no functional build in the demo.` },
-      { t: "INDEX — manifest + traceability (feature → spec → MD3 component → verification)" },
+      { t: "INDEX — manifest + traceability (feature → spec → ui-* component → verification)" },
     ]
   },
   {
@@ -971,24 +976,24 @@ UI KIND (built later; blocks + tokens) — locked panels with an upgrade CTA whe
     items: [
       { t: "Confirm the foundation (Phase 0) is complete with the user" },
       { t: "Move legacy page/feature modules into a parked /archive folder excluded from the Vite build" },
-      { t: "Keep in src/: guide.jsx, data.js, store.js, db.js; keep all docs" },
+      { t: "Old modules parked in archive/src/ + project/ (the research oracle, out of the build graph); src/ keeps only main.jsx + guide.jsx; all docs kept" },
       { t: "App entry renders only the guide → the .io is this guide on a clean slate" },
       { t: "Verify archived code is out of the build graph and the guide still renders; commit" },
     ]
   },
   {
-    id: "p2", icon: "foundation", label: "2 · Material foundation & theme",
-    blurb: "Stand up the neutral, token-driven MD3 theme everything renders through. Design is a layer, not baked in.",
+    id: "p2", icon: "foundation", label: "2 · Foundation & theme (Canonical UI)",
+    blurb: "Stand up the token-driven Canonical UI theme everything renders through. Design is a layer, not baked in.",
     items: [
-      { t: "MD3 :root design tokens (--md-sys-color-* / --md-sys-typescale-* / --md-ref-typeface-*) so the Design page can re-skin live" },
-      { t: "Neutral defaults now; no Claude-specific styling yet" },
-      { t: "App shell scaffold (top bar + nav + main) composed from Material Web md-* components" },
-      { t: "Verify: renders, no console errors, MD3-only (zero MUI)" },
+      { t: "Adopt design-system/tokens.css at the app :root (--ui-ref-* + --ui-sys-*) so the Design page can re-skin live" },
+      { t: "Start-state defaults (already encoded in tokens.css); no Claude-specific styling yet" },
+      { t: "App shell scaffold composed from ui-app-shell + ui-app-bar + ui-sidebar + ui-status-bar" },
+      { t: "Verify: renders, no console errors, design-system-only (zero MUI/Tailwind/hand CSS)" },
     ]
   },
   {
     id: "p4", icon: "dashboard", label: "App shell",
-    blurb: "The frame every page lives in — standard Material components only. Built before the Design page, because you can't re-skin a shell that doesn't exist yet.",
+    blurb: "The frame every page lives in — Canonical UI components only (ui-app-shell/ui-app-bar/ui-sidebar/ui-inspector/ui-status-bar). Built before the Design page, because you can't re-skin a shell that doesn't exist yet.",
     items: [
       { t: "Brand bar / AppBar (icon + name + workspace selector + people + profile)" },
       { t: "Primary nav (Lists · Scoring · Map · Plans · Community · Workspaces · Help)" },
@@ -1000,19 +1005,19 @@ UI KIND (built later; blocks + tokens) — locked panels with an upgrade CTA whe
     id: "p3", icon: "palette", label: "Settings → Design page",
     blurb: "The page that controls every design token live, with subtext describing the Claude endgame. This is how the look comes back without vibing — and it comes after the shell exists to re-skin.",
     items: [
-      { t: "Design controls (MD3 / Material Web) for color tokens, type scale, density, radius, surfaces" },
+      { t: "Design controls (Canonical UI) for color tokens, type roles, density, radius, surfaces — incl. the two open token decisions (accent hue; shadows vs flat)" },
       { t: "Writes tokens to :root CSS variables (live re-theme, no reload)" },
       { t: "Each control carries subtext describing the Claude-ward target" },
-      { t: "Persists to appConfig; defaults remain neutral Material" },
+      { t: "Persists to appConfig; defaults remain the tokens.css start-state" },
     ]
   },
   {
     id: "p5", icon: "table_view", label: "5 · Pages (in order)",
-    blurb: "Rebuild each page from standard MD3 (Material Web) components, strictly to its spec. Confirm each before the next.",
+    blurb: "Rebuild each page from the Canonical UI (ui-*) components, strictly to its sealed capture box. Confirm each before the next.",
     items: [
       { t: "Lists / workspace table (every column + edit mode per TABLE_COLUMNS)" },
       { t: "Scoring (grid: stakeholders × team; edit only your column; weights)" },
-      { t: "Map (zones, dots, drag-rescores-all, history) per MAP_GUIDE + RELATIONSHIP_ZONES" },
+      { t: "Map (zones, dots, READ-ONLY positions, history) per the sealed Map capture box — drag-to-rescore is removed" },
       { t: "Plans — landing + record (relationship-recommendation ranking + override)" },
       { t: "Community — landing + record (rollups, votes, value score)" },
       { t: "Workspaces (Setup) + workspace record" },
@@ -1026,7 +1031,7 @@ UI KIND (built later; blocks + tokens) — locked panels with an upgrade CTA whe
     id: "p6", icon: "view_sidebar", label: "6 · Record scaffold & workHQ",
     blurb: "The universal read/edit shell all record types pour through, and the workspace intelligence strip.",
     items: [
-      { t: "RecordShell on Material (sub-page nav · content · metadata · footer; read↔edit parity)" },
+      { t: "RecordShell on the design system (sub-page nav · content · metadata · footer; read↔edit parity)" },
       { t: "record.[type].view/.edit for stakeholder · plan · community · workspace · setting" },
       { t: "Tables inside records embed the real table component verbatim" },
       { t: "Map-in-scaffold (right-rail scorecard)" },
