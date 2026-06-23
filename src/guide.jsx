@@ -1067,6 +1067,35 @@ deleteStakeholder (removes from stakeholders + deletes scores[id] + stakeholderW
 
 ══ CANONICAL UI BUILD MAP ══
 ui-app-shell = the whole frame · ui-app-bar = brand bar (Row 1) · ui-tabs = nav-tab row (Row 2) and bottom workspace-tab strip (Row 4) · ui-sidebar = IntelPanel / messaging sidebar / detail drawer hosts · ui-dialog = OpenWorkspaceModal, CommandPalette, EditProfileModal, StakeholderModal, UserListPopup · ui-icon = every glyph (Material Symbols ligatures per the translation table above) · ui-icon-button = close/create/message/fan-toggle controls. No md-*, no shadcn, no hand-rolled glyphs.` },
+      { t: "workHQ (IntelPanel) — the workspace intelligence band [CODE — archive/src/intel.jsx; captured as-is per the 2026-06-13 \"no preference\" ruling, reshape allowed at build]", d:
+`WHAT IT IS — a "Workspace Intelligence" band (the IntelPanel) that renders as a separate section ABOVE the Lists table and divided from it; the table component (.sheet-wrap) is untouched and renders BELOW the band. Every card is COMPUTED from data already in the Store (stakeholders, scores, team, community, plans, currentUser) — there is NO backend and no new data. Props: mode, setMode, stakeholders, scores, team, community, plans, currentUser, isMaster, workspaceLabel, workspaceId, onAddStakeholder.
+
+THREE VIEW MODES — driven by data-mode on the parent .intel-split: "split" (default — band and table share the screen) · "intel" (the band takes over; cards show more rows) · "table" (the band collapses to a single summary line and the table takes over). The cards render only when mode !== "table".
+
+THE HEAD (.intel-head) — left to right: the title "WorkHQ" (.intel-title); when mode === "table", the one-line summary (.intel-summary) shows here inline; a flexible spacer (.intel-spacer); a quick-add button (.intel-quick) with the plus icon + label "Stakeholder" calling onAddStakeholder (title "Add stakeholder"); then the mode toggle group (.intel-modes, role="group", aria-label "Intelligence layout") = three buttons, the active one carries the "on" class: dashboard icon → setMode("intel") (title "Expand intelligence") · splitscreen icon → setMode("split") (title "Split view") · table_rows icon → setMode("table") (title "Expand table").
+
+CONSTANTS & HELPERS — COLD_DAYS = 90. now = new Date(). daysSince(d): if !d return Infinity; parse t = new Date( (d matches the regex /^\\d{4}-\\d{2}-\\d{2}$/ ? d + "T00:00:00" : d) ); if isNaN(t) return Infinity; else return Math.floor((now - t) / 86400000) (whole days). nameOf(s) = displayName(s) || s.name.
+
+THE SIGNALS (all derived each render) —
+• COLD ENGAGEMENT — stakeholders.filter(priority === "High" AND daysSince(lastContact) >= 90), sorted by daysSince(lastContact) DESCENDING (stalest first). [Computed; note: not currently rendered as its own card — it feeds only the summary line. Preserve the computation; it becomes a real card at build.]
+• NEEDS YOUR SCORE — if currentUser: stakeholders.filter(s => NOT ((scores[s.id] || {})[currentUser.id])) — i.e. the current user has no score record for that stakeholder (consistent with "unscored != 0,0"); [] when there is no currentUser.
+• RELATIONSHIP MIX — for each stakeholder: wc = weightedCoord(s.id, scores||{}, team||[]); st = statusFor(wc.x, wc.y); classify into mix { positive, winnable, negative } using EXACT zone arrays — POS = [Cooperate, Collaborate, Valuable Relationship, High Value Relationship, Strategic Partner] → positive++; NEG = [Proactively Defend, Defend, Protect, Respond, Identify] → negative++; everything else (Monitor, Maintain, Connect, Commit) → winnable++. [These 5+5 arrays are load-bearing; capture verbatim. Computed but not currently shown as a card — available for a future mix card; preserve.]
+• AWAITING YOUR VOTE — (community||[]).filter(a => a.stage is one of [Proposed, Under Review] AND currentUser AND NOT ((a.votes||{})[currentUser.id])).
+• ACTIVE PLANS IN THIS WORKSPACE — wsPlans = isMaster ? (plans||[]) : (plans||[]).filter(p => p.workspaceId === workspaceId). [Computed; not rendered yet — preserve.]
+• DEVELOPMENTS — flatten every stakeholder's notesHistory into entries { at, body, who: n.by, stakeholder: s }; sort by new Date(at||0) DESCENDING (newest first). devLabel(d) = (displayName(stakeholder) || stakeholder.name) + ": " + body.slice(0,40) + (body.length > 40 ? "…" : "").
+
+THE SUMMARY LINE — summaryBits, joined by " · ": if cold.length → "{cold.length} high-priority going cold"; if needsScore.length → "{needsScore.length} need your score"; if awaitingVote.length → "{awaitingVote.length} awaiting your vote". If no bits → "All clear — nothing needs attention." (Shown inline in the head only in table mode.)
+
+THE CARDS (.intel-cards, rendered when mode !== "table") — three IntelCards, each tone "data"; the slice count depends on mode ("intel" shows more):
+1. ALERTS (wide) — names = developments.slice(0, mode==="intel" ? 12 : 5).map(devLabel); more = developments.length - (12 or 5); empty text "No new developments".
+2. NEED YOUR SCORE (wide) — names = needsScore.slice(0, mode==="intel" ? 12 : 5).map(nameOf); more = needsScore.length - (12 or 5); empty "You're caught up on scoring".
+3. TASKS — names = awaitingVote.slice(0, mode==="intel" ? 8 : 4).map(a => "Vote: " + a.name); more = awaitingVote.length - (8 or 4); empty "Nothing pending".
+
+IntelCard PROP SURFACE (capture the FULL surface; today only label/tone/wide/names/more/empty are used, but the component supports more and the rebuild should preserve it): className = "intel-card tone-{tone||calm}" + (wide ? " intel-card-wide" : ""); a .intel-card-label header; then ONE content variant — stack (rows of {v,k} as .intel-stack-row with .intel-stack-v + .intel-stack-k) OR mix (a .intel-mix segmented bar: three .intel-mix-seg spans pos/neu/neg, each an i swatch colored var(--pos)/var(--neu)/var(--neg) followed by the count) OR value (.intel-card-value) ; optional sub (.intel-card-sub); then names — if names.length>0 a .intel-card-names list of .intel-name spans plus a .intel-name.more "+{more} more" when more>0, else the empty string in .intel-card-empty.
+
+NAMING NOTE — the UI label is "WorkHQ" (the head title); the source-file comment calls it the "Workspace Intelligence band"; the build-phase row and this guide call it "workHQ". One feature, three names — standardize on "workHQ" at build.
+
+REBUILD BUILD-MAP (Canonical UI, ui-* only — NEVER md-*/shadcn): the band = a tokened surface-container section (a step darker than the white table runway) sitting above the ui-stakeholder-table, with a divider between. Head: the title in --ui-sys-font-title; the quick-add = a ui-button (tonal/text) with a leading ui-icon (plus → add); the mode toggle = a ui-icon-button group (dashboard / splitscreen / table_rows ligatures via ui-icon, the active one selected). Each IntelCard = a tokened ui-* card composition: label in --ui-sys-font-label, the name list as a compact ui-list (or chip row), the overflow as a ui-chip "+N more", the mix bar as a small tokened segmented bar using --ui-sys-pos / --ui-sys-neg and a neutral. At build, promote the already-computed COLD and RELATIONSHIP-MIX and ACTIVE-PLANS signals into their own cards (they are computed today but unshown). Layout mode (split/intel/table) = a host data-attribute swapping CSS-grid track sizes — token-only, no ad-hoc styling.` },
       { t: "Whiteboard — team collaboration white-space (NEW; articulated, not designed yet)", d:
 `A NEW FEATURE — articulated here, NOT designed yet. A team "WHITE SPACE" to write, collaborate, and comment: an ADVANCED form of Messages, in the spirit of Slack + Todoist. It lives under Workspaces as the team's collaboration surface. Purpose: plan; write; capture IDEAS for planning or for noting a stakeholder's significance.
 
@@ -2022,7 +2051,53 @@ BILLING & GATING — Stripe per-seat subscriptions + plan tiers; per-org ENTITLE
 DEPENDENCIES — all require STATE B (Supabase/backend) + the relevant integrations (polling capture, AI API, Stripe). In the demo they appear as LOCKED affordances (the lock chip already used in the Plan editor), never functional.
 
 UI KIND (built later; blocks + tokens) — locked panels with an upgrade CTA where the feature would live (Plan elements 8/9, the Key Messages element); a billing/entitlements admin section in Settings; metered-usage indicators. Visual cues per the Design system; no functional build in the demo.` },
-      { t: "INDEX — manifest + traceability (feature → spec → ui-* component → verification)" },
+            { t: "INDEX — manifest + traceability (domain → capture box → oracle module → ui-* component → status)", d:
+`PURPOSE — this INDEX is the manifest and traceability spine of the capture. For every app capability it records: (1) its CAPTURE BOX on this .io, (2) the ORACLE module it was captured from (archive/src/* plus project/*), (3) the CANONICAL UI components/tokens it assembles from (design-system/manifest.json), and (4) its STATUS. Read it to navigate the capture and to confirm coverage before any build phase begins. "audited" = checked module-by-module against the oracle on 2026-06-13 and its leaks filled this pass.
+
+TRACEABILITY (domain → box → oracle → ui-* → status):
+• Component law / design system → Box 1 "Canonical UI is the ONLY kit" + "Design system" box → CLAUDE.md + design-system/ (tokens.css, manifest.json) → ALL ui-* → RULED 2026-06-13 (history preserved).
+• Type & icon system → "Type & Icon system" box → design-system/tokens.css → ui-icon (Material Symbols) → ruled, re-confirm.
+• Component sourcing → "Component sourcing — manifest is binding" box → design-system/manifest.json → all ui-* → ruled.
+• Ecosystem / data model → "Ecosystem" box → data.js + store.js → — → captured.
+• Relationship engine (axes, 14 zones, GRID, statusFor, weightedCoord, bounds) → "Relationship engine" box → data.js → --ui-sys-zone-* (ui-stakeholder-map) → captured.
+• Scoring matrix → "Scoring & weighting" box → scoring.jsx + data.js → ui-data-table-style matrix, ui-text-field + ui-icon-button steppers, ui-slider, ui-chip → audited.
+• Scoring cadence / reminders → "Scoring cadence" box → app.jsx + settings.jsx (fiscal) → ui-* → captured.
+• Map → "Map" box → map.jsx + tweaks-panel.jsx → ui-stakeholder-map (sanctioned inline SVG) → audited.
+• Lists table → "Lists table" box → sheet.jsx → ui-stakeholder-table / ui-data-table → audited.
+• Create/edit stakeholder modal → "Create / edit stakeholder modal" box → sheet-modals.jsx → ui-dialog (+ ui-text-field/ui-select/ui-switch/ui-chip-set) → NEW, audited.
+• Stakeholder profile (read-only) → "Stakeholder profile (read-only modal)" box → profiles.jsx → ui-dialog (+ ui-list/ui-chip) → NEW.
+• Notes modal → folded into the stakeholder-modal box → sheet.jsx + sheet-modals.jsx → ui-dialog → audited.
+• Plan algorithm models + factors → "Plan algorithm — catalog" + "Plan algorithm — FACTOR KEY" boxes → data.js (authoritative doc set) → — → sealed.
+• Relationship recommendation → "Relationship recommendation alignment" box → plan.jsx (sepScore/sepFactorSignal, bands 67/40) → — → audited (oracle math added).
+• Plan page → "Plan page" box → plan.jsx → ui-data-table + ui-select + ui-chip → audited (incl. goalNotes oracle bug = do-not-replicate).
+• Plan landing / worked example → "Plan page" + "Stakeholder Plan worked-example" boxes → plan.jsx + the engagement doc → ui-* landing → sealed/audited.
+• Community → "Community" box → community.jsx + community-modal.jsx → ui-dialog + ui-data-table + ui-chip → audited (FX/multi-currency = forward-design vs USD-only oracle).
+• Workspaces / Setup → "Workspaces" box → setup.jsx → ui-* + SegmentBadge/GeographyChip (tokens) → audited (+ scope/scopeState fields).
+• App shell & routing → "App shell & routing" box → app.jsx → ui-app-shell/ui-app-bar/ui-sidebar/ui-tabs/ui-dialog → NEW, audited (incl. demo auto-manager TRAP, removeUser cascade).
+• workHQ → "workHQ (IntelPanel)" box → intel.jsx → ui-* band above ui-stakeholder-table → NEW, captured as-is.
+• Settings → "Settings" box → settings.jsx → ui-* (BeakerColorField, QuartersPreview, SiteSettings) → audited (9 oracle panes; Integrations = forward-design 10th).
+• Users & People → "Users & People" box → users.jsx → ui-* + Avatar/ManagerStar (tokens) → audited.
+• User profile page → "User profile page (record.user)" box → profile-page.jsx → ui-tabs + ui-data-table → NEW.
+• Command palette (⌘K) → "Command palette (⌘K)" box → palette.jsx → ui-dialog + ui-autocomplete + ui-chip → NEW.
+• Messaging → "Messaging" box → messaging.jsx → ui-list + ui-text-field + ui-chip (mentions) + ui-dialog → audited (token grammar {{type:id|label}}, codes stk/wsp/pln/cmy).
+• Help → "Help" box → help.jsx → ui-* page (no right rail) + ui-chip zone swatches + tokened SVG grid → audited (verbatim copy + 5th section).
+• Record scaffold + landings → "Record scaffold, landing pages & page shells" box → record.jsx + landing.jsx → ui-app-shell/ui-sidebar/ui-inspector + ui-data-table → audited (MetaField vocab, LandingView shell).
+• Shared UI primitives → "Shared UI primitives" box → components.jsx + users.jsx → ui-icon + GAPS to add (avatar, avatar-stack, owner-picker, badge/count) → NEW.
+• Catalogs + location data + helpers → "Catalogs" box → data.js → — → audited (US/MX/CA lists, STATE_ABBR, siteLabel/resolveCountries, ORG_GOALS, TITLES).
+• Demo seed dataset → "Demo seed dataset" box → data.js → — → SHAPE + canonical sample (sh-01/06/12 trails verbatim); fixtures regenerated at rebuild.
+• Persistence & realtime → "Persistence & realtime" box → store.js → — → audited (Store API, keys hp_map_col_order_v2 / hp_map_user, appConfig defaults, the two backend traps).
+• Enterprise state model + architecture → those two boxes → project/* (HANDOFF, VERIFICATION, ENTERPRISE_ARCHITECTURE) → — → forward-design.
+• Database schema (Supabase) → "Database schema" box → project/db.js → — → captured (column divergences flagged in Persistence).
+• Demo features / Paid add-ons / Whiteboard → those three boxes → client + forward-design → ui-* (built later) → forward-design (await ui-* retarget at seal).
+
+COVERAGE GATES (must pass before the build phases start):
+1) Every capture box read against its oracle and declared lossless (audit done 2026-06-13; ~168 leaks + 7 missing surfaces filled this pass).
+2) The GAP components surfaced by the Shared-primitives box (avatar, avatar-stack, owner-picker, badge/count, command-palette composition) added to design-system/manifest.json BEFORE they are used.
+3) Every design-value hex flagged across the boxes (priority/status/segment/geography/plan pills, theme swatches, map density/halo/trail, avatar ink, manager amber) migrated to --ui-sys-* tokens — no literal hex in app code.
+4) The over-claims marked "forward-design vs oracle" (Settings Integrations pane; Setup sort control; invite-code client regenerate; Community FX/multi-currency) consciously kept or dropped, not mistaken for captured behavior.
+5) The recorded ORACLE BUGS deliberately NOT replicated: goalNotes set() called with two args (never persists); demo auto-promote-to-manager (3 sites); the column-order key discrepancy (live code = hp_map_col_order_v2, an older box said v3).
+
+OUTSTANDING (after this pass): forward-design boxes (Whiteboard, Enterprise ×2, Demo features, Paid add-ons, Database schema) get their UI build-maps retargeted to ui-* as they are sealed; the longform book docs/STAKEHOLDR_BOOK.md Parts III–IX remain to be written as the prose mirror.` },
       { t: "Command palette (⌘K) — global search across 5 entity types", d:
 `CommandPalette (archive/src/palette.jsx) is the universal Cmd/Ctrl-K command palette: a thin centered search bar over a blurred backdrop, with grouped autocomplete across five entity types. Arrow keys move the active row, Enter goes, click goes. It is GLOBAL and independent of the per-page inline search bars (those keep working on their own).
 
