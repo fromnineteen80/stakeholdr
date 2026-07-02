@@ -138,6 +138,16 @@
   /* Control sizing role (consistent control height across the kit) */
   --ui-sys-control-height: 36px;
 
+  /* Sidebar width roles (RULED 2026-07-02: expanded rail narrower than the
+     MD3 248px default — tight, Slack-competitive; the ONE place rail widths live) */
+  --ui-sys-sidebar-width: 208px;
+  --ui-sys-sidebar-width-collapsed: 64px;
+
+  /* Avatar sizing scale (identity circles; the ONE place avatar px live) */
+  --ui-sys-avatar-size-sm: 24px;
+  --ui-sys-avatar-size-md: 32px;
+  --ui-sys-avatar-size-lg: 40px;
+
   /* Icon sizing scale (modest, ~1em-relative; the ONE place icon px live).
      Every icon — inline SVG or <ui-icon> — sizes from these, never ad-hoc. */
   --ui-sys-icon-size-sm: 18px;

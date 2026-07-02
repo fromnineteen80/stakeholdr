@@ -6,6 +6,7 @@
 import "./tokens.css";
 
 import "./components/icon.js";
+import "./components/avatar.js";
 import "./components/app-shell.js";
 import "./components/sidebar.js";
 import "./components/inspector.js";

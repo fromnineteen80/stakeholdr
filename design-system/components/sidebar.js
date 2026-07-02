@@ -5,7 +5,7 @@
  *   attrs: collapsed (boolean)
  *   slots: brand (top, logo/name area), default (items), footer (bottom)
  *   emits: toggle { detail: { collapsed: Boolean } }
- *   Expanded width: 248px.  Collapsed width: 64px.
+ *   Widths from --ui-sys-sidebar-width / --ui-sys-sidebar-width-collapsed (208/64 default).
  *   Animates width with --ui-sys-motion-emphasis.
  *
  * <ui-sidebar-item>
@@ -299,13 +299,13 @@ sidebarTemplate.innerHTML = `
       border-right: 1px solid var(--ui-sys-outline-subtle);
       overflow: hidden;
       /* Animate width */
-      width: 248px;
+      width: var(--ui-sys-sidebar-width, 248px);
       min-width: 0;
       transition: width var(--ui-sys-motion-emphasis);
     }
 
     :host([collapsed]) {
-      width: 64px;
+      width: var(--ui-sys-sidebar-width-collapsed, 64px);
     }
 
     /* Header: brand + toggle button */

@@ -110,6 +110,18 @@ The Settings → Design page tunes tokens later; the start-state is already in t
 - Rules: no gradients ever; nav state via ink (no hover/active background swaps); sidebars
   never white; main content white; sidebar fields lighter-than-rail but not white; airy-but-
   tight 4px rhythm. **Readability, ease, and pleasure of use are the bar.**
+- **SHELL DESIGN RULINGS (user, 2026-07-02 — bind every screen; already in the wireframes):**
+  (1) the **workspace selector lives in the TOP BAR next to the brand** (never in the
+  sidebar); (2) the expanded sidebar is **tight — `--ui-sys-sidebar-width: 208px`**
+  (tokenized; 248px was waste); (3) the signed-in identity appears in **ONE place: an
+  avatar circle (initials or photo) pinned bottom-left of the sidebar** — `ui-avatar` is
+  now a real manifest-registered component (`--ui-sys-avatar-size-*`); (4) the **brand
+  mark is the "Sr" monogram** — capital S + lowercase *italic* r, title typeface, on a
+  colored field that is **the SAME color as the app title** (both read
+  `--ui-sys-on-surface`, encoded in CSS so they can never drift; re-themes together); (5) the chrome is **identical on
+  every screen** (same app-bar composition: mark + name + workspace selector left, search
+  right) — Slack-competitive consistency is the bar for everything wrapped AROUND the
+  map/tables.
 
 ## HANDSHAKE / submit control
 The guide (`src/guide.jsx`, the `.io`) carries a confirm control so the user can signal
