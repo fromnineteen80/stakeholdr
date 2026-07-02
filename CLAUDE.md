@@ -100,7 +100,13 @@ The Settings → Design page tunes tokens later; the start-state is already in t
   `--ui-sys-zone-*` tokens (single-sourced for Map/Lists/Help/scorecard).
 - **Open token decisions (decide at the Design-page step, with the user; token edits only):**
   accent hue (`--ui-sys-accent #B5552C` vs design.md's `#D96B43`); shadows (tokens ship a
-  subtle elevation ramp for overlays vs the "no shadows ever" start-state rule).
+  subtle elevation ramp for overlays vs the "no shadows ever" start-state rule); wrapper
+  theme direction (2026-07-02: user wants a "Modern" minimalist theme variant — cooler/
+  crisper wrapper competing with Slack — built as a NAMED TOKEN SET alongside the Soapbox
+  cream default, previewed on preview.html for side-by-side ruling; the 14 zone colors,
+  zone inks/borders, and priority/status/segment/valence pill tokens are NEVER touched by
+  any theme swap — if the wrapper cools, adjust surfaces for zone readability, never the
+  zone hexes).
 - Rules: no gradients ever; nav state via ink (no hover/active background swaps); sidebars
   never white; main content white; sidebar fields lighter-than-rail but not white; airy-but-
   tight 4px rhythm. **Readability, ease, and pleasure of use are the bar.**
