@@ -144,6 +144,18 @@ the guide source.
   (List, Map, Mobile) — remaining screens wireframed during the build phases.
 - **AGREED SEQUENCE (the user's plan): (1) write the 5 missing boxes → (2) seal the ~20
   pending boxes one at a time → (3) verification audit vs the oracle → (4) build phases.**
+- **ORIGINAL-DESIGN CENSUS (ruled 2026-07-02, runs after the content-verify loop):** four
+  sweeps over the ORIGINAL app (`archive/src` incl. `styles.css` + `project/` prototype),
+  not the guide page: (a) COLORS — all ~187 literals reconciled with a disposition each
+  (already-tokenized / needs-token / flagged decision — nothing silently dropped);
+  (b) ELEMENTS/STRUCTURE — the ~641 className regions accounted for, AND a per-screen
+  SKELETON TREE (nested region tree extracted from the original JSX: shell → slot →
+  in-main stack, in order) written into each page's box so the build assembles against a
+  tree, never prose — this kills the "inferred divs, missing wrappers, line-by-line hell"
+  failure of the first build; (c) UX — all ~515 event-handler interactions accounted for;
+  (d) CONNECTIVITY — every cross-record link/navigation edge captured, fake wiring
+  flagged make-real. Wrapper structure itself lives INSIDE ui-* components (shadow DOM),
+  so page assembly is slotting components, never authoring divs.
 
 ## Engineering discipline
 Work in the code, fix at the source, single-source, replace-don't-duplicate, verify it
