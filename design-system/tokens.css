@@ -180,3 +180,26 @@
   --ui-sys-neg:    #B33C3C;
   --ui-sys-accent: #B5552C;
 }
+
+/* ============================================================================
+ * THEME: "modern" — cool minimalist wrapper (user anchors 2026-07-02:
+ * charcoal #36454F · slate #708090 · light gray #D3D3D3 · white #FFFFFF;
+ * intermediate cool steps derived). WRAPPER ONLY: overrides Tier-1 neutrals +
+ * inks, which every --ui-sys-* surface/ink role inherits. The relationship-zone
+ * spectrum, zone inks/borders, valence tones, and all pill/status semantics are
+ * deliberately NOT overridden — no theme swap may ever touch them.
+ * Activate with <html data-theme="modern">. Default (no attribute) = Soapbox cream.
+ * ==========================================================================*/
+:root[data-theme="modern"] {
+  --ui-ref-neutral-0:  #FFFFFF;  /* content / cards (user anchor) */
+  --ui-ref-neutral-1:  #FBFCFD;  /* app window runway (derived, near-white cool) */
+  --ui-ref-neutral-2:  #F5F7F8;  /* idle fields (derived) */
+  --ui-ref-neutral-3:  #EEF1F3;  /* panels, rails, headers (derived — never white) */
+  --ui-ref-neutral-4:  #E3E8EB;  /* hovers, active cells (derived) */
+  --ui-ref-neutral-5:  #DBE0E4;  /* subtle section outlines (derived) */
+  --ui-ref-neutral-6:  #D3D3D3;  /* structural borders (user anchor) */
+
+  --ui-ref-ink-strong: #36454F;  /* primary text + primary action (user anchor: charcoal) */
+  --ui-ref-ink-muted:  #708090;  /* secondary text / captions (user anchor: slate) */
+  --ui-ref-ink-faint:  #C3CBD1;  /* dividers / disabled (derived) */
+}

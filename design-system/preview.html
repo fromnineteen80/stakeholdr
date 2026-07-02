@@ -66,6 +66,13 @@
 </head>
 <body>
   <aside>
+    <div class="editor-title">Theme</div>
+    <div class="row" style="margin-bottom: var(--ui-sys-space-4);">
+      <ui-button id="theme-cream" variant="tonal">Cream</ui-button>
+      <ui-button id="theme-modern" variant="outlined">Modern</ui-button>
+    </div>
+    <p class="hint">Wrapper tokens only — the zone spectrum and pill semantics never change with the theme.</p>
+
     <div class="editor-title">Token editor</div>
     <p class="hint">Change a token → every component re-skins at once. One surface, no patchwork.</p>
 
@@ -516,6 +523,23 @@
         { label: 'Sam Okafor', value: 'sam' }, { label: 'Taylor Okonjo', value: 'taylor' },
       ];
     });
+  </script>
+
+  <script type="module">
+    // Cream <-> Modern theme toggle. Wrapper tokens only; zones/pills untouched.
+    const setTheme = (t) => {
+      if (t === 'modern') document.documentElement.dataset.theme = 'modern';
+      else delete document.documentElement.dataset.theme;
+      try { localStorage.setItem('ui-theme', t); } catch (e) {}
+      const c = document.getElementById('theme-cream'), m = document.getElementById('theme-modern');
+      if (c && m) { c.setAttribute('variant', t === 'modern' ? 'outlined' : 'tonal');
+                    m.setAttribute('variant', t === 'modern' ? 'tonal' : 'outlined'); }
+    };
+    let saved = 'cream'; try { saved = localStorage.getItem('ui-theme') || 'cream'; } catch (e) {}
+    setTheme(saved);
+    const c = document.getElementById('theme-cream'), m = document.getElementById('theme-modern');
+    if (c) c.addEventListener('click', () => setTheme('cream'));
+    if (m) m.addEventListener('click', () => setTheme('modern'));
   </script>
 </body>
 </html>

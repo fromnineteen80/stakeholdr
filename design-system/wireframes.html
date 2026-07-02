@@ -87,6 +87,10 @@
     <header class="lead">
       <a class="back" href="./preview.html"><ui-icon size="sm">arrow_back</ui-icon> Component gallery</a>
       <h1>Wireframes</h1>
+      <div style="display:flex; gap: var(--ui-sys-space-2); margin: var(--ui-sys-space-2) 0;">
+        <ui-button id="theme-cream" variant="tonal">Cream</ui-button>
+        <ui-button id="theme-modern" variant="outlined">Modern</ui-button>
+      </div>
       <p>The scaffolding composed into Stakeholdr screens, so the shell and its states read in context. Every element is a <code>&lt;ui-*&gt;</code> on <code>--ui-sys-*</code> tokens; the collapse and inspector controls are live.</p>
     </header>
 
@@ -185,5 +189,22 @@
       </ui-bottom-bar>
     </div>
   </div>
+
+  <script type="module">
+    // Cream <-> Modern theme toggle. Wrapper tokens only; zones/pills untouched.
+    const setTheme = (t) => {
+      if (t === 'modern') document.documentElement.dataset.theme = 'modern';
+      else delete document.documentElement.dataset.theme;
+      try { localStorage.setItem('ui-theme', t); } catch (e) {}
+      const c = document.getElementById('theme-cream'), m = document.getElementById('theme-modern');
+      if (c && m) { c.setAttribute('variant', t === 'modern' ? 'outlined' : 'tonal');
+                    m.setAttribute('variant', t === 'modern' ? 'tonal' : 'outlined'); }
+    };
+    let saved = 'cream'; try { saved = localStorage.getItem('ui-theme') || 'cream'; } catch (e) {}
+    setTheme(saved);
+    const c = document.getElementById('theme-cream'), m = document.getElementById('theme-modern');
+    if (c) c.addEventListener('click', () => setTheme('cream'));
+    if (m) m.addEventListener('click', () => setTheme('modern'));
+  </script>
 </body>
 </html>
