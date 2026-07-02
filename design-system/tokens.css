@@ -138,9 +138,10 @@
   /* Control sizing role (consistent control height across the kit) */
   --ui-sys-control-height: 36px;
 
-  /* Sidebar width roles (RULED 2026-07-02: expanded rail = CLAUDE SIDEBAR PARITY,
-     18rem = 288px; the ONE place rail widths live — nudge here if it reads wide) */
-  --ui-sys-sidebar-width: 288px;
+  /* Sidebar width roles (RULED 2026-07-02: Claude-LIKE but PROPORTIONAL — grows
+     with the window up to Claude's 18rem, never below a tight floor; and the rail
+     must never sit hollow: nav + workspace section + identity fill it) */
+  --ui-sys-sidebar-width: clamp(208px, 18vw, 288px);
   --ui-sys-sidebar-width-collapsed: 64px;
 
   /* Avatar sizing scale (identity circles; the ONE place avatar px live) */
