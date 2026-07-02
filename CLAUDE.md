@@ -112,9 +112,10 @@ The Settings → Design page tunes tokens later; the start-state is already in t
   tight 4px rhythm. **Readability, ease, and pleasure of use are the bar.**
 - **SHELL DESIGN RULINGS (user, 2026-07-02 — bind every screen; already in the wireframes):**
   (1) the **workspace selector lives in the TOP BAR next to the brand** (never in the
-  sidebar); (2) the expanded sidebar matches the **Claude
-  sidebar width: `--ui-sys-sidebar-width: 288px` (18rem parity)** — tokenized, one edit
-  to nudge; (3) the signed-in identity appears in **ONE place: an
+  sidebar); (2) the expanded sidebar is **Claude-LIKE but
+  PROPORTIONAL: `--ui-sys-sidebar-width: clamp(208px, 18vw, 288px)`** (grows with the
+  window up to Claude's 18rem, tight floor below) — and the rail must **never sit
+  hollow**: full nav + a Workspaces section + the identity footer fill it; (3) the signed-in identity appears in **ONE place: an
   avatar circle (initials or photo) pinned bottom-left of the sidebar** — `ui-avatar` is
   now a real manifest-registered component (`--ui-sys-avatar-size-*`); (4) the **brand
   mark is the "Sr" monogram** — capital S + lowercase *italic* r, title typeface, on a

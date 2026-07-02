@@ -62,6 +62,13 @@
       background: var(--ui-sys-surface-field);
       cursor: pointer;
     }
+    /* Sidebar section caption — fills the rail with structure, Claude-style. */
+    .nav-sec {
+      font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted);
+      text-transform: uppercase; letter-spacing: .07em;
+      padding: var(--ui-sys-space-4) var(--ui-sys-space-3) var(--ui-sys-space-1);
+    }
+    ui-sidebar[collapsed] .nav-sec { display: none; }
     /* Signed-in identity — one place: bottom-left of the sidebar (RULED 2026-07-02). */
     .me { display: flex; align-items: center; gap: var(--ui-sys-space-2); padding: var(--ui-sys-space-2); }
     .me-name { font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -136,7 +143,13 @@
           <ui-sidebar-item active href="#"><ui-icon slot="icon">table_rows</ui-icon>List</ui-sidebar-item>
           <ui-sidebar-item href="#"><ui-icon slot="icon">scatter_plot</ui-icon>Map</ui-sidebar-item>
           <ui-sidebar-item href="#"><ui-icon slot="icon">insights</ui-icon>Scoring</ui-sidebar-item>
+          <ui-sidebar-item href="#"><ui-icon slot="icon">description</ui-icon>Plans</ui-sidebar-item>
+          <ui-sidebar-item href="#"><ui-icon slot="icon">favorite</ui-icon>Community</ui-sidebar-item>
           <ui-sidebar-item href="#"><ui-icon slot="icon">tune</ui-icon>Setup</ui-sidebar-item>
+          <div class="nav-sec">Workspaces</div>
+          <ui-sidebar-item href="#"><ui-icon slot="icon">workspaces</ui-icon>Master</ui-sidebar-item>
+          <ui-sidebar-item href="#"><ui-icon slot="icon">workspaces</ui-icon>Cedarville</ui-sidebar-item>
+          <ui-sidebar-item href="#"><ui-icon slot="icon">workspaces</ui-icon>EMEA Outreach</ui-sidebar-item>
           <ui-sidebar-item slot="footer" href="#"><ui-icon slot="icon">help</ui-icon>Help</ui-sidebar-item>
           <div slot="footer" class="me"><ui-avatar name="Colin Maynard" size="sm"></ui-avatar><span class="me-name">Colin Maynard</span></div>
         </ui-sidebar>
@@ -169,6 +182,8 @@
           <ui-sidebar-item href="#"><ui-icon slot="icon">table_rows</ui-icon>List</ui-sidebar-item>
           <ui-sidebar-item active href="#"><ui-icon slot="icon">scatter_plot</ui-icon>Map</ui-sidebar-item>
           <ui-sidebar-item href="#"><ui-icon slot="icon">insights</ui-icon>Scoring</ui-sidebar-item>
+          <ui-sidebar-item href="#"><ui-icon slot="icon">description</ui-icon>Plans</ui-sidebar-item>
+          <ui-sidebar-item href="#"><ui-icon slot="icon">favorite</ui-icon>Community</ui-sidebar-item>
           <ui-sidebar-item href="#"><ui-icon slot="icon">tune</ui-icon>Setup</ui-sidebar-item>
           <ui-sidebar-item slot="footer" href="#"><ui-icon slot="icon">help</ui-icon>Help</ui-sidebar-item>
           <div slot="footer" class="me"><ui-avatar name="Colin Maynard" size="sm"></ui-avatar><span class="me-name">Colin Maynard</span></div>
