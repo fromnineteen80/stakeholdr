@@ -138,9 +138,9 @@
   /* Control sizing role (consistent control height across the kit) */
   --ui-sys-control-height: 36px;
 
-  /* Sidebar width roles (RULED 2026-07-02: expanded rail narrower than the
-     MD3 248px default — tight, Slack-competitive; the ONE place rail widths live) */
-  --ui-sys-sidebar-width: 208px;
+  /* Sidebar width roles (RULED 2026-07-02: expanded rail = CLAUDE SIDEBAR PARITY,
+     18rem = 288px; the ONE place rail widths live — nudge here if it reads wide) */
+  --ui-sys-sidebar-width: 288px;
   --ui-sys-sidebar-width-collapsed: 64px;
 
   /* Avatar sizing scale (identity circles; the ONE place avatar px live) */
