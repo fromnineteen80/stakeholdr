@@ -77,3 +77,8 @@ ui-sidebar[collapsed] .me { justify-content: center; padding: var(--ui-sys-space
 /* Honest pending state — a control that is not wired yet must LOOK inert
  * (make-real law: never a live-looking dead affordance). Removed per phase. */
 .ws-select.is-pending { opacity: .55; cursor: default; }
+
+/* Collapsed rail: the mark stays; only the wordmark hides; margins reset so
+ * the centered header owns the axis. */
+ui-sidebar[collapsed] .brand-text { display: none; }
+ui-sidebar[collapsed] .brand { margin-left: 0; }
