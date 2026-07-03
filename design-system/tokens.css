@@ -238,6 +238,16 @@
   --ui-sys-accent-tint-soft:   color-mix(in srgb, var(--ui-sys-accent) 12%, transparent); /* ~10-15% tints: active-tab count, plan-tag, profile-tab count, view-all-link hover, ws-card.active ring, picked-chip bg */
   --ui-sys-accent-tint-strong: color-mix(in srgb, var(--ui-sys-accent) 20%, transparent); /* ~18-30% tints: selected map-dot ring, picked-chip border + hover */
 
+  /* Priority pill pairs (census group E CAPTURED→TOKEN — the components.jsx
+     PriorityPill catalog, verbatim; pill-semantic: never touched by any theme
+     swap. Unknown priority values fall back to the Low pair.) */
+  --ui-sys-priority-high-surface:   #F1DBD0;
+  --ui-sys-priority-high-ink:       #7A2E12;
+  --ui-sys-priority-medium-surface: #EEE6D2;
+  --ui-sys-priority-medium-ink:     #6E5419;
+  --ui-sys-priority-low-surface:    #E1E1DA;
+  --ui-sys-priority-low-ink:        #54524A;
+
   /* Lists selection/header tints (census group G — deeper siblings of the
      --ui-sys-row-hover cream working surface) */
   --ui-sys-row-selected:        #FCEFD6;  /* selected-row tint on every cell of a checked Lists row; also ws-menu-item.active */

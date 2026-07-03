@@ -42,6 +42,35 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 await page.goto('http://127.0.0.1:4174/app.html', { waitUntil: 'networkidle' });
 await page.waitForTimeout(1500);
 await page.screenshot({ path: `${OUT}/app-expanded.png` });
+
+// ── PHASE-3 LISTS CAPTURES (playwright CSS pierces open shadow roots) ──────
+// Filter popover open
+await page.locator('ui-stakeholder-table .tb-filter').click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/lists-filter-popover.png` });
+await page.keyboard.press('Escape');
+// Sort popover open
+await page.locator('ui-stakeholder-table .tb-sort').click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/lists-sort-popover.png` });
+await page.keyboard.press('Escape');
+// a cell dropdown open (first row's Category CellSelect)
+await page.locator('ui-stakeholder-table .sheet-row .cell-dd-trigger').first().click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/lists-cell-dropdown.png` });
+await page.keyboard.press('Escape');
+// scroll right: frozen columns + edge shadow + the far column set
+await page.locator('ui-stakeholder-table .sheet-scroll').evaluate((el) => { el.scrollLeft = 900; });
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/lists-scrolled-x.png` });
+await page.locator('ui-stakeholder-table .sheet-scroll').evaluate((el) => { el.scrollLeft = 0; });
+// notes modal (page-hosted ui-dialog)
+await page.locator('ui-stakeholder-table .sheet-cell.notes').first().click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/lists-notes-modal.png` });
+// close via the dialog API (Escape only lands when focus sits inside the card)
+await page.evaluate(() => document.querySelector('ui-dialog')?.close());
+await page.waitForTimeout(300);
 await page.screenshot({ path: `${OUT}/rail-expanded.png`, clip: { x: 0, y: 0, width: 300, height: 900 } });
 await measureAxis(page, 'expanded');
 
