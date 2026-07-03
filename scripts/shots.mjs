@@ -54,11 +54,35 @@ await page.locator('ui-stakeholder-table .tb-sort').click();
 await page.waitForTimeout(300);
 await page.screenshot({ path: `${OUT}/lists-sort-popover.png` });
 await page.keyboard.press('Escape');
-// a cell dropdown open (first row's Category CellSelect)
+// a cell editor open (first row's Category display cell mounts a REAL pre-opened ui-select)
 await page.locator('ui-stakeholder-table .sheet-row .cell-dd-trigger').first().click();
-await page.waitForTimeout(300);
+await page.waitForTimeout(400);
 await page.screenshot({ path: `${OUT}/lists-cell-dropdown.png` });
 await page.keyboard.press('Escape');
+await page.waitForTimeout(200);
+// owners popover (sealed OwnersDisplay) — hover the first owner stack.
+// Raw mouse move, not locator.hover(): hover() re-scrolls the cell flush to
+// the container edge, which clips the popover.
+await page.evaluate(() => {
+  const t = document.querySelector('ui-stakeholder-table');
+  const sc = t.shadowRoot.querySelector('.sheet-scroll');
+  const w = t.shadowRoot.querySelector('.owner-wrap');
+  // land the owner stack ~350px left of the container's right edge — clear of
+  // the sticky frozen columns on the left, with room for the popover on the right
+  sc.scrollLeft += (w.getBoundingClientRect().right - sc.getBoundingClientRect().right) + 350;
+});
+await page.waitForTimeout(200);
+const ownerXY = await page.evaluate(() => {
+  const t = document.querySelector('ui-stakeholder-table');
+  const r = t.shadowRoot.querySelector('.owner-wrap').getBoundingClientRect();
+  return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+});
+await page.mouse.move(ownerXY.x, ownerXY.y);
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/lists-owners-popover.png` });
+await page.keyboard.press('Escape');
+await page.locator('ui-stakeholder-table .sheet-scroll').evaluate((el) => { el.scrollLeft = 0; });
+await page.waitForTimeout(200);
 // scroll right: frozen columns + edge shadow + the far column set
 await page.locator('ui-stakeholder-table .sheet-scroll').evaluate((el) => { el.scrollLeft = 900; });
 await page.waitForTimeout(300);

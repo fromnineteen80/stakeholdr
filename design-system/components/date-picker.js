@@ -549,7 +549,10 @@ class UiDatePicker extends HTMLElement {
 
   #onDocMousedown = (e) => {
     if (!this.hasAttribute('open')) return;
-    if (!this.shadowRoot.contains(e.target) && !this.contains(e.target)) {
+    // composedPath, not e.target: a document-level listener sees a RETARGETED
+    // target when the picker is composed inside another shadow root (e.g. the
+    // stakeholder-table cell editors), which would read as "outside".
+    if (!e.composedPath().includes(this)) {
       this.#closePopup();
     }
   };

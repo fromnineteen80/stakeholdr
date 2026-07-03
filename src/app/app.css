@@ -77,7 +77,11 @@ ui-sidebar[collapsed] .me { justify-content: center; padding: var(--ui-sys-space
 
 /* NOTES MODAL (sealed NotesModal spec) — layout-only, token-only classes for
  * the ui-dialog + ui-textarea composition hosted by the Lists page. */
-.notes-head { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.notes-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: var(--ui-sys-space-3); min-width: 0;
+}
+.notes-head-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .notes-eyebrow {
   font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted);
   text-transform: uppercase; letter-spacing: .08em;

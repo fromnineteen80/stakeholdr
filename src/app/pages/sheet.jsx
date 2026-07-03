@@ -18,7 +18,7 @@
  * shell-state phase — workspaceLabel feeds the sealed CSV filename rule.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { usePersistentState, uid, nowStamp } from '../data/store.js';
+import { usePersistentState, uid, nowStamp, cmdKeyLabel } from '../data/store.js';
 import { weightedCoord, statusFor } from '../data/engine.js';
 import {
   SEED_STAKEHOLDERS, SEED_SCORES, SEED_TEAM, SEED_USERS, SEED_COMMUNITY,
@@ -106,7 +106,15 @@ export function SheetPage() {
       const { id, patch } = e.detail;
       setStakeholders((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch, updatedAt: nowStamp() } : s)));
     };
-    const onNotesOpen = (e) => { setNoteDraft(''); setNotesFor(e.detail.id); };
+    // On OPEN the composer clears — draft state AND the persistent ui-textarea
+    // element (not only after add): a draft abandoned on close/switch must
+    // never leak into the next stakeholder's composer. The element itself is
+    // (re)cleared in the [notesFor] effect below, which runs once it exists.
+    const onNotesOpen = (e) => {
+      setNoteDraft('');
+      if (composerRef.current) composerRef.current.value = '';
+      setNotesFor(e.detail.id);
+    };
     const onSelect = (e) => setSelectedId(e.detail.id);
     // Honest pending affordance (make-real law: no silent dead click) — the
     // full stakeholder record opens in the RECORD phase.
@@ -154,10 +162,13 @@ export function SheetPage() {
     return () => dlg.removeEventListener('close', onClose);
   }, [notesFor]);
 
-  // ui-textarea is a web component: track the composer draft via its input event.
+  // ui-textarea is a web component: track the composer draft via its input
+  // event. On every OPEN (notesFor set/changed) the persistent element's value
+  // clears too — the composer always starts blank for the new subject.
   useEffect(() => {
     const ta = composerRef.current;
     if (!ta) return;
+    if (notesFor) ta.value = '';
     const onInput = () => setNoteDraft(ta.value || '');
     ta.addEventListener('input', onInput);
     return () => ta.removeEventListener('input', onInput);
@@ -180,7 +191,9 @@ export function SheetPage() {
 
   return (
     <div className="sheet-wrap">
-      <ui-stakeholder-table ref={tableRef} class="sheet-table"></ui-stakeholder-table>
+      {/* kbd-label: the cmd-key hint is single-sourced in the store
+          (cmdKeyLabel) and PASSED to the table — never re-derived inside. */}
+      <ui-stakeholder-table ref={tableRef} class="sheet-table" kbd-label={cmdKeyLabel}></ui-stakeholder-table>
 
       {/* NotesModal → ui-dialog (sealed CANONICAL-UI map: scrim closes; head
           eyebrow "Notes" over the stakeholder name; history newest first;
@@ -188,9 +201,17 @@ export function SheetPage() {
       <ui-dialog ref={dialogRef}>
         {subject && (
           <>
+            {/* Sealed NotesModal head: eyebrow + name, plus the HEAD CLOSE
+                icon-button — the third of the three equivalent dismissal
+                routes (scrim · head close · footer Close). */}
             <div slot="headline" className="notes-head">
-              <span className="notes-eyebrow">Notes</span>
-              <span className="notes-title">{displayName(subject) || subject.name}</span>
+              <div className="notes-head-text">
+                <span className="notes-eyebrow">Notes</span>
+                <span className="notes-title">{displayName(subject) || subject.name}</span>
+              </div>
+              <ui-icon-button variant="standard" aria-label="Close" onClick={() => setNotesFor(null)}>
+                <ui-icon>close</ui-icon>
+              </ui-icon-button>
             </div>
             <div className="notes-body">
               {history.length === 0 ? (

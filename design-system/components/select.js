@@ -309,7 +309,10 @@ class UiSelect extends HTMLElement {
   }
 
   #handleOutside(e) {
-    if (!this.contains(e.target) && !this.shadowRoot.contains(e.target)) this.#close();
+    // composedPath, not e.target: a document-level listener sees a RETARGETED
+    // target when the select is composed inside another shadow root (e.g. the
+    // stakeholder-table cell editors), which would read as "outside".
+    if (!e.composedPath().includes(this)) this.#close();
   }
 
   #handleFieldKey(e) {

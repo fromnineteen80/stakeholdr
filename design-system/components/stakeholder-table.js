@@ -40,6 +40,43 @@
  * the pure functions directly.
  * ==========================================================================*/
 
+/* ════════════════════════════════════════════════════════════════════════
+ * COMPOSITION RULING (2026-07-03): display cells are lightweight shadow-DOM
+ * renders for grid performance (industry practice — grids do not nest full
+ * widget components per cell); every INTERACTIVE surface composes the REAL
+ * design-system elements: toolbar controls and on-demand cell editors.
+ *
+ * Concretely: toolbar search = <ui-text-field variant="plain"> with a leading
+ * search ui-icon and the kbd chip; Filter/Sort/Categories/Sites =
+ * <ui-button variant="outlined"> (text + conditional count ui-badge — NO
+ * leading icons, per the sealed skeleton tree: text + badge only); impact
+ * bands = <ui-chip variant="filter">; Export CSV and every popover "Clear
+ * all" = <ui-button variant="text">; the edit cell = <ui-icon-button
+ * variant="standard">. Clicking a dropdown display cell mounts a REAL
+ * pre-opened <ui-select> (+ ui-option) positioned in the cell — value
+ * committed on change, editor unmounted when the select closes; the date
+ * cell mounts a REAL <ui-date-picker> the same way. Display cells stay
+ * lightweight text/pill renders under this ruling.
+ * ══════════════════════════════════════════════════════════════════════ */
+
+/* The composed components are side-effect modules that touch `document` at
+ * module scope, so they load behind the same DOM guard that protects the
+ * node-imported pure logic below (scripts/lists-test.mjs imports this file
+ * in node). In the app and on the preview pages design-system/entry.js has
+ * already registered them synchronously; this block makes the module
+ * self-sufficient when imported standalone in a browser. */
+if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
+  import('./icon.js');
+  import('./text-field.js');
+  import('./button.js');
+  import('./icon-button.js');
+  import('./badge.js');
+  import('./chips.js');
+  import('./select.js');
+  import('./date-picker.js');
+  import('./avatar.js');
+}
+
 /* ── ZONE + BAND CATALOGS (sealed Relationship-engine box) ─────────────── */
 
 export const ZONE_TOKEN_MAP = {
@@ -78,6 +115,8 @@ export const BAND_STATUSES = {
 /* ── COLUMN MODEL (sealed column groups) ───────────────────────────────── */
 
 export const FROZEN_COLS = [
+  // idx header text (declared): the sealed skeleton tree names NO header text
+  // for the idx column; '#' is the DECLARED choice here — confirm at seal.
   { key: 'idx',  label: '#',            field: null },
   { key: 'edit', label: '',             field: null },
   { key: 'name', label: 'Stakeholder',  field: 'name' },
@@ -431,11 +470,6 @@ const HAS_DOM = typeof document !== 'undefined' && typeof HTMLElement !== 'undef
 
 if (HAS_DOM) {
 
-const cmdKeyLabel =
-  (typeof navigator !== 'undefined' &&
-   /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent || ''))
-    ? '⌘K' : 'Ctrl K';
-
 /* Gallery/wireframe sample fallback (used ONLY when no .data is set before
  * connect — preview.html / wireframes.html mount the tag bare). Shaped to the
  * live row contract: full field set + computed _x/_y/_status/_unscored.      */
@@ -500,114 +534,47 @@ template.innerHTML = `
     z-index: 40;
   }
 
-  .search-wrap { position: relative; display: flex; align-items: center; }
-  .search-wrap ui-icon.search-ico {
-    position: absolute; left: 8px; pointer-events: none;
-    color: var(--ui-sys-on-surface-muted);
-  }
-  .search-input {
-    appearance: none;
-    height: var(--ui-sys-control-height);
-    padding: 0 52px 0 32px;
-    border: 1px solid var(--ui-sys-outline);
-    border-radius: var(--ui-sys-shape-control);
-    background: var(--ui-sys-surface-field);
-    color: var(--ui-sys-on-surface);
-    font: var(--ui-sys-font-body);
-    width: 304px;
-    outline: none;
-    transition: border-color var(--ui-sys-motion-control), background var(--ui-sys-motion-control);
-  }
-  .search-input::placeholder { color: var(--ui-sys-on-surface-muted); }
-  .search-input:focus {
-    border-color: var(--ui-sys-focus-ring);
-    background: var(--ui-sys-surface-card);
-    box-shadow: 0 0 0 2px var(--ui-sys-focus-wash);
-  }
+  /* Search = the REAL ui-text-field (composition ruling). Width is layout
+     geometry in this context, not a component override. */
+  .search-field { width: 304px; }
+
+  /* kbd chip — slotted into the search field's trailing slot (and reused
+     statically in the footer). width/height auto out-rank the field's
+     ::slotted 18px icon box (outer-tree normal declarations beat ::slotted). */
   .kbd {
-    position: absolute; right: 8px; pointer-events: none;
+    width: auto; height: auto;
     font: var(--ui-sys-font-caption);
     color: var(--ui-sys-on-surface-muted);
     background: var(--ui-sys-surface-hover);
     border: 1px solid var(--ui-sys-outline-subtle);
     border-radius: var(--ui-sys-shape-control);
     padding: 1px 5px;
+    white-space: nowrap;
   }
+  .kbd[hidden] { display: none; }
 
   .filter-button-wrap { position: relative; }
-
-  .toolbar-btn {
-    appearance: none;
-    position: relative;
-    isolation: isolate;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--ui-sys-space-1);
-    height: var(--ui-sys-control-height);
-    padding: 0 var(--ui-sys-space-3);
-    border: 1px solid var(--ui-sys-outline);
-    border-radius: var(--ui-sys-shape-control);
-    background: var(--ui-sys-surface-card);
-    color: var(--ui-sys-on-surface);
-    font: var(--ui-sys-font-label);
-    cursor: pointer;
-    user-select: none;
-    white-space: nowrap;
-    transition: background var(--ui-sys-motion-control);
-  }
-  .toolbar-btn::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: currentColor; opacity: 0; z-index: -1;
-    transition: opacity var(--ui-sys-motion-control);
-  }
-  .toolbar-btn:hover::before  { opacity: var(--ui-sys-state-hover-opacity); }
-  .toolbar-btn:active::before { opacity: var(--ui-sys-state-pressed-opacity); }
-  .toolbar-btn:focus-visible  { outline: 2px solid var(--ui-sys-focus-ring); outline-offset: 2px; }
-  .toolbar-btn.filter-active { border-color: var(--ui-sys-accent); }
-
-  .badge[hidden] { display: none; }
-  .badge {
-    display: inline-flex; align-items: center; justify-content: center;
-    min-width: 18px; height: 18px; padding: 0 5px;
-    border-radius: var(--ui-sys-shape-pill);
-    background: var(--ui-sys-primary);
-    color: var(--ui-sys-on-primary);
-    font: var(--ui-sys-font-caption);
-    font-weight: 600;
-  }
+  /* Filter/Sort/Categories/Sites are REAL ui-button outlined elements
+     (composition ruling; text + conditional count ui-badge, NO leading icons
+     per the sealed skeleton tree). The active signal is the visible count
+     ui-badge — the hand-rolled .filter-active accent border retired with the
+     hand-rolled button. */
 
   .spacer { flex: 1 1 auto; }
 
   .band-chips { display: flex; align-items: center; gap: var(--ui-sys-space-2); }
 
-  /* Impact-band chips (live filters) */
-  .impact-chip {
-    appearance: none;
-    display: inline-flex; align-items: center; gap: 6px;
-    height: 28px; padding: 0 var(--ui-sys-space-3);
-    border: 1px solid var(--ui-sys-outline);
-    border-radius: var(--ui-sys-shape-pill);
-    background: var(--ui-sys-surface-card);
-    color: var(--ui-sys-on-surface);
-    font: var(--ui-sys-font-caption);
-    white-space: nowrap;
-    cursor: pointer;
-    user-select: none;
-    transition: background var(--ui-sys-motion-control), color var(--ui-sys-motion-control);
-  }
-  .impact-chip:focus-visible { outline: 2px solid var(--ui-sys-focus-ring); outline-offset: 2px; }
-  .impact-chip .swatch { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .impact-chip .swatch--pos { background: var(--ui-sys-pos); }
-  .impact-chip .swatch--neu { background: var(--ui-sys-neu); }  /* sealed: token, never the old literal */
-  .impact-chip .swatch--neg { background: var(--ui-sys-neg); }
+  /* Impact-band chips are REAL ui-chip variant=filter elements (composition
+     ruling); the selected state drives the band filter. The valence swatch is
+     slotted content owned by this tree — sealed tokens, never the old literal.
+     (The sealed census-D valence .on fills were properties of the hand-rolled
+     chip; the composed ui-chip wears its canonical selected state, and the
+     always-valence swatch keeps the band color legible — declared here.) */
+  .swatch { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .swatch--pos { background: var(--ui-sys-pos); }
+  .swatch--neu { background: var(--ui-sys-neu); }  /* sealed: token, never the old literal */
+  .swatch--neg { background: var(--ui-sys-neg); }
   .impact-chip strong { font-weight: 600; }
-  /* Sealed .on states: pos/neg wear their valence fill with on-strong ink;
-     neu wears the Maintain zone tint with the neutral zone ink (census D). */
-  .impact-chip.on.pos { background: var(--ui-sys-pos); color: var(--ui-sys-zone-ink-on-strong); border-color: var(--ui-sys-pos); }
-  .impact-chip.on.neg { background: var(--ui-sys-neg); color: var(--ui-sys-zone-ink-on-strong); border-color: var(--ui-sys-neg); }
-  .impact-chip.on.neu { background: var(--ui-sys-zone-maintain); color: var(--ui-sys-zone-ink-neutral); border-color: var(--ui-sys-neu); }
-  .impact-chip.on .swatch { background: currentColor; }
 
   /* ── TOOLBAR POPOVERS ────────────────────────────────────────── */
   .filter-popover {
@@ -632,15 +599,7 @@ template.innerHTML = `
     margin-bottom: var(--ui-sys-space-2);
   }
   .filter-pop-head strong { font: var(--ui-sys-font-label); }
-  .clear-all {
-    appearance: none; border: none; background: transparent;
-    color: var(--ui-sys-on-surface-muted);
-    font: var(--ui-sys-font-caption);
-    cursor: pointer;
-    padding: 2px 4px;
-    border-radius: var(--ui-sys-shape-control);
-  }
-  .clear-all:hover { background: var(--ui-sys-surface-hover); color: var(--ui-sys-on-surface); }
+  /* "Clear all" is a REAL ui-button variant=text (composition ruling). */
 
   .filter-pop-label {
     font: var(--ui-sys-font-caption);
@@ -837,8 +796,12 @@ template.innerHTML = `
     border-color: var(--ui-sys-focus-ring);
   }
 
-  /* Inline dropdown cell (CellSelect — the ui-select-style trigger + menu) */
-  .cell-dd { position: relative; display: inline-flex; }
+  /* Dropdown/date DISPLAY cells (lightweight renders per the COMPOSITION
+     RULING). Clicking one mounts the REAL editor — <ui-select> / <ui-date-
+     picker> — absolutely positioned in the cell; the display hides while the
+     editor is mounted so the max-content track keeps its size. */
+  .sheet-cell:not(.frozen) { position: relative; }
+  .cell-dd { display: inline-flex; }
   .cell-dd-trigger {
     appearance: none;
     display: inline-flex; align-items: center; gap: 4px;
@@ -855,82 +818,45 @@ template.innerHTML = `
   .cell-dd-trigger:hover { background: var(--ui-sys-row-selected-strong); }
   .cell-dd-trigger:focus-visible { outline: 2px solid var(--ui-sys-focus-ring); outline-offset: 1px; }
   .cell-dd-trigger.is-empty { color: var(--ui-sys-on-surface-muted); }
-  .cell-dd-menu {
+  .cell-editing > .cell-display { visibility: hidden; }
+  .cell-editor {
+    position: absolute;
+    top: 2px;
+    left: var(--ui-sys-space-1);
+    z-index: 45;
+    background: var(--ui-sys-surface-card);
+  }
+
+  /* Owners popover (sealed OwnersDisplay — Shared-primitives box): hover/click
+     on the owner stack opens it; rows compose the REAL ui-avatar. */
+  .owner-wrap { display: inline-flex; position: relative; }
+  .owners-pop {
     position: absolute;
     top: calc(100% + 2px);
     left: 0;
     z-index: 50;
-    min-width: 100%;
-    max-height: 260px;
-    overflow: auto;
+    min-width: 200px;
     background: var(--ui-sys-surface-card);
     border: 1px solid var(--ui-sys-outline);
     border-radius: var(--ui-sys-shape-card);
     box-shadow: var(--ui-sys-elevation-2);
-    padding: 4px;
-    display: flex; flex-direction: column;
+    padding: var(--ui-sys-space-2) var(--ui-sys-space-3);
   }
-  .cell-dd-opt {
-    appearance: none; border: none; background: transparent;
-    color: var(--ui-sys-on-surface);
-    font: var(--ui-sys-font-body);
-    text-align: left;
-    padding: 4px 8px;
-    border-radius: var(--ui-sys-shape-control);
-    cursor: pointer;
+  .owners-pop-head {
+    font: var(--ui-sys-font-caption);
+    color: var(--ui-sys-on-surface-muted);
+    margin-bottom: var(--ui-sys-space-1);
     white-space: nowrap;
   }
-  .cell-dd-opt:hover { background: var(--ui-sys-surface-hover); }
-  .cell-dd-opt.on { background: var(--ui-sys-accent-tint-soft); }
-
-  /* Inline date cell (CellDate — popover calendar) */
-  .cell-cal {
-    position: absolute;
-    top: calc(100% + 2px);
-    left: 0;
-    z-index: 50;
-    background: var(--ui-sys-surface-card);
-    border: 1px solid var(--ui-sys-outline);
-    border-radius: var(--ui-sys-shape-card);
-    box-shadow: var(--ui-sys-elevation-2);
-    padding: var(--ui-sys-space-2);
+  .owners-pop-row {
+    display: flex; align-items: center;
+    gap: var(--ui-sys-space-2);
+    padding: 2px 0;
+    white-space: nowrap;
   }
-  .cell-cal-head {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: var(--ui-sys-space-1);
-    margin-bottom: var(--ui-sys-space-1);
-  }
-  .cell-cal-title { font: var(--ui-sys-font-label); }
-  .cell-cal-nav {
-    appearance: none; border: none; background: transparent;
-    color: var(--ui-sys-on-surface-muted);
-    border-radius: var(--ui-sys-shape-control);
-    cursor: pointer;
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 24px; height: 24px;
-  }
-  .cell-cal-nav:hover { background: var(--ui-sys-surface-hover); color: var(--ui-sys-on-surface); }
-  .cell-cal-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 28px);
-    gap: 2px;
-  }
-  .cell-cal-dow {
-    font: var(--ui-sys-font-caption);
-    color: var(--ui-sys-on-surface-muted);
-    display: inline-flex; align-items: center; justify-content: center;
-    height: 22px;
-  }
-  .cell-cal-day {
-    appearance: none; border: none; background: transparent;
-    color: var(--ui-sys-on-surface);
-    font: var(--ui-sys-font-caption);
-    height: 26px;
-    border-radius: var(--ui-sys-shape-control);
-    cursor: pointer;
-  }
-  .cell-cal-day:hover { background: var(--ui-sys-surface-hover); }
-  .cell-cal-day.on { background: var(--ui-sys-primary); color: var(--ui-sys-on-primary); }
+  .owners-pop-names { display: flex; flex-direction: column; min-width: 0; }
+  .owners-pop-name { font: var(--ui-sys-font-label); }
+  .owners-pop-title { font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted); }
 
   /* Pills (tags / issues / community) */
   .pills-inline { display: inline-flex; align-items: center; gap: 4px; }
@@ -994,20 +920,9 @@ template.innerHTML = `
   }
   a.plain-link:hover { border-bottom-color: var(--ui-sys-on-surface-muted); }
 
-  /* Edit icon button (frozen edit cell) */
-  .icon-btn {
-    appearance: none;
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 28px; height: 28px; padding: 0;
-    border: none;
-    border-radius: var(--ui-sys-shape-control);
-    background: transparent;
-    color: var(--ui-sys-on-surface-muted);
-    cursor: pointer;
-    transition: background var(--ui-sys-motion-control), color var(--ui-sys-motion-control);
-  }
-  .icon-btn:hover { background: var(--ui-sys-surface-hover); color: var(--ui-sys-on-surface); }
-  .icon-btn:focus-visible { outline: 2px solid var(--ui-sys-focus-ring); outline-offset: 2px; }
+  /* Edit cell = a REAL ui-icon-button variant=standard (composition ruling);
+     quiet ink that strengthens on hover comes from the component itself. */
+  .sheet-cell.edit ui-icon-button { color: var(--ui-sys-on-surface-muted); }
 
   /* ── FOOTER ──────────────────────────────────────────────────── */
   .footer {
@@ -1026,67 +941,46 @@ template.innerHTML = `
   }
   .footer .group { display: inline-flex; align-items: center; gap: var(--ui-sys-space-1); }
   .footer strong { color: var(--ui-sys-on-surface); font-weight: 600; }
-  .footer .kbd { position: static; pointer-events: auto; }
   .stat-sep { color: var(--ui-sys-on-surface-faint); }
-  .export-btn {
-    appearance: none;
-    display: inline-flex; align-items: center; gap: var(--ui-sys-space-1);
-    height: 26px; padding: 0 var(--ui-sys-space-3);
-    border: 1px solid var(--ui-sys-outline);
-    border-radius: var(--ui-sys-shape-control);
-    background: var(--ui-sys-surface-card);
-    color: var(--ui-sys-on-surface);
-    font: var(--ui-sys-font-caption);
-    font-weight: 500;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: background var(--ui-sys-motion-control);
-  }
-  .export-btn:hover { background: var(--ui-sys-surface-hover); }
-  .export-btn:focus-visible { outline: 2px solid var(--ui-sys-focus-ring); outline-offset: 2px; }
+  /* Export CSV is a REAL ui-button variant=text (composition ruling). */
+  .export-btn { flex-shrink: 0; }
 </style>
 
+<!-- TOOLBAR PLACEMENT (declared): the sealed skeleton PORTALS this toolbar into
+     the shell's explainer band ABOVE the table ([PORTAL] div.sheet-toolbar →
+     explainerSlot). INTERIM: it renders inside the component until the
+     shell-state phase lands, at which point the toolbar renders into a
+     slotted/portaled band. Declared, not forgotten. -->
 <div class="toolbar" role="toolbar" aria-label="Stakeholder table controls">
-  <div class="search-wrap">
-    <ui-icon size="sm" class="search-ico">search</ui-icon>
-    <input class="search-input" type="search" placeholder="Search stakeholders, orgs, tags…"
-           aria-label="Search stakeholders" autocomplete="off" spellcheck="false"/>
-    <span class="kbd kbd-cmdk" aria-hidden="true"></span>
-  </div>
+  <ui-text-field variant="plain" class="search-field" label="Search stakeholders"
+                 placeholder="Search stakeholders, orgs, tags…">
+    <ui-icon slot="leading" size="sm">search</ui-icon>
+    <span slot="trailing" class="kbd kbd-cmdk" aria-hidden="true" hidden></span>
+  </ui-text-field>
   <div class="filter-button-wrap" data-pop="filter">
-    <button class="toolbar-btn tb-filter" type="button" aria-haspopup="true" aria-expanded="false">
-      <ui-icon size="sm">filter_list</ui-icon>Filter<span class="badge tb-filter-badge" hidden></span>
-    </button>
+    <ui-button variant="outlined" class="tb-pop-btn tb-filter" aria-haspopup="true"
+               aria-expanded="false">Filter<ui-badge class="tb-filter-badge"></ui-badge></ui-button>
   </div>
   <div class="filter-button-wrap" data-pop="sort">
-    <button class="toolbar-btn tb-sort" type="button" aria-haspopup="true" aria-expanded="false">
-      <ui-icon size="sm">swap_vert</ui-icon>Sort<span class="badge tb-sort-badge" hidden></span>
-    </button>
+    <ui-button variant="outlined" class="tb-pop-btn tb-sort" aria-haspopup="true"
+               aria-expanded="false">Sort<ui-badge class="tb-sort-badge"></ui-badge></ui-button>
   </div>
   <div class="filter-button-wrap" data-pop="cat">
-    <button class="toolbar-btn tb-cat" type="button" aria-haspopup="true" aria-expanded="false">
-      Categories<span class="badge tb-cat-badge" hidden></span>
-    </button>
+    <ui-button variant="outlined" class="tb-pop-btn tb-cat" aria-haspopup="true"
+               aria-expanded="false">Categories<ui-badge class="tb-cat-badge"></ui-badge></ui-button>
   </div>
   <div class="filter-button-wrap" data-pop="site">
-    <button class="toolbar-btn tb-site" type="button" aria-haspopup="true" aria-expanded="false">
-      Sites<span class="badge tb-site-badge" hidden></span>
-    </button>
+    <ui-button variant="outlined" class="tb-pop-btn tb-site" aria-haspopup="true"
+               aria-expanded="false">Sites<ui-badge class="tb-site-badge"></ui-badge></ui-button>
   </div>
   <div class="spacer"></div>
   <div class="band-chips">
-  <button class="impact-chip pos" type="button" data-band="positive">
-    <span class="swatch swatch--pos" aria-hidden="true"></span>
-    <strong class="count-pos">0</strong> Positive impact
-  </button>
-  <button class="impact-chip neu" type="button" data-band="middle">
-    <span class="swatch swatch--neu" aria-hidden="true"></span>
-    <strong class="count-mid">0</strong> Winnable middle
-  </button>
-  <button class="impact-chip neg" type="button" data-band="negative">
-    <span class="swatch swatch--neg" aria-hidden="true"></span>
-    <strong class="count-neg">0</strong> Negative impact
-  </button>
+    <ui-chip variant="filter" class="impact-chip pos" data-band="positive"><span
+      class="swatch swatch--pos" aria-hidden="true"></span><strong class="count-pos">0</strong>Positive impact</ui-chip>
+    <ui-chip variant="filter" class="impact-chip neu" data-band="middle"><span
+      class="swatch swatch--neu" aria-hidden="true"></span><strong class="count-mid">0</strong>Winnable middle</ui-chip>
+    <ui-chip variant="filter" class="impact-chip neg" data-band="negative"><span
+      class="swatch swatch--neg" aria-hidden="true"></span><strong class="count-neg">0</strong>Negative impact</ui-chip>
   </div>
 </div>
 
@@ -1100,9 +994,8 @@ template.innerHTML = `
   <span class="group">Avg <span class="kbd">x</span> <strong class="footer-avgx">—</strong></span>
   <span class="group">Avg <span class="kbd">y</span> <strong class="footer-avgy">—</strong></span>
   <div class="spacer"></div>
-  <button class="export-btn" type="button" aria-label="Export to CSV">
-    <ui-icon size="sm">download</ui-icon>Export CSV
-  </button>
+  <ui-button variant="text" class="export-btn" aria-label="Export to CSV"><ui-icon
+    slot="leading" size="sm">download</ui-icon>Export CSV</ui-button>
 </div>
 `;
 
@@ -1125,16 +1018,32 @@ class UiStakeholderTable extends HTMLElement {
   #openPop = null;          // 'filter' | 'sort' | 'cat' | 'site' | null
   #dragKey = null;
   #dragOverKey = null;
-  #openDD = null;           // the one open cell dropdown/calendar { close() }
+  #openDD = null;           // the one open in-grid popover (owners) { close() }
+  #openEditor = null;       // unmount fn of the one mounted cell editor
   #docMousedown = null;
   #docKeydown = null;
+
+  /* kbd-label (finding: single source) — the cmd-key hint text is NOT derived
+   * here; the page passes it from the store's exported single source
+   * (src/app/data/store.js → cmdKeyLabel). Empty/absent hides the chip. */
+  static observedAttributes = ['kbd-label'];
 
   constructor() {
     super();
     this.attachShadow({ mode: 'open' }).appendChild(template.content.cloneNode(true));
   }
 
+  attributeChangedCallback(name) {
+    if (name === 'kbd-label') this.#syncKbd();
+  }
+
   /* ── public API ────────────────────────────────────────────────── */
+  get kbdLabel() { return this.getAttribute('kbd-label') || ''; }
+  set kbdLabel(v) {
+    if (v) this.setAttribute('kbd-label', String(v));
+    else this.removeAttribute('kbd-label');
+  }
+
   get data() { return this.#data; }
   set data(rows) {
     this.#data = Array.isArray(rows) ? rows : [];
@@ -1168,27 +1077,28 @@ class UiStakeholderTable extends HTMLElement {
       this.#colOrder = mergeColumnOrder(saved);
     } catch { this.#colOrder = mergeColumnOrder(null); }
 
-    sr.querySelector('.kbd-cmdk').textContent = cmdKeyLabel;
+    this.#syncKbd();
 
-    // search (matches displayName/name/org/type/notes/tags — sealed)
-    const input = sr.querySelector('.search-input');
-    const onSearch = () => { this.#search = input.value; this.#render(); };
-    input.addEventListener('input', onSearch);
-    input.addEventListener('search', onSearch);
+    // search — the REAL ui-text-field (composition ruling); matches
+    // displayName/name/org/type/notes/tags (sealed)
+    const search = sr.querySelector('.search-field');
+    search.addEventListener('input', () => { this.#search = search.value; this.#render(); });
 
-    // toolbar popover buttons — full four-way exclusivity (recorded ruling)
+    // toolbar popover buttons (REAL ui-button elements) — full four-way
+    // exclusivity (recorded ruling)
     sr.querySelector('.tb-filter').addEventListener('click', () => this.#togglePop('filter'));
     sr.querySelector('.tb-sort').addEventListener('click', () => this.#togglePop('sort'));
     sr.querySelector('.tb-cat').addEventListener('click', () => this.#togglePop('cat'));
     sr.querySelector('.tb-site').addEventListener('click', () => this.#togglePop('site'));
 
-    // impact-band chips (live filters)
+    // impact-band chips — REAL ui-chip variant=filter; the chip's selected
+    // state drives the band filter (composition ruling)
     sr.querySelectorAll('.impact-chip').forEach((chip) => {
-      chip.addEventListener('click', () => {
+      chip.addEventListener('change', (e) => {
         const band = chip.dataset.band;
-        this.#bandFilter = this.#bandFilter.includes(band)
-          ? this.#bandFilter.filter((b) => b !== band)
-          : [...this.#bandFilter, band];
+        this.#bandFilter = e.detail?.selected
+          ? [...new Set([...this.#bandFilter, band])]
+          : this.#bandFilter.filter((b) => b !== band);
         this.#render();
       });
     });
@@ -1215,10 +1125,19 @@ class UiStakeholderTable extends HTMLElement {
     this.#unbindDoc();
   }
 
-  /* ── document-level dismissal (popovers + cell dropdowns) ─────────
+  #syncKbd() {
+    const el = this.shadowRoot?.querySelector('.kbd-cmdk');
+    if (!el) return;
+    el.textContent = this.kbdLabel;
+    el.hidden = !this.kbdLabel;
+  }
+
+  /* ── document-level dismissal (toolbar popovers + the owners popover) ─
    * one mousedown + one keydown listener while anything is open;
    * outside-press closes (unless inside the open surface's wrap);
-   * Escape closes (recorded normalization: applies to ALL popovers).  */
+   * Escape closes (recorded normalization: applies to ALL popovers).
+   * Cell EDITORS (ui-select / ui-date-picker) own their dismissal —
+   * their teardown is driven by their `open` attribute (#mountCellEditor). */
   #bindDoc() {
     if (this.#docMousedown) return;
     this.#docMousedown = (e) => {
@@ -1282,7 +1201,8 @@ class UiStakeholderTable extends HTMLElement {
     const cols = this.#cols();
     grid.style.gridTemplateColumns = `repeat(${cols.length}, max-content)`; // sealed: every track max-content
     grid.textContent = '';
-    if (this.#openDD) { this.#openDD = null; this.#unbindDoc(); } // menus lived inside the grid
+    if (this.#openDD) { this.#openDD = null; this.#unbindDoc(); } // popovers lived inside the grid
+    this.#openEditor = null;                                     // editors lived inside the grid too
 
     const head = document.createElement('div');
     head.className = 'sheet-head';
@@ -1290,6 +1210,9 @@ class UiStakeholderTable extends HTMLElement {
     for (const col of cols) head.appendChild(this.#buildHeaderCell(col));
     grid.appendChild(head);
 
+    // VIRTUALIZATION (declared): the sealed build map names a virtualized body
+    // for large workspaces; DEFERRED at demo scale (~20 rows) — to be
+    // implemented when workspaces exceed ~200 rows. Declared, not forgotten.
     const frag = document.createDocumentFragment();
     this.#filtered.forEach((row, i) => frag.appendChild(this.#buildRow(row, i, cols)));
     grid.appendChild(frag);
@@ -1433,6 +1356,14 @@ class UiStakeholderTable extends HTMLElement {
     return cell;
   }
 
+  /* TOOLTIP RULING (2026-07-03, declared departure): in-shadow supplementary
+   * hints use native title until a shadow-safe ui-tooltip pattern is added to
+   * the manifest (declared departure). Titles are kept ONLY where they are
+   * supplementary to a real affordance: the drag headers ("Drag to reorder"
+   * beside the grip), the edit ui-icon-button (beside its aria-label), the
+   * notes cell (beside its pointer cursor + click affordance), and the
+   * community pills (the engagement name). Owner avatars carry the REAL
+   * owners popover (sealed OwnersDisplay) instead of stacked title text.     */
   #buildCell(col, row, index) {
     const isFrozen = FROZEN_COLS.some((f) => f.key === col.key);
     const cell = document.createElement('div');
@@ -1451,11 +1382,11 @@ class UiStakeholderTable extends HTMLElement {
       case 'edit': {
         cell.classList.add('edit');
         const person = isPersonOf(row);
-        const btn = document.createElement('button');
-        btn.className = 'icon-btn';
-        btn.type = 'button';
-        btn.title = person ? 'Edit person' : 'Edit organization';       // sealed tooltip copy
-        btn.setAttribute('aria-label', btn.title);
+        const btn = document.createElement('ui-icon-button');           // REAL icon button (composition ruling)
+        btn.setAttribute('variant', 'standard');
+        const hint = person ? 'Edit person' : 'Edit organization';      // sealed tooltip copy
+        btn.setAttribute('aria-label', hint);
+        btn.title = hint;                                               // supplementary (TOOLTIP RULING above)
         const ic = document.createElement('ui-icon');
         ic.setAttribute('size', 'sm');
         ic.textContent = person ? 'person' : 'groups';                  // sealed icon map user/users
@@ -1581,21 +1512,7 @@ class UiStakeholderTable extends HTMLElement {
         break;
       }
       case 'owner': {
-        const list = asArr(row.owners)
-          .map((id) => this.#users.find((u) => u.id === id))
-          .filter(Boolean);                                             // sealed: unresolved ids silently dropped
-        if (!list.length) { this.#muted(cell); break; }
-        const stack = document.createElement('span');
-        stack.className = 'owner-stack';
-        for (const u of list) {
-          const av = document.createElement('span');
-          av.className = 'owner-av';
-          if (u.avatarColor) av.style.background = u.avatarColor;       // token reference from seed, never hex
-          av.textContent = abbrev(u.name);
-          av.title = u.title ? `${u.name} · ${u.title}` : u.name;
-          stack.appendChild(av);
-        }
-        cell.appendChild(stack);
+        this.#buildOwnersCell(cell, row);
         break;
       }
       case 'email': {
@@ -1711,15 +1628,124 @@ class UiStakeholderTable extends HTMLElement {
     cell.appendChild(wrap);
   }
 
-  /* CellSelect — the inline ui-select-style dropdown cell (sealed mechanics:
-   * trigger stopPropagation+toggle · menu stopPropagation · option pick →
-   * change + close · outside-mousedown close · Escape close · .is-empty).    */
+  /* OwnersDisplay (sealed Shared-primitives spec): read-only 20px avatar
+   * stack; hover/click opens the owners popover — head "{n} owner"/"{n}
+   * owners" (singularizes at 1 via label.replace(/s$/,"")), then a row per
+   * RESOLVED owner (REAL ui-avatar + name + muted title). Unresolved owner
+   * ids silently drop from BOTH the stack and the head count (sealed).
+   * Outside-mousedown + Escape close via the shared #openDD registry.        */
+  #buildOwnersCell(cell, row) {
+    const list = asArr(row.owners)
+      .map((id) => this.#users.find((u) => u.id === id))
+      .filter(Boolean);                                                 // sealed: unresolved ids silently dropped
+    if (!list.length) { this.#muted(cell); return; }
+
+    const wrap = document.createElement('span');
+    wrap.className = 'owner-wrap';
+    const stack = document.createElement('span');
+    stack.className = 'owner-stack';
+    for (const u of list) {
+      const av = document.createElement('span');
+      av.className = 'owner-av';
+      if (u.avatarColor) av.style.background = u.avatarColor;           // token reference from seed, never hex
+      av.textContent = abbrev(u.name);
+      stack.appendChild(av);
+    }
+    wrap.appendChild(stack);
+
+    const open = () => {
+      if (this.#openDD && this.#openDD.anchor === wrap) return;
+      this.#openDD?.close();
+      const pop = document.createElement('div');
+      pop.className = 'owners-pop';
+      pop.addEventListener('click', (e) => e.stopPropagation());        // reading owners never selects the row
+      const head = document.createElement('div');
+      head.className = 'owners-pop-head';
+      const label = 'owners';
+      head.textContent = `${list.length} ${list.length === 1 ? label.replace(/s$/, '') : label}`;
+      pop.appendChild(head);
+      for (const u of list) {
+        const rowEl = document.createElement('div');
+        rowEl.className = 'owners-pop-row';
+        const av = document.createElement('ui-avatar');                 // REAL avatar primitive (composition ruling)
+        av.setAttribute('size', 'sm');
+        av.setAttribute('name', u.name || '');
+        if (u.avatarColor) av.style.background = u.avatarColor;         // token reference from seed, never hex
+        rowEl.appendChild(av);
+        const names = document.createElement('span');
+        names.className = 'owners-pop-names';
+        const nm = document.createElement('span');
+        nm.className = 'owners-pop-name';
+        nm.textContent = u.name || '';
+        names.appendChild(nm);
+        if (u.title) {
+          const ti = document.createElement('span');
+          ti.className = 'owners-pop-title';
+          ti.textContent = u.title;
+          names.appendChild(ti);
+        }
+        rowEl.appendChild(names);
+        pop.appendChild(rowEl);
+      }
+      wrap.appendChild(pop);
+      const close = () => { pop.remove(); this.#openDD = null; this.#unbindDoc(); };
+      this.#openDD = { anchor: wrap, close };
+      this.#bindDoc();
+    };
+    wrap.addEventListener('mouseenter', open);                          // sealed: hover opens
+    wrap.addEventListener('click', (e) => {
+      e.stopPropagation();                                              // opening the popover never selects the row
+      if (this.#openDD && this.#openDD.anchor === wrap) this.#openDD.close();
+      else open();                                                      // sealed: click opens too
+    });
+    cell.appendChild(wrap);
+  }
+
+  /* Mount a REAL design-system editor over a display cell (COMPOSITION
+   * RULING): hides the display render, absolutely positions the editor in
+   * the cell, commits on 'change', and unmounts when the component's own
+   * `open` attribute clears — the component's dismissal (outside click /
+   * Escape / commit) drives the teardown; no dismissal logic is re-rolled.  */
+  #mountCellEditor(cell, editor, preOpen, onCommit) {
+    if (this.#openEditor) this.#openEditor();                           // one editor at a time
+    editor.classList.add('cell-editor');
+    cell.classList.add('cell-editing');
+    editor.addEventListener('click', (e) => e.stopPropagation());       // editing never selects the row (sealed)
+    let done = false;
+    const unmount = () => {
+      if (done) return;
+      done = true;
+      obs.disconnect();
+      editor.remove();
+      cell.classList.remove('cell-editing');
+      if (this.#openEditor === unmount) this.#openEditor = null;
+    };
+    const obs = new MutationObserver(() => {
+      if (!editor.hasAttribute('open')) unmount();                      // editor closed → unmount
+    });
+    obs.observe(editor, { attributes: true, attributeFilter: ['open'] });
+    editor.addEventListener('change', (e) => {
+      unmount();
+      onCommit(e);                                                      // commit flows out as row-change (sealed seam)
+    });
+    cell.appendChild(editor);
+    this.#openEditor = unmount;
+    requestAnimationFrame(() => {
+      if (editor.shadowRoot) preOpen(editor);
+      else customElements.whenDefined(editor.localName).then(() => preOpen(editor));
+    });
+  }
+
+  /* CellSelect — a lightweight display render (COMPOSITION RULING) whose
+   * click mounts a REAL pre-opened <ui-select> (+ ui-option) in the cell;
+   * the value commits on the select's change and the editor unmounts when
+   * the select closes (its own outside-mousedown/Escape dismissal).         */
   #buildCellSelect(cell, row, options, current, onChange, placeholder = '-') {
     const opts = options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o));
     const currentOpt = opts.find((o) => o.value === current);
 
     const dd = document.createElement('span');
-    dd.className = 'cell-dd';
+    dd.className = 'cell-dd cell-display';
     const trigger = document.createElement('button');
     trigger.type = 'button';
     trigger.className = 'cell-dd-trigger' + (currentOpt ? '' : ' is-empty');
@@ -1729,36 +1755,31 @@ class UiStakeholderTable extends HTMLElement {
 
     trigger.addEventListener('click', (e) => {
       e.stopPropagation();                                              // opening never selects the row (sealed)
-      if (this.#openDD && this.#openDD.anchor === dd) { this.#openDD.close(); return; }
-      this.#openDD?.close();
-      const menu = document.createElement('div');
-      menu.className = 'cell-dd-menu';
-      menu.setAttribute('role', 'listbox');
-      menu.addEventListener('click', (e2) => e2.stopPropagation());     // choosing never selects the row (sealed)
+      const sel = document.createElement('ui-select');
       for (const o of opts) {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'cell-dd-opt' + (o.value === current ? ' on' : '');
-        b.setAttribute('role', 'option');
-        b.textContent = o.label;
-        b.addEventListener('click', () => { close(); onChange(o.value); });
-        menu.appendChild(b);
+        const opt = document.createElement('ui-option');
+        opt.setAttribute('value', o.value);
+        opt.textContent = o.label;
+        sel.appendChild(opt);
       }
-      dd.appendChild(menu);
-      const close = () => { menu.remove(); this.#openDD = null; this.#unbindDoc(); };
-      this.#openDD = { anchor: dd, close };
-      this.#bindDoc();
+      if (currentOpt) sel.setAttribute('value', current);
+      this.#mountCellEditor(cell, sel, (el) => {
+        // Pre-open: ui-select has no public open() API yet, so the mount
+        // presses the component's own trigger field (open shadow mode) —
+        // the editor IS the real component; nothing is re-implemented.
+        el.shadowRoot?.querySelector('.field')?.click();
+      }, (e2) => onChange(e2.detail.value));
     });
     cell.appendChild(dd);
   }
 
-  /* CellDate — the inline date cell (sealed popover calendar: view month =
-   * the stored value's month else current; DOW letters S M T W T F S; leading
-   * blanks; pick → YYYY-MM-DD zero-padded; nav ±1 month; same dismissal).    */
+  /* CellDate — a lightweight display render (COMPOSITION RULING) whose click
+   * mounts a REAL pre-opened <ui-date-picker> in the cell; picking a day
+   * commits the sealed YYYY-MM-DD value and the editor unmounts on close.    */
   #buildCellDate(cell, row) {
     const stored = row.lastContact || '';
     const dd = document.createElement('span');
-    dd.className = 'cell-dd';
+    dd.className = 'cell-dd cell-display';
     const trigger = document.createElement('button');
     trigger.type = 'button';
     trigger.className = 'cell-dd-trigger' + (stored ? '' : ' is-empty');
@@ -1766,68 +1787,13 @@ class UiStakeholderTable extends HTMLElement {
     dd.appendChild(trigger);
 
     trigger.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (this.#openDD && this.#openDD.anchor === dd) { this.#openDD.close(); return; }
-      this.#openDD?.close();
-
-      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(stored);
-      let view = m ? new Date(+m[1], +m[2] - 1, 1) : (() => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), 1); })();
-
-      const cal = document.createElement('div');
-      cal.className = 'cell-cal';
-      cal.addEventListener('click', (e2) => e2.stopPropagation());
-      dd.appendChild(cal);
-      const close = () => { cal.remove(); this.#openDD = null; this.#unbindDoc(); };
-      this.#openDD = { anchor: dd, close };
-      this.#bindDoc();
-
-      const pad = (n) => String(n).padStart(2, '0');
-      const renderCal = () => {
-        cal.textContent = '';
-        const head = document.createElement('div');
-        head.className = 'cell-cal-head';
-        const mkNav = (glyph, delta) => {
-          const b = document.createElement('button');
-          b.type = 'button';
-          b.className = 'cell-cal-nav';
-          const ic = document.createElement('ui-icon');
-          ic.setAttribute('size', 'sm');
-          ic.textContent = glyph;
-          b.appendChild(ic);
-          b.addEventListener('click', () => { view = new Date(view.getFullYear(), view.getMonth() + delta, 1); renderCal(); });
-          return b;
-        };
-        head.appendChild(mkNav('chevron_left', -1));
-        const title = document.createElement('span');
-        title.className = 'cell-cal-title';
-        title.textContent = view.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
-        head.appendChild(title);
-        head.appendChild(mkNav('chevron_right', 1));
-        cal.appendChild(head);
-
-        const grid = document.createElement('div');
-        grid.className = 'cell-cal-grid';
-        for (const d of ['S', 'M', 'T', 'W', 'T', 'F', 'S']) {
-          const s = document.createElement('span');
-          s.className = 'cell-cal-dow';
-          s.textContent = d;
-          grid.appendChild(s);
-        }
-        const first = new Date(view.getFullYear(), view.getMonth(), 1).getDay();
-        for (let i = 0; i < first; i++) grid.appendChild(document.createElement('span'));
-        const days = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
-        for (let d = 1; d <= days; d++) {
-          const iso = `${view.getFullYear()}-${pad(view.getMonth() + 1)}-${pad(d)}`;
-          const b = document.createElement('button');
-          b.type = 'button';
-          b.className = 'cell-cal-day' + (iso === stored ? ' on' : '');
-          b.textContent = String(d);
-          b.addEventListener('click', () => { close(); this.#patch(row, { lastContact: iso }); });
-          grid.appendChild(b);
-        }
-        cal.appendChild(grid);
-      };
-      renderCal();
+      e.stopPropagation();                                              // opening never selects the row (sealed)
+      const dp = document.createElement('ui-date-picker');
+      dp.setAttribute('label', 'Last contact');
+      if (stored) dp.setAttribute('value', stored);                     // view month = stored value's month (component behavior)
+      this.#mountCellEditor(cell, dp,
+        (el) => el.setAttribute('open', ''),                            // ui-date-picker supports the open attribute
+        (e2) => this.#patch(row, { lastContact: e2.detail.value }));    // sealed YYYY-MM-DD zero-padded
     });
     cell.appendChild(dd);
   }
@@ -1835,17 +1801,14 @@ class UiStakeholderTable extends HTMLElement {
   /* ── toolbar sync + popovers ───────────────────────────────────── */
   #syncToolbar() {
     const sr = this.shadowRoot;
-    const setBadge = (sel, n, activeBtn) => {
-      const el = sr.querySelector(sel);
-      el.hidden = !n;
-      el.textContent = n || '';
-      activeBtn.classList.toggle('filter-active', !!n);
-    };
+    // The count ui-badge hides itself at 0 (component behavior) — the visible
+    // badge IS the active signal on each REAL toolbar ui-button.
+    const setBadge = (sel, n) => sr.querySelector(sel).setAttribute('count', String(n));
     const filterCount = Object.values(this.#filters).reduce((s, a) => s + a.length, 0);
-    setBadge('.tb-filter-badge', filterCount, sr.querySelector('.tb-filter'));
-    setBadge('.tb-sort-badge', this.#sortKey ? 1 : 0, sr.querySelector('.tb-sort'));
-    setBadge('.tb-cat-badge', this.#catFilter.length, sr.querySelector('.tb-cat'));
-    setBadge('.tb-site-badge', this.#siteFilter.length, sr.querySelector('.tb-site'));
+    setBadge('.tb-filter-badge', filterCount);
+    setBadge('.tb-sort-badge', this.#sortKey ? 1 : 0);
+    setBadge('.tb-cat-badge', this.#catFilter.length);
+    setBadge('.tb-site-badge', this.#siteFilter.length);
 
     // band counts — a per-zone tally over rows (sealed countByStatus)
     const tally = countByStatus(this.#data);
@@ -1854,7 +1817,7 @@ class UiStakeholderTable extends HTMLElement {
     sr.querySelector('.count-mid').textContent = sum(BAND_STATUSES.middle);
     sr.querySelector('.count-neg').textContent = sum(BAND_STATUSES.negative);
     sr.querySelectorAll('.impact-chip').forEach((chip) => {
-      chip.classList.toggle('on', this.#bandFilter.includes(chip.dataset.band));
+      chip.toggleAttribute('selected', this.#bandFilter.includes(chip.dataset.band));
     });
 
     if (this.#openPop) this.#renderPopover();
@@ -1864,10 +1827,10 @@ class UiStakeholderTable extends HTMLElement {
     // full four-way exclusivity + one dismissal model (the recorded
     // normalization of the sealed oracle quirk)
     this.#openPop = this.#openPop === which ? null : which;
-    this.shadowRoot.querySelectorAll('.filter-button-wrap .toolbar-btn').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+    this.shadowRoot.querySelectorAll('.filter-button-wrap .tb-pop-btn').forEach((b) => b.setAttribute('aria-expanded', 'false'));
     this.shadowRoot.querySelectorAll('.filter-popover').forEach((p) => p.remove());
     if (this.#openPop) {
-      this.shadowRoot.querySelector(`.filter-button-wrap[data-pop="${which}"] .toolbar-btn`)
+      this.shadowRoot.querySelector(`.filter-button-wrap[data-pop="${which}"] .tb-pop-btn`)
         .setAttribute('aria-expanded', 'true');
       this.#renderPopover();
       this.#bindDoc();
@@ -1892,8 +1855,8 @@ class UiStakeholderTable extends HTMLElement {
     const title = document.createElement('strong');
     title.textContent = which === 'filter' ? 'Filter' : which === 'sort' ? 'Sort by' : which === 'cat' ? 'Categories' : 'Sites';
     head.appendChild(title);
-    const clear = document.createElement('button');
-    clear.type = 'button';
+    const clear = document.createElement('ui-button');                   // REAL text button (composition ruling)
+    clear.setAttribute('variant', 'text');
     clear.className = 'clear-all';
     clear.textContent = 'Clear all';
     clear.addEventListener('click', () => {
