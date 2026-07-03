@@ -190,6 +190,75 @@
   --ui-sys-pos:    #3E7A2E;
   --ui-sys-neg:    #B33C3C;
   --ui-sys-accent: #B5552C;
+
+  /* ==========================================================================
+   * CENSUS NEEDS-TOKEN ADDITIONS (2026-07-03) — meaningful colors from the
+   * original design surfaced by the color census; single-sourced here, never
+   * inlined in app code.
+   * ========================================================================*/
+
+  /* Valence core completion (census group C — the oracle's --neu amber third
+     valence tone + the darkened-negative danger hover) */
+  --ui-sys-neu:       #B07E1F;  /* neutral-band valence tone: help-card.mid borders, band chips */
+  --ui-sys-neg-hover: #962B2B;  /* btn-danger hover; unify the sheet-modals brightness(0.95) variant on this at build */
+
+  /* Accent text-safe sibling (census group C — the oracle's --accent-ink, the
+     dark text on accent tints, e.g. .tab.active .count).
+     LOUD WARNING: this ships the census hex, which is BLUE-ERA (sibling of the
+     #024AD8 oracle accent). It MUST be re-derived as a dark, text-safe sibling
+     of --ui-sys-accent when the accent start-hue is ruled at the Design-page
+     step — never leave it frozen at this blue-era value. */
+  --ui-sys-accent-ink: #022B7E;
+
+  /* Accent-derived wash/tint scale (census group I — ONE derived scale replacing
+     BOTH frozen rgba families of the oracle, blue-era rgba(2,74,216,x) and
+     terracotta-era rgba(181,85,44,x). The oracle froze them raw, so re-accenting
+     never re-derived a single focus ring or selected wash (a live theming bug).
+     Here every step is color-mix from --ui-sys-accent and re-derives with it. */
+  --ui-sys-focus-wash:         color-mix(in srgb, var(--ui-sys-accent) 15%, transparent); /* THE universal focus ring (box-shadow 0 0 0 2-3px) + login-field focus */
+  --ui-sys-accent-tint-faint:  color-mix(in srgb, var(--ui-sys-accent) 5%, transparent);  /* ~4-8% washes: roles-row.self, open-ws/profile-entry hovers, drag-over, record-nav .on, team-add-card hover, login glow */
+  --ui-sys-accent-tint-soft:   color-mix(in srgb, var(--ui-sys-accent) 12%, transparent); /* ~10-15% tints: active-tab count, plan-tag, profile-tab count, view-all-link hover, ws-card.active ring, picked-chip bg */
+  --ui-sys-accent-tint-strong: color-mix(in srgb, var(--ui-sys-accent) 20%, transparent); /* ~18-30% tints: selected map-dot ring, picked-chip border + hover */
+
+  /* Lists selection/header tints (census group G — deeper siblings of the
+     --ui-sys-row-hover cream working surface) */
+  --ui-sys-row-selected:        #FCEFD6;  /* selected-row tint on every cell of a checked Lists row; also ws-menu-item.active */
+  --ui-sys-row-selected-strong: #ECE2C6;  /* selected row's index cell, one step deeper; doubles as the editable-cell hover affordance */
+  --ui-sys-header-hover:        #EBE4D2;  /* sortable column-header hover */
+
+  /* Zone-grid hairline (census group H — the map's structural hairline over
+     colored zone fills: zone borders + axis crosshair, main map AND Help grid.
+     Zone-adjacent: lives outside every theme swap, like the zone tokens). */
+  --ui-sys-zone-grid-line: rgba(0,0,0,.18);
+
+  /* Valence border tints + negative overlay (census group J — DERIVED from the
+     valence tokens per the census rule, never frozen rgba) */
+  --ui-sys-neg-border-soft: color-mix(in srgb, var(--ui-sys-neg) 50%, transparent); /* help-card.neg border */
+  --ui-sys-neu-border-soft: color-mix(in srgb, var(--ui-sys-neu) 50%, transparent); /* help-card.mid border */
+  --ui-sys-pos-border-soft: color-mix(in srgb, var(--ui-sys-pos) 50%, transparent); /* help-card.pos border */
+  --ui-sys-neg-overlay:     color-mix(in srgb, var(--ui-sys-neg) 85%, transparent); /* multi-owner-remove: the 85% neg scrim covering an owner avatar with an X */
+
+  /* Mention-dot semantics (census group J — messaging composer + rendered chips;
+     pill-semantic colors: never touched by any theme swap. The workspace/community
+     mention dots share the settings swatch literals and are tokenized with that
+     CAPTURED→TOKEN catalog, not here.) */
+  --ui-sys-mention-stakeholder: #2E7D32;  /* t-stk stakeholder mention dot */
+  --ui-sys-mention-plan:        #6A1B9A;  /* t-pln plan mention dot */
+
+  /* Manager badge pair (census group J — siblings of --ui-sys-manager-amber
+     #E0A21A, the ManagerStar fill, which arrives with its CAPTURED→TOKEN group) */
+  --ui-sys-manager-badge-surface: rgba(224,162,26,.14); /* .manager-badge background — 14% amber wash */
+  --ui-sys-manager-badge-ink:     #7A5414;              /* .manager-badge ink — deep amber-brown */
+
+  /* Funnel amber ramp, stages 2-3 (census group K — the Help-page engagement
+     funnel SVG; stage 1 is --ui-sys-band-middle #E2A85F per the Lists box) */
+  --ui-sys-funnel-2: #F0C988;  /* "Plan" arrow fill */
+  --ui-sys-funnel-3: #F8E2B0;  /* "Execute" arrow fill */
+
+  /* Reveal-on-scroll scrollbar (census group K — the warm auto-hiding thumb
+     treatment, a deliberate design feature) */
+  --ui-sys-scrollbar-thumb:       #DCD3BF;  /* webkit thumb + Firefox .is-scrolling scrollbar-color */
+  --ui-sys-scrollbar-thumb-hover: #C5BBA3;  /* thumb hover */
 }
 
 /* ============================================================================

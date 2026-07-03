@@ -1,6 +1,8 @@
 /* ============================================================================
  * <ui-text-field> — outlined text input with floating label, leading/trailing
  * icon slots, error state, and supporting text. formAssociated.
+ * variant="outlined" (default) | "plain" — plain is the label-less,
+ * chrome-light inline field (hairline outline that strengthens on focus).
  * Styled ONLY via --ui-sys-* tokens. No hardcoded colors or sizes.
  * ==========================================================================*/
 
@@ -15,6 +17,21 @@ template.innerHTML = `
       --_outline-width: 1px;
       --_label-color:   var(--ui-sys-on-surface-muted);
       --_support-color: var(--ui-sys-on-surface-muted);
+    }
+
+    /* ---- plain variant: label-less, chrome-light inline field ----
+     * Hairline outline at rest; strengthens to the same focus border/ring
+     * as outlined via the shared .field:focus-within rules below.
+     * Declared BEFORE [error]/[disabled] so those states still win. */
+    :host([variant="plain"]) {
+      --_outline: var(--ui-sys-outline-subtle);
+    }
+    :host([variant="plain"]) label {
+      display: none;
+    }
+    :host([variant="plain"][label]) input {
+      padding-top: var(--ui-sys-space-2);
+      padding-bottom: var(--ui-sys-space-2);
     }
 
     :host([error]) {
@@ -190,6 +207,7 @@ class UiTextField extends HTMLElement {
   static formAssociated = true;
   static observedAttributes = [
     'label', 'value', 'placeholder', 'type', 'disabled', 'error', 'supporting-text',
+    'variant',
   ];
 
   #internals;
@@ -235,13 +253,21 @@ class UiTextField extends HTMLElement {
     const type          = this.getAttribute('type') || 'text';
     const disabled      = this.hasAttribute('disabled');
     const supportingText = this.getAttribute('supporting-text') || '';
+    const plain         = this.getAttribute('variant') === 'plain'; // plain = label-less, placeholder-driven
 
     this.#label.textContent        = label;
-    this.#label.style.display      = label ? '' : 'none';
-    this.#input.placeholder        = label ? '' : placeholder;  // placeholder only when no floating label
+    this.#label.style.display      = (label && !plain) ? '' : 'none';
+    this.#input.placeholder        = (label && !plain) ? '' : placeholder;  // placeholder only when no floating label
     this.#input.type               = type;
     this.#input.disabled           = disabled;
     this.#supporting.textContent   = supportingText;
+
+    // Plain variant hides the label element; keep it accessible instead.
+    if (plain && label) {
+      this.#input.setAttribute('aria-label', label);
+    } else {
+      this.#input.removeAttribute('aria-label');
+    }
 
     // Reflect initial value attribute
     if (this.hasAttribute('value') && !this.#input.value) {
