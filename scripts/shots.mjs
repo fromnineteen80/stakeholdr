@@ -54,6 +54,15 @@ await page.waitForTimeout(600);
 await page.screenshot({ path: `${OUT}/app-collapsed.png` });
 await page.screenshot({ path: `${OUT}/rail-collapsed.png`, clip: { x: 0, y: 0, width: 120, height: 900 } });
 await measureAxis(page, 'collapsed');
+// hover the collapsed header: the mark must swap to the open-panel icon (ONE spot)
+await page.evaluate(() => {
+  const h = document.querySelector('ui-sidebar').shadowRoot.querySelector('.header');
+  h.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+});
+await page.hover('ui-sidebar');
+await page.mouse.move(32, 28);
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/rail-collapsed-hover.png`, clip: { x: 0, y: 0, width: 120, height: 120 } });
 
 // re-expand + zoom the chrome (header + sidebar top) for close inspection
 await page.evaluate(() => {
