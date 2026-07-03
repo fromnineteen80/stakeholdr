@@ -63,3 +63,7 @@ ui-sidebar[collapsed] .me { justify-content: center; padding: var(--ui-sys-space
   height: 100%; overflow: auto;
   padding: var(--ui-sys-space-4);
 }
+
+/* Phase-placeholder typography (removed as pages land). */
+.ph-title { font: var(--ui-sys-font-title); }
+.ph-body { font: var(--ui-sys-font-body); color: var(--ui-sys-on-surface-muted); }

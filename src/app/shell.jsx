@@ -67,10 +67,10 @@ export function AppShell() {
             page's phase runs, this honest placeholder states the build state
             rather than faking a screen. */}
         <ui-card variant="outlined">
-          <div style={{ font: 'var(--ui-sys-font-title)' }}>
+          <div className="ph-title">
             {(visibleTabs.find(t => t.id === view) || { label: 'Help' }).label}
           </div>
-          <p style={{ font: 'var(--ui-sys-font-body)', color: 'var(--ui-sys-on-surface-muted)' }}>
+          <p className="ph-body">
             Phase 1 scaffold — the shell is live (chrome, nav, tokens, theme cascade).
             This page assembles in its build phase, node by node against its sealed
             skeleton tree.
