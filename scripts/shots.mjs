@@ -24,6 +24,7 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 await page.goto('http://127.0.0.1:4174/app.html', { waitUntil: 'networkidle' });
 await page.waitForTimeout(1500);
 await page.screenshot({ path: `${OUT}/app-expanded.png` });
+await page.screenshot({ path: `${OUT}/rail-expanded.png`, clip: { x: 0, y: 0, width: 300, height: 900 } });
 
 // collapse the sidebar via the panel toggle (shadow DOM part)
 await page.evaluate(() => {
@@ -32,6 +33,7 @@ await page.evaluate(() => {
 });
 await page.waitForTimeout(600);
 await page.screenshot({ path: `${OUT}/app-collapsed.png` });
+await page.screenshot({ path: `${OUT}/rail-collapsed.png`, clip: { x: 0, y: 0, width: 120, height: 900 } });
 
 // re-expand + zoom the chrome (header + sidebar top) for close inspection
 await page.evaluate(() => {

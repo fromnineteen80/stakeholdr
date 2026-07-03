@@ -47,7 +47,12 @@ itemTemplate.innerHTML = `
       gap: var(--ui-sys-space-2);
       width: 100%;
       min-height: var(--ui-sys-control-height);
-      padding: 0 var(--ui-sys-space-3);
+      /* ONE VERTICAL AXIS (RULED): every icon centers on the collapsed-rail
+         centerline. padding-left = axis - list-pad - icon/2, all token-derived. */
+      padding: 0 var(--ui-sys-space-3) 0
+        calc(var(--ui-sys-sidebar-width-collapsed, 64px) / 2
+             - var(--ui-sys-space-3)
+             - var(--ui-sys-icon-size-md) / 2);
       border-radius: var(--ui-sys-shape-pill);
       background: transparent;
       color: var(--ui-sys-on-surface);
@@ -137,6 +142,9 @@ itemTemplate.innerHTML = `
       justify-content: center;
       padding: 0;
       width: 40px;
+      /* center the 40px box in the rail so the icon stays on the SAME axis */
+      margin-left: auto;
+      margin-right: auto;
       margin: 0 auto;
     }
     :host([sidebar-collapsed]) .label {

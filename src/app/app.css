@@ -16,6 +16,9 @@ body {
  * typeface, on a field that reads THE SAME token as the app title so they can
  * never drift apart (re-themes together). */
 .brand {
+  /* mark center = the rail's ONE vertical axis (collapsed-rail centerline) */
+  margin-left: calc(var(--ui-sys-sidebar-width-collapsed, 64px) / 2
+                    - var(--ui-sys-space-3) - 13px);
   display: inline-flex; align-items: center; gap: var(--ui-sys-space-2);
   font: var(--ui-sys-font-title); font-size: 15px;
   color: var(--ui-sys-on-surface);
