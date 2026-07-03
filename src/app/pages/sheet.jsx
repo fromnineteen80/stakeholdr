@@ -36,13 +36,15 @@ export function SheetPage() {
   const tableRef = useRef(null);
 
   // Sealed row mapping: each visible stakeholder computes, live,
-  // _x/_y (weightedCoord, 1 decimal) · _status (statusFor) · _unscored
-  // (team.length > 0 AND no team member has a score for this stakeholder).
+  // _x/_y = weightedCoord (RAW — 1-decimal is display-only, applied by the
+  // table component at render) · _status = statusFor over the RAW position
+  // (rounding first flips zones near boundaries) · _unscored (team.length > 0
+  // AND no team member has a score for this stakeholder).
   const rows = useMemo(() => stakeholders.map((s) => {
     const pos = weightedCoord(s.id, scores, team);
-    const _x = Math.round(pos.x * 10) / 10;
-    const _y = Math.round(pos.y * 10) / 10;
-    const _status = statusFor(_x, _y);
+    const _x = pos.x;
+    const _y = pos.y;
+    const _status = statusFor(pos.x, pos.y);
     const perRater = scores[s.id] || {};
     const _unscored = team.length > 0 && !team.some((m) => perRater[m.id]);
     return {
