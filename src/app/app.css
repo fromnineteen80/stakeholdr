@@ -1,0 +1,73 @@
+/* Stakeholdr app — the ONE sanctioned token-only layout layer.
+ * Every value below is a --ui-sys-* / --ui-ref-* token; no literal hex, no px
+ * styling decisions of its own. Components carry all real structure.
+ * The brand/selector/section/identity rules mirror the RULED wireframe
+ * compositions (SHELL DESIGN RULINGS 2026-07-02). */
+
+html, body, #root { height: 100%; margin: 0; }
+body {
+  background: var(--ui-sys-surface);
+  color: var(--ui-sys-on-surface);
+  font: var(--ui-sys-font-body);
+}
+#root > ui-app-shell { height: 100vh; }
+
+/* The brand mark (RULED): "Sr" monogram — capital S + lowercase ITALIC r, title
+ * typeface, on a field that reads THE SAME token as the app title so they can
+ * never drift apart (re-themes together). */
+.brand {
+  display: inline-flex; align-items: center; gap: var(--ui-sys-space-2);
+  font: var(--ui-sys-font-title); font-size: 15px;
+  color: var(--ui-sys-on-surface);
+}
+.brand .mark {
+  width: 24px; height: 24px; border-radius: var(--ui-ref-radius-sm);
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--ui-sys-on-surface); color: var(--ui-sys-surface-card);
+  font-family: var(--ui-ref-typeface-title); font-weight: 500; font-size: 13px;
+  letter-spacing: 0; line-height: 1;
+}
+.brand .mark i { font-style: italic; font-weight: 500; }
+
+/* Workspace selector — lives in the TOP BAR next to the brand (RULED). */
+.ws-select {
+  display: inline-flex; align-items: center; gap: var(--ui-sys-space-1);
+  font: var(--ui-sys-font-label);
+  padding: var(--ui-sys-space-1) var(--ui-sys-space-2);
+  margin-left: var(--ui-sys-space-3);
+  border-radius: var(--ui-sys-shape-control);
+  border: 1px solid var(--ui-sys-outline-subtle);
+  background: var(--ui-sys-surface-field);
+  cursor: pointer;
+}
+
+/* Sidebar section caption — fills the rail with structure (RULED: never hollow). */
+.nav-sec {
+  font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted);
+  text-transform: uppercase; letter-spacing: .07em;
+  padding: var(--ui-sys-space-4) var(--ui-sys-space-3) var(--ui-sys-space-1);
+}
+ui-sidebar[collapsed] .nav-sec { display: none; }
+
+/* Signed-in identity — ONE place: bottom-left of the sidebar (RULED). */
+.me { display: flex; align-items: center; gap: var(--ui-sys-space-2); padding: var(--ui-sys-space-2); }
+.me-name {
+  font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+ui-sidebar[collapsed] .me-name { display: none; }
+ui-sidebar[collapsed] .me { justify-content: center; padding: var(--ui-sys-space-2) 0; }
+
+/* Main work area runway — pages mount inside; white content per the design rules. */
+.work {
+  height: 100%; overflow: auto;
+  padding: var(--ui-sys-space-4);
+}
+
+/* Phase-placeholder typography (removed as pages land). */
+.ph-title { font: var(--ui-sys-font-title); }
+.ph-body { font: var(--ui-sys-font-body); color: var(--ui-sys-on-surface-muted); }
+
+/* Lists page — the table fills the work runway (the component owns all real
+ * structure; this is pure token-free sizing). */
+.sheet-table { display: flex; height: 100%; }

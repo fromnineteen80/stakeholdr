@@ -6,8 +6,12 @@ plans + community investment + collaboration). It is written for a senior engine
 
 **Build philosophy:** ship a **Demo** first (no backend, seed data, full
 capability), then flip a single switch to **Production** (Supabase). The data
-access layer is identical in both states — see §2. Frontend = React + Vite +
-shadcn/ui + Tailwind (see the `.io` build guide). Backend = Supabase
+access layer is identical in both states — see §2. Frontend = React 18 + Vite +
+the repo's own Canonical UI design system (`design-system/` `ui-*` web components;
+`--ui-sys-*` tokens are the only styling surface — see the `.io` build guide).
+*(An earlier draft of this line said shadcn/ui + Tailwind; that predates the
+2026-06-13 Canonical UI ruling and is superseded — Tailwind/shadcn are forbidden
+in the rebuilt app.)* Backend = Supabase
 (Postgres + Auth + Realtime + Storage + Edge Functions).
 
 ---

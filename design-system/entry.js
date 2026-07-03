@@ -6,6 +6,12 @@
 import "./tokens.css";
 
 import "./components/icon.js";
+import "./components/avatar.js";
+import "./components/card.js";
+import "./components/textarea.js";
+import "./components/badge.js";
+import "./components/owner-picker.js";
+import "./components/coachmark.js";
 import "./components/app-shell.js";
 import "./components/sidebar.js";
 import "./components/inspector.js";

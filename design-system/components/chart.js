@@ -168,17 +168,16 @@ class UiChart extends HTMLElement {
       }).join('');
       seriesMarkup = series;
     } else {
-      // line / area — build path
-      const pts = points.map((p, i) => `${xOf(i).toFixed(1)},${yOf(p.value).toFixed(1)}`).join(' L ');
-      const first = `${xOf(0).toFixed(1)},${yOf(points[0].value).toFixed(1)}`;
-      const last  = `${xOf(points.length - 1).toFixed(1)},${yOf(points[points.length - 1].value).toFixed(1)}`;
+      // line / area — polyline takes plain space-separated pairs; only <path d>
+      // uses L commands.
+      const pairs = points.map((p, i) => `${xOf(i).toFixed(1)},${yOf(p.value).toFixed(1)}`);
       const baseline = (padT + chartH).toFixed(1);
 
       if (type === 'area') {
-        const areaPath = `M ${xOf(0).toFixed(1)},${baseline} L ${pts} L ${xOf(points.length-1).toFixed(1)},${baseline} Z`;
+        const areaPath = `M ${xOf(0).toFixed(1)},${baseline} L ${pairs.join(' L ')} L ${xOf(points.length-1).toFixed(1)},${baseline} Z`;
         seriesMarkup += `<path d="${areaPath}" fill="${primary}" opacity="0.18" />`;
       }
-      seriesMarkup += `<polyline points="${first} L ${pts}" fill="none" stroke="${primary}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />`;
+      seriesMarkup += `<polyline points="${pairs.join(' ')}" fill="none" stroke="${primary}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />`;
       // dots
       seriesMarkup += points.map((p, i) =>
         `<circle cx="${xOf(i).toFixed(1)}" cy="${yOf(p.value).toFixed(1)}" r="3" fill="${primary}" />`

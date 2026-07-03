@@ -138,6 +138,31 @@
   /* Control sizing role (consistent control height across the kit) */
   --ui-sys-control-height: 36px;
 
+  /* Sidebar width roles (RULED 2026-07-02: Claude-LIKE but PROPORTIONAL — grows
+     with the window up to Claude's 18rem, never below a tight floor; and the rail
+     must never sit hollow: nav + workspace section + identity fill it) */
+  --ui-sys-sidebar-width: clamp(208px, 18vw, 288px);
+  --ui-sys-sidebar-width-collapsed: 64px;
+
+  /* Avatar sizing scale (identity circles; the ONE place avatar px live) */
+  --ui-sys-avatar-size-sm: 24px;
+  --ui-sys-avatar-size-md: 32px;
+  --ui-sys-avatar-size-lg: 40px;
+
+  /* Badge/count-indicator roles (start-state from the original msg-badge /
+     count-alert values captured in the Scoring-cadence box) */
+  --ui-sys-on-accent: #FAF8F2;
+  --ui-sys-badge-alert-surface: var(--ui-sys-accent);
+  --ui-sys-badge-alert-ink: var(--ui-sys-on-accent);
+  --ui-sys-badge-neutral-surface: var(--ui-sys-surface-container-highest);
+  --ui-sys-badge-neutral-ink: var(--ui-sys-on-surface);
+  --ui-sys-badge-size: 16px;
+  --ui-sys-badge-pad-inline: 4px;
+  --ui-sys-badge-font-size: 9.5px;
+  --ui-sys-badge-dot-size: 8px;
+  --ui-sys-badge-offset-block: -4px;
+  --ui-sys-badge-offset-inline: -4px;
+
   /* Icon sizing scale (modest, ~1em-relative; the ONE place icon px live).
      Every icon — inline SVG or <ui-icon> — sizes from these, never ad-hoc. */
   --ui-sys-icon-size-sm: 18px;
@@ -179,4 +204,110 @@
   --ui-sys-pos:    #3E7A2E;
   --ui-sys-neg:    #B33C3C;
   --ui-sys-accent: #B5552C;
+
+  /* ==========================================================================
+   * CENSUS NEEDS-TOKEN ADDITIONS (2026-07-03) — meaningful colors from the
+   * original design surfaced by the color census; single-sourced here, never
+   * inlined in app code.
+   * ========================================================================*/
+
+  /* Valence core completion (census group C — the oracle's --neu amber third
+     valence tone + the darkened-negative danger hover) */
+  --ui-sys-neu:       #B07E1F;  /* neutral-band valence tone: help-card.mid borders, band chips */
+  --ui-sys-neg-hover: #962B2B;  /* btn-danger hover; unify the sheet-modals brightness(0.95) variant on this at build */
+
+  /* Accent text-safe sibling (census group C — the oracle's --accent-ink, the
+     dark text on accent tints, e.g. .tab.active .count).
+     LOUD WARNING: this ships the census hex, which is BLUE-ERA (sibling of the
+     #024AD8 oracle accent). It MUST be re-derived as a dark, text-safe sibling
+     of --ui-sys-accent when the accent start-hue is ruled at the Design-page
+     step — never leave it frozen at this blue-era value. */
+  --ui-sys-accent-ink: #022B7E;
+
+  /* Accent-derived wash/tint scale (census group I — ONE derived scale replacing
+     BOTH frozen rgba families of the oracle, blue-era rgba(2,74,216,x) and
+     terracotta-era rgba(181,85,44,x). The oracle froze them raw, so re-accenting
+     never re-derived a single focus ring or selected wash (a live theming bug).
+     Here every step is color-mix from --ui-sys-accent and re-derives with it. */
+  --ui-sys-focus-wash:         color-mix(in srgb, var(--ui-sys-accent) 15%, transparent); /* THE universal focus ring (box-shadow 0 0 0 2-3px) + login-field focus */
+  --ui-sys-accent-tint-faint:  color-mix(in srgb, var(--ui-sys-accent) 5%, transparent);  /* ~4-8% washes: roles-row.self, open-ws/profile-entry hovers, drag-over, record-nav .on, team-add-card hover, login glow */
+  --ui-sys-accent-tint-soft:   color-mix(in srgb, var(--ui-sys-accent) 12%, transparent); /* ~10-15% tints: active-tab count, plan-tag, profile-tab count, view-all-link hover, ws-card.active ring, picked-chip bg */
+  --ui-sys-accent-tint-strong: color-mix(in srgb, var(--ui-sys-accent) 20%, transparent); /* ~18-30% tints: selected map-dot ring, picked-chip border + hover */
+
+  /* Lists selection/header tints (census group G — deeper siblings of the
+     --ui-sys-row-hover cream working surface) */
+  --ui-sys-row-selected:        #FCEFD6;  /* selected-row tint on every cell of a checked Lists row; also ws-menu-item.active */
+  --ui-sys-row-selected-strong: #ECE2C6;  /* selected row's index cell, one step deeper; doubles as the editable-cell hover affordance */
+  --ui-sys-header-hover:        #EBE4D2;  /* sortable column-header hover */
+
+  /* Zone-grid hairline (census group H — the map's structural hairline over
+     colored zone fills: zone borders + axis crosshair, main map AND Help grid.
+     Zone-adjacent: lives outside every theme swap, like the zone tokens). */
+  --ui-sys-zone-grid-line: rgba(0,0,0,.18);
+
+  /* Valence border tints + negative overlay (census group J — DERIVED from the
+     valence tokens per the census rule, never frozen rgba) */
+  --ui-sys-neg-border-soft: color-mix(in srgb, var(--ui-sys-neg) 50%, transparent); /* help-card.neg border */
+  --ui-sys-neu-border-soft: color-mix(in srgb, var(--ui-sys-neu) 50%, transparent); /* help-card.mid border */
+  --ui-sys-pos-border-soft: color-mix(in srgb, var(--ui-sys-pos) 50%, transparent); /* help-card.pos border */
+  --ui-sys-neg-overlay:     color-mix(in srgb, var(--ui-sys-neg) 85%, transparent); /* multi-owner-remove: the 85% neg scrim covering an owner avatar with an X */
+
+  /* Mention-dot semantics (census group J — messaging composer + rendered chips;
+     pill-semantic colors: never touched by any theme swap. The workspace/community
+     mention dots share the settings swatch literals and are tokenized with that
+     CAPTURED→TOKEN catalog, not here.) */
+  --ui-sys-mention-stakeholder: #2E7D32;  /* t-stk stakeholder mention dot */
+  --ui-sys-mention-plan:        #6A1B9A;  /* t-pln plan mention dot */
+
+  /* Manager badge pair (census group J — siblings of --ui-sys-manager-amber
+     #E0A21A, the ManagerStar fill, which arrives with its CAPTURED→TOKEN group) */
+  --ui-sys-manager-badge-surface: rgba(224,162,26,.14); /* .manager-badge background — 14% amber wash */
+  --ui-sys-manager-badge-ink:     #7A5414;              /* .manager-badge ink — deep amber-brown */
+
+  /* Funnel amber ramp, stages 2-3 (census group K — the Help-page engagement
+     funnel SVG; stage 1 is --ui-sys-band-middle #E2A85F per the Lists box) */
+  --ui-sys-funnel-2: #F0C988;  /* "Plan" arrow fill */
+  --ui-sys-funnel-3: #F8E2B0;  /* "Execute" arrow fill */
+
+  /* Reveal-on-scroll scrollbar (census group K — the warm auto-hiding thumb
+     treatment, a deliberate design feature) */
+  --ui-sys-scrollbar-thumb:       #DCD3BF;  /* webkit thumb + Firefox .is-scrolling scrollbar-color */
+  --ui-sys-scrollbar-thumb-hover: #C5BBA3;  /* thumb hover */
+
+  /* Avatar identity palette (census group F CAPTURED→TOKEN — the seed users'
+     stable per-user avatar colors + the Shared-primitives Avatar palette;
+     identity-semantic: never touched by any theme swap. Seed data references
+     these token NAMES, never hex — the guard bans hex in app code.) */
+  --ui-sys-avatar-palette-1: #AD1457;  /* seed: Alex Rivera */
+  --ui-sys-avatar-palette-2: #E64A19;  /* seed: Jordan Kim */
+  --ui-sys-avatar-palette-3: #388E3C;  /* seed: Sam Okafor */
+  --ui-sys-avatar-palette-4: #1976D2;  /* seed: Devon Wright */
+  --ui-sys-avatar-palette-5: #00897B;  /* seed: Kenji Tanaka */
+  --ui-sys-avatar-palette-6: #4F3F69;  /* Avatar-box palette slot 4 (regenerated: Priya Patel) */
+  --ui-sys-avatar-palette-7: #5A8F8F;  /* Avatar-box palette slot 8 (regenerated: Marisol Aguilar) */
+  --ui-sys-avatar-system:    #1F1A14;  /* the Reminders bot (u-system) — sealed seed value */
+  --ui-sys-avatar-ink:       #FAF8F2;  /* avatar initials ink (Shared-primitives Avatar text) */
+}
+
+/* ============================================================================
+ * THEME: "modern" — cool minimalist wrapper (user anchors 2026-07-02:
+ * charcoal #36454F · slate #708090 · light gray #D3D3D3 · white #FFFFFF;
+ * intermediate cool steps derived). WRAPPER ONLY: overrides Tier-1 neutrals +
+ * inks, which every --ui-sys-* surface/ink role inherits. The relationship-zone
+ * spectrum, zone inks/borders, valence tones, and all pill/status semantics are
+ * deliberately NOT overridden — no theme swap may ever touch them.
+ * Activate with <html data-theme="modern">. Default (no attribute) = Soapbox cream.
+ * ==========================================================================*/
+:root[data-theme="modern"] {
+  --ui-ref-neutral-0:  #FFFFFF;  /* content / cards (user anchor) */
+  --ui-ref-neutral-1:  #FBFCFD;  /* app window runway (derived, near-white cool) */
+  --ui-ref-neutral-2:  #F5F7F8;  /* idle fields (derived) */
+  --ui-ref-neutral-3:  #EEF1F3;  /* panels, rails, headers (derived — never white) */
+  --ui-ref-neutral-4:  #E3E8EB;  /* hovers, active cells (derived) */
+  --ui-ref-neutral-5:  #DBE0E4;  /* subtle section outlines (derived) */
+  --ui-ref-neutral-6:  #D3D3D3;  /* structural borders (user anchor) */
+
+  --ui-ref-ink-strong: #36454F;  /* primary text + primary action (user anchor: charcoal) */
+  --ui-ref-ink-muted:  #708090;  /* secondary text / captions (user anchor: slate) */
+  --ui-ref-ink-faint:  #C3CBD1;  /* dividers / disabled (derived) */
 }
