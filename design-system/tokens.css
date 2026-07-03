@@ -273,6 +273,20 @@
      treatment, a deliberate design feature) */
   --ui-sys-scrollbar-thumb:       #DCD3BF;  /* webkit thumb + Firefox .is-scrolling scrollbar-color */
   --ui-sys-scrollbar-thumb-hover: #C5BBA3;  /* thumb hover */
+
+  /* Avatar identity palette (census group F CAPTURED→TOKEN — the seed users'
+     stable per-user avatar colors + the Shared-primitives Avatar palette;
+     identity-semantic: never touched by any theme swap. Seed data references
+     these token NAMES, never hex — the guard bans hex in app code.) */
+  --ui-sys-avatar-palette-1: #AD1457;  /* seed: Alex Rivera */
+  --ui-sys-avatar-palette-2: #E64A19;  /* seed: Jordan Kim */
+  --ui-sys-avatar-palette-3: #388E3C;  /* seed: Sam Okafor */
+  --ui-sys-avatar-palette-4: #1976D2;  /* seed: Devon Wright */
+  --ui-sys-avatar-palette-5: #00897B;  /* seed: Kenji Tanaka */
+  --ui-sys-avatar-palette-6: #4F3F69;  /* Avatar-box palette slot 4 (regenerated: Priya Patel) */
+  --ui-sys-avatar-palette-7: #5A8F8F;  /* Avatar-box palette slot 8 (regenerated: Marisol Aguilar) */
+  --ui-sys-avatar-system:    #1F1A14;  /* the Reminders bot (u-system) — sealed seed value */
+  --ui-sys-avatar-ink:       #FAF8F2;  /* avatar initials ink (Shared-primitives Avatar text) */
 }
 
 /* ============================================================================

@@ -3,6 +3,7 @@ import { useState } from 'react';
 // ui-* element and loads the token contract (tokens.css).
 import '../../design-system/entry.js';
 import './app.css';
+import { SheetPage } from './pages/sheet.jsx';
 
 // NAV_TABS per the sealed App-shell box (icons = the captured semantic→ligature
 // map). Scoring carries hideWhenMaster (sealed rule) — enforced when workspace
@@ -63,23 +64,28 @@ export function AppShell() {
       </ui-sidebar>
 
       <div className="work">
-        {/* Pages mount here phase by phase (Build Protocol order). Until a
-            page's phase runs, this honest placeholder states the build state
-            rather than faking a screen. */}
-        <ui-card variant="outlined">
-          <div className="ph-title">
-            {(visibleTabs.find(t => t.id === view) || { label: 'Help' }).label}
-          </div>
-          <p className="ph-body">
-            Phase 1 scaffold — the shell is live (chrome, nav, tokens, theme cascade).
-            This page assembles in its build phase, node by node against its sealed
-            skeleton tree.
-          </p>
-        </ui-card>
+        {/* Pages mount here phase by phase (Build Protocol order). Phase 2:
+            the Lists page (SheetPage) is live. Until another page's phase
+            runs, an honest placeholder states the build state rather than
+            faking a screen. */}
+        {view === 'sheet' ? (
+          <SheetPage />
+        ) : (
+          <ui-card variant="outlined">
+            <div className="ph-title">
+              {(visibleTabs.find(t => t.id === view) || { label: 'Help' }).label}
+            </div>
+            <p className="ph-body">
+              Phase 1 scaffold — the shell is live (chrome, nav, tokens, theme cascade).
+              This page assembles in its build phase, node by node against its sealed
+              skeleton tree.
+            </p>
+          </ui-card>
+        )}
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Build: Phase 1 — Foundation &amp; shell</span>
+        <span>Build: Phase 2 — Data foundation &amp; Lists</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
     </ui-app-shell>
