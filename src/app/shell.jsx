@@ -91,7 +91,7 @@ export function AppShell() {
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Build: Phase 2 — Data foundation &amp; Lists</span>
+        <span>Build: Phase 3 — the full Lists grid</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
     </ui-app-shell>
