@@ -177,7 +177,7 @@
       "tag": "ui-button",
       "status": "built",
       "category": "native",
-      "summary": "Primary action control; filled/tonal/outlined/text variants, state layer, focus ring, form-associated.",
+      "summary": "Primary action control; filled/tonal/outlined/text variants, neutral/danger tones, state layer, focus ring, form-associated.",
       "props": [
         {
           "name": "variant",
@@ -204,6 +204,16 @@
             "reset"
           ],
           "default": "button"
+        },
+        {
+          "name": "tone",
+          "type": "enum",
+          "values": [
+            "neutral",
+            "danger"
+          ],
+          "default": "neutral",
+          "note": "danger = destructive action; reads --ui-sys-neg/-neg-border-soft (sealed btn-danger surfaces: delete stakeholder, confirm Delete)"
         }
       ],
       "states": [
@@ -665,12 +675,18 @@
       "tag": "ui-dialog",
       "status": "built",
       "category": "native",
-      "summary": "Modal dialog; scrim, animated card, focus trap, Esc dismiss; headline/body/actions slots; show()/close().",
+      "summary": "Modal dialog; scrim, animated card, focus trap (native + ui-* hosts, card fallback focus), Esc dismiss; headline/body/actions slots; show()/close(). Stackable: set the --ui-dialog-layer CSS property on a host to raise a stacked dialog (e.g. a delete-confirm) so its scrim covers the dialog beneath — clicks/Esc around the stacked card can never reach the lower dialog.",
       "props": [
         {
           "name": "open",
           "type": "boolean",
           "default": false
+        },
+        {
+          "name": "--ui-dialog-layer",
+          "type": "css-custom-property",
+          "default": 0,
+          "note": "z-lift for stacked dialogs; scrim = 900+layer, card = 901+layer"
         }
       ],
       "states": [
@@ -1404,6 +1420,52 @@
         "disabled"
       ],
       "import": "./components/card.js"
+    },
+    "upload": {
+      "tag": "ui-upload",
+      "status": "built",
+      "category": "gapFill",
+      "summary": "File-pick control (the oracle's label-wrapped hidden file input, stakeholder-modal photo row). Composes a real ui-button (default slot = label text, e.g. 'Upload photo'/'Replace photo') over a HIDDEN native file input inside the shadow root (the one legal home for the raw primitive under the app-code composition guard). Reads the first picked file via FileReader.readAsDataURL and emits change {dataUrl, name}; input clears after each read so re-picking the same file fires again.",
+      "props": [
+        {
+          "name": "accept",
+          "type": "string",
+          "default": "",
+          "note": "passed to the file input (e.g. 'image/*')"
+        },
+        {
+          "name": "variant",
+          "type": "enum",
+          "values": [
+            "filled",
+            "tonal",
+            "outlined",
+            "text"
+          ],
+          "default": "outlined",
+          "note": "forwarded to the composed ui-button"
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "default": false
+        }
+      ],
+      "events": [
+        {
+          "name": "change",
+          "detail": "{ dataUrl, name }",
+          "note": "composed: true; first selected file as a data URL"
+        }
+      ],
+      "states": [
+        "enabled",
+        "hover",
+        "pressed",
+        "focus-visible",
+        "disabled"
+      ],
+      "import": "./components/upload.js"
     }
   }
 }

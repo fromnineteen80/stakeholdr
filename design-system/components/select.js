@@ -248,6 +248,9 @@ class UiSelect extends HTMLElement {
     }
   }
 
+  /* Delegate programmatic focus to the real field (dialog focus pass etc.). */
+  focus(options) { this.#field.focus(options); }
+
   get value() { return this.getAttribute('value') ?? ''; }
   set value(v) { this.setAttribute('value', v); }
 

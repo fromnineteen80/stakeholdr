@@ -12,12 +12,20 @@ template.innerHTML = `
       display: contents;
     }
 
+    /* Stacking: a page can raise a STACKED dialog (e.g. a delete-confirm over
+       an edit dialog) by setting --ui-dialog-layer on the host — its scrim
+       then covers the lower dialog's card (clicks around the stacked card can
+       never reach the dialog beneath). */
+    :host {
+      --_layer: var(--ui-dialog-layer, 0);
+    }
+
     /* Scrim */
     .scrim {
       position: fixed;
       inset: 0;
       background: var(--ui-sys-scrim);
-      z-index: 900;
+      z-index: calc(900 + var(--_layer));
       opacity: 0;
       visibility: hidden;
       transition: opacity var(--ui-sys-motion-emphasis),
@@ -36,7 +44,7 @@ template.innerHTML = `
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 901;
+      z-index: calc(901 + var(--_layer));
       pointer-events: none;
       visibility: hidden;
     }
@@ -110,7 +118,12 @@ template.innerHTML = `
 
   <div class="scrim" part="scrim"></div>
   <div class="dialog" role="dialog" aria-modal="true">
-    <div class="card" part="card">
+    <!-- tabindex=-1: the open-focus fallback target. Canonical UI content
+         keeps its real controls inside shadow roots, so the light-DOM
+         focusable query can come up empty — the card itself must be
+         programmatically focusable or keyboard focus (and Escape) stays in
+         whatever dialog was open underneath. -->
+    <div class="card" part="card" tabindex="-1">
       <div class="headline" part="headline">
         <slot name="headline"></slot>
       </div>
@@ -209,7 +222,10 @@ class UiDialog extends HTMLElement {
   };
 
   #getFocusable() {
-    const selectors = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    // Native focusables + Canonical UI hosts (their real controls live in
+    // shadow DOM and delegate via their focus() overrides / host tabindex).
+    const selectors = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), ' +
+      'ui-button:not([disabled]), ui-icon-button:not([disabled]), ui-text-field:not([disabled]), ui-textarea:not([disabled]), ui-select:not([disabled]), ui-date-picker, ui-chip:not([disabled]), ui-upload:not([disabled])';
     // Slotted light DOM
     const light = Array.from(this.querySelectorAll(selectors));
     return light;

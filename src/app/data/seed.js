@@ -166,7 +166,7 @@ export const SEED_STAKEHOLDERS = [
     notes: 'Device refresh pilot running in 12 classrooms; wants teacher training.',
   },
   {
-    id: 'sh-08', isPerson: true, firstName: 'Marcus', lastName: 'Boone', title: 'None',
+    id: 'sh-08', isPerson: true, firstName: 'Marcus', lastName: 'Boone', title: '', // sealed None = value ""
     name: 'Marcus Boone', org: 'Greater Houston Interfaith Council',
     email: 'mboone@ghic.org', phone: '(713) 555-0147', xAccount: '@RevBoone',
     category: 'Communities', type: 'Church',
@@ -297,7 +297,7 @@ export const SEED_STAKEHOLDERS = [
     notes: 'Long-horizon holder; asked for the FY26 circularity metrics early.',
   },
   {
-    id: 'sh-20', isPerson: true, firstName: 'Aisha', lastName: 'Bell', title: 'None',
+    id: 'sh-20', isPerson: true, firstName: 'Aisha', lastName: 'Bell', title: '', // sealed None = value ""
     name: 'Aisha Bell', org: 'HP, Inc.',
     email: 'aisha.bell@hp.com', phone: '(541) 555-0151', xAccount: '@AishaBellHP',
     category: 'Our People', type: 'Community Outreach Lead',
@@ -402,12 +402,17 @@ export const SEED_MESSAGES = {
 };
 
 /* ── COMMUNITY — 4 applications, one per major KIND (sealed counts/kinds/
- * stages; field values regenerated in the sealed shape: identity + kind +
- * stage + summary/description/rationale + submitter + representedStakeholderId
- * + recipient + linkedStakeholders[] + markets/regions/issues + ask + timeline/
- * decisionDeadline + budget + approval + licenseToOperate/relationshipImpact
- * (value score = their mean, computed downstream) + risk + attachments +
- * votes + owners/createdBy/createdAt).                                       */
+ * stages), in the SEALED FIELD SHAPE (Community box data model): identity +
+ * kind + stage + summary/description/rationale + submitter/submitterRole/
+ * dateSubmitted + representedStakeholderId + recipient + linkedStakeholders[]
+ * + markets/regions/issues + FLAT askType/amount/unit/recurrence/years +
+ * timeline/decisionDeadline + budget{total, requested, otherFunding, inKind}
+ * + approvedAmount/dateApproved + licenseToOperate/relationshipImpact (value
+ * score = their mean, computed downstream) + risk{reputational, legal,
+ * conflictOfInterest, attestation} + attachments + votes + owners/createdBy/
+ * createdAt/updatedAt. unit ∈ USD · hours · "" (sealed enum);
+ * approvedAmount/dateApproved drive the sealed rollups + the profile's
+ * cumulative-committed sum (isDecided(stage) && approvedAmount > 0).         */
 export const SEED_COMMUNITY = [
   {
     id: 'ca-01', name: 'Cedarville STEM Classroom Grant',
@@ -415,20 +420,20 @@ export const SEED_COMMUNITY = [
     summary: 'Three-year STEM equipment and teacher-training grant for Cedarville USD.',
     description: 'Funds printer/PC labs in 12 classrooms plus an annual teacher-training summer institute.',
     rationale: 'Deepens the district partnership and visibly supports local education around the Palo Alto site.',
-    submitter: 'u-sam',
+    submitter: 'u-sam', submitterRole: 'Community Relations Manager', dateSubmitted: '2025-12-04',
     representedStakeholderId: 'sh-07',
     recipient: 'Cedarville Unified School District',
     linkedStakeholders: ['sh-01', 'sh-13'],
     markets: ['Americas'], regions: ['United States'], issues: ['Education', 'AI'],
-    ask: { askType: 'Funding', amount: 150000, unit: 'USD', recurrence: 'Multi-year', years: 3 },
+    askType: 'Funding', amount: 150000, unit: 'USD', recurrence: 'Multi-year', years: 3,
     timeline: 'FY26 Q1 – FY28 Q4', decisionDeadline: '2026-01-15',
-    budget: { fiscalYear: 'FY26', requested: 150000, approved: 150000 },
-    approval: { approved: true, approvedBy: 'u-alex', approvedAt: '2026-01-22T18:30:00.000Z' },
+    budget: { total: 150000, requested: 150000, otherFunding: 0, inKind: '' },
+    approvedAmount: 150000, dateApproved: '2026-01-22',
     licenseToOperate: 7, relationshipImpact: 8,
-    risk: { level: 'Low', notes: 'Established district partner; standard grant agreement.' },
+    risk: { reputational: 'Low — established district partner; standard grant agreement.', legal: '', conflictOfInterest: false, attestation: true },
     attachments: [],
     votes: { 'u-alex': 'for', 'u-jordan': 'for', 'u-sam': 'for', 'u-devon': 'abstain' },
-    owners: ['u-sam'], createdBy: 'u-sam', createdAt: '2025-12-04T17:10:00.000Z',
+    owners: ['u-sam'], createdBy: 'u-sam', createdAt: '2025-12-04T17:10:00.000Z', updatedAt: '2026-01-22T18:30:00.000Z',
   },
   {
     id: 'ca-02', name: 'Willamette River Cleanup Day',
@@ -436,20 +441,20 @@ export const SEED_COMMUNITY = [
     summary: 'Employee volunteer day restoring the riverbank near the Corvallis site.',
     description: '200 employee volunteer hours, co-organized with the tribal council; HP provides logistics and supplies.',
     rationale: 'Directly counters the outfall-permit narrative with visible stewardship beside our critics.',
-    submitter: 'u-devon',
+    submitter: 'u-devon', submitterRole: 'Sustainability Analyst', dateSubmitted: '2026-05-28',
     representedStakeholderId: 'sh-09',
     recipient: 'Cedar Valley Tribal Council',
     linkedStakeholders: ['sh-06', 'sh-20'],
     markets: ['Americas'], regions: ['United States'], issues: ['Sustainability', 'Site Operations'],
-    ask: { askType: 'Volunteer hours', amount: 200, unit: 'hours', recurrence: 'Annual', years: 1 },
+    askType: 'Volunteer hours', amount: 200, unit: 'hours', recurrence: 'Annual', years: 1,
     timeline: 'FY26 Q4', decisionDeadline: '2026-07-15',
-    budget: { fiscalYear: 'FY26', requested: 8000 },
-    approval: { approved: false },
+    budget: { total: 8000, requested: 8000, otherFunding: 0, inKind: 'HP logistics and supplies' },
+    approvedAmount: 0, dateApproved: '',
     licenseToOperate: 8, relationshipImpact: 6,
-    risk: { level: 'Low', notes: 'Weather-dependent; coordinate messaging with the consultation track.' },
+    risk: { reputational: 'Weather-dependent; coordinate messaging with the consultation track.', legal: '', conflictOfInterest: false, attestation: true },
     attachments: [],
     votes: { 'u-devon': 'for', 'u-sam': 'for' },
-    owners: ['u-devon'], createdBy: 'u-devon', createdAt: '2026-05-28T21:05:00.000Z',
+    owners: ['u-devon'], createdBy: 'u-devon', createdAt: '2026-05-28T21:05:00.000Z', updatedAt: '2026-05-28T21:05:00.000Z',
   },
   {
     id: 'ca-03', name: 'Oregon Modernization PAC Contribution',
@@ -457,20 +462,20 @@ export const SEED_COMMUNITY = [
     summary: 'PAC contribution supporting the permitting-modernization legislative slate.',
     description: 'One-time contribution to the Cascade Manufacturing Council PAC for the FY26 session.',
     rationale: 'Aligns with the Hawk plan priority on permitting and modernization approvals.',
-    submitter: 'u-alex',
+    submitter: 'u-alex', submitterRole: 'Director, Government Affairs', dateSubmitted: '2026-06-02',
     representedStakeholderId: 'sh-16',
     recipient: 'Cascade Manufacturing Council PAC',
     linkedStakeholders: ['sh-02'],
     markets: ['Americas'], regions: ['United States'], issues: ['Procurement Reform', 'Taxation'],
-    ask: { askType: 'Political contribution', amount: 25000, unit: 'USD', recurrence: 'One-time', years: 1 },
+    askType: 'Political contribution', amount: 25000, unit: 'USD', recurrence: 'One-time', years: 1,
     timeline: 'FY26 Q4', decisionDeadline: '2026-08-01',
-    budget: { fiscalYear: 'FY26', requested: 25000 },
-    approval: { approved: false },
+    budget: { total: 25000, requested: 25000, otherFunding: 0, inKind: '' },
+    approvedAmount: 0, dateApproved: '',
     licenseToOperate: 6, relationshipImpact: 5,
-    risk: { level: 'Medium', notes: 'Requires legal compliance sign-off and public disclosure.' },
+    risk: { reputational: 'Public disclosure of the contribution.', legal: 'Requires legal compliance sign-off.', conflictOfInterest: false, attestation: true },
     attachments: [],
     votes: { 'u-alex': 'for', 'u-jordan': 'for', 'u-priya': 'against' },
-    owners: ['u-alex'], createdBy: 'u-alex', createdAt: '2026-06-02T15:48:00.000Z',
+    owners: ['u-alex'], createdBy: 'u-alex', createdAt: '2026-06-02T15:48:00.000Z', updatedAt: '2026-06-02T15:48:00.000Z',
   },
   {
     id: 'ca-04', name: 'LATAM E-Waste Take-Back Equipment',
@@ -478,20 +483,20 @@ export const SEED_COMMUNITY = [
     summary: 'In-kind donation of collection and sorting equipment for a Brazilian e-waste cooperative network.',
     description: 'Donates refurbished sorting lines plus training to certified recycling cooperatives in São Paulo state.',
     rationale: 'Strengthens the supplies-recycling story in the market where clone-cartridge pressure is highest.',
-    submitter: 'u-kenji',
+    submitter: 'u-kenji', submitterRole: 'Site Operations Lead', dateSubmitted: '2026-03-20',
     representedStakeholderId: 'sh-17',
     recipient: 'Rede Recicla SP',
     linkedStakeholders: ['sh-14'],
     markets: ['LATAM'], regions: ['Brazil'], issues: ['Supply Chain', 'Sustainability'],
-    ask: { askType: 'In-kind', amount: 60000, unit: 'USD equivalent', recurrence: 'One-time', years: 1 },
+    askType: 'In-kind', amount: 60000, unit: 'USD', recurrence: 'One-time', years: 1,
     timeline: 'FY26 Q3 – FY27 Q1', decisionDeadline: '2026-04-10',
-    budget: { fiscalYear: 'FY26', requested: 60000, approved: 60000 },
-    approval: { approved: true, approvedBy: 'u-jordan', approvedAt: '2026-04-14T13:12:00.000Z' },
+    budget: { total: 60000, requested: 60000, otherFunding: 0, inKind: 'Refurbished sorting lines + training' },
+    approvedAmount: 60000, dateApproved: '2026-04-14',
     licenseToOperate: 7, relationshipImpact: 7,
-    risk: { level: 'Low', notes: 'Logistics partner identified; customs paperwork in progress.' },
+    risk: { reputational: 'Low — logistics partner identified.', legal: 'Customs paperwork in progress.', conflictOfInterest: false, attestation: true },
     attachments: [],
     votes: { 'u-kenji': 'for', 'u-jordan': 'for', 'u-alex': 'for' },
-    owners: ['u-kenji'], createdBy: 'u-kenji', createdAt: '2026-03-20T16:33:00.000Z',
+    owners: ['u-kenji'], createdBy: 'u-kenji', createdAt: '2026-03-20T16:33:00.000Z', updatedAt: '2026-04-14T13:12:00.000Z',
   },
 ];
 

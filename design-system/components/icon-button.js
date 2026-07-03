@@ -166,6 +166,9 @@ class UiIconButton extends HTMLElement {
     this.#btn.removeEventListener('click', this.#onClick);
   }
 
+  /* Delegate programmatic focus to the real control (dialog focus pass etc.). */
+  focus(options) { this.#btn.focus(options); }
+
   attributeChangedCallback() {
     this.#sync();
   }

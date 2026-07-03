@@ -95,6 +95,55 @@ await page.screenshot({ path: `${OUT}/lists-notes-modal.png` });
 // close via the dialog API (Escape only lands when focus sits inside the card)
 await page.evaluate(() => document.querySelector('ui-dialog')?.close());
 await page.waitForTimeout(300);
+
+// ── PHASE-4 STAKEHOLDER MODAL CAPTURES ─────────────────────────────────────
+// 1 · CREATE modal via the app-bar context-aware (+) (sealed addNonceFor route)
+await page.locator('ui-app-bar ui-icon-button[aria-label="Create new"]').click();
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p4-create-modal.png` });
+// 2 · person toggle ON → Title select + First/Last name row appear
+await page.locator('.sh-dialog ui-switch').click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p4-person-toggle.png` });
+// 3 · IssueSelector: scroll to Issues, add one company chip + one custom value
+await page.locator('.sh-dialog .issue-selector').first().scrollIntoViewIfNeeded();
+await page.locator('.sh-dialog .issue-selector').first().locator('ui-chip').first().click();
+await page.waitForTimeout(200);
+await page.locator('.sh-dialog .issue-selector').first().locator('.issue-custom').click();
+await page.keyboard.type('river access');
+await page.keyboard.press('Enter');
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p4-issue-selector.png` });
+// close the create draft (Escape — a sealed silent-discard dismissal route)
+await page.keyboard.press('Escape');
+await page.waitForTimeout(400);
+// 4 · READ-ONLY PROFILE via the row edit icon (sealed initialView route)
+await page.locator('ui-stakeholder-table ui-icon-button[aria-label^="Edit"]').first().click();
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p4-profile-view.png` });
+// scroll the profile body to the community/notes sections
+await page.evaluate(() => {
+  const dlg = document.querySelector('.sh-dialog');
+  const body = dlg?.shadowRoot?.querySelector('.body');
+  if (body) body.scrollTop = body.scrollHeight;
+});
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p4-profile-view-bottom.png` });
+// 5 · "Edit stakeholder" flips to the FORM; delete section → confirm dialog
+await page.locator('.sh-dialog ui-button', { hasText: 'Edit stakeholder' }).click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p4-edit-form.png` });
+await page.locator('.sh-dialog .sh-delete ui-button').scrollIntoViewIfNeeded();
+await page.locator('.sh-dialog .sh-delete ui-button').click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p4-delete-confirm.png` });
+// close the confirm (its OWN Escape — the main edit form must stay open)
+await page.keyboard.press('Escape');
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p4-edit-after-confirm-close.png` });
+await page.keyboard.press('Escape');
+await page.waitForTimeout(400);
+
 await page.screenshot({ path: `${OUT}/rail-expanded.png`, clip: { x: 0, y: 0, width: 300, height: 900 } });
 await measureAxis(page, 'expanded');
 

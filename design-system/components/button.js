@@ -24,6 +24,15 @@ template.innerHTML = `
     :host([variant="outlined"]){ --_bg: transparent; --_fg: var(--ui-sys-on-surface); --_border: var(--ui-sys-outline); }
     :host([variant="text"])    { --_bg: transparent; --_fg: var(--ui-sys-on-surface); }
 
+    /* tone="danger" — destructive actions (the sealed btn-danger surfaces:
+       delete stakeholder / confirm Delete). Orthogonal to variant; reads the
+       --ui-sys-neg error tokens, never a literal color. */
+    :host([tone="danger"][variant="filled"]) { --_bg: var(--ui-sys-neg); --_fg: var(--ui-sys-on-primary); }
+    :host([tone="danger"][variant="tonal"]),
+    :host([tone="danger"][variant="outlined"]),
+    :host([tone="danger"][variant="text"])   { --_fg: var(--ui-sys-neg); }
+    :host([tone="danger"][variant="outlined"]) { --_border: var(--ui-sys-neg-border-soft); }
+
     button {
       /* layout */
       appearance: none;
@@ -113,6 +122,9 @@ class UiButton extends HTMLElement {
   attributeChangedCallback() {
     this.#btn.disabled = this.hasAttribute('disabled');
   }
+
+  /* Delegate programmatic focus to the real control (dialog focus pass etc.). */
+  focus(options) { this.#btn.focus(options); }
 
   #onClick = () => {
     if (this.hasAttribute('disabled')) return;

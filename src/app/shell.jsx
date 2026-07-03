@@ -17,9 +17,25 @@ const NAV_TABS = [
   { id: 'setup',     label: 'Workspaces', icon: 'work' },
 ];
 
+// Sealed NAV-TABS RIGHT CLUSTER: the context-aware "Create new" (+) shows for
+// exactly these views (on setup it opens the new-workspace modal; elsewhere it
+// fires the per-view create flow).
+const CREATE_VIEWS = ['sheet', 'scoring', 'plan', 'community', 'setup'];
+
 export function AppShell() {
   const [view, setView] = useState('sheet');
   const isMaster = true; // workspace state arrives with the shell-state phase
+
+  // SEALED addNonceFor ROUTE, adapted to this shell: the oracle kept
+  // addNonce + addNonceFor("sheet") state in app.jsx and the Lists view
+  // watched the nonce to open its create modal. This shell has no nav-tab
+  // row (Claude form factor ruling) — the (+) lives in the content header's
+  // trailing cluster instead — and the nonce is passed to the page as the
+  // createNonce prop (no window.__* bridges; first-class props per the
+  // make-real law). Only the sheet flow exists yet, so the (+) is live on
+  // the Lists view and honestly inert (disabled + phase note) on the other
+  // sealed create views until their phases land.
+  const [createNonce, setCreateNonce] = useState(0);
 
   const visibleTabs = NAV_TABS.filter(t => !(isMaster && t.hideWhenMaster));
 
@@ -35,6 +51,20 @@ export function AppShell() {
               title="Workspace switching arrives with the shell-state phase">
           Master <ui-icon size="sm">expand_more</ui-icon>
         </span>
+        {CREATE_VIEWS.includes(view) && (
+          <ui-icon-button
+            slot="trailing"
+            variant="standard"
+            aria-label="Create new"
+            title={view === 'sheet'
+              ? 'Create new'
+              : "Create new — wires up with this page's build phase"}
+            disabled={view === 'sheet' ? undefined : ''}
+            onClick={view === 'sheet' ? () => setCreateNonce(n => n + 1) : undefined}
+          >
+            <ui-icon>add</ui-icon>
+          </ui-icon-button>
+        )}
         <ui-icon-button slot="trailing" variant="standard" disabled aria-label="Search"
                         title="Search (⌘K) arrives with the command-palette phase">
           <ui-icon>search</ui-icon>
@@ -75,7 +105,7 @@ export function AppShell() {
             runs, an honest placeholder states the build state rather than
             faking a screen. */}
         {view === 'sheet' ? (
-          <SheetPage />
+          <SheetPage createNonce={createNonce} />
         ) : (
           <ui-card variant="outlined">
             <div className="ph-title">
@@ -91,7 +121,7 @@ export function AppShell() {
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Build: Phase 3 — the full Lists grid</span>
+        <span>Build: Phase 4 — stakeholder create/edit modal</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
     </ui-app-shell>

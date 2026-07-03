@@ -44,5 +44,6 @@ import "./components/nav-drawer.js";
 import "./components/sheet.js";
 import "./components/bottom-bar.js";
 import "./components/date-picker.js";
+import "./components/upload.js";
 import "./components/stakeholder-table.js";
 import "./components/stakeholder-map.js";
