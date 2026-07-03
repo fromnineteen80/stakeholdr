@@ -218,34 +218,36 @@ function IssueSelector({ selected, company, restrict, onChange }) {
   );
 }
 
-/* ── read-only profile primitives (sealed Shared-UI-primitives) ──────────── */
+/* ── read-only profile primitives (sealed Shared-UI-primitives) ────────────
+ * COMPOSITION LAW: the pill/dot visuals live in ONE place — the design
+ * system's ui-chip priority/zone/tag variants + ui-status-dot
+ * (design-system/components/chips.js). These wrappers only compose them;
+ * never hand-rolled spans (the old .tag/.pill/.status-dot/.zone-pill app.css
+ * rules are deleted). */
 
 function TagPills({ values }) {
   if (!values || !values.length) return <span className="muted">-</span>;
   const extra = values.length - 3;
   return (
     <span className="pills-inline">
-      {values.slice(0, 3).map((v) => <span className="tag" key={v}>{v}</span>)}
+      {values.slice(0, 3).map((v) => <ui-chip variant="tag" key={v}>{v}</ui-chip>)}
+      {/* sealed Tags primitive: the "+N" overflow is a MUTED TEXT SPAN, not a chip */}
       {extra > 0 && <span className="muted">+{extra}</span>}
     </span>
   );
 }
 
 function StatusDot({ value }) {
-  // Sealed dot colors → tokens: Active --ui-sys-pos · Watch --ui-sys-accent ·
-  // Dormant/unknown --ui-sys-status-dormant (app.css).
-  const mod = value === 'Active' ? 'active' : value === 'Watch' ? 'watch' : 'dormant';
-  return (
-    <span className="status-dot">
-      <span className={'dot dot-' + mod}></span>{value || '-'}
-    </span>
-  );
+  // ui-status-dot null-guards an empty value (renders nothing); the profile's
+  // empty-field convention is a literal "-", so guard here.
+  if (!value) return <span className="muted">-</span>;
+  return <ui-status-dot value={value}></ui-status-dot>;
 }
 
 function PriorityPill({ value }) {
-  const p = (value || '').toLowerCase();
-  const cls = p === 'high' ? 'pill--high' : p === 'medium' ? 'pill--medium' : 'pill--low';
-  return <span className={'pill ' + cls}>{value || ''}</span>;
+  // value matched case-insensitively; unknown falls back to the Low pair
+  // (sealed rule, implemented inside the variant).
+  return <ui-chip variant="priority" value={value || ''}>{value || ''}</ui-chip>;
 }
 
 function PRow({ k, children, full }) {
@@ -257,10 +259,12 @@ function PRow({ k, children, full }) {
   );
 }
 
-/* One community-engagement row. SEALED intent: clicking opens the nested
- * CommunityModal — that surface lands with the Community build phase, so the
- * row is INERT here (non-interactive, phase note) per the make-real law:
- * never a live-looking dead affordance. */
+/* One community-engagement row. PHASE-PENDING (Community phase): the sealed
+ * intent is that clicking opens the nested CommunityModal (initialView, with
+ * the re-target-in-place onOpenStakeholder wiring) — that surface belongs to
+ * the COMMUNITY BUILD PHASE, which will wire these rows. Until then the row
+ * is deliberately INERT (non-interactive, phase-note tooltip) per the
+ * make-real law: never a live-looking dead affordance. */
 function EngagementRow({ a }) {
   return (
     <div className="profile-entry" title="Opens with the Community build phase">
@@ -380,7 +384,11 @@ export function StakeholderModal({
                 <div className="prof-title">{displayName(s) || s.name}</div>
                 <div className="prof-sub">{profSub}</div>
                 <div className="prof-tagline">
-                  <span className="zone-pill" data-zone={relStatus}>{relStatus}</span>
+                  {/* The shared zone variant carries the sealed NULL-GUARD:
+                      an uncatalogued zone renders nothing, never an empty
+                      pill (statusFor always returns a catalogued zone, so
+                      this is belt-and-braces). */}
+                  <ui-chip variant="zone" data-zone={relStatus}>{relStatus}</ui-chip>
                   <span className="prof-coords">x {wc.x.toFixed(1)} · y {wc.y.toFixed(1)}</span>
                 </div>
               </div>
@@ -427,13 +435,15 @@ export function StakeholderModal({
               <PRow k="Owners" full>
                 <Owners users={users} value={s.owners || []} readonly />
               </PRow>
-              {/* Sealed: workspace chips are clickable ONLY when an
-                  onOpenWorkspace route exists — the Workspaces page lands in
-                  its own phase, so these are the sealed plain (non-clickable)
-                  pills until then. */}
+              {/* PHASE-PENDING (Workspaces phase): sealed rule — workspace
+                  chips are clickable ONLY when an onOpenWorkspace route
+                  exists. The Workspaces page (Setup) build phase lands that
+                  route and upgrades these to clickable chips; until then they
+                  are the sealed plain non-clickable tag pills (declared
+                  inert, not a dead affordance). */}
               <PRow k="Workspaces" full>
                 {wsList.length
-                  ? <span className="pills-inline">{wsList.map((w) => <span className="tag" key={w.id}>{w.name}</span>)}</span>
+                  ? <span className="pills-inline">{wsList.map((w) => <ui-chip variant="tag" key={w.id}>{w.name}</ui-chip>)}</span>
                   : '-'}
               </PRow>
 

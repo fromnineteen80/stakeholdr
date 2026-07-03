@@ -49,7 +49,8 @@
       "textarea",
       "badge",
       "owner-picker",
-      "coachmark"
+      "coachmark",
+      "status-dot"
     ],
     "scaffold": [
       "app-shell",
@@ -562,7 +563,7 @@
       "tag": "ui-chip",
       "status": "built",
       "category": "native",
-      "summary": "Chip variants assist/filter/input/suggestion; pill shape; filter toggles primary-container; input removable; paired with ui-chip-set.",
+      "summary": "Chip variants assist/filter/input/suggestion (interactive: pill shape; filter toggles primary-container; input removable; paired with ui-chip-set) PLUS the sealed presentational pill variants priority/zone/tag (Shared-UI-primitives): non-interactive caption-type pills with no state layer/tabstop/role. priority reads --ui-sys-priority-{high|medium|low}-surface/-ink via the value attr (case-insensitive; unknown falls back to the Low pair). zone reads the 14 single-sourced --ui-sys-zone-* fills + band inks via data-zone = the exact zone name, with the SEALED NULL-GUARD: an uncatalogued zone renders NOTHING. tag is the quiet surface-container tag pill. These variants are the ONE source of pill visuals — screens compose them, never hand-rolled spans.",
       "props": [
         {
           "name": "variant",
@@ -571,7 +572,10 @@
             "assist",
             "filter",
             "input",
-            "suggestion"
+            "suggestion",
+            "priority",
+            "zone",
+            "tag"
           ],
           "default": "assist"
         },
@@ -584,6 +588,23 @@
           "name": "disabled",
           "type": "boolean",
           "default": false
+        },
+        {
+          "name": "value",
+          "type": "enum",
+          "values": [
+            "High",
+            "Medium",
+            "Low"
+          ],
+          "default": "",
+          "note": "priority variant only; matched case-insensitively; unknown/absent falls back to the Low pair (sealed PriorityPill rule)"
+        },
+        {
+          "name": "data-zone",
+          "type": "string",
+          "default": "",
+          "note": "zone variant only; the exact relationship-zone name (one of the 14 catalogued zones); unknown renders nothing (sealed StatusPill null-guard)"
         }
       ],
       "states": [
@@ -591,7 +612,36 @@
         "hover",
         "pressed",
         "focus-visible",
-        "disabled"
+        "disabled",
+        "presentational (priority/zone/tag)",
+        "zone-null-guard-hidden"
+      ],
+      "import": "./components/chips.js"
+    },
+    "status-dot": {
+      "tag": "ui-status-dot",
+      "status": "built",
+      "category": "gapFill",
+      "summary": "The sealed StatusDot primitive (Shared-UI-primitives box): a 7px round dot + the value text as its label, non-interactive. Colors: Active reads --ui-sys-pos, Watch reads --ui-sys-accent, Dormant AND any unknown value read --ui-sys-status-dormant. NULL-GUARD: an absent/empty value renders nothing.",
+      "props": [
+        {
+          "name": "value",
+          "type": "enum",
+          "values": [
+            "Active",
+            "Watch",
+            "Dormant"
+          ],
+          "default": "",
+          "note": "the label text; unknown non-empty values render with the Dormant grey dot; empty/absent renders nothing"
+        }
+      ],
+      "states": [
+        "active",
+        "watch",
+        "dormant",
+        "unknown-fallback",
+        "hidden (null-guard)"
       ],
       "import": "./components/chips.js"
     },

@@ -57,6 +57,9 @@
  * committed on change, editor unmounted when the select closes; the date
  * cell mounts a REAL <ui-date-picker> the same way. Display cells stay
  * lightweight text/pill renders under this ruling.
+ * NOTE (2026-07-03): the display-cell pills (priority/zone/tag/status-dot)
+ * migrate to the shared ui-chip priority|zone|tag variants + ui-status-dot
+ * (chips.js) in a cleanup pass — same token pairs, one visual source.
  * ══════════════════════════════════════════════════════════════════════ */
 
 /* The composed components are side-effect modules that touch `document` at

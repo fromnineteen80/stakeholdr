@@ -117,9 +117,13 @@ await page.screenshot({ path: `${OUT}/p4-issue-selector.png` });
 // close the create draft (Escape — a sealed silent-discard dismissal route)
 await page.keyboard.press('Escape');
 await page.waitForTimeout(400);
-// 4 · READ-ONLY PROFILE via the row edit icon (sealed initialView route)
+// 4 · row edit icon → EDIT FORM directly (sealed edit route, census C1);
+//     the read-only profile is reached via the form's "View Stakeholder" flip
 await page.locator('ui-stakeholder-table ui-icon-button[aria-label^="Edit"]').first().click();
 await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p4-edit-form.png` });
+await page.locator('.sh-dialog ui-button', { hasText: 'View Stakeholder' }).click();
+await page.waitForTimeout(400);
 await page.screenshot({ path: `${OUT}/p4-profile-view.png` });
 // scroll the profile body to the community/notes sections
 await page.evaluate(() => {
@@ -129,10 +133,10 @@ await page.evaluate(() => {
 });
 await page.waitForTimeout(300);
 await page.screenshot({ path: `${OUT}/p4-profile-view-bottom.png` });
-// 5 · "Edit stakeholder" flips to the FORM; delete section → confirm dialog
+// 5 · "Edit stakeholder" flips back to the FORM; delete section → confirm dialog
 await page.locator('.sh-dialog ui-button', { hasText: 'Edit stakeholder' }).click();
 await page.waitForTimeout(400);
-await page.screenshot({ path: `${OUT}/p4-edit-form.png` });
+await page.screenshot({ path: `${OUT}/p4-edit-form-back.png` });
 await page.locator('.sh-dialog .sh-delete ui-button').scrollIntoViewIfNeeded();
 await page.locator('.sh-dialog .sh-delete ui-button').click();
 await page.waitForTimeout(400);

@@ -1,5 +1,7 @@
 /* ============================================================================
  * <ui-chip-set> + <ui-chip> — chip variants: assist|filter|input|suggestion
+ * plus the sealed PRESENTATIONAL pill variants: priority|zone|tag — and the
+ * companion <ui-status-dot> element (sealed Shared-UI-primitives box).
  *
  * Usage:
  *   <ui-chip-set>
@@ -10,15 +12,35 @@
  *       Help
  *     </ui-chip>
  *   </ui-chip-set>
+ *   <ui-chip variant="priority" value="High">High</ui-chip>
+ *   <ui-chip variant="zone" data-zone="Strategic Partner">Strategic Partner</ui-chip>
+ *   <ui-chip variant="tag">public-official</ui-chip>
+ *   <ui-status-dot value="Active"></ui-status-dot>
  *
  * Attrs on <ui-chip>:
- *   variant  — assist | filter | input | suggestion  (default: assist)
+ *   variant  — assist | filter | input | suggestion   (interactive; default assist)
+ *              priority | zone | tag                  (presentational pills)
  *   selected — boolean, meaningful for filter chips
  *   disabled — boolean
+ *   value    — priority variant only: High | Medium | Low (case-insensitive;
+ *              unknown/absent falls back to the Low pair — sealed PriorityPill)
+ *   data-zone — zone variant only: the exact relationship-zone NAME. Colors
+ *              read the single-sourced --ui-sys-zone-* + band-ink tokens.
+ *              SEALED NULL-GUARD: a zone with no catalog entry renders
+ *              NOTHING (display:none), never an empty pill.
  *
  * filter chips: click toggles selected, emits change(detail:{selected})
  * input chips: show × remove button, emits remove (composed:true)
  * assist/suggestion: emits click (native, composed:true)
+ * priority/zone/tag: NON-INTERACTIVE display pills — no state layer, no
+ *   tabstop, no role; visuals come only from --ui-sys-* tokens. These are the
+ *   ONE source of the pill visuals (the modal/profile compose them; the
+ *   stakeholder-table's internal display cells migrate here in a cleanup pass).
+ *
+ * <ui-status-dot value="Active|Watch|Dormant"> — the sealed StatusDot: a 7px
+ *   round dot + the value as its label. Active → --ui-sys-pos, Watch →
+ *   --ui-sys-accent, Dormant/unknown → --ui-sys-status-dormant. NULL-GUARD:
+ *   an absent/empty value renders nothing.
  * ==========================================================================*/
 
 /* ---- <ui-chip-set> ------------------------------------------------------- */
@@ -170,6 +192,66 @@ chipTpl.innerHTML = `
       outline: 2px solid var(--ui-sys-focus-ring);
       outline-offset: 1px;
     }
+
+    /* ── PRESENTATIONAL PILL VARIANTS (sealed Shared-UI-primitives) ─────────
+       priority / zone / tag are display-only: compact caption-type pills, no
+       state layer, no pointer affordance. All color via --ui-sys-* tokens. */
+    :host([variant="priority"]) .chip,
+    :host([variant="zone"]) .chip,
+    :host([variant="tag"]) .chip {
+      height: auto;
+      padding: 1px var(--ui-sys-space-2);
+      font: var(--ui-sys-font-caption);
+      cursor: default;
+      user-select: text;
+    }
+    :host([variant="priority"]) .chip::before,
+    :host([variant="zone"]) .chip::before,
+    :host([variant="tag"]) .chip::before { content: none; } /* no state layer */
+
+    /* tag — the quiet .tag pill (sealed Tags primitive chip shape). */
+    :host([variant="tag"]) {
+      --_bg:     var(--ui-sys-surface-container);
+      --_border: transparent;
+      --_fg:     var(--ui-sys-on-surface);
+    }
+
+    /* priority — sealed PriorityPill pairs; unknown/absent value falls back
+       to the Low pair (sealed fallback rule). Border transparent (tag shape). */
+    :host([variant="priority"]) {
+      --_bg:     var(--ui-sys-priority-low-surface);
+      --_border: transparent;
+      --_fg:     var(--ui-sys-priority-low-ink);
+    }
+    :host([variant="priority"][value="high" i]) {
+      --_bg: var(--ui-sys-priority-high-surface);
+      --_fg: var(--ui-sys-priority-high-ink);
+    }
+    :host([variant="priority"][value="medium" i]) {
+      --_bg: var(--ui-sys-priority-medium-surface);
+      --_fg: var(--ui-sys-priority-medium-ink);
+    }
+
+    /* zone — the sealed StatusPill. SEALED NULL-GUARD: default display:none;
+       only a catalogued data-zone below turns the pill on — an unknown zone
+       renders NOTHING, never an empty pill. Every pair reads the
+       single-sourced --ui-sys-zone-* fills + band inks. */
+    :host([variant="zone"]) { display: none; --_border: var(--ui-sys-outline-subtle); }
+    :host([variant="zone"]) .chip { padding: 2px var(--ui-sys-space-2); }
+    :host([variant="zone"][data-zone="Proactively Defend"])      { display: inline-flex; --_bg: var(--ui-sys-zone-proactively-defend);      --_fg: var(--ui-sys-zone-ink-on-strong); }
+    :host([variant="zone"][data-zone="Defend"])                  { display: inline-flex; --_bg: var(--ui-sys-zone-defend);                  --_fg: var(--ui-sys-zone-ink-negative); }
+    :host([variant="zone"][data-zone="Protect"])                 { display: inline-flex; --_bg: var(--ui-sys-zone-protect);                 --_fg: var(--ui-sys-zone-ink-negative); }
+    :host([variant="zone"][data-zone="Respond"])                 { display: inline-flex; --_bg: var(--ui-sys-zone-respond);                 --_fg: var(--ui-sys-zone-ink-negative); }
+    :host([variant="zone"][data-zone="Identify"])                { display: inline-flex; --_bg: var(--ui-sys-zone-identify);                --_fg: var(--ui-sys-zone-ink-negative); }
+    :host([variant="zone"][data-zone="Monitor"])                 { display: inline-flex; --_bg: var(--ui-sys-zone-monitor);                 --_fg: var(--ui-sys-zone-ink-neutral); }
+    :host([variant="zone"][data-zone="Maintain"])                { display: inline-flex; --_bg: var(--ui-sys-zone-maintain);                --_fg: var(--ui-sys-zone-ink-neutral); }
+    :host([variant="zone"][data-zone="Connect"])                 { display: inline-flex; --_bg: var(--ui-sys-zone-connect);                 --_fg: var(--ui-sys-zone-ink-neutral); }
+    :host([variant="zone"][data-zone="Commit"])                  { display: inline-flex; --_bg: var(--ui-sys-zone-commit);                  --_fg: var(--ui-sys-zone-ink-neutral); }
+    :host([variant="zone"][data-zone="Cooperate"])               { display: inline-flex; --_bg: var(--ui-sys-zone-cooperate);               --_fg: var(--ui-sys-zone-ink-positive); }
+    :host([variant="zone"][data-zone="Collaborate"])             { display: inline-flex; --_bg: var(--ui-sys-zone-collaborate);             --_fg: var(--ui-sys-zone-ink-positive); }
+    :host([variant="zone"][data-zone="Valuable Relationship"])   { display: inline-flex; --_bg: var(--ui-sys-zone-valuable-relationship);   --_fg: var(--ui-sys-zone-ink-positive); }
+    :host([variant="zone"][data-zone="High Value Relationship"]) { display: inline-flex; --_bg: var(--ui-sys-zone-high-value-relationship); --_fg: var(--ui-sys-zone-ink-positive); }
+    :host([variant="zone"][data-zone="Strategic Partner"])       { display: inline-flex; --_bg: var(--ui-sys-zone-strategic-partner);       --_fg: var(--ui-sys-zone-ink-on-strong); }
   </style>
   <div class="chip" part="chip" tabindex="0">
     <span class="icon" part="icon"><slot name="icon"></slot></span>
@@ -222,7 +304,7 @@ class UiChip extends HTMLElement {
   attributeChangedCallback(name) {
     if (name === 'variant')  this.#syncRole();
     if (name === 'selected') this.#syncSelected();
-    if (name === 'disabled') {
+    if (name === 'disabled' && !this.#isPresentation()) {
       const d = this.hasAttribute('disabled');
       this.#chip.setAttribute('aria-disabled', String(d));
       this.#chip.setAttribute('tabindex', d ? '-1' : '0');
@@ -232,16 +314,29 @@ class UiChip extends HTMLElement {
   get selected() { return this.hasAttribute('selected'); }
   set selected(v) { v ? this.setAttribute('selected', '') : this.removeAttribute('selected'); }
 
+  /* priority/zone/tag are display-only pills — no widget role, no tabstop. */
+  #isPresentation() {
+    return ['priority', 'zone', 'tag'].includes(this.getAttribute('variant'));
+  }
+
   #syncRole() {
     const v = this.getAttribute('variant') || 'assist';
-    if (v === 'filter') {
+    if (this.#isPresentation()) {
+      this.removeAttribute('role');
+      this.#chip.removeAttribute('tabindex');
+      this.#chip.removeAttribute('aria-checked');
+      this.#chip.removeAttribute('aria-pressed');
+    } else if (v === 'filter') {
       this.setAttribute('role', 'checkbox');
+      this.#chip.setAttribute('tabindex', this.hasAttribute('disabled') ? '-1' : '0');
     } else if (v === 'input' || v === 'assist' || v === 'suggestion') {
       this.setAttribute('role', 'button');
+      this.#chip.setAttribute('tabindex', this.hasAttribute('disabled') ? '-1' : '0');
     }
   }
 
   #syncSelected() {
+    if (this.#isPresentation()) return;
     const sel = this.hasAttribute('selected');
     this.#chip.setAttribute('aria-checked', String(sel));
     this.#chip.setAttribute('aria-pressed', String(sel));
@@ -290,3 +385,59 @@ class UiChip extends HTMLElement {
 }
 
 if (!customElements.get('ui-chip')) customElements.define('ui-chip', UiChip);
+
+
+/* ---- <ui-status-dot> ------------------------------------------------------
+ * The sealed StatusDot primitive: a 7px round dot + the value as its label.
+ * Colors (sealed Shared-UI-primitives): Active → --ui-sys-pos · Watch →
+ * --ui-sys-accent · Dormant/unknown → --ui-sys-status-dormant.
+ * NULL-GUARD: absent/empty value renders nothing. Non-interactive.         */
+
+const statusDotTpl = document.createElement('template');
+statusDotTpl.innerHTML = `
+  <style>
+    :host {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--ui-sys-space-1);
+      font: var(--ui-sys-font-body);
+      color: var(--ui-sys-on-surface);
+      white-space: nowrap;
+    }
+    /* sealed null-guard: no value → render nothing */
+    :host(:not([value])), :host([value=""]) { display: none; }
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: var(--ui-sys-shape-pill);
+      background: var(--ui-sys-status-dormant); /* Dormant AND the unknown fallback */
+      flex-shrink: 0;
+    }
+    :host([value="Active"]) .dot { background: var(--ui-sys-pos); }
+    :host([value="Watch"])  .dot { background: var(--ui-sys-accent); }
+  </style>
+  <span class="dot" part="dot" aria-hidden="true"></span>
+  <span class="label" part="label"></span>
+`;
+
+class UiStatusDot extends HTMLElement {
+  static observedAttributes = ['value'];
+
+  #label;
+
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' }).appendChild(statusDotTpl.content.cloneNode(true));
+    this.#label = this.shadowRoot.querySelector('.label');
+  }
+
+  connectedCallback() { this.#sync(); }
+  attributeChangedCallback() { this.#sync(); }
+
+  get value() { return this.getAttribute('value') || ''; }
+  set value(v) { v ? this.setAttribute('value', v) : this.removeAttribute('value'); }
+
+  #sync() { this.#label.textContent = this.getAttribute('value') || ''; }
+}
+
+if (!customElements.get('ui-status-dot')) customElements.define('ui-status-dot', UiStatusDot);

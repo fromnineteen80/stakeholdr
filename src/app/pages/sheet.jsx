@@ -68,8 +68,10 @@ export function SheetPage({ createNonce = 0 }) {
   const [noteDraft, setNoteDraft] = useState('');
 
   // StakeholderModal routing state: null | { mode:'create' } |
-  // { mode:'edit', id, view } — view = the sealed initialView (read-only
-  // profile first; its Edit action flips to the form).
+  // { mode:'edit', id, view? }. The Lists edit routes (frozen edit icon +
+  // name dblclick) open EDIT MODE directly (no view flag — sealed census C1);
+  // view:true (the sealed initialView read-only profile) is reserved for the
+  // profile's own sealed openers when their phases land (e.g. Scoring drill).
   const [shModal, setShModal] = useState(null);
 
   // currentUser = the seeded first user UNTIL THE LOGIN PHASE lands the real
@@ -125,9 +127,12 @@ export function SheetPage({ createNonce = 0 }) {
     const onSelect = (e) => setSelectedId(e.detail.id);
     // SEALED EDIT ROUTE (replaces the Phase-3 pending snackbar): the row's
     // frozen edit icon AND the name-cell double-click both emit open-record —
-    // open the StakeholderModal on that record in initialView (the read-only
-    // profile; "Edit stakeholder" flips to the form).
-    const onOpenRecord = (e) => setShModal({ mode: 'edit', id: e.detail.id, view: true });
+    // both open the StakeholderModal directly in EDIT MODE (sealed census C1:
+    // "StakeholderModal (EDIT mode) for that row"; NO initialView here). The
+    // read-only profile stays reachable via its own sealed routes when they
+    // land (e.g. the Scoring drill / Plan row click in later phases) and via
+    // the form's "View Stakeholder" flip.
+    const onOpenRecord = (e) => setShModal({ mode: 'edit', id: e.detail.id });
     const onCommunityOpen = (e) =>
       snackRef.current?.show(`"${e.detail.name}" — the community entry view opens in the Community build phase`);
     el.addEventListener('row-change', onRowChange);
@@ -203,8 +208,16 @@ export function SheetPage({ createNonce = 0 }) {
   // currentUser: the seeded first user until the login phase (as above).
   // CREATE ROUTE (sealed addNonceFor adaptation): the shell's context-aware
   // (+) bumps createNonce; every bump opens the modal in create mode.
+  // STALE-NONCE GUARD: the ref captures the nonce as it stood when THIS
+  // SheetPage mounted, and the modal opens only when the nonce INCREASES past
+  // it — so remounting the page (press +, cancel, go to Map, come back) can
+  // never replay an already-consumed create request.
+  const seenNonce = useRef(createNonce);
   useEffect(() => {
-    if (createNonce > 0) setShModal({ mode: 'create' });
+    if (createNonce > seenNonce.current) {
+      seenNonce.current = createNonce;
+      setShModal({ mode: 'create' });
+    }
   }, [createNonce]);
 
   /* addStakeholder (sealed): mint uid("sh"); stamp createdBy + createdAt/

@@ -232,62 +232,11 @@ ui-sidebar[collapsed] .me { justify-content: center; padding: var(--ui-sys-space
 .prof-legacy-note { margin: 0; font: var(--ui-sys-font-body); white-space: pre-wrap; }
 .sh-empty-line { font: var(--ui-sys-font-caption); padding: var(--ui-sys-space-1) 0; }
 
-/* tag pill (sealed .tag / Tags primitive: first 3 + muted "+N"). */
+/* Pill/dot VISUALS live in the design system, not here (composition law):
+ * ui-chip variant=tag|priority|zone and ui-status-dot
+ * (design-system/components/chips.js) are the single source. This layer keeps
+ * only the layout wrapper below. */
 .pills-inline { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--ui-sys-space-1); }
-.tag {
-  display: inline-flex; align-items: center;
-  padding: 1px var(--ui-sys-space-2);
-  border-radius: var(--ui-sys-shape-pill);
-  background: var(--ui-sys-surface-container);
-  color: var(--ui-sys-on-surface);
-  font: var(--ui-sys-font-caption);
-  white-space: nowrap;
-}
-
-/* Priority pill (sealed --ui-sys-priority-* pairs; unknown → Low). */
-.pill {
-  display: inline-flex; align-items: center;
-  padding: 1px var(--ui-sys-space-2);
-  border-radius: var(--ui-sys-shape-pill);
-  font: var(--ui-sys-font-caption);
-}
-.pill--high   { background: var(--ui-sys-priority-high-surface);   color: var(--ui-sys-priority-high-ink); }
-.pill--medium { background: var(--ui-sys-priority-medium-surface); color: var(--ui-sys-priority-medium-ink); }
-.pill--low    { background: var(--ui-sys-priority-low-surface);    color: var(--ui-sys-priority-low-ink); }
-
-/* StatusDot (sealed: 7px dot + label; Active --ui-sys-pos · Watch
- * --ui-sys-accent · Dormant/unknown --ui-sys-status-dormant). */
-.status-dot { display: inline-flex; align-items: center; gap: var(--ui-sys-space-1); font: var(--ui-sys-font-body); }
-.status-dot .dot { width: 7px; height: 7px; border-radius: var(--ui-sys-shape-pill); display: inline-block; }
-.status-dot .dot-active  { background: var(--ui-sys-pos); }
-.status-dot .dot-watch   { background: var(--ui-sys-accent); }
-.status-dot .dot-dormant { background: var(--ui-sys-status-dormant); }
-
-/* Relationship zone pill — every pair reads the single-sourced
- * --ui-sys-zone-* tokens (sealed StatusPill; null-guard is upstream:
- * statusFor always returns a catalogued zone). */
-.zone-pill {
-  display: inline-flex; align-items: center;
-  padding: 2px var(--ui-sys-space-2);
-  border-radius: var(--ui-sys-shape-pill);
-  border: 1px solid var(--ui-sys-outline-subtle);
-  font: var(--ui-sys-font-caption);
-  white-space: nowrap;
-}
-.zone-pill[data-zone="Proactively Defend"]      { background: var(--ui-sys-zone-proactively-defend);      color: var(--ui-sys-zone-ink-on-strong); }
-.zone-pill[data-zone="Defend"]                  { background: var(--ui-sys-zone-defend);                  color: var(--ui-sys-zone-ink-negative); }
-.zone-pill[data-zone="Protect"]                 { background: var(--ui-sys-zone-protect);                 color: var(--ui-sys-zone-ink-negative); }
-.zone-pill[data-zone="Respond"]                 { background: var(--ui-sys-zone-respond);                 color: var(--ui-sys-zone-ink-negative); }
-.zone-pill[data-zone="Identify"]                { background: var(--ui-sys-zone-identify);                color: var(--ui-sys-zone-ink-negative); }
-.zone-pill[data-zone="Monitor"]                 { background: var(--ui-sys-zone-monitor);                 color: var(--ui-sys-zone-ink-neutral); }
-.zone-pill[data-zone="Maintain"]                { background: var(--ui-sys-zone-maintain);                color: var(--ui-sys-zone-ink-neutral); }
-.zone-pill[data-zone="Connect"]                 { background: var(--ui-sys-zone-connect);                 color: var(--ui-sys-zone-ink-neutral); }
-.zone-pill[data-zone="Commit"]                  { background: var(--ui-sys-zone-commit);                  color: var(--ui-sys-zone-ink-neutral); }
-.zone-pill[data-zone="Cooperate"]               { background: var(--ui-sys-zone-cooperate);               color: var(--ui-sys-zone-ink-positive); }
-.zone-pill[data-zone="Collaborate"]             { background: var(--ui-sys-zone-collaborate);             color: var(--ui-sys-zone-ink-positive); }
-.zone-pill[data-zone="Valuable Relationship"]   { background: var(--ui-sys-zone-valuable-relationship);   color: var(--ui-sys-zone-ink-positive); }
-.zone-pill[data-zone="High Value Relationship"] { background: var(--ui-sys-zone-high-value-relationship); color: var(--ui-sys-zone-ink-positive); }
-.zone-pill[data-zone="Strategic Partner"]       { background: var(--ui-sys-zone-strategic-partner);       color: var(--ui-sys-zone-ink-on-strong); }
 
 /* Community engagements (sealed profile section). */
 .profile-cumulative { display: flex; align-items: baseline; gap: var(--ui-sys-space-2); }

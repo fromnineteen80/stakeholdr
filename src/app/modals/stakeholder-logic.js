@@ -115,7 +115,16 @@ export function titleCase(s) {
 }
 
 /* Every IssueSelector add titleCases and dedups (sealed selected.includes
- * guard). Returns the same array when nothing was added. */
+ * guard). Returns the same array when nothing was added.
+ *
+ * DECLARED DEPARTURE / QUIRK (sealed-faithful; ruling pending): the sealed
+ * rule "every add titleCases" applies to PRESET clicks too, so clicking a
+ * lowercase company preset like "+ ally" adds "Ally" — which does NOT equal
+ * the company value "ally", so the "+ ally" preset chip never disappears
+ * from the available row (available = company minus selected, exact-match).
+ * This mirrors the oracle exactly. A future ruling may case-preserve preset
+ * adds (or case-insensitively filter availability); until the user rules,
+ * DO NOT "fix" this silently. */
 export function addIssueValue(selected, raw) {
   const v = titleCase(raw);
   if (!v || selected.includes(v)) return selected;
