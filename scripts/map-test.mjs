@@ -119,10 +119,13 @@ t('x ticks are every integer -10..10 (21 ticks)', () => {
   assert.deepEqual(X_TICKS.slice(9, 12), [-1, 0, 1]);
 });
 
-/* ── legend copy (sealed verbatim) ─────────────────────────────────────── */
+/* ── legend copy — DECLARED RESOLUTION (box-internal conflict): the sealed
+ * box BODY spaces the centre segment's middot with DOUBLE spaces while the
+ * box's own SKELETON TREE uses SINGLE; single ships (see the LEGEND_*
+ * comment in stakeholder-map.js). Left/right are sealed verbatim. ───────── */
 t('legend left: "← Works against you"', () =>
   assert.equal(LEGEND_LEFT, '← Works against you'));
-t('legend centre: "↑ Greater community influence · ↓ Less community influence"', () =>
+t('legend centre (declared resolution): single-spaced "↑ Greater community influence · ↓ Less community influence"', () =>
   assert.equal(LEGEND_CENTER, '↑ Greater community influence · ↓ Less community influence'));
 t('legend right: "Works with you →"', () =>
   assert.equal(LEGEND_RIGHT, 'Works with you →'));

@@ -22,11 +22,18 @@
  *           (the page computes weightedCoord/statusFor live) plus the
  *           stakeholder fields incl. history[] and notesHistory[].
  *   .users  Array of users (resolves the scorecard Owner avatar stack).
+ *   .selectedId  Controlled selection (string id | null). The page owns
+ *           selection (sealed: "selection lifts to the page"); the component
+ *           emits selection-change and the page passes the id back here.
  * Attributes (display options; sealed TWEAK_DEFAULTS = halo/false/true/22):
  *   map-style        "halo" | "classic" | "density"   (default "halo")
  *   show-labels      "true"/"" | "false"              (default false)
  *   show-zone-labels "true"/"" | "false"              (default true)
  *   dot-size         px, sealed slider range 14–36    (default 22)
+ *   gallery          boolean — preview/wireframes ONLY: renders the built-in
+ *                    sample when no .data is set. Without it the component
+ *                    renders EMPTY until .data arrives (make-real rule: the
+ *                    app never shows a live-looking fake dataset).
  * Events (composed, bubble):
  *   selection-change {id}   single click / recent-row select (wrapSelect:
  *                           select + force scorecard open + exit history)
@@ -197,7 +204,13 @@ export function haloInset(dotSize) { return -(dotSize * 0.8); }
 export const Y_TICKS = [10, 7.5, 5, 2.5, 0, -2.5, -5, -7.5, -10];
 export const X_TICKS = Array.from({ length: 21 }, (_, i) => i - 10);
 
-/* Sealed legend copy — verbatim. */
+/* Sealed legend copy — DECLARED RESOLUTION of a box-internal conflict on the
+ * CENTRE segment's spacing: the sealed box BODY ("AXIS TICKS & LEGEND" bullet)
+ * writes it with DOUBLE spaces around the middot ("… influence  ·  ↓ …") while
+ * the same box's own SKELETON TREE writes it with SINGLE spaces ("… influence
+ * · ↓ …"). This ships the single-space form (the skeleton reading; matches the
+ * left/right segments' single-space rhythm). Left/right segments are verbatim
+ * and unconflicted. */
 export const LEGEND_LEFT = '← Works against you';
 export const LEGEND_CENTER = '↑ Greater community influence · ↓ Less community influence';
 export const LEGEND_RIGHT = 'Works with you →';
@@ -259,8 +272,10 @@ export function tagsOverflow(values) {
   return { shown: v.slice(0, 3), more: Math.max(0, v.length - 3) };
 }
 
-/* Gallery sample (bare tag on preview.html/wireframes.html only; the app
- * always sets .data).                                                        */
+/* Gallery sample — ONLY rendered when the host element carries the `gallery`
+ * attribute (preview.html / wireframes.html set it). In the app the map
+ * renders EMPTY until .data arrives (MAKE-REAL rule: never a live-looking
+ * fake dataset in real chrome).                                              */
 const SAMPLE_DATA = [
   { id: 's-1', name: 'Mayor Maria Chen', org: 'City of Cedarville', type: 'Mayor', category: 'Government', priority: 'High', status: 'Active', _x: 2.9, _y: 8.1, lastContact: '2026-05-12', notes: 'Generally supportive; cares about local jobs.', history: [{ quarter: 'FY26 Q1', x: 1, y: 6 }, { quarter: 'FY26 Q2', x: 2, y: 7 }] },
   { id: 's-2', name: 'Cedarville Chamber', org: 'Chamber of Commerce', type: 'Trade Association', category: 'Industry', priority: 'High', status: 'Active', _x: 1.5, _y: 4.2 },
@@ -528,6 +543,9 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
     /* ── HISTORY: dashed paper dots + quarter labels (dashed/no-shadow is
        this component's OWN tokened style — the oracle's !important patch is
        DO-NOT-REPLICATE) and the dashed trail SVG ─────────────────────────── */
+    /* INK MAPPING DECLARED: the sealed history dot uses TWO inks (ink-3 text
+       + ink-mute dashed border); this folds both to the single
+       --ui-sys-on-surface-muted step. */
     .history-dot .dot-inner {
       background: var(--ui-sys-surface-card);
       color: var(--ui-sys-on-surface-muted);
@@ -597,7 +615,13 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
     /* ── THE SCORECARD RAIL: the REAL ui-inspector. Sealed SCORECARD CHROME:
        the rail is a CONTAINER surface (oracle var(--bg-2); sidebars never
        white) — set on the host element (outer-tree host styling, not a
-       shadow-internal override). */
+       shadow-internal override).
+       INTERIOR-METRIC MAPPING DECLARED: the sealed rail interior is 14px 16px
+       padding with a head row at margin -4px 0 8px / padding-bottom 6px /
+       1px bottom rule; ui-inspector ships its own defaults instead
+       (--ui-sys-space-4 = 16px content padding, 52px bordered header). The
+       sealed values become --ui-sys-* tokens on the inspector composition at
+       the Design (Settings→Design) pass — not a component override here. */
     ui-inspector.detail { background: var(--ui-sys-surface-container); }
     /* Sealed head-row treatment: 10-11px caps 0.08em muted ink. */
     .det-head-label {
@@ -789,6 +813,9 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
       <div class="dots-layer" role="group" aria-label="Stakeholder dots"></div>
     </div>
     <div class="map-xaxis-ticks" aria-hidden="true"></div>
+    <!-- Legend copy: centre-segment spacing is a DECLARED RESOLUTION (box
+         body double-space vs the box's own skeleton single-space; single
+         ships) — see the LEGEND_* constants above. -->
     <div class="map-axis-legend" aria-hidden="true">
       <span class="leg-start"></span>
       <span class="leg-mid"></span>
@@ -796,7 +823,8 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
     </div>
   </div>
 
-  <ui-inspector class="detail" open>
+  <!-- Built-in close × carries the sealed oracle intent via close-label. -->
+  <ui-inspector class="detail" open close-label="Hide scorecard panel">
     <span slot="title" class="det-head-label">Scorecard</span>
     <div class="det-body"></div>
   </ui-inspector>
@@ -860,6 +888,17 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
     }
 
     get selectedId() { return this.#selectedId; }
+    /* Controlled selection (sealed: "selection lifts to the page" — the page
+     * owns it and passes it back; selection-change is the emit half).
+     * Setting the SAME id is a no-op (breaks the page-echo loop); setting a
+     * new id mirrors wrapSelect's state (exits history) without re-emitting. */
+    set selectedId(val) {
+      const id = val || null;
+      if (id === this.#selectedId) return;
+      this.#selectedId = id;
+      this.#historyMode = false;
+      if (this.isConnected) this.#render();
+    }
 
     /* Display options (attributes with the sealed TWEAK_DEFAULTS). */
     get mapStyle() {
@@ -927,7 +966,9 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
     /* ---- rendering ---- */
 
     #normalize() {
-      const raw = this.#data ?? SAMPLE_DATA;
+      // No .data yet: EMPTY in the app; the sample only under the explicit
+      // gallery attribute (preview/wireframes) — no live-looking fake.
+      const raw = this.#data ?? (this.hasAttribute('gallery') ? SAMPLE_DATA : []);
       this.#rows = (raw || []).map((d) => {
         const x = d._x != null ? d._x : (d.x || 0);
         const y = d._y != null ? d._y : (d.y || 0);
@@ -1118,28 +1159,32 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
     }
 
     /* Sealed EMPTY STATE: the de-staled READ-ONLY prompt + "Recently scored"
-     * = the first six stakeholders as real ui-button text rows.             */
+     * = the first six stakeholders as real ui-button text rows. Per the
+     * sealed skeleton tree, the caption + rows nest INSIDE the anonymous
+     * prompt block (one padded, centered block holds title, prompt, caption
+     * and the six rows) — never siblings of it.                             */
     #renderEmptyDetail(body) {
       const block = h('div', 'empty-block');
       block.appendChild(h('div', 'empty-title', 'Scorecard'));
       block.appendChild(h('div', 'empty-prompt muted', EMPTY_PROMPT));
-      body.appendChild(block);
-      if (!this.#rows.length) return;
-      body.appendChild(h('div', 'recent-caption', 'Recently scored'));
-      const list = h('div', 'recent-list');
-      for (const s of this.#rows.slice(0, 6)) {
-        const btn = document.createElement('ui-button');
-        btn.setAttribute('variant', 'text');
-        const text = h('span', 'recent-row-text');
-        text.append(
-          h('span', null, displayName(s) || s.name || ''),
-          h('span', 'muted', ' - ' + (s.type || '')),
-        );
-        btn.appendChild(text);
-        btn.addEventListener('click', () => this.#wrapSelect(s.id));
-        list.appendChild(btn);
+      if (this.#rows.length) {
+        block.appendChild(h('div', 'recent-caption', 'Recently scored'));
+        const list = h('div', 'recent-list');
+        for (const s of this.#rows.slice(0, 6)) {
+          const btn = document.createElement('ui-button');
+          btn.setAttribute('variant', 'text');
+          const text = h('span', 'recent-row-text');
+          text.append(
+            h('span', null, displayName(s) || s.name || ''),
+            h('span', 'muted', ' - ' + (s.type || '')),
+          );
+          btn.appendChild(text);
+          btn.addEventListener('click', () => this.#wrapSelect(s.id));
+          list.appendChild(btn);
+        }
+        block.appendChild(list);
       }
-      body.appendChild(list);
+      body.appendChild(block);
     }
 
     #metaRow(rows, k, v) {
@@ -1200,10 +1245,13 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
         body.appendChild(tipWrap);
       }
 
-      // Large zone pill + live coords (1 decimal).
+      // Large zone pill + live coords (1 decimal). Sealed: StatusPill
+      // size "lg" (12px font / 3px 10px padding) — the ui-chip zone
+      // variant's size="lg" (registered in manifest.json).
       const pillRow = h('div', 'status-pill-row');
       const zoneChip = document.createElement('ui-chip');
       zoneChip.setAttribute('variant', 'zone');
+      zoneChip.setAttribute('size', 'lg');
       zoneChip.setAttribute('data-zone', s._status);
       zoneChip.textContent = s._status;
       pillRow.appendChild(zoneChip);
@@ -1257,7 +1305,10 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
       this.#metaRow(rows, 'Priority', prio);
 
       // Owner: read-only ui-avatar stack (sealed OwnersDisplay resolution:
-      // unresolvable owner ids silently drop).
+      // unresolvable owner ids silently drop). SIZE MAPPING DECLARED: the
+      // sealed OwnersDisplay avatars are 22px; ui-avatar's token scale has
+      // no 22px step, so this ships size="sm" (--ui-sys-avatar-size-sm =
+      // 24px, the nearest step).
       let ownersNode = null;
       const owners = (s.owners || [])
         .map((id) => (this.#users || []).find((u) => u.id === id))

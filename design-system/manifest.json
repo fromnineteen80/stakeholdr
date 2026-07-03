@@ -151,12 +151,18 @@
       "tag": "ui-inspector",
       "status": "built",
       "category": "scaffold",
-      "summary": "Right-hand detail/inspector panel (second sidebar). ~320px when open; animates to width 0 / hidden when closed (removed from tab order). Slots title/(content)/actions; built-in close × emits close. role=complementary.",
+      "summary": "Right-hand detail/inspector panel (second sidebar). ~320px when open; animates to width 0 / hidden when closed (removed from tab order). Slots title/(content)/actions; built-in close × emits close (accessible name + hover title via close-label). role=complementary.",
       "props": [
         {
           "name": "open",
           "type": "boolean",
           "default": false
+        },
+        {
+          "name": "close-label",
+          "type": "string",
+          "default": "Close inspector",
+          "note": "aria-label + title for the built-in close ×; hosts set their sealed intent (the Map scorecard sets \"Hide scorecard panel\")"
         }
       ],
       "states": [
@@ -605,6 +611,15 @@
           "type": "string",
           "default": "",
           "note": "zone variant only; the exact relationship-zone name (one of the 14 catalogued zones); unknown renders nothing (sealed StatusPill null-guard)"
+        },
+        {
+          "name": "size",
+          "type": "enum",
+          "values": [
+            "lg"
+          ],
+          "default": "",
+          "note": "zone variant only; \"lg\" = the sealed LARGE StatusPill (size \"lg\" = 12px font, 3px 10px padding — the Map scorecard's status-pill-row pill), sizing token-derived from the space scale; absent/other = the small default"
         }
       ],
       "states": [
@@ -1162,19 +1177,31 @@
       "tag": "ui-stakeholder-map",
       "status": "built",
       "category": "domain",
-      "summary": "The Stakeholdr Map at the FULL sealed spec — READ-ONLY (drag-to-rescore removed by ruling). Plot internals are the ONE sanctioned inline-SVG/positioned-div composition; chrome/panels compose real ui-* elements. Stage: paper runway, proportional 92%/920px plot box; 6x4 zone grid as fr ratios (rows 2/1/1/1/1/2) filled by the single-sourced --ui-sys-zone-* tokens, strong-outline outer border + zone-grid-line hairlines + centre cross; optional zone labels + bottom-right per-cell count pills (binning EXACTLY matches statusFor); y ticks [10..-10 by 2.5] left, x ticks every integer -10..10 below, the sealed bordered legend card. Dots at coordToPct(_x,_y) (left=((x+10)/20)%, top=((10-y)/20)%), zone fill/ink/border tokens (accent when selected), abbrev initials at dot-size>=22, name label when show-labels or selected, ui-tooltip '{name} · {zone} · (x, y)'. Styles: halo (DEFAULT; ring inset -(dotSize*0.8)px — solid translucent disc pending the recorded gradient ruling) | classic | density (color-mix(in oklch, zone {20+t*80}%, --ui-sys-zone-density-base)). History mode (rows with history[]): other dots hide; dashed 14px paper quarter dots + the dashed accent trail SVG (viewBox 0 0 100 100, stroke-width .35, dash 1.2,1.2, non-scaling-stroke) through [...history, current]; selecting any dot exits. Scorecard = the real ui-inspector rail (defaults OPEN; closed shows the reopen ui-icon-button chevron_left at top 16/right 0): empty state = de-staled prompt + first-six 'Recently scored' ui-button rows; selected state = title/org, Visit Website (normalizeUrl), ui-chip filter 'Show history' toggle (only when history exists), large zone ui-chip + live coords, zone-tinted STRATEGY card (engine strategy/action verbatim), the sealed 11 metadata rows (86px/1fr; tag/priority chips, ui-avatar owner stack, formatDateLong, ui-status-dot), and the LATEST NOTE card (newest notesHistory by .at, fallback notes). Pure logic (GRID/statusFor/coordToPct/cellFor/countCells/densityPct/haloInset/ticks/legend/TWEAK_DEFAULTS/formatDateLong/latestNote — verbatim mirrors of the sealed engine, parity-tested by scripts/map-test.mjs) is exported for node. Bare tag renders a gallery sample.",
+      "summary": "The Stakeholdr Map at the FULL sealed spec — READ-ONLY (drag-to-rescore removed by ruling). Plot internals are the ONE sanctioned inline-SVG/positioned-div composition; chrome/panels compose real ui-* elements. Stage: paper runway, proportional 92%/920px plot box; 6x4 zone grid as fr ratios (rows 2/1/1/1/1/2) filled by the single-sourced --ui-sys-zone-* tokens, strong-outline outer border + zone-grid-line hairlines + centre cross; optional zone labels + bottom-right per-cell count pills (binning EXACTLY matches statusFor); y ticks [10..-10 by 2.5] left, x ticks every integer -10..10 below, the sealed bordered legend card. Dots at coordToPct(_x,_y) (left=((x+10)/20)%, top=((10-y)/20)%), zone fill/ink/border tokens (accent when selected), abbrev initials at dot-size>=22, name label when show-labels or selected, ui-tooltip '{name} · {zone} · (x, y)'. Styles: halo (DEFAULT; ring inset -(dotSize*0.8)px — solid translucent disc pending the recorded gradient ruling) | classic | density (color-mix(in oklch, zone {20+t*80}%, --ui-sys-zone-density-base)). History mode (rows with history[]): other dots hide; dashed 14px paper quarter dots + the dashed accent trail SVG (viewBox 0 0 100 100, stroke-width .35, dash 1.2,1.2, non-scaling-stroke) through [...history, current]; selecting any dot exits. Scorecard = the real ui-inspector rail (defaults OPEN; closed shows the reopen ui-icon-button chevron_left at top 16/right 0): empty state = de-staled prompt + first-six 'Recently scored' ui-button rows; selected state = title/org, Visit Website (normalizeUrl), ui-chip filter 'Show history' toggle (only when history exists), large zone ui-chip (size=\"lg\") + live coords, zone-tinted STRATEGY card (engine strategy/action verbatim), the sealed 11 metadata rows (86px/1fr; tag/priority chips, ui-avatar owner stack, formatDateLong, ui-status-dot), and the LATEST NOTE card (newest notesHistory by .at, fallback notes). Pure logic (GRID/statusFor/coordToPct/cellFor/countCells/densityPct/haloInset/ticks/legend/TWEAK_DEFAULTS/formatDateLong/latestNote — verbatim mirrors of the sealed engine, parity-tested by scripts/map-test.mjs) is exported for node. A bare tag renders EMPTY until .data arrives (make-real rule: no live-looking fake); the gallery attribute (preview/wireframes only) opts into the built-in sample.",
       "props": [
         {
           "name": "data",
           "type": "array",
-          "default": "sample",
-          "note": "set via JS property; rows carry the stakeholder fields plus RAW computed _x/_y/_status (the page computes weightedCoord/statusFor live) and history[]/notesHistory[]"
+          "default": "[]",
+          "note": "set via JS property; rows carry the stakeholder fields plus RAW computed _x/_y/_status (the page computes weightedCoord/statusFor live) and history[]/notesHistory[]. Unset = renders EMPTY unless the gallery attribute is present"
         },
         {
           "name": "users",
           "type": "array",
           "default": "[]",
           "note": "set via JS property; resolves the scorecard Owner avatar stack (unresolvable ids silently drop — sealed OwnersDisplay rule)"
+        },
+        {
+          "name": "selectedId",
+          "type": "string",
+          "default": null,
+          "note": "set via JS property; CONTROLLED selection — the page owns selection (sealed: selection lifts to the page) and passes the id from selection-change back down; same-id sets no-op, new ids exit history mode"
+        },
+        {
+          "name": "gallery",
+          "type": "boolean",
+          "default": false,
+          "note": "preview.html/wireframes.html ONLY: renders the built-in sample when no .data is set; without it the component renders EMPTY until .data arrives (make-real rule — the app never shows a live-looking fake dataset)"
         },
         {
           "name": "map-style",

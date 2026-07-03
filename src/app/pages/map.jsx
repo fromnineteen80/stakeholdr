@@ -44,8 +44,12 @@ export function MapPage() {
 
   const mapRef = useRef(null);
 
-  // Selection lifts to the page (sealed: Lists/Map/Scoring share it).
-  const [, setSelectedId] = useState(null);
+  // Selection lifts to the page (sealed: Lists/Map/Scoring share it). REAL
+  // state, read AND written: the page owns it and passes it back down as the
+  // component's controlled selectedId property (the component emits
+  // selection-change; no dead write). Cross-page sharing (Lists/Scoring
+  // reading the same selection) arrives with the shell-state phase.
+  const [selectedId, setSelectedId] = useState(null);
 
   // OPEN-PROFILE route (sealed: dot double-click → the full stakeholder
   // profile). view:true = the sealed initialView read-only profile; the
@@ -71,6 +75,14 @@ export function MapPage() {
     el.users = users;
     el.data = rows;
   }, [rows, users]);
+
+  // Controlled selection down (the component setter no-ops on the same id,
+  // so the selection-change → setSelectedId → here echo settles).
+  useEffect(() => {
+    const el = mapRef.current;
+    if (!el) return;
+    el.selectedId = selectedId;
+  }, [selectedId]);
 
   // Component events → page state (first-class routes, sealed).
   useEffect(() => {
