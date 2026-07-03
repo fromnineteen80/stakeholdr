@@ -185,7 +185,7 @@ THE 14 ZONES — cells (x / y) · tone · color / text / border · STRATEGY, the
 (Tone values are exactly "negative", "neutral-low", "positive". Only zones 1 and 14 carry a border property; all other zones have no border field — dot outlines fall back to the zone's text color. Colors were hand-chosen to read on the warm-cream background; in the rebuild each zone's color/text/border single-sources as the --ui-sys-zone-* token family.)
 
 STATUS_ORDER (spectrum, most-negative→positive): Proactively Defend · Defend · Protect · Respond · Identify · Monitor · Maintain · Connect · Commit · Cooperate · Collaborate · Valuable Relationship · High Value Relationship · Strategic Partner.` },
-                              { t: "Scoring & weighting — the team matrix, edit-only-your-column, weighted position", d:
+                                    { t: "Scoring & weighting — the team matrix, edit-only-your-column, weighted position", d:
 `WHAT IT IS — the Scoring page is a MATRIX where the team collectively rates each stakeholder, and those ratings blend into the single position that drives the Map, the Lists table, and every profile. Rows = stakeholders. Columns = team members, followed by two computed columns: "Weighted (x, y)" and "Relationship".
 
 DATA MODEL — the team and the scores are GLOBAL, NOT per-workspace. There is ONE team (the "team" table) and ONE score-set per stakeholder (scores[stakeholderId][teamMemberId]) shared across the entire app. The ONLY thing the active workspace changes is WHICH STAKEHOLDERS (rows) appear: on a workspace the rows are filtered to stakeholders whose stakeholderWorkspaces join includes that workspace; on Master the rows would be the full union (but Scoring is disabled on Master — see Scoping). The columns (team members) and each cell's stored score are the SAME no matter which workspace you view from. A stakeholder in three workspaces has one shared position, scored once by the one team.
@@ -227,7 +227,41 @@ STAKEHOLDER NAME CELL (sh-cell, sh-cell-link) — three stacked lines: (1) sh-ce
 
 SCOPING — Scoring is a PER-WORKSPACE collaboration act and is DISABLED on Master: if the active workspace is Master, the Scoring nav item is hidden, and navigating to Scoring on Master redirects to the Map. (Master is the read-only org-wide union; you score within a workspace, not across the whole org.)
 
-CANONICAL-UI BUILD MAP (Canonical UI design system — ui-* web components; the matrix is a tokened ui-data-table-style composition since the layout is a custom sticky/scroll grid, NOT a third-party grid) — matrix: a semantic table / CSS-grid structure styled only with --ui-sys-* surface/outline tokens, with TWO sticky-left columns ("Stakeholder" pinned at left 0 with 220px min-width; the current user's my-col pinned at left 220px immediately after it — only other teammates' and the computed columns scroll horizontally) and the WHOLE header row sticky at top 0 during vertical scroll — in the rebuild these are sticky-position values inside the tokened table composition, with the corner z-order (name header above my-col header above body) preserved. Rows are 40px with hairline (rule-2-token) cell borders; the row-hover tint (#FBF7EB), the read-only-cell wash (rgba(0,0,0,0.018)), the teammate-header and computed-header surfaces (the two gradient pairs, resolved to flat tokens per the flag), and the #FBF6E6 derived-cell fill are all --ui-sys-* tokens. Teammate column headers: name + the member-weight sub-label ("weight {value}×") as tokened text. Each editable x/y cell: two small ui-text-field type="number" (min -10 / max 10 / step 1), each paired with two ui-icon-button steppers (chevronUp / chevron, ±1 clamped); an unscored own cell starts empty and creates the record per the EDITABLE-CELL RULE above; read-only teammate cells: tokened static text in the xy-readonly two-pair layout with a ui-tooltip "{name}'s score". Weight: ui-slider (0.0–2.0 step 0.1, tick at 1.0 carrying a ui-tooltip with the exact copy "Baseline weight 1.0") with the "0.0 / 1.0 baseline / 2.0" label row beneath. % of team: a tinted readout (ui-chip or tokened surface) with the tri-color weight tint. Teammate card: a tokened surface-container card holding the avatar (image or initials), name/title text, the ui-slider, and the remove ui-icon-button (gated per the rebuild-correction permission rule above). Add-teammate: opened by the NEW "Add teammate" ui-button on the team bar (the make-real affordance above — never by the oracle's dispatcher-less "open-add-teammate" event); the dialog is a ui-dialog (title "Add a teammate", width 380, header close ui-icon-button + scrim dismiss) + ui-autocomplete typeahead. Last-teammate / closure: the ui-dialog (width 460, header close ui-icon-button + scrim dismiss) with the "Hand off to" ui-select (placeholder "Select a teammate…") and the destructive ui-button (error tokens). Relationship cell: ui-chip (zone-tokened) on the derived-fill (→ token) cell surface. Stakeholder name cell: a tokened clickable opening that stakeholder's profile via the open-stakeholder-profile event.` },
+CANONICAL-UI BUILD MAP (Canonical UI design system — ui-* web components; the matrix is a tokened ui-data-table-style composition since the layout is a custom sticky/scroll grid, NOT a third-party grid) — matrix: a semantic table / CSS-grid structure styled only with --ui-sys-* surface/outline tokens, with TWO sticky-left columns ("Stakeholder" pinned at left 0 with 220px min-width; the current user's my-col pinned at left 220px immediately after it — only other teammates' and the computed columns scroll horizontally) and the WHOLE header row sticky at top 0 during vertical scroll — in the rebuild these are sticky-position values inside the tokened table composition, with the corner z-order (name header above my-col header above body) preserved. Rows are 40px with hairline (rule-2-token) cell borders; the row-hover tint (#FBF7EB), the read-only-cell wash (rgba(0,0,0,0.018)), the teammate-header and computed-header surfaces (the two gradient pairs, resolved to flat tokens per the flag), and the #FBF6E6 derived-cell fill are all --ui-sys-* tokens. Teammate column headers: name + the member-weight sub-label ("weight {value}×") as tokened text. Each editable x/y cell: two small ui-text-field type="number" (min -10 / max 10 / step 1), each paired with two ui-icon-button steppers (chevronUp / chevron, ±1 clamped); an unscored own cell starts empty and creates the record per the EDITABLE-CELL RULE above; read-only teammate cells: tokened static text in the xy-readonly two-pair layout with a ui-tooltip "{name}'s score". Weight: ui-slider (0.0–2.0 step 0.1, tick at 1.0 carrying a ui-tooltip with the exact copy "Baseline weight 1.0") with the "0.0 / 1.0 baseline / 2.0" label row beneath. % of team: a tinted readout (ui-chip or tokened surface) with the tri-color weight tint. Teammate card: a tokened surface-container card holding the avatar (image or initials), name/title text, the ui-slider, and the remove ui-icon-button (gated per the rebuild-correction permission rule above). Add-teammate: opened by the NEW "Add teammate" ui-button on the team bar (the make-real affordance above — never by the oracle's dispatcher-less "open-add-teammate" event); the dialog is a ui-dialog (title "Add a teammate", width 380, header close ui-icon-button + scrim dismiss) + ui-autocomplete typeahead. Last-teammate / closure: the ui-dialog (width 460, header close ui-icon-button + scrim dismiss) with the "Hand off to" ui-select (placeholder "Select a teammate…") and the destructive ui-button (error tokens). Relationship cell: ui-chip (zone-tokened) on the derived-fill (→ token) cell surface. Stakeholder name cell: a tokened clickable opening that stakeholder's profile via the open-stakeholder-profile event.
+
+SKELETON TREE (the literal nested region tree extracted from archive/src/scoring.jsx — the build assembles against THIS tree, never prose; indentation = nesting; every className region in the module appears below or is explicitly absorbed by a component's shadow DOM) —
+· div.scoring-wrap — the page container for the whole Scoring surface. Mapping: the page slot inside ui-app-shell main content; layout column — token-only container.
+  · div.team-bar — the horizontal team-card row at the top (plus, in the rebuild only, the make-real "Add teammate" ui-button after the last card). Mapping: layout row — token-only container.
+    · div.team-card ×N (one per teammate, in orderedTeam order). Mapping: tokened surface-container card.
+      · header row div (inline flex, gap 8, align center) — Avatar (size 22) + a min-width-0 flex-1 column div (name line: 12.5px weight 500 ellipsis; title line: 10px ink-3 ellipsis) + button.btn.btn-ghost remove (Icon "close", aria-label "Remove", inline padding 2). Mapping: ui-avatar + tokened text + ui-icon-button (gated per the REMOVE permission correction).
+      · weight label row div (inline flex, space-between) — span "Weight" (10px uppercase 0.08em ink-mute) + span value "{weight.toFixed(1)}×" (var(--mono) 12px 600 → Inter tnum per the type law). Mapping: layout row — token-only.
+      · WeightSlider → div.weight-track. Mapping: ui-slider (everything inside is internal to ui-slider).
+        · div.wt-rail — contains div.wt-fill (inline left/width percentages spanning between the 1.0-baseline position and the current value) + div.wt-baseline (the centered 1.0 tick, title "Baseline weight 1.0" → ui-tooltip on the tick).
+        · input type=range min 0.0 max 2.0 step 0.1 — the real control overlaid on the rail. Internal to ui-slider.
+      · end-labels row div (inline flex space-between, ~9.5px ink-mute, mono → tnum) — span "0.0" + span "1.0 baseline" + span "2.0". Mapping: layout row — token-only.
+      · % of team readout div — inline-styled tinted pill (tri-color background per the % OF TEAM rule, radius 4, ~10.5px ink-3, centered) with text "{pct}% of team". Mapping: ui-chip or tokened readout surface (tints → tokens per the flag).
+  · div.scoring-table-wrap — the both-axes scroll container (flex 1, min-width 0). Mapping: internal to the tokened matrix composition (its scroll viewport).
+    · table.scoring-table — semantic table, border-collapse separate, width max-content min-width 100%. Mapping: the tokened ui-data-table-style composition; the table structure itself is internal to that composition.
+      · thead → tr — the sticky header row (all th sticky top 0):
+        · th "Stakeholder" — inline position sticky, left 0, z-index 5, background var(--bg-2). Internal sticky-corner header cell.
+        · th.member (+ .my-col on the current user's column) ×N — teammate name + span.member-weight "weight {w}×" sub-label. Internal header cells (lighter gradient tier → flat token per the flag).
+        · th "Weighted (x, y)" — inline gold gradient background; contains the block "derived" sub-label span. Internal computed header (deeper tier → token).
+        · th "Relationship" — inline gold gradient background. Internal computed header.
+      · tbody → tr ×N (one per stakeholder):
+        · td.sh-cell.sh-cell-link — onClick dispatches "open-stakeholder-profile"; title "Open stakeholder"; contains div.sh-cell-name + [only when s.org] div.sh-cell-org + div.sh-cell-meta (the type line). Internal sticky-left name cell, clickable.
+        · td per teammate — class .my-col (editable, second sticky column) OR .scoring-cell-ro (read-only, faint wash):
+          · editable: div.xy-input — span.lbl "x" + span.xy-field (input type=number min -10 max 10 step 1 + span.xy-spin holding button.xy-spin-btn up (Icon chevronUp, aria-label "Increase x") and button.xy-spin-btn down (Icon chevron, aria-label "Decrease x")) + the identical span.lbl "y" / span.xy-field / span.xy-spin trio for y. Mapping: 2× ui-text-field (number) + 4× ui-icon-button steppers (tabIndex -1) inside the cell template.
+          · read-only: div.xy-readonly (title "{name}'s score" → ui-tooltip) — 2× span.xy-readonly-pair, each span.xy-readonly-k ("x"/"y") + span.xy-readonly-v (value). Mapping: tokened static text.
+        · td.computed — two inline-colored spans (pos/neg per axis sign) separated by ",  ". Internal derived cell (fill → token).
+        · td (relationship; inline padding 0 12px, background #FBF6E6) — StatusPill. Mapping: ui-chip (zone-tokened) on the derived-fill cell.
+  · [conditional addOpen] AddTeammateModal → Fragment: div.modal-veil.show (onClick onCancel; Mapping: ui-dialog scrim) + div.modal (width 380; Mapping: ui-dialog) → div.modal-head (h2 "Add a teammate" + button.btn.btn-ghost close) / div.modal-body → div.login-field (span.lbl "Pick a user" + div.ws-owner-control (inline padding 4px 8px) wrapping UserAutocomplete + span.muted helper). Mapping: ui-autocomplete (UserAutocomplete's internal tree lives in users.jsx — users box) / div.modal-foot (button.btn "Cancel" + button.btn.btn-primary "Add to team").
+  · [conditional newShOpen] StakeholderModal (create, the (+) route) — full tree captured in the StakeholderModal box. Mapping: ui-dialog.
+  · [conditional lastMemberId] the last-teammate dialog → Fragment: div.modal-veil.show (onClick cancels) + div.modal (inline width 460, max-width calc(100% - 32px)) → div.modal-head (h2 "Last teammate on this workspace" + button.btn.btn-ghost close) / div.modal-body (intro p + label.login-field with span.lbl "Hand off to" + div.designed-select wrapping the select — designed-select is internal to ui-select) / div.modal-foot (inline justify space-between: button.btn.btn-danger "Delete workspace" left + button.btn.btn-primary "Hand off & remove" right). Mapping: ui-dialog + ui-select + ui-button (error / primary).
+
+UX HANDLER CENSUS (every event handler in archive/src/scoring.jsx, enumerated in source order) —
+(1) window addEventListener "open-add-teammate" → opens the Add-teammate dialog (the dispatcher-less dead wiring captured in HOW IT OPENS; replaced at rebuild by the real button). (2) team-card remove button onClick → requestRemove(m.id, orderedTeam.length === 1) — routes to the last-teammate dialog when this is the sole member, else removeTeamMember(id). (3) WeightSlider range input onChange → updateTeam(m.id, { weight: Number(value) }) (one instance per card). (4) stakeholder name cell (td.sh-cell-link) onClick → window.dispatchEvent CustomEvent "open-stakeholder-profile" with detail s.id. Editable own-column cell (per cell): (5) x number input onChange → updateScore with clamp(value, -10, 10); (6) x step-up onClick → x+1 clamped; (7) x step-down onClick → x-1 clamped; (8) y number input onChange → clamped; (9) y step-up onClick; (10) y step-down onClick — all six spread the { x: 0, y: 0 } fallback, which is exactly the first-touch-zero-fills mechanic captured in the EDITABLE-CELL RULE. AddTeammateModal: (11) veil onClick → onCancel; (12) head close onClick → onCancel; (13) foot "Cancel" onClick → onCancel; (14) "Add to team" onClick → onAdd(pickedId) (disabled until a user is picked). Last-teammate dialog: (15) veil onClick → clears the pending last-member id (cancel, no removal); (16) head close onClick → same cancel; (17) "Hand off to" select onChange → replacementId; (18) "Delete workspace" onClick → onDeleteWorkspace() then close; (19) "Hand off & remove" onClick → addTeamMember(replacement) + removeTeamMember(last) + close.
+Non-DOM wiring (not counted): UserAutocomplete's onChange prop (its own internal handlers live in users.jsx and are counted with the users capture); the embedded StakeholderModal's onCancel/onSubmit (counted in the StakeholderModal box); the addNonceFor === "scoring" effect and the open-add-teammate registration effect (the listener itself is #1).
+COUNT: 19 handlers, all accounted — every one was already described in the sections above; the census adds no new behavior.` },
                   { t: "Scoring cadence & re-score reminders — fiscal quarters, unscored detection, the Reminders bot", d:
 `WHY THIS EXISTS — the stakeholder pool can be enormous (potentially hundreds of thousands). A workspace deliberately FOCUSES the team on the limited set of stakeholders with enough influence to impact the brand, operations, or goals at hand. Re-scoring on a fixed cadence keeps each focused set's positions current without asking anyone to score the whole universe.
 
@@ -270,7 +304,7 @@ CANONICAL UI BUILD MAP (Canonical UI design system — ui-* components per desig
 - Count badges: GAP — the manifest ships NO badge component. Build ui-badge INTO design-system/ to the ui-button quality bar and register it in manifest.json, with the oracle values above as its TOKEN START-STATE: a numeric-count pill, ~16px tall (min-width 16px, padding 0 4px), 9.5-10px weight-600 tabular numerals (Inter — never the oracle's mono), border-radius 999px; alert tone = accent surface with #FAF8F2 ink (e.g. --ui-sys-badge-alert-surface / --ui-sys-badge-alert-ink) plus a neutral tone; an overlap placement mode pinning it to the host's top-right corner at -4px/-4px; non-interactive (pointer-events none). THEN compose it: (a) on the Scoring nav item (ui-nav-rail's ui-nav-item, or ui-tabs' ui-tab, per the final shell) showing live unscoredCount when > 0; (b) on the Messages ui-icon-button (variant standard, ui-icon "chat" ligature) showing the real unread count; (c) as the trailing pending chip on the Reminders conversation row. Never a hand-rolled span, never !important.
 - Reminders surfaces (inside Messaging; full Messaging capture in its own box): conversation list = ui-list (interactive) of ui-list-item rows — leading slot: the system avatar (accent surface, #FAF8F2 glyph ink → tokens) with the sparkle glyph via ui-icon; headline: "Reminders"; supporting text: the live "{n} stakeholders need scoring" / "All caught up" subtitle; trailing: ui-badge count (or the time text when zero); the row itself carries the system-row wash tokens (rgba(31,26,20,.03) resting / .08 hover → --ui-sys-* tokens). The thread itself renders system messages as standard message rows within the Messaging composition (ui-list-based thread per the Messaging box); the system thread ships read-only pending the Messaging-box decision.
 - All icons are Material Symbols ligatures via ui-icon; every color/size in these surfaces comes from --ui-sys-* tokens (zone/alert tones included) — no inline literals, no component-stylesheet overrides.` },
-                              { t: "Map — coordinate→pixel translation, dots, zones, read-only positions, history trail, scorecard", d:
+                                    { t: "Map — coordinate→pixel translation, dots, zones, read-only positions, history trail, scorecard", d:
 `WHAT IT IS — the Map is the visual face of the Relationship engine: a 4-column x 6-row zone grid with one DOT per (visible) stakeholder, positioned by that stakeholder's weighted (x, y). It is READ-ONLY: it displays positions; it does NOT edit them. All scoring/rescoring happens on the Scoring page (per the quarterly cadence); the Map simply reflects the resulting weighted positions. (The old build allowed dragging a dot to rewrite everyone's scores — that drag-to-rescore behavior is REMOVED.) Rows = the same workspace-filtered visibleStakeholders as everywhere else; team + scores are global (see Scoring). Unlike Scoring, the Map IS available on Master (it is the org-wide overview Master redirects Scoring to). Each row precomputes _x/_y = weightedCoord(s.id, scores, team) and _status = statusFor(_x, _y).
 
 THE COORDINATE -> PIXEL TRANSLATION (this is the heart of "positioned correctly"):
@@ -309,8 +343,48 @@ CANONICAL-UI BUILD MAP (Canonical UI design system — the plot is the domain ui
 • Axis legend strip (under the stage): tokened label text ("← Works against you", "↑ Greater community influence · ↓ Less community influence", "Works with you →").
 • Scorecard (right rail): ui-inspector — the manifest's right-hand detail/inspector panel (design-system/manifest.json: ~320px when open; animates to width 0 / hidden when closed and leaves the tab order; slots title/content/actions; built-in close × emitting close; role=complementary) — which matches the oracle's 320px-open / 0-closed rail exactly; NEVER a hand-rolled side panel (law 1: a component is never reimplemented in markup/CSS). The ui-inspector's built-in close × replaces the oracle's ad-hoc ghost close button (same "Hide scorecard panel" intent); the collapsed state shows the single reopen ui-icon-button with the chevron-left icon (title "Reopen scorecard") per the oracle's 24×36 edge tab. Inside it: ui-list rows; status as ui-chip (zone-tokened); issues/tags as ui-chip sets; owners as overlapping avatars; "Show history" as a ui-chip filter or ui-button toggle carrying the title copy ("Exit history view" in history mode, else "View this stakeholder's historic positions") via ui-tooltip. Scorecard defaults OPEN (detailOpen=true). Empty state shows the de-staled prompt "Click any dot on the map to see details." and lists six recent stakeholders as ui-button (ghost) rows.
 • Display options (mapStyle/showLabels/showZoneLabels/dotSize) come from the Settings/Design controls, read as props, with the shipped defaults above (halo / false / true / 22) — never ad-hoc.
-• Selection state lifts to the page so Scoring/Lists/Map share the selected stakeholder.` },
-                        { t: "Lists table — the master stakeholder table (columns · edit mechanism · ui-* composition)", d:
+• Selection state lifts to the page so Scoring/Lists/Map share the selected stakeholder.
+
+SKELETON TREE (ORIGINAL-DESIGN STRUCTURE CENSUS, 2026-07-03 — the literal region tree extracted from archive/src/map.jsx, in render order; [brackets] = conditional; the build assembles against THIS tree, never prose) —
+div "map-wrap" (+ " detail-closed" when detailOpen is false) — the PAGE CONTAINER: a two-column grid (1fr 320px, collapsing to 1fr 0 when closed). Canonical UI: the page-level layout row — content region beside ui-inspector; token-only container, no visual decisions of its own.
+. div "map-stage" (ref stageRef) — the left column, the plot stage. Canonical UI: the HOST of ui-stakeholder-map — everything nested under it is INTERNAL to ui-stakeholder-map (shadow DOM), never authored as app-side divs.
+. . div "map-grid-area" — the proportional plot box (92% width / max 920px / centered / flex 1 / position relative / min-height 0). Internal to ui-stakeholder-map. Children in order:
+. . . div "map-yaxis-ticks" — 9 x span "map-ytick" (10, 7.5, 5, 2.5, 0, -2.5, -5, -7.5, -10). Internal to ui-stakeholder-map.
+. . . div "map-grid" — the zone grid: D.GRID flatMap to 24 x div "zone" (inline background/color from STATUSES), each containing [span "zone-label" when showZoneLabels] + [span "zone-count" when cnt > 0]. Internal to ui-stakeholder-map.
+. . . div "axis-lines" — an EMPTY element; the centre-cross overlay (its two 1px lines are stylesheet pseudo-elements). Internal to ui-stakeholder-map.
+. . . div "dots-layer" — the 0-100% coordinate space every dot shares (the oracle's drag math reads ITS bounding rect). Internal to ui-stakeholder-map. Children in order:
+. . . . [historyMode AND selected AND history.length > 0] svg "trail-svg" (viewBox "0 0 100 100", preserveAspectRatio "none") containing ONE path — the dashed trail. Sanctioned inline SVG inside ui-stakeholder-map.
+. . . . [historyMode AND selected] one div "dot history-dot" PER history snapshot, each containing div "dot-inner" (inline 14x14, paper bg, dashed border) + div "dot-label" (the quarter, paper background).
+. . . . one div "dot" per rendered stakeholder (all rows normally; ONLY the selected one in history mode) — gains "selected" / "dragging"; contains, in order: [div "dot-halo" when style is "halo"] + div "dot-inner" (the circular marker) + [div "dot-label" when showLabels OR selected].
+. . div "map-xaxis-ticks" — 21 x span "map-xtick" (-10..10). A SIBLING of map-grid-area (below it, inside map-stage). Internal to ui-stakeholder-map.
+. . div "map-axis-legend" (inline marginTop 14 / width 92% / maxWidth 920 / centered) — 3 spans: start "← Works against you" / center "↑ Greater community influence · ↓ Less community influence" / end "Works with you →". Internal to ui-stakeholder-map.
+. [detailOpen] MapDetail = div "detail" — the right rail. Canonical UI: ui-inspector (never a hand-rolled panel). TWO mutually exclusive layouts:
+. . EMPTY STATE (no selected stakeholder):
+. . . div "detail-head-row" — inline-styled strong "Scorecard" (11px caps) + button "btn btn-ghost" close (Icon "close"). Maps to the ui-inspector title slot + its built-in close.
+. . . div (ANONYMOUS inline-styled prompt block, padding 30px 12px, centered — absorbed into ui-inspector content as a tokened block): div "Scorecard" (16px) + div "muted" prompt line + div "Recently scored" caption (inline caps) + div (anonymous inline flex column, gap 4) holding SIX button "btn btn-ghost" rows (span name + span "muted" "- {type}") — maps to ui-button (ghost) rows.
+. . SELECTED STATE:
+. . . div "detail-head-row" — same composition as the empty state.
+. . . h3 (displayName || name) · div "det-org" · [ANONYMOUS inline div wrapper > a "det-website" "Visit Website", when url present — absorbed as inspector content].
+. . . [button "map-history-btn" (+ " active"), only when history non-empty] — maps to a ui-button toggle.
+. . . div "status-pill-row" — StatusPill (size lg) + span (inline mono style) with the live coords.
+. . . div (ANONYMOUS inline zone-colored STRATEGY card — absorbed as a tokened panel inside the inspector): caption div ("Strategy") + strategy div (bold) + action div.
+. . . 11 x div "detail-row" (each = div "k" + div "v"), in order: Category, Type, Market, Region, Geography, Issues (v holds an anonymous inline flex-wrap span of span "tag" chips, or span "muted" "-"), Priority (PriorityPill), Owner (OwnersDisplay), Last contact, Status (StatusDot), Tags (Tags). Maps to ui-list rows / ui-chip sets inside ui-inspector.
+. . . [div "detail-latest-note", only when a note resolves] — div "detail-latest-note-head" (span caption "Latest note" + [span date stamp]) + div "detail-latest-note-body".
+. [NOT detailOpen] button "map-detail-reopen" (Icon "chevron-left", className "ico") — the 24x36 edge reopen tab. Maps to the reopen ui-icon-button.
+CLASSNAME ACCOUNTING — every className region in map.jsx appears in the tree above: map-wrap, detail-closed, map-stage, map-grid-area, map-yaxis-ticks, map-ytick, map-grid, zone, zone-label, zone-count, axis-lines, dots-layer, trail-svg, dot, history-dot, dot-inner, dot-label, dot-halo, selected, dragging, map-xaxis-ticks, map-xtick, map-axis-legend, map-detail-reopen, ico, detail, detail-head-row, btn btn-ghost, muted, det-org, det-website, map-history-btn, active, status-pill-row, tag, detail-row, k, v, detail-latest-note, detail-latest-note-head, detail-latest-note-body — NONE dropped. The four ANONYMOUS inline-styled regions (empty-state prompt block + its recent-list column, the website-link wrapper, the strategy card, the Issues chip wrap) are named explicitly above and absorb into ui-inspector content as token-driven composition — never rebuilt as ad-hoc divs. The tree CONFIRMS the box's layout claims (two-column 1fr/320px grid, tick rows as siblings of the plot box, legend inside the stage); no corrections required.
+
+UX HANDLER CENSUS (ORIGINAL-DESIGN UX CENSUS, 2026-07-03 — every event handler in archive/src/map.jsx) —
+1. dot onPointerDown → onPointerDown(e, id): guards on stageRef, e.preventDefault(), wrapSelect(id) (select + force scorecard open + exit history mode), then setDragging({ id }). ORACLE-ONLY TAIL: the setDragging arm STARTS a drag; the rebuild keeps only the select, per this box's read-only ruling.
+2. dot onDoubleClick → openDetail(r.id) (opens the full stakeholder record).
+3. window "pointermove" listener (attached in a useEffect while dragging is truthy) — reads the dots-layer bounding rect, computes leftPct/topPct clamped 0..100, pctToCoord, rounds both axes to .25 (Math.round(v * 4) / 4), calls updateCoordForStakeholder(dragging.id, rx, ry). ORACLE-ONLY: this is the drag-to-rescore write, REMOVED by ruling (captured for losslessness).
+4. window "pointerup" listener (same effect) → setDragging(null); both listeners removed on the effect cleanup. ORACLE-ONLY (drag teardown, removed with the drag).
+5. reopen tab (map-detail-reopen) onClick → setDetailOpen(true).
+6. empty-state close button onClick → onClose (= setDetailOpen(false)).
+7. empty-state "Recently scored" row onClick (six rows, one handler shape) → setSelectedId(s.id), which is wrapSelect — select + keep scorecard open + exit history.
+8. selected-state close button onClick → onClose (= setDetailOpen(false)).
+9. history toggle (map-history-btn) onClick → onToggleHistory (= setHistoryMode(h => !h)).
+9 handlers, all accounted — each is described in the box body above (dot select/double-click, scorecard open/close/reopen, recent-list select, history toggle); handlers 1-tail, 3, and 4 are the oracle's drag machinery, captured verbatim and explicitly removed by this box's read-only ruling. No other on* props, listeners, or interactive effects exist in the module (title attributes are tooltips, not handlers; the det-website anchor is a plain href, browser-default navigation).` },
+                              { t: "Lists table — the master stakeholder table (columns · edit mechanism · ui-* composition)", d:
 `WHAT IT IS — the Lists page is the MASTER STAKEHOLDER TABLE: the app's primary data surface (a spreadsheet built from CSS grid, NOT an HTML table element and NOT an MD3 list-detail layout). The SAME SheetView component renders Master (all stakeholders) and each workspace (rows filtered to that workspace via the stakeholderWorkspaces join), and is EMBEDDED elsewhere (record pages). Rows = the workspace-scoped visibleStakeholders mapped via useMemo: each row computes, live, _x/_y = weightedCoord(s.id, scores, team), _status = statusFor(_x,_y), and _unscored = (team.length > 0 AND no team member has a score for this stakeholder, i.e. !team.some(m => teamScores[m.id])).
 
 COLUMNS — two groups.
@@ -324,7 +398,7 @@ EDIT MECHANISM per column —
 • DISPLAY-ONLY in the grid (edited via the full record modal): Issues (Tags chips from row.issues), Tags (Tags chips from row.tags), Priority (PriorityPill High/Medium/Low), Owner (OwnersDisplay avatars, size 20), Community investment (affiliatedCommunity(row.id, community) → pills, or muted "-").
 • LINK cells:
   - Email — mailto:{row.email} (class plain-link), click stops propagation; muted "-" if empty.
-  - Phone — anchor href "tel:" + row.phone.replace(/[^\\\\d+]/g, "") (strips everything except digits and +); display text = formatPhone(row.phone); muted "-" if empty.
+  - Phone — anchor href "tel:" + row.phone.replace(/[^\\\\\\\\d+]/g, "") (strips everything except digits and +); display text = formatPhone(row.phone); muted "-" if empty.
   - X account — if empty, muted "-"; else handle = row.xAccount.replace(/^@+/, "") (strips one-or-more leading @), href "https://x.com/" + handle, target _blank rel noopener noreferrer, link text rendered as "@" + handle.
   - Website — if row.url, anchor href normalizeUrl(row.url), target _blank, text "Visit Website"; else muted "-".
 • COMPUTED read-only: x = row._x.toFixed(1), y = row._y.toFixed(1) (cls "coord readonly" plus tone: "positive" when value > 1, "negative" when value < -1, "" otherwise); Relationship = StatusPill(row._status) (the scored zone pill).
@@ -352,7 +426,7 @@ SORT DEFAULT (no explicit sortKey) — unscored stakeholders FIRST (a._unscored 
 
 HEADER-CLICK SORT (a SECOND, independent sort entry point — the popover is not the only one) — clicking ANY header cell whose column definition carries a field calls toggleSort(field): if sortKey already equals that field, the direction flips asc↔desc; if it is a new field, sortKey is set to it with direction asc. The active header renders a trailing sort-indicator character: "↑" when asc, "↓" when desc (only on the header whose field === sortKey). This applies to the FROZEN Stakeholder (field name) and Organization (field org) headers AND to every field-bearing reorderable header — category, type, market, region, geography, state, site, priority, _x, _y, _status, owner, email, phone, xAccount, lastContact, status, notes, url. Headers with NO field (idx, edit, Issues, Tags, Community investment) are not sortable. On reorderable headers, click-to-sort coexists with drag-to-reorder (drag events fire on drag; a plain click sorts), and each reorderable header keeps its title="Drag to reorder" tooltip regardless of sortability. CRITICAL CONSEQUENCE: header-click is the ONLY route by which priority, status, _x, _y, owner, email, phone, xAccount, notes, url, category, and geography can ever become sortKey — none of them are among the Sort popover's 11 fields — so the comparator's priority {High:0,Medium:1,Low:2} and status {Active:0,Watch:1,Dormant:2} orderings are reachable ONLY via header click; without header sort they would be dead code. The Sort button's "1" badge and the Sort popover's Clear all apply equally to a header-initiated sort (one shared sortKey/sortDir state). KNOWN ORACLE BUG (do-not-replicate blindly): the Owner column's field is "owner" but rows carry an "owners" ARRAY and no "owner" property, so header-sorting Owner compares undefined vs undefined and is effectively a no-op; the rebuild should either sort on the first owner's resolved user name or make the Owner header non-sortable — decide at build time, do not silently copy the inert sort. Also note _x/_y sort numerically (subtraction) and _status via header sorts alphabetically by zone name (the same as picking Relationship in the popover — localeCompare, NOT canonical zone order).
 
-PAGE FOOTER (the page-level footer at the bottom of THIS page; distinct from the always-bottom APP shell footer) — table Icon + "{filtered.length} of {rows.length} stakeholders"; "·"; Avg x = mean of filtered _x to 1 decimal; Avg y = mean of filtered _y to 1 decimal (each divided by max(filtered.length,1)); spacer; an Export CSV button (download Icon). CSV column set (in order, with accessors): Stakeholder(displayName||name), Organization, Category, Type, Market, Region, Geography, Issues(joined "; "), Priority, Tags(joined "; "), Owners(ids resolved to user.name), Last contact, Status, x(_x.toFixed(1)), y(_y.toFixed(1)), Relationship(_status), Website(normalizeUrl(url) if any), Notes. Values escaped: any cell matching /[",\\\\n]/ is wrapped in double quotes with internal quotes doubled. Filename = (workspaceLabel||"stakeholders") with non-word chars → "_", plus ".csv".
+PAGE FOOTER (the page-level footer at the bottom of THIS page; distinct from the always-bottom APP shell footer) — table Icon + "{filtered.length} of {rows.length} stakeholders"; "·"; Avg x = mean of filtered _x to 1 decimal; Avg y = mean of filtered _y to 1 decimal (each divided by max(filtered.length,1)); spacer; an Export CSV button (download Icon). CSV column set (in order, with accessors): Stakeholder(displayName||name), Organization, Category, Type, Market, Region, Geography, Issues(joined "; "), Priority, Tags(joined "; "), Owners(ids resolved to user.name), Last contact, Status, x(_x.toFixed(1)), y(_y.toFixed(1)), Relationship(_status), Website(normalizeUrl(url) if any), Notes. Values escaped: any cell matching /[",\\\\\\\\n]/ is wrapped in double quotes with internal quotes doubled. Filename = (workspaceLabel||"stakeholders") with non-word chars → "_", plus ".csv".
 
 INTERACTIONS — clicking a row selects it (selection lifts to the page; shared with Map/Scoring); double-clicking the name (or clicking the frozen edit icon, which stops propagation) opens the full record (StakeholderModal in edit mode); the notes cell stops propagation and opens the Notes modal (tooltip "Click to view notes & history", pointer cursor). Clicking any field-bearing header sorts by that field (full spec in HEADER-CLICK SORT above). Horizontal scroll toggles a "scrolled-x" class (left-edge shadow) once scrollLeft > 0; frozen columns auto-size to content and their sticky left offsets are MEASURED after layout (useLayoutEffect reading each frozen header cell's getBoundingClientRect width, accumulating left offsets) so they stack deterministically. Column reorder = native HTML5 drag-and-drop on the reorderable header cells (draggable, onDragStart sets dragKey, onDragOver sets dragOverKey + preventDefault, onDrop splices dragKey before the target in colOrder and persists; every draggable header shows the "Drag to reorder" tooltip). The new-stakeholder modal opens when addNonceFor === "sheet" fires; openStakeholderId routes an external open-request into editId.
 
@@ -366,8 +440,70 @@ CANONICAL-UI BUILD MAP (NEVER md-*/mat-table/shadcn — the rebuilt app is assem
 • Edit icon + reorder grips: ui-icon-button (Material Symbols person/groups, drag_indicator); the edit cell keeps its tooltip ("Edit person" / "Edit organization") via ui-tooltip. Tooltips route through ui-tooltip everywhere: reorderable headers get ui-tooltip "Drag to reorder", the notes cell gets ui-tooltip "Click to view notes & history" — never bare title attributes in the rebuilt app.
 • Toolbar: search = ui-text-field with a leading ui-icon "search" + cmd-key hint; Filter/Sort/Categories/Sites = ui-button opening a ui-menu of checkbox items for multi-select (or a larger ui-dialog for the multi-field filter panel); EACH popover's header carries its ghost "Clear all" ui-button (variant text) with the exact clearing semantics above (Filter's Clear all also empties Categories but never Sites/bands; Sort's Clear all restores the unscored-first default); open/close exclusivity and dismissal per POPOVER OPEN/CLOSE MECHANICS (if normalized to ui-menu's outside-click dismissal for all four, record the ruling); impact bands = ui-chip (filter variant, selected = active). The "Winnable middle" swatch color #E2A85F MUST be promoted to a --ui-sys-* token (sits beside the positive/negative band tokens).
 • Footer: design-system label/body text + an Export CSV ui-button (download ui-icon). Computed x/y tone via positive/negative on-surface tokens.
-• Selection/edit/notes state lifts to the page; the Notes modal and the full record open via ui-dialog (the create/edit modal is captured in its own box).` },
-                        { t: "Create / edit stakeholder modal (StakeholderModal) — fields, defaults, validation, sub-controls", d:
+• Selection/edit/notes state lifts to the page; the Notes modal and the full record open via ui-dialog (the create/edit modal is captured in its own box).
+
+SKELETON TREE (the literal nested region tree extracted from archive/src/sheet.jsx — plus the two toolbar popovers from sheet-modals.jsx — the build assembles against THIS tree, never prose; indentation = nesting; every className region in the module appears below or is explicitly absorbed by a component's shadow DOM) —
+· div.sheet-wrap — the page container for the whole Lists surface. Mapping: the page slot inside ui-app-shell main content; layout column — token-only container.
+  · [PORTAL] div.sheet-toolbar — rendered via ReactDOM.createPortal INTO explainerSlot (the shell's explainer band ABOVE the table): a child of SheetView in JSX but physically mounted in the shell slot, and only when explainerSlot exists. Mapping: layout row — token-only container in the shell's explainer/toolbar slot.
+    · div.search — leading Icon "search" + text input (placeholder "Search stakeholders, orgs, tags…") + span.kbd.kbd-cmdk showing cmdKeyLabel. Mapping: ui-text-field with leading ui-icon "search"; the kbd hint as trailing slot content.
+    · div.filter-button-wrap (Filter) — anchor wrapper pairing the button with its popover. Mapping: absorbed by ui-menu anchoring (exists only to anchor + to exempt outside-mousedown).
+      · button.btn (+ .filter-active when any filter selected) — text "Filter" + [conditional] span.filter-count badge. Mapping: ui-button with tokened count badge.
+      · [conditional] FilterPopover (sheet-modals.jsx) → div.filter-popover. Mapping: ui-menu surface (or ui-dialog for the multi-field panel).
+        · div.filter-pop-head — strong "Filter" + button.btn.btn-ghost "Clear all" (fontSize 11). Mapping: menu header row; ui-button variant text.
+        · div.filter-pop-body — six FilterSection blocks in order (Audience type, Priority, Status, Relationship, Issues, Owner). Mapping: checkbox-item groups internal to ui-menu; FilterSection itself is the shared component captured with components.jsx.
+    · div.filter-button-wrap (Sort) — same anchor pattern.
+      · button.btn (+ .filter-active when sortKey) — "Sort" + [conditional] span.filter-count "1". Mapping: ui-button.
+      · [conditional] SortPopover (sheet-modals.jsx) → div.filter-popover.sort-popover
+        · div.filter-pop-head — strong "Sort by" + ghost "Clear all". Mapping: menu header row.
+        · div.filter-pop-body — SortFieldList (shared component, components.jsx). Mapping: internal to ui-menu.
+    · div.filter-button-wrap (Categories)
+      · button.btn (+ .filter-active) — "Categories" + count badge. Mapping: ui-button.
+      · [conditional] div.filter-popover (inline width 220; closes on its own onMouseLeave)
+        · div.filter-pop-head — strong "Categories" + ghost "Clear all"
+        · div.filter-pop-body → div.cat-opt-list — one button.cat-opt (+ .on when selected) per category: Icon "check" (.ico.cat-check) + span label. Mapping: ui-menu checkbox items.
+    · div.filter-button-wrap (Sites) — identical structure to Categories; options = SITES via siteLabel, buttons keyed by site id. Mapping: ui-button + ui-menu checkbox items.
+    · div.spacer — flex spacer. Mapping: layout row spacer — token-only.
+    · button.impact-chip ×3 (+ .on.pos / .on.neu / .on.neg when its band is active) — each: span.swatch (inline background var(--pos) / literal #E2A85F / var(--neg)) + strong live count + band label. Mapping: ui-chip (filter variant) with tokened swatch.
+  · [conditional newOpen] StakeholderModal (create) — full tree captured in the StakeholderModal box. Mapping: ui-dialog.
+  · [conditional editing] StakeholderModal (edit) — same box. Mapping: ui-dialog.
+  · [conditional notesFor] NotesModal — tree captured in the StakeholderModal box. Mapping: ui-dialog.
+  · div.sheet-scroll — the ONE scroll container (both axes); a ref-bound native scroll listener toggles class .scrolled-x when scrollLeft > 0 (drives the frozen-edge shadow); the binding is guarded by an el._scrollBound flag so re-renders never double-bind. Mapping: internal to ui-stakeholder-table (its scroll viewport).
+    · div.sheet-grid — the CSS grid itself (ref gridRef); inline gridTemplateColumns = one "max-content" track per column (4 frozen + the ordered reorderables), inline minWidth max-content. Mapping: internal to ui-stakeholder-table.
+      · div.sheet-head — the header row (its cells are direct grid children). Mapping: internal to ui-stakeholder-table (sticky header).
+        · div.sheet-cell.frozen.frozen-{idx|edit|name|org} (+ cls .idx / .edit) ×4 — inline style left = the MEASURED frozenLeft[key] offset; onClick sorts when the column carries a field; contains span label + [conditional] span.sort-indicator ("↑"/"↓"). Mapping: internal frozen header cells of ui-stakeholder-table.
+        · div.sheet-cell.col-draggable (+ per-column cls "coord" on x/y) (+ .drag-over / .dragging during a drag) ×22 — draggable, title "Drag to reorder"; contains Icon "drag" (.ico.col-grip) + span label + [conditional] span.sort-indicator. Mapping: internal reorderable header cells (grip = ui-icon drag_indicator; tooltip via ui-tooltip).
+      · SheetRow ×N → div.sheet-row (+ .selected) — onClick selects the row. Mapping: internal rows of ui-stakeholder-table.
+        · div.sheet-cell.frozen.frozen-idx.idx — inline left; text = index+1. Internal frozen cell.
+        · div.sheet-cell.frozen.frozen-edit.edit — inline left; onClick (stopPropagation) opens the record; title "Edit person"/"Edit organization"; contains Icon "user"/"users" (.ico.edit-icon). Mapping: ui-icon-button in the frozen-cell template + ui-tooltip.
+        · div.sheet-cell.frozen.frozen-name — inline left; onDoubleClick opens the record; text displayName(row) || "-". Internal frozen cell (read-only).
+        · div.sheet-cell.frozen.frozen-org — inline left; contains input.cell-input bound to row.org. Mapping: ui-text-field (dense, no label) in the cell template.
+        · div.sheet-cell + cellClass(c) ×22 per row — the reorderable body cells, classed per the CELL EMPHASIS map (pills-cell / coord readonly + positive|negative / zone-cell / notes / url-cell / cell-dim / cell-strong / cell-sm); ONLY the notes cell carries onClick (stopPropagation → Notes modal), title "Click to view notes & history", and inline cursor pointer. Cell contents per renderCell:
+          · CellSelect (category/type/market/region/geography/state/site/status) → span.cell-dd (outside-click ref). Mapping: ui-select — everything below is internal to ui-select.
+            · button.cell-dd-trigger (+ .is-empty when nothing selected) — shows the selected option's label, else the placeholder ("-").
+            · [conditional open] div.cell-dd-menu (click stopPropagation) — one button.cell-dd-opt (+ .on for the current value) per option.
+          · CellDate (lastContact) → span.cell-dd. Mapping: ui-date-picker — everything below is internal to ui-date-picker.
+            · button.cell-dd-trigger (+ .is-empty) — shows the YYYY-MM-DD value or "-".
+            · [conditional open] div.cell-cal (click stopPropagation)
+              · div.cell-cal-head — button.cell-cal-nav (Icon chevron-left, previous month) + span.cell-cal-title (locale long month + numeric year) + button.cell-cal-nav (Icon chevron-right, next month)
+              · div.cell-cal-grid — 7× span.cell-cal-dow ("S","M","T","W","T","F","S") + leading empty spans (first-weekday offset) + one button.cell-cal-day (+ .on on the stored date) per day of the month
+          · other cell contents — Tags chips (issues/tags), PriorityPill, OwnersDisplay(size 20), StatusPill(row._status), span.notes-preview, span.pills-inline holding one span.tag per community affiliation (title = engagement name), a.plain-link anchors (email/phone/x), the plain "Visit Website" anchor, span.muted "-" empties, and raw toFixed(1) text for _x/_y — each per the EDIT MECHANISM section. Mapping: ui-chip / avatars / zone-tokened ui-chip / semantic anchors / tokened text inside the cell templates.
+  · div.sheet-footer — the page footer row. Mapping: layout row — token-only container beneath the table.
+    · div.group — Icon "table" + strong filtered count + " of N stakeholders"
+    · div.group — the "·" separator
+    · div.group — "Avg" + span.kbd "x" + strong mean-x (1 decimal)
+    · div.group — "Avg" + span.kbd "y" + strong mean-y (1 decimal)
+    · div.spacer (inline flex 1)
+    · div.group → button.footer-export-btn — Icon "download" + "Export CSV". Mapping: ui-button with leading ui-icon "download".
+TREE-PROVEN NOTE (dead code, do not replicate): sheet.jsx also defines module-level FROZEN_COLS / FROZEN_LEFT / FROZEN_TOTAL constants (idx 38 / edit 34 / name 240 / org 200) that are SHADOWED by the in-component frozenCols array (40/34/220/190) actually rendered — the module-level trio is never used; the widths in the COLUMNS section above (40/34/220/190) are the rendered truth.
+
+UX HANDLER CENSUS (every event handler in the module, enumerated against the oracle — sheet.jsx plus its two toolbar popovers in sheet-modals.jsx; source order) —
+SheetView toolbar and chrome: (1) search input onChange → setSearch. (2) Filter button onClick → toggle Filter popover + close Sort and Categories. (3) Sort button onClick → toggle Sort popover + close Filter and Categories. (4) Categories button onClick → toggle Categories popover + close Filter and Sort. (5) Categories popover onMouseLeave → close. (6) Categories "Clear all" onClick → catFilter emptied. (7) category option (cat-opt) onClick → toggleCat(c). (8) Sites button onClick → toggle Sites popover + close Categories, Filter and Sort. (9) Sites popover onMouseLeave → close. (10) Sites "Clear all" onClick → siteFilter emptied. (11) site option onClick → toggleSite(s.id). (12)(13)(14) the three impact-chip onClicks → toggleBand("positive"/"middle"/"negative"). (15) sheet-scroll native "scroll" listener → toggles .scrolled-x when scrollLeft > 0 (bound once via the el._scrollBound guard). (16) frozen header cell onClick → toggleSort(c.field) when the column has a field. (17–22) reorderable header cell, six handlers: onDragStart → dragKey = key; onDragOver → preventDefault + dragOverKey = key; onDragLeave → clears dragOverKey ONLY if it still equals this column (functional update k === c.key ? null : k); onDrop → onColDrop(target) — a guarded no-op that just clears both drag states when dragKey is null or equals the target, otherwise splices dragKey immediately BEFORE the target in colOrder and persists to localStorage; onDragEnd → clears BOTH dragKey and dragOverKey (an aborted drag leaves no stuck highlight); onClick → toggleSort(c.field). (23) footer "Export CSV" onClick → exportCsv().
+SheetRow: (24) row onClick → onSelect (selection lifts to the page). (25) edit cell onClick → stopPropagation + open the record. (26) name cell onDoubleClick → open the record. (27) org input onChange → writes {org} for a person, {org, name: org} for an org. (28) notes cell onClick → stopPropagation + open the Notes modal. (29)(30)(31)(32) the FOUR link anchors — Email (mailto), Phone (tel), X account (x.com), Website — EACH carries onClick stopPropagation so following a link never selects the row (previously stated only for Email; explicit for all four here).
+CellSelect (the ×8 dropdown columns): (33) document mousedown (while open) → closes when the press lands outside the span.cell-dd; (34) document keydown → Escape closes; (35) trigger onClick → stopPropagation + toggle open (opening a dropdown never selects the row); (36) menu onClick → stopPropagation (choosing never selects the row); (37) option onClick → onChange(value) + close.
+CellDate: (38) document mousedown outside → close; (39) document keydown Escape → close; (40) trigger onClick → stopPropagation + toggle open; (41) calendar onClick → stopPropagation; (42) previous-month nav onClick → view month - 1; (43) next-month nav onClick → view month + 1; (44) day onClick → onChange(YYYY-MM-DD with zero-padded month/day) + close.
+FilterPopover (sheet-modals.jsx): (45) document mousedown → close unless the press is inside the popover or inside any .filter-button-wrap; (46) "Clear all" onClick → clearAllFilters (the cross-clearing semantics above). SortPopover: (47) the same outside-mousedown close; (48) "Clear all" onClick → sortKey null + sortDir "asc". (The per-option toggle clicks inside FilterSection and SortFieldList live in the shared components module, components.jsx, and are counted with that capture.)
+COUNT: 44 handlers in sheet.jsx + 4 in FilterPopover/SortPopover = 48 handlers, all accounted. Newly added by this census (previously undescribed in this box): the onDragLeave / onDragEnd / no-op-drop mechanics in (17–22), the universal link-cell stopPropagation in (29–32), and the full CellSelect/CellDate open-close mechanics in (33–44) — outside-mousedown close, Escape close, trigger and menu stopPropagation, month navigation, and the .is-empty trigger state. Everything else was already captured above.` },
+                              { t: "Create / edit stakeholder modal (StakeholderModal) — fields, defaults, validation, sub-controls", d:
 `WHAT IT IS — StakeholderModal is the single popped-up card used for BOTH creating a new stakeholder and editing an existing one (it replaced the old NewStakeholderModal). Same shape either way; when an "existing" stakeholder is passed it loads that record's values and saves via onSubmit (a patch) instead of creating. OPENING ROUTES (verified against the oracle — there is NO "New stakeholder" button on the Lists toolbar; the toolbar holds only search, Filter, Sort, Categories, Sites, and the three impact-band chips — do NOT invent a toolbar New button at rebuild): CREATE mode opens exclusively when the addNonceFor === "sheet" nonce fires (sheet.jsx watches addNonce/addNonceFor and sets the new-modal open), and exactly two callers fire it — (a) the app shell's global context-aware (+) button (app.jsx nav-tabs-right-button, title/aria-label "Create new", plus Icon; on the Lists view its onClick runs setAddNonceFor(activeView) i.e. "sheet" and bumps addNonce), and (b) the WorkHQ band's quick "+ Stakeholder" button (intel.jsx class intel-quick, title "Add stakeholder", plus Icon + "Stakeholder"), whose onAddStakeholder handler in app.jsx runs the same setAddNonceFor("sheet") + addNonce bump. EDIT mode opens from a Lists row's frozen edit-icon cell (title "Edit person" / "Edit organization") or a name-cell double-click, and from external open requests (the openStakeholderId prop: an effect sets that id as the edit target and calls onConsumeOpen to clear the request). Props of note: users, workspaces, isMaster, currentUser, existing, onCancel, onSubmit, onDelete, initialView, companyIssues, companyTags, community, stakeholders, scores, team, getWorkspacesForStakeholder, onOpenWorkspace, updateCommunityApp. isEdit = !!existing.
 
 CHROME COPY (exact strings) — modal head h2 title = "New stakeholder" (create) / "Edit stakeholder" (edit); beside the title, edit mode only, a "View Stakeholder" link-button with tooltip title="View full profile"; a ghost close button (close Icon, aria-label "Close") at the head's right. Footer = "Cancel" button + primary button labelled "Create stakeholder" (create) / "Save changes" (edit), the primary disabled until valid (see VALIDATION).
@@ -413,8 +549,55 @@ MULTI-OWNER PICKER — MultiOwnerPicker(users, owners=draft.owners, onChange, si
 
 NOTES MODAL (NotesModal — opened from the Lists notes cell; also the modal's own Notes textarea writes the current notes string) — rendered over its OWN dimmed veil (modal-veil show) whose onClick is onClose: clicking the backdrop closes the Notes modal, same as the head close icon and the footer "Close" button (three equivalent dismissal routes; a pending unsubmitted composer draft is lost silently). Header eyebrow "NOTES" over displayName(stakeholder) || stakeholder.name; close button. HISTORY (newest first): start from stakeholder.notesHistory; if that array is empty but stakeholder.notes exists, synthesize a single legacy entry { id:"n-legacy", body: stakeholder.notes, at: stakeholder.lastContact || now(ISO), by: null }; sort by at descending via (b.at||"").localeCompare(a.at||""). Each entry shows a date stamp = new Date(n.at).toLocaleDateString with { month:"short", day:"numeric", year:"numeric" } (or "-" if no date), plus the author: "· {author.name}" when by resolves to a user, else a muted "· legacy" (for by:null). Empty state (no history): "No notes yet. Add the first one below." COMPOSER (a form below): label "Add a new note", a 3-row textarea (placeholder "Write what happened, what was said, or what you learned…"), a footer line "Dated today, posted as {currentUser.name || 'you'}.", a "Close" button and an "Add note" submit (disabled until the text trims non-empty). On add, the Lists handler builds entry { id: uid("n"), body: text, at: new Date().toISOString(), by: currentUser.id }, appends it to notesHistory, AND sets notes to the new text, then clears the composer.
 
-CANONICAL-UI BUILD MAP (NEVER md-*/shadcn) — host = ui-dialog with head title "New stakeholder" / "Edit stakeholder" (Newsreader title type), the "View Stakeholder" ui-button (variant text, ui-tooltip "View full profile") beside it in edit mode, and a close ui-icon-button (icon close, aria-label "Close"). SCRIM DISMISSAL maps to ui-dialog's scrim-dismiss: the main dialog's scrim click fires onCancel (draft discarded, no confirmation — per BACKDROP DISMISSAL above); the stacked delete-confirm ui-dialog's own scrim closes only the confirm (back to the edit form); the NotesModal ui-dialog's scrim closes the Notes modal. Text inputs (Organization, Website, Email, Phone, X account, person First/Last, custom title) = ui-text-field; selects (Title, Category, Audience type, Market, Region, Geography, Site, State, Priority, Status) = ui-select; Last contact = ui-date-picker (or native date if simpler); "Add a person" = ui-switch (or ui-checkbox). IssueSelector = a ui-chip set (selected filled chips with remove, available dashed add chips) + a ui-text-field for custom entry with placeholder "Add custom issues, separated by commas" (the text field is omitted when restrict). Owners = the owner-avatar picker. Photo = a plain file input behind a ui-button (Upload/Replace) plus a ui-button ghost "Remove"; preview is an avatar surface with the data URL or a fallback ui-icon. Footer = "Required: …" hint + ui-button "Cancel" + primary ui-button labelled "Create stakeholder" / "Save changes" (disabled until valid). The delete-confirm is a second stacked ui-dialog ("Delete this stakeholder?" / "Cancel" + danger "Delete"). Tone, spacing, and colors come only from --ui-sys-* tokens.` },
-            { t: "Stakeholder profile (read-only modal) — the full field set & sections", d:
+CANONICAL-UI BUILD MAP (NEVER md-*/shadcn) — host = ui-dialog with head title "New stakeholder" / "Edit stakeholder" (Newsreader title type), the "View Stakeholder" ui-button (variant text, ui-tooltip "View full profile") beside it in edit mode, and a close ui-icon-button (icon close, aria-label "Close"). SCRIM DISMISSAL maps to ui-dialog's scrim-dismiss: the main dialog's scrim click fires onCancel (draft discarded, no confirmation — per BACKDROP DISMISSAL above); the stacked delete-confirm ui-dialog's own scrim closes only the confirm (back to the edit form); the NotesModal ui-dialog's scrim closes the Notes modal. Text inputs (Organization, Website, Email, Phone, X account, person First/Last, custom title) = ui-text-field; selects (Title, Category, Audience type, Market, Region, Geography, Site, State, Priority, Status) = ui-select; Last contact = ui-date-picker (or native date if simpler); "Add a person" = ui-switch (or ui-checkbox). IssueSelector = a ui-chip set (selected filled chips with remove, available dashed add chips) + a ui-text-field for custom entry with placeholder "Add custom issues, separated by commas" (the text field is omitted when restrict). Owners = the owner-avatar picker. Photo = a plain file input behind a ui-button (Upload/Replace) plus a ui-button ghost "Remove"; preview is an avatar surface with the data URL or a fallback ui-icon. Footer = "Required: …" hint + ui-button "Cancel" + primary ui-button labelled "Create stakeholder" / "Save changes" (disabled until valid). The delete-confirm is a second stacked ui-dialog ("Delete this stakeholder?" / "Cancel" + danger "Delete"). Tone, spacing, and colors come only from --ui-sys-* tokens.
+
+SKELETON TREE (the literal nested region tree extracted from archive/src/sheet-modals.jsx — StakeholderModal + IssueSelector + NotesModal; FilterPopover/SortPopover also live in this file but belong to the Lists box tree; the build assembles against THIS tree, never prose; indentation = nesting) —
+· [Fragment root — StakeholderModal, form mode. When viewMode AND existing, the ENTIRE tree below is replaced by StakeholderProfile (captured in its own box).]
+  · div.modal-veil.show — the main dimmed backdrop; onClick = onCancel (BACKDROP DISMISSAL). Mapping: ui-dialog scrim.
+  · [conditional confirmDelete] the stacked delete confirm:
+    · div.modal-veil.show (inline zIndex 60) — onClick closes ONLY the confirm. Mapping: the stacked ui-dialog's own scrim.
+    · div.modal.confirm-modal (inline zIndex 61, width 380). Mapping: second stacked ui-dialog.
+      · div.modal-body (inline padding 20) — h2 "Delete this stakeholder?" + p.muted body copy (with a strong stakeholder name span) + a flex-end button row (layout row — token-only): button.btn "Cancel" + button.btn.btn-danger "Delete".
+  · div.modal.stakeholder-modal — the dialog card. Mapping: ui-dialog.
+    · div.modal-head — Mapping: ui-dialog title slot.
+      · div.row (inline gap 12, minWidth 0) — h2 title ("New stakeholder"/"Edit stakeholder") + [edit only] button.explainer-link "View Stakeholder" (title "View full profile" → ui-tooltip). Mapping: dialog title text + ui-button variant text.
+      · button.btn.btn-ghost close (Icon "close", aria-label "Close"). Mapping: ui-dialog's built-in close ui-icon-button.
+    · div.modal-body — the scrolling form stack. Mapping: ui-dialog content slot; every sh-form-row below is a layout row — token-only container.
+      · div.sh-photo-row — span.sh-photo-preview (+ .person | .org) (photo as inline center/cover background, else fallback Icon user/users) + a column div holding span.lbl "Profile image" and a row div: label.btn wrapping the HIDDEN file input (type file, accept image/*, display none — the label IS the button, text "Upload photo"/"Replace photo") + [when photo] button.btn.btn-ghost "Remove". Mapping: avatar-like preview surface + ui-button (label-wrapped file input) + ui-button text.
+      · div.sh-form-row.sh-form-row-2 — Organization + Website: each label.login-field (span.lbl + input; Website adds span.muted helper "Skip http: we add it."). Mapping: 2-col row of ui-text-field.
+      · label.add-person-toggle — the checkbox input + span.add-person-box (the drawn box, internal to ui-checkbox) + a text span (strong "Add a person" + muted block sub-copy). Mapping: ui-checkbox (or ui-switch) with label + supporting text.
+      · [conditional isPerson] div.sh-form-row.sh-form-row-3 — Title: label.login-field > div.designed-select > select ([when title === "Other"] a second input below, placeholder "Write a custom title"); First name; Last name. Mapping: ui-select + 2× ui-text-field; designed-select is internal to ui-select.
+      · div.sh-form-row.sh-form-row-3 — Email / Phone / X account. Mapping: 3× ui-text-field.
+      · div.sh-form-row.sh-form-row-2 — Category / Audience type (each div.designed-select > select). Mapping: 2× ui-select.
+      · div.sh-form-row.sh-form-row-3 — Market / Region / Geography. Mapping: 3× ui-select.
+      · div.sh-form-row.sh-form-row-2 — Site / State. Mapping: 2× ui-select.
+      · div.sh-form-row.sh-form-row-2 — Priority / Status. Mapping: 2× ui-select.
+      · label.login-field — Last contact: input type=date. Mapping: ui-date-picker (or native date).
+      · label.login-field — Owners: span.lbl + span.muted helper + MultiOwnerPicker (its internal tree lives in users.jsx — owner picker capture).
+      · label.login-field — Issues: span.lbl + span.muted helper + IssueSelector (tree below).
+      · label.login-field — Tags: span.lbl + span.muted helper + IssueSelector with restrict (tree below).
+      · label.login-field — Notes: span.lbl + textarea rows 3 (inline styled: resize vertical, padding 8, 1px var(--rule) border, radius 6, 13px, paper background, ink — all values become tokens). Mapping: ui-text-field multiline.
+      · [conditional !isEdit] div.muted — the create-only notice (inline ~11.5px, 1px var(--rule-2) top border). Mapping: tokened helper text.
+      · [conditional isEdit AND onDelete] div.sh-delete-section — div.sh-delete-label "Delete stakeholder" + p.muted copy + button.btn.btn-danger (Icon "close" + "Delete stakeholder"). Mapping: tokened danger section + ui-button (error tokens).
+    · div.modal-foot — [when invalid] span.modal-missing.muted "Required: …" + button.btn "Cancel" + button.btn.btn-primary submit. Mapping: ui-dialog actions slot.
+· IssueSelector (sub-control, used twice) → div.issue-selector-block
+  · [when any selected] div.issue-row — one span.tag.issue-chip.selected per value (title "Click to remove"; trailing "×" span). Mapping: ui-chip (filled, removable).
+  · [when any available] div.issue-row.issue-row-available — one button.tag.issue-chip.available "+ {value}" per unselected company value. Mapping: ui-chip (dashed add variant).
+  · [when NOT restrict] input.issue-custom-input — the unboxed custom-entry input, sized like the pills. Mapping: ui-text-field (dense).
+· NotesModal → Fragment
+  · div.modal-veil.show — onClick onClose. Mapping: ui-dialog scrim.
+  · div.modal.notes-modal — Mapping: ui-dialog.
+    · div.modal-head — a min-width-0 column div (eyebrow div "Notes": 11px uppercase 0.08em ink-3; then h2 stakeholder name) + button.btn.btn-ghost close (Icon "close", aria-label "Close").
+    · div.modal-body — EITHER div.notes-empty.muted (empty state) OR div.notes-history → one div.notes-entry per note: div.notes-entry-meta (span.notes-entry-date + span.notes-entry-by, the latter with .muted for the "· legacy" variant) + div.notes-entry-body. Mapping: tokened list stack inside the dialog content.
+    · form.notes-composer (onSubmit) — span.lbl "Add a new note" + textarea rows 3 + div.modal-foot (inline padding 0, border 0): span.muted "Dated today, posted as …" line (margin-right auto) + button.btn "Close" + button[type=submit].btn.btn-primary "Add note". Mapping: ui-dialog actions row; ui-text-field multiline + 2× ui-button.
+
+UX HANDLER CENSUS (every event handler in the box's modules — StakeholderModal, IssueSelector, NotesModal in archive/src/sheet-modals.jsx; FilterPopover/SortPopover handlers are counted in the Lists box census; source order) —
+StakeholderModal (33): (1) main veil onClick → onCancel. (2) confirm veil onClick → closes the confirm only. (3) confirm "Cancel" onClick → closes the confirm. (4) confirm "Delete" onClick → closes the confirm + onDelete(). (5) "View Stakeholder" onClick → viewMode true. (6) head close onClick → onCancel. (7) photo file input onChange → FileReader.readAsDataURL → draft.photo. (8) photo "Remove" onClick → photo null. (9) Organization input onChange. (10) Website input onChange. (11) "Add a person" checkbox onChange → isPerson. (12) Title select onChange. (13) custom-title input onChange → titleOther. (14) First name onChange. (15) Last name onChange. (16) Email onChange. (17) Phone onChange. (18) Phone onBlur → formatPhone(value). (19) X account onChange. (20) Category select onChange → cascade resets type to the new category's first. (21) Audience type onChange. (22) Market select onChange → cascade resets region to the market's first. (23) Region onChange. (24) Geography onChange. (25) Site select onChange → auto-fills state when the chosen site has one. (26) State onChange. (27) Priority onChange. (28) Status onChange. (29) Last contact date onChange. (30) Notes textarea onChange. (31) delete-section danger button onClick → confirmDelete true. (32) foot "Cancel" onClick → onCancel. (33) foot primary onClick → submit() (guarded no-op while invalid; the button is also disabled).
+IssueSelector (5): (34) selected chip onClick → remove that value. (35) available chip onClick → add(titleCased value, deduped). (36) custom input onChange → local draft. (37) custom input onKeyDown — Enter: preventDefault + commitDraft; ",": preventDefault + commit everything up to and including the comma inline (split on commas, titleCase, dedup-append, clear — no setTimeout); Backspace on an EMPTY draft: removes the LAST selected value. (38) custom input onBlur → commitDraft when any pending text.
+NotesModal (5): (39) veil onClick → onClose. (40) head close onClick → onClose. (41) composer form onSubmit → submit (preventDefault; no-op on blank text; calls onAdd then clears). (42) composer textarea onChange. (43) foot "Close" onClick → onClose. NOTE (mechanics, previously implicit): the "Add note" button is type=submit — it carries NO handler of its own and routes through the form's onSubmit (41).
+Non-DOM wiring (not counted): the Owners MultiOwnerPicker onChange and the two IssueSelector onChange props are component wiring (MultiOwnerPicker's own internal handlers live in users.jsx and are counted with that capture); the FileReader onload callback inside (7) is part of that handler.
+COUNT: 43 handlers (33 + 5 + 5), all accounted — every interaction was already described in the sections above; the census adds only the "Add note = type submit, no own handler" note.` },
+                  { t: "Stakeholder profile (read-only modal) — the full field set & sections", d:
 `StakeholderProfile (archive/src/profiles.jsx) is the READ-ONLY view of a single stakeholder, rendered as a centered modal over a dimmed veil. It is DISTINCT from the page-shell record.stakeholder surface — this one is a modal you open to inspect a stakeholder without entering edit mode. The "Edit stakeholder" action is the bridge into the editable StakeholderModal.
 
 PROPS: stakeholder (subject), users, stakeholders (full array, used to swap subject when navigating from a community entry), community (full array), scores, team, getWorkspacesForStakeholder (fn id -> [workspace]), onClose, onEdit, onOpenWorkspace, updateCommunityApp, currentUser, companyIssues. D = STAKEHOLDER_DATA.
@@ -492,7 +675,84 @@ REBUILD BUILD-MAP (Canonical UI — never md-*/shadcn):
 - Community engagement rows = ui-list rows (leading name+meta, trailing amount, trailing ui-icon chevron).
 - Notes = a ui-list of note rows, each row = a meta line + a body line. The meta date (oracle: fontFamily var(--mono), color var(--ink-2)) does NOT keep the mono face — the design law is "No mono, no other families" and the token contract ships no mono token; render the formatDateLong date in the BODY face (Inter) with tabular numerals (tnum) in muted ink (--ui-sys-on-surface-muted), the " · {author name}" suffix in the same muted ink, and the note body in normal body ink. var(--mono) is oracle-only and must not be reintroduced as a token.
 - Section labels = the cm-section-label eyebrow style (uppercase, tracked).
-- Nested community detail = a stacked ui-dialog. "View all" = a second stacked ui-dialog. All icons via ui-icon ligatures (search/close/chevron-right/user/users). No ad-hoc div/span primitives, no inline color except the token references (var(--pos)/var(--ink-3) become --ui-sys-* equivalents).` },
+- Nested community detail = a stacked ui-dialog. "View all" = a second stacked ui-dialog. All icons via ui-icon ligatures (search/close/chevron-right/user/users). No ad-hoc div/span primitives, no inline color except the token references (var(--pos)/var(--ink-3) become --ui-sys-* equivalents).
+
+SKELETON TREE (literal region tree extracted from the archive/src/profiles.jsx JSX — the build assembles against THIS tree, never prose. One node per line, nested in source order. Each node: what it is → what it contains → Canonical UI mapping. Nodes marked "layout row/column — token-only container" are pure layout wrappers with no component identity; wrapper structure otherwise lives INSIDE the mapped ui-* component's shadow DOM. Bracketed [conditions] gate a node's render.)
+
+SURFACE A — THE PROFILE MODAL (the component returns a React fragment; surfaces B and C stack ABOVE it conditionally):
+div.modal-veil.show [onClick=onClose] — dimming scrim → absorbed into ui-dialog (its scrim)
+div.modal.stakeholder-modal.profile-modal — the centered card → ui-dialog (container)
+  div.prof-header — header row: avatar · titles · actions → ui-dialog headline slot (layout row — token-only container)
+    span.prof-avatar.person|.org — [s.photo] center/cover background photo; [no photo] contains Icon "user" (person) or "users" (org), class ico → ui-avatar (photo/icon fallback)
+    div [inline minWidth:0; flex:1] — titles block (layout column — token-only container)
+      div.prof-title — displayName(s)||s.name → title text (Newsreader title token)
+      div.prof-sub — org, optionally " · " + title → body muted text
+      div.prof-tagline — pill + coords (layout row — token-only container)
+        StatusPill(relStatus) → ui-chip zone variant (--ui-sys-zone-* tokens)
+        span.prof-coords — "x N.N · y N.N" → muted tnum body text
+    div.prof-header-actions — (layout row — token-only container)
+      [onEdit] button.explainer-link "Edit stakeholder" → ui-button variant text
+      button.btn.btn-ghost [aria-label "Close"] containing Icon "close" → ui-icon-button
+  div.modal-body.prof-body — scrollable vertical section stack → ui-dialog content slot (layout column)
+    div.cm-section-label "Identity" → section eyebrow (token type style)
+    div.prof-grid — 2-column key/value grid (layout grid — token-only container)
+      div.prof-row ×8 — each contains div.prof-k (key) + div.prof-v (value); the 8 rows in order: Type, Status (contains StatusDot), Market, Region, Site, State, Geography, Last contact → key/value row primitive; StatusDot = the dot+label status primitive
+    div.prof-fullrow — div.prof-k "Priority" + div.prof-v containing PriorityPill → full-width key/value row + ui-chip priority variant
+    div.cm-section-label "Contact"
+    div.prof-grid — 4 prof-row (prof-k + prof-v): Website (a.plain-link, target _blank), Email (a.plain-link mailto), Phone (text), X account (text) → key/value rows; links = real tokened anchors
+    div.cm-section-label "Ownership & reach"
+    div.prof-fullrow — "Owners" + div.prof-v containing OwnersDisplay(size 22) → ui-avatar-stack (read-only)
+    div.prof-fullrow — "Workspaces" + div.prof-v: [wsList.length] span [inline-flex; wrap; gap:4] (layout row — token-only container) of span.tag[.tag-clickable] ×wsList; [empty] "-" → ui-chip set (clickable variant when onOpenWorkspace)
+    div.prof-tagsissues — two-column tags/issues block, NO section label above it (layout row — token-only container)
+      div.prof-ti-col — div.prof-k "Tags" + div.prof-ti-pills containing Tags(s.tags) or span.muted "-" → ui-chip group (first-3 + "+N" overflow per the Tags primitive)
+      div.prof-ti-col — div.prof-k "Issues" + div.prof-ti-pills containing Tags(s.issues) or span.muted "-" → ui-chip group
+    div.cm-section-label "Community engagements"
+    div.profile-cumulative — span.comm-meta-k "Cumulative committed" + span.profile-cumulative-val [inline color var(--pos) or var(--ink-3)] → stat row, token colors only
+    [affil empty] div.muted [inline 12.5px; padding 4px 0] "No community engagements linked yet." → muted body text
+    [affil nonempty] div.profile-entry-list — entry stack (layout column — token-only container)
+      button.profile-entry ×min(affil.length,5) [title "Open application"] → ui-list interactive row
+        span.profile-entry-main — (layout column) span.profile-entry-name + span.profile-entry-meta.muted "{kind} · {stage}"
+        span.profile-entry-amt — communityEntryAmount(a) → trailing amount text (tnum)
+        Icon "chevron-right" class ico → trailing ui-icon
+      [affil.length>5] button.explainer-link [inline alignSelf:flex-start; marginTop:2] "View all N engagements" → ui-button variant text
+    div.cm-section-label "Notes"
+    [no history AND no s.notes] div.muted [12.5px; 4px 0] "No notes recorded."
+    [history nonempty] div.prof-notes — note stack (layout column — token-only container)
+      div.prof-note ×n → ui-list row (non-interactive)
+        div.prof-note-meta — span [inline fontFamily var(--mono); color var(--ink-2)] date + [author resolved] span.muted " · {name}" → meta line (Inter tnum muted at rebuild, per the Notes build-map line)
+        div.prof-note-body — n.body → body text
+    [no history but s.notes] p.comm-card-summary — s.notes → body paragraph
+
+SURFACE B — NESTED COMMUNITY MODAL [viewEntry truthy]: mounts the full CommunityModal component (initialView true) stacked above surface A. Its internal tree is owned by the Community-modal capture box, not re-drawn here → stacked ui-dialog.
+
+SURFACE C — "VIEW ALL" OVERLAY [showAllEntries true] (its own fragment, stacked above surface A):
+div.modal-veil.show [onClick → setShowAllEntries(false)] → stacked ui-dialog scrim
+div.modal [inline width:460; maxWidth:calc(100% - 32px)] → ui-dialog
+  div.modal-head — head row (layout row — token-only container)
+    div [inline minWidth:0] — (layout column)
+      div [inline 10.5px; letterSpacing .08em; uppercase; var(--ink-3)] "Community engagements" → eyebrow (token type style)
+      h2 [inline margin:0] — displayName(s)||s.name → title (Newsreader)
+    button.btn.btn-ghost [aria-label "Close"] containing Icon "close" → ui-icon-button
+  div.modal-body [inline gap:6] → ui-dialog content slot
+    div.profile-entry-list — FULL affil list (not capped) (layout column)
+      button.profile-entry ×affil.length — identical anatomy to the surface-A entry rows → ui-list interactive rows
+
+CLASSNAME ACCOUNTING: every className region in profiles.jsx appears above — modal-veil/show, modal, stakeholder-modal, profile-modal, prof-header, prof-avatar (person/org), ico, prof-title, prof-sub, prof-tagline, prof-coords, prof-header-actions, explainer-link, btn, btn-ghost, modal-body, prof-body, cm-section-label, prof-grid, prof-row, prof-k, prof-v, prof-fullrow, plain-link, tag, tag-clickable, prof-tagsissues, prof-ti-col, prof-ti-pills, muted, profile-cumulative, comm-meta-k, profile-cumulative-val, profile-entry-list, profile-entry, profile-entry-main, profile-entry-name, profile-entry-meta, profile-entry-amt, prof-notes, prof-note, prof-note-meta, prof-note-body, comm-card-summary, modal-head. None silently dropped; the pills-inline markup inside Tags is absorbed into the Tags primitive (single-sourced in the Shared-UI-primitives box). The tree confirms the box body — no corrections needed.
+
+UX HANDLER CENSUS (archive/src/profiles.jsx — every event handler in the module, enumerated with exact behavior):
+1. Surface-A veil onClick → onClose (close the profile).
+2. Header "Edit stakeholder" button onClick → onEdit (bridge to the editable StakeholderModal).
+3. Header ghost close button onClick → onClose.
+4. Workspace chip onClick (attached ONLY when onOpenWorkspace is provided; otherwise the chip has no handler and no tag-clickable class) → onOpenWorkspace(w.id), then onClose() if onClose present.
+5. profile-entry button onClick (inline top-5 list) → setEntryId(a.id) (opens the nested CommunityModal on that engagement).
+6. "View all N engagements" button onClick → setShowAllEntries(true).
+7. CommunityModal onOpenStakeholder(id) callback → find that stakeholder in stakeholders; if found, setSubject(next) + setEntryId(null) (re-target in place).
+8. CommunityModal onCancel callback → setEntryId(null).
+9. CommunityModal onSubmit(app) callback → updateCommunityApp(app) if provided, then setEntryId(null).
+10. Surface-C veil onClick → setShowAllEntries(false).
+11. Surface-C ghost close button onClick → setShowAllEntries(false).
+12. Surface-C profile-entry button onClick → setShowAllEntries(false) THEN setEntryId(a.id) (close the list, open that engagement).
+12 handlers (9 DOM onClick sites + 3 CommunityModal callback props), all accounted — every one is already described in the body above; no missing interactions found. (The [stakeholder.id] reset effect is state synchronization, not an event handler; it is captured under LOCAL STATE.)` },
                   { t: "Plan algorithm — sector/type model catalog, plan selection, workspace→plan stakeholder flow", d:
 `SCOPE — this captures the PLAN ALGORITHM and how stakeholders flow into a plan. It is APP KNOWLEDGE, not the full plan-page element spec (sections/fields/validation come later, when we build the plan + stakeholder pages). The algorithm is NOT the plan: the algorithm tells you WHICH plan it is, and that classification dictates some CUSTOM parts of the plan page built later.
 
@@ -735,7 +995,7 @@ MODEL SCORE + OVERALL SCORE/BAND:
 - top (the "weighs ..." readout) = Object.entries(merged) sorted by combined weight descending, first 3, mapped to SEP_FACTORS[k].label (or k) — the three highest-combined-weight factors across both models.
 
 THE DESIGN'S RELATIONSHIP TO THIS MATH: the successor keeps these exact observable signals (power/align/opp/urgency/engage/issueRel/commTie) and the same equal sector+plan-type blend, but (a) replaces the hidden round(score01*100) number with a DISCLOSED FIT BAND + plain reason, (b) keeps the 67/40 thresholds as the band cut-points for High/Medium/Low, (c) surfaces the "top 3 factors" as the human-readable reason rather than as tooltip fine print, (d) adds CATEGORY AFFINITY on top of the factor blend, and (e) EXTENDS the factor map with the 14 doc-only entries above so the authoritative catalog is fully scoreable. Rename all SEP* internals (sepScore/sepFactorSignal/SEP_*) per the naming rule; the formulas above are preserved as the numeric core.` },
-                              { t: "Plan page — plan elements, fields, exists/fix/create (blends the example + the old code)", d:
+                                    { t: "Plan page — plan elements, fields, exists/fix/create (blends the example + the old code)", d:
 `WHAT IT IS — a Plan is a structured engagement document scoped to ONE workspace, produced after the team PICKS a plan algorithm (industry sector + plan type; basic default). Surfaces: a LANDING grid of the workspace's plans, plus record.plan.view and record.plan.edit.
 
 LAYOUT (record.plan) — a LEFT SIDEBAR lists the PLAN ELEMENTS by NAME (no numbers shown). Selecting an element opens its MAIN CONTENT, which is broken into SECTIONS holding that element's decisions, collaboration, content creation, and fields. Elements behave like SUB-PAGES; together they build a single plan you can ARCHIVE, revisit, and EXPORT as one Word file. TERMINOLOGY: the numbered items below are PLAN ELEMENTS; "sections" = the sub-divisions of an element's main content.
@@ -872,7 +1132,181 @@ NEW PLAN DEFAULTS (newPlan) — id uid("plan"); workspaceId = isMaster ? workspa
 
 DEEP-LINK BRIDGE — window.__pendingPlanId: if set and a matching plan exists, open it (setOpenId + mode "review"), then clear the global. (Mirrors Community's __pendingCommunityId; used from a profile page to jump to a specific plan.)
 
-RETARGET UI BUILD-MAP TO CANONICAL UI (ui-*) — the old code uses raw <select>/.designed-select, hand-built tables, and .tag pills. REBUILD ONLY with Canonical UI: ui-select for sector/type/status/workspace/market/region/site/state/geography pickers; ui-data-table for the stakeholder list (element 6) and the landing table; ui-chip pills for the goal-model "type" pill and issue tags; ui-autocomplete for the add-existing-stakeholder, lead, teammate, and community-investment pickers — configured per the PLANAUTOCOMPLETE MECHANICS paragraph above (8-result cap, open-on-focus with full list on empty query, label-OR-sub matching, two-line option rows, pick clears the query and closes, blur dismisses); ui-text-field for single-line text, number, and date inputs. DECLARED GAP — MULTILINE (the SAME gap the Community box declares; resolve ONCE for both records BEFORE assembling either editor): the plan editor is full of multiline fields — the one-line summary (textarea rows 2), the three scenario textareas, the per-goal alignment-note textareas, each strategy's "how" (rows 2), and Measurement — but design-system/manifest.json has NO ui-textarea component and ui-text-field's manifest contract (props: label, value, placeholder, type, error, supporting-text, disabled) has NO multiline/rows mode. Per the CLAUDE.md gap rule: EITHER extend ui-text-field with a multiline/rows mode (updating its manifest entry) OR build a new ui-textarea into design-system/ to the ui-button quality bar and register it in manifest.json — never a raw textarea element. DECLARED GAP — PLAIN/INLINE VARIANT: the toolbar plan-title input (placeholder "Insert Plan Name") and the inline team-role input (placeholder "Role on this plan") call for a chromeless inline text field, but ui-text-field's manifest contract has NO variant prop — before use, EITHER register a variant (e.g. variant "plain") as a contract extension in manifest.json (built to the quality bar) OR re-map both inputs to the standard outlined ui-text-field; never pass an unregistered prop. SCAFFOLDING: the editor's LEFT metadata aside = ui-sidebar; the RIGHT team/factors/personas aside = ui-inspector; the editor footer = ui-status-bar; toolbar = ui-app-bar with the back control as a ui-button (variant text, leading ui-icon chevron_left). PRIORITY OVERRIDE: the prio-pop popover = a ui-menu anchored to the priority ui-chip (anchor by id; opens on cell click, managers only), containing a non-interactive header block ("Suggested · {band} · {score}/100" + "Weighs {top}") then three ui-menu-item entries High / Medium / Low (the effective band carries the selected state; picking the suggested band clears the override) and, when overridden, a fourth ui-menu-item "Use suggestion ({band})" with leading ui-icon auto_awesome. The ✦ suggestion mark = ui-icon (auto_awesome, size --ui-sys-icon-size-sm) wrapped in a ui-tooltip carrying the "Suggested · {score}/100 - weighs {top}" text; the "·set" overridden mark = plain token-inked text wrapped in a ui-tooltip ("Set by a manager - click to use the suggestion"). VALIDATION READOUT: the .modal-missing "{N} left: …" readout = persistent token-inked text (--ui-sys-on-surface-muted) inside the ui-app-bar next to the Save ui-button, with the full missing list in its ui-tooltip — NOT a ui-snackbar (it is a persistent state, not an event). RIGHT-SIDEBAR CONTENT: team rows = a ui-list of items composing avatar + name + the inline role text field (per the PLAIN/INLINE-VARIANT gap above; placeholder "Role on this plan") + trailing ui-icon-button (close); "Add Teammate" / "Add Community Investment" / the made-real "Add strategy/tactic" (replacing the oracle's dead display:none plan-tactic-add div — see the ORACLE STUB flag above) = ui-button (variant text); the prioritization explainer + factor readout + personas lock note = token-inked text blocks inside the ui-inspector (lock = ui-icon lock). NEVER md-*/shadcn, never raw <select>/<span>/<div> as UI primitives, never inline hexes — pill/status colors come from --ui-sys-* tokens.` },
+RETARGET UI BUILD-MAP TO CANONICAL UI (ui-*) — the old code uses raw <select>/.designed-select, hand-built tables, and .tag pills. REBUILD ONLY with Canonical UI: ui-select for sector/type/status/workspace/market/region/site/state/geography pickers; ui-data-table for the stakeholder list (element 6) and the landing table; ui-chip pills for the goal-model "type" pill and issue tags; ui-autocomplete for the add-existing-stakeholder, lead, teammate, and community-investment pickers — configured per the PLANAUTOCOMPLETE MECHANICS paragraph above (8-result cap, open-on-focus with full list on empty query, label-OR-sub matching, two-line option rows, pick clears the query and closes, blur dismisses); ui-text-field for single-line text, number, and date inputs. DECLARED GAP — MULTILINE (the SAME gap the Community box declares; resolve ONCE for both records BEFORE assembling either editor): the plan editor is full of multiline fields — the one-line summary (textarea rows 2), the three scenario textareas, the per-goal alignment-note textareas, each strategy's "how" (rows 2), and Measurement — but design-system/manifest.json has NO ui-textarea component and ui-text-field's manifest contract (props: label, value, placeholder, type, error, supporting-text, disabled) has NO multiline/rows mode. Per the CLAUDE.md gap rule: EITHER extend ui-text-field with a multiline/rows mode (updating its manifest entry) OR build a new ui-textarea into design-system/ to the ui-button quality bar and register it in manifest.json — never a raw textarea element. DECLARED GAP — PLAIN/INLINE VARIANT: the toolbar plan-title input (placeholder "Insert Plan Name") and the inline team-role input (placeholder "Role on this plan") call for a chromeless inline text field, but ui-text-field's manifest contract has NO variant prop — before use, EITHER register a variant (e.g. variant "plain") as a contract extension in manifest.json (built to the quality bar) OR re-map both inputs to the standard outlined ui-text-field; never pass an unregistered prop. SCAFFOLDING: the editor's LEFT metadata aside = ui-sidebar; the RIGHT team/factors/personas aside = ui-inspector; the editor footer = ui-status-bar; toolbar = ui-app-bar with the back control as a ui-button (variant text, leading ui-icon chevron_left). PRIORITY OVERRIDE: the prio-pop popover = a ui-menu anchored to the priority ui-chip (anchor by id; opens on cell click, managers only), containing a non-interactive header block ("Suggested · {band} · {score}/100" + "Weighs {top}") then three ui-menu-item entries High / Medium / Low (the effective band carries the selected state; picking the suggested band clears the override) and, when overridden, a fourth ui-menu-item "Use suggestion ({band})" with leading ui-icon auto_awesome. The ✦ suggestion mark = ui-icon (auto_awesome, size --ui-sys-icon-size-sm) wrapped in a ui-tooltip carrying the "Suggested · {score}/100 - weighs {top}" text; the "·set" overridden mark = plain token-inked text wrapped in a ui-tooltip ("Set by a manager - click to use the suggestion"). VALIDATION READOUT: the .modal-missing "{N} left: …" readout = persistent token-inked text (--ui-sys-on-surface-muted) inside the ui-app-bar next to the Save ui-button, with the full missing list in its ui-tooltip — NOT a ui-snackbar (it is a persistent state, not an event). RIGHT-SIDEBAR CONTENT: team rows = a ui-list of items composing avatar + name + the inline role text field (per the PLAIN/INLINE-VARIANT gap above; placeholder "Role on this plan") + trailing ui-icon-button (close); "Add Teammate" / "Add Community Investment" / the made-real "Add strategy/tactic" (replacing the oracle's dead display:none plan-tactic-add div — see the ORACLE STUB flag above) = ui-button (variant text); the prioritization explainer + factor readout + personas lock note = token-inked text blocks inside the ui-inspector (lock = ui-icon lock). NEVER md-*/shadcn, never raw <select>/<span>/<div> as UI primitives, never inline hexes — pill/status colors come from --ui-sys-* tokens.
+
+================================================================
+SKELETON TREE (ORIGINAL-DESIGN STRUCTURE CENSUS — the literal region tree extracted from archive/src/plan.jsx JSX, plus the shared archive/src/landing.jsx shell both landings render through. One tree per surface, nested in source order; every className region appears or is explicitly absorbed. Each node: region -> contents -> Canonical UI mapping. The build assembles against THESE trees, never prose; wrapper structure lives INSIDE ui-* components (shadow DOM), so assembly is slotting components, never authoring divs.)
+
+TREE 1 — PLAN LANDING (PlanHome, rendered THROUGH the shared LandingView in landing.jsx; the LandingView regions below are the SHARED landing shell, identical for Community):
+- div.community-wrap — the landing page root (LandingView) -> layout column, token-only container (the page's main region inside ui-app-shell)
+  - [PORTAL via ReactDOM.createPortal into the explainerSlot DOM node — the app header's explainer region; renders ONLY when explainerSlot is passed] div.community-toolbar — the landing toolbar row -> ui-app-bar content row
+    - div.search — Icon search + input placeholder "Search…" (live search over searchKeys) + span.kbd.kbd-cmdk showing cmdKeyLabel -> ui-text-field (search variant, leading ui-icon search); the kbd hint = token-inked text
+    - div.filter-button-wrap — Filter control cluster -> layout row, token-only container
+      - button.btn (+.filter-active when any filter on) — "Filter" or "Filter (n)" (n = active filter count); click toggles the filter popover and closes the sort popover -> ui-button (variant text/outlined) anchoring a ui-menu
+      - [conditional: filterOpen] div.filter-popover — closes onMouseLeave -> ui-menu / ui-sheet surface
+        - div.filter-pop-head — strong "Filter" + a btn-ghost "Clear all" (resets filters {}) -> ui-menu header block + ui-button (variant text)
+        - div.filter-pop-body — one FilterSection per filterDef (label + distinct-value chips, toggle per value) -> ui-chip (filter variant) groups
+    - div.filter-button-wrap — Sort control cluster (same pattern)
+      - button.btn (+.filter-active when sort.key) — "Sort"; toggles the sort popover, closes filter
+      - [conditional: sortOpen] div.filter-popover.sort-popover — onMouseLeave close
+        - div.filter-pop-head — strong "Sort by" + "Clear all" (sort -> { key:null, dir:"asc" })
+        - div.filter-pop-body — SortFieldList over sortFields (field + asc/desc set)
+    - button.btn (+.filter-active in table mode) — "See all" (title "See all in a table"); toggles cards <-> table -> ui-button (variant text) with selected state
+    - div.spacer (flex 1) — layout spacer
+    - {toolbarRight} slot — PLAN PASSES NOTHING here (only Community passes its rollup strip) — absorbed: empty slot on the Plan landing
+  - {headerSlot} — PLAN PASSES NOTHING (prop unused on this surface) — absorbed
+  - ONE OF (mutually exclusive body states):
+    - [empty: 0 items after search+filter] div.comm-empty.muted — emptyText "No plans yet. Create one to begin building a stakeholder engagement plan." -> token-inked empty-state text
+    - [table mode] div.landing-table-scroll — horizontal scroll container -> ui-data-table (owns its own scroll)
+      - div.profile-table.landing-table.landing-table-flex — the table
+        - div.profile-trow.profile-thead — gridTemplateColumns "minmax(180px,2fr)" + max-content per remaining col; one span.profile-th-label per col (Plan · Workspace · Type · Market · Region · Site · Status) -> ui-data-table header row
+        - div.profile-trow × N (one per plan; onClick -> onRowClick = onReview(p.id); cursor pointer; title "Open") — one span.profile-td per col -> ui-data-table body rows
+    - [cards mode, default] div.comm-grid — the card grid (gridClass default; Plan passes none) -> layout grid, token-only container; one PLAN CARD per plan (TREE 2)
+  - {footerSlot} div.sheet-footer.comm-footer — div.group (Icon plan + strong count + " plans") · div.group "·" · div.group.muted flex 1 (the Priority explainer sentence) -> ui-status-bar
+
+TREE 2 — PLAN CARD (renderCard, one per plan in the landing grid):
+- div.comm-card.plan-card — card root -> composed card surface on --ui-sys-surface-card (domain-component layer; never loose divs)
+  - div.comm-card-head — head row -> layout row inside the card composition
+    - div.plan-card-titlewrap (minWidth 0) — title column
+      - span.comm-card-name.plan-card-title — plan title; CLICK -> onReview(p.id); tooltip title "Open plan" -> clickable token-inked text control wrapped in ui-tooltip
+      - div.comm-card-recipient.muted — workspace name (or "-") -> token-inked muted text
+    - div.plan-card-team-avatars — OwnersDisplay over team userIds, size 24, label "team" -> ui-avatar stack (--ui-sys-avatar-size-*)
+  - div.comm-card-badges — span.tag goal-model pill (PLAN_GOAL_COLORS bg/fg, transparent border; fallback var(--bg-2)/var(--ink-2)) + span.spacer (flex 1) + span.comm-stage-text status text (PLAN_STAGE_FG color) -> ui-chip (assist, non-interactive, token-driven variant) + spacer + token-inked status text (--ui-sys-* stage tokens)
+  - p.comm-card-summary.plan-card-summary — summary, or muted "No summary written yet." -> token-inked body text
+  - div.plan-linked-group — the linked key/value block -> ui-list two-column key/value rows
+    - [conditional: issues non-empty] div.comm-card-linked — span.comm-meta-k "Issues" + span.comm-card-issues (Tags) -> key + ui-chip-set (non-interactive)
+    - div.comm-card-linked — "Engaged" + span.comm-linked-names "{n} stakeholders"
+    - div.comm-card-linked — "Market" + value or "-"
+    - div.comm-card-linked — "Region" + value or "-"
+    - div.comm-card-linked — "Site" + D.siteLabel or "-"
+  - div.comm-card-meta.plan-meta-nobottom — four div.comm-meta-row (comm-meta-k + comm-meta-v): Tactics "{n} deployed"/"-" · Investments "{n} linked"/"-" · Segment (workspace.segment) · Unit (workspace.businessUnit) -> ui-list key/value rows
+  - div.comm-card-foot — span.muted "Updated {planDate(p.updatedAt)}" + span.plan-card-actions with two explainer-link buttons "Review" (stopPropagation; onReview) and "Edit" (stopPropagation; onOpen -> editor) -> token-inked text + two ui-button (variant text)
+
+TREE 3 — PLAN EDITOR (PlanEditor, mode "edit"):
+- div.sheet-wrap — page root -> the record page region inside ui-app-shell
+  - div.sheet-toolbar — editor toolbar -> ui-app-bar
+    - button.plan-back — "‹ All plans"; click -> onBack -> ui-button (variant text, leading ui-icon chevron_left)
+    - input.plan-toolbar-title — inline title input, placeholder "Insert Plan Name"; onChange set({title}) -> ui-text-field (the declared PLAIN/INLINE-VARIANT gap)
+    - div.spacer (flex 1)
+    - label.plan-model-pick > div.designed-select > select — sectorModel over D.SEP_SECTOR_MODELS -> ui-select
+    - label.plan-model-pick > div.designed-select > select — goalModel over D.SEP_GOAL_MODELS -> ui-select
+    - button.btn.btn-primary — "Save"; disabled !planValid; click -> onBack -> ui-button (variant filled)
+    - [conditional: !planValid] span.modal-missing — "{N} left: …" readout, full list in title -> persistent token-inked text + ui-tooltip
+  - div.plan-body — the THREE-COLUMN SPLIT: left aside · main · right aside -> layout row, token-only container (the ui-sidebar / main / ui-inspector composition)
+    - aside.plan-aside — LEFT floating metadata sidebar -> ui-sidebar
+      - label.plan-aside-field — span.lbl "One-line summary" + textarea.plan-field rows 2 (placeholder per COPY STRINGS) -> multiline gap component
+      - label.plan-aside-field — "Status" + designed-select (PLAN_STAGES) -> ui-select
+      - label.plan-aside-field — "Workspace" + designed-select (workspaces) -> ui-select
+      - label.plan-aside-field — "Market" + designed-select (Object.keys(D.MARKETS); resets region) -> ui-select
+      - label.plan-aside-field — "Region" + designed-select (D.MARKETS[p.market]) -> ui-select
+      - label.plan-aside-field — "Site" + designed-select ("None" + D.SITES; cascades state) -> ui-select
+      - label.plan-aside-field — "State" + designed-select ("None" + D.US_STATES, D.STATE_ABBR labels) -> ui-select
+      - label.plan-aside-field — "Geography" + designed-select (D.GEOGRAPHIES) -> ui-select
+      - div.plan-aside-field.plan-divider — "Owners" + MultiOwnerPicker size 26 -> ui-autocomplete + ui-avatar composition (owners picker)
+      - div.plan-aside-field.plan-divider — "Issues" + IssueSelector -> ui-chip-set + ui-autocomplete composition
+      - div.plan-aside-field.plan-divider.plan-community-field — "Linked community investment" + PlanCommunity:
+        - div.plan-community — the linker block
+          - div.plan-comm-row × N (per linked entry) — name (500/13px) over muted 11px "{kind} · {stage} · {communityEntryAmount}" + btn-ghost remove (Icon close, aria-label "Remove") -> ui-list item + trailing ui-icon-button
+          - ONE OF: p.muted "Select a market and region above…" note / div.plan-team-add (UserAutocomplete "Search community investments…", autoFocus) -> ui-autocomplete / button.btn.plan-add-inline "Add Community Investment" -> ui-button (variant text) / p.muted "No community investments available…" note
+    - div.plan-main — the main plan document, a stack of five PlanSection blocks -> main content column (white --ui-sys-surface-card)
+      - PlanSection shell (each): div.plan-section (+.plan-section-wide when wide — never passed in the oracle; absorbed) > div.plan-section-head (span.plan-section-n number + h3 title + optional span.plan-tag — never passed; absorbed) + children -> composed section header (token-inked number + heading) + slot
+      - PlanSection n=1 "Scenario & Context" — three label.plan-q (span.lbl + textarea.plan-field rows 3) for solves/approach/outcome -> multiline gap component ×3
+      - PlanSection n=2 "Aligning With Organizational Goals" — p.plan-inherited-note (verbatim copy) + div.plan-goal-list > div.plan-goal-item per ORG_GOAL (div.subheader-text.plan-goal-title read-only goal + textarea.plan-field.plan-goal-note — the goalNotes-bug field) -> token-inked note + ui-list of title + multiline gap component
+      - PlanSection n=3 "Stakeholders In This Plan"
+        - div.plan-sh-table — the ranked table -> ui-data-table (or the ui-stakeholder-table domain component)
+          - div.plan-sh-thead — four spans: Stakeholder · Type · Relationship · Priority
+          - div.plan-sh-trow × N (per ranked stakeholder; onClick -> StakeholderProfile overlay; title "Open stakeholder") — span.plan-sh-name + span.muted type + StatusPill + PlanPriorityCell (TREE 3a)
+          - div.plan-sh-addrow — LAST row: PlanAutocomplete "Add existing stakeholder…" (TREE 3b) -> ui-autocomplete row
+        - button.btn.plan-add-btn — "Add New Stakeholder" -> ui-button
+      - PlanSection n=4 "Tactics" — PlanStrategies:
+        - div.plan-strats — strategy stack
+          - div.plan-strat × N — per strategy card:
+            - div.plan-strat-top — input.plan-strat-title (placeholder "Strategy / tactic") + btn-ghost remove (Icon close, aria-label "Remove") -> ui-text-field + ui-icon-button
+            - textarea.plan-field rows 2 (placeholder "How - the action to take") -> multiline gap component
+            - div.plan-strat-meta-inline — label.plan-inline-field.plan-timing-field (lbl "Timing" + input.plan-inline-input placeholder "e.g. Q1–Q2") + label.plan-inline-field (lbl "Lead" + LeadPick, TREE 3c) -> ui-text-field + the lead composition
+          - div.plan-tactic-add style display:none — the DEAD add stub (ORACLE STUB above) — absorbed: DO NOT REPLICATE; replaced by the made-real "Add strategy/tactic" ui-button (variant text)
+      - PlanSection n=5 "Measurement & Reporting" — textarea.plan-field rows 4 (placeholder per COPY STRINGS) -> multiline gap component
+    - aside.plan-aside.plan-aside-right — RIGHT floating sidebar -> ui-inspector
+      - div.plan-aside-field — span.lbl "Cross-functional team" + PlanTeam:
+        - div.plan-team — div.plan-team-row × N (Avatar 28 + div.plan-team-meta {name 500/13px + input.plan-team-role placeholder "Role on this plan"} + btn-ghost remove) -> ui-list items (ui-avatar + name + inline text field per the PLAIN/INLINE gap + trailing ui-icon-button); then ONE OF div.plan-team-add (UserAutocomplete "Search teammates…", autoFocus) -> ui-autocomplete / button.btn.plan-add-inline "Add Teammate" (only when available.length > 0) -> ui-button (variant text)
+      - div.plan-aside-field.plan-divider — "How stakeholders are prioritized": p.plan-aside-explain (verbatim explainer; strong "suggest"; span.prio-suggest-inline ✦) + SepExplain -> token-inked text block, then:
+        - div.sep-explain > div.sep-explain-group × 2 ("Sector · {name}" / "Scenario · {name}") — div.sep-explain-head + div.sep-explain-factor per factor (div.sep-explain-top {strong label + span.sep-explain-w "{w}%"} + div.sep-explain-desc) -> token-inked factor readout block inside the ui-inspector
+      - div.plan-aside-field.plan-divider — "Personas": div.plan-addon-note (Icon lock + add-on copy) -> ui-icon lock + token-inked text
+  - div.sheet-footer — div.group (Icon plan + strong n + " stakeholders in plan") · div.group "·" · div.group workspace name · div.group "·" · div.group sector name · div.spacer · div.group.muted "Saved · {date}" -> ui-status-bar
+  - [conditional overlay: newSh] StakeholderModal — the shared new-stakeholder modal (captured in the Lists/sheet-modals box) -> ui-dialog composition
+  - [conditional overlay: viewSh] StakeholderProfile — the stakeholder profile overlay (captured in the stakeholder-profile box)
+  - [DEAD: addExisting && false] an empty fragment that can NEVER render — and addExisting has NO true-setter anywhere (only setAddExisting(false) in assignExisting); dead state + dead block — absorbed: DO NOT REPLICATE
+
+TREE 3a — PlanPriorityCell (the Priority cell, inside each editor stakeholder row):
+- span.plan-prio-cell (ref wrapRef; onClick stopPropagation + managers toggle popover) -> the priority ui-chip + ui-menu anchor
+  - PriorityPill (effective band) -> ui-chip (priority tokens)
+  - ONE OF: span.prio-mark.prio-overridden "·set" (title "Set by a manager - click to use the suggestion") / span.prio-mark.prio-suggest "✦" (title = the suggested-score tooltip) -> token-inked mark in ui-tooltip (✦ = ui-icon auto_awesome per the build-map)
+  - [conditional: open && canEdit] div.prio-pop (onClick stopPropagation only — keeps the popover open when its body is clicked) -> ui-menu surface
+    - div.prio-pop-head — span.prio-pop-score "Suggested · {band} · {score}/100" + span.prio-pop-why "Weighs {top}" -> non-interactive ui-menu header block
+    - div.prio-pop-opts — three button.prio-pop-opt High/Medium/Low (.on on the effective band) -> ui-menu-item ×3
+    - [conditional: override] button.prio-pop-revert — Icon sparkle + "Use suggestion ({band})" -> ui-menu-item with leading ui-icon auto_awesome
+
+TREE 3b — PlanAutocomplete (shared inline autocomplete):
+- div.user-autocomplete.plan-ac (+.plan-ac-dark for LeadPick) (onBlur 150ms-delayed close) -> ui-autocomplete
+  - input (onChange sets query + opens; onFocus opens)
+  - [conditional: open && matches] div.ua-menu — button.ua-row × up-to-8 (onMouseDown pick; div.ua-row-name + div.ua-row-title) -> ui-autocomplete option rows (two-line)
+
+TREE 3c — LeadPick (three mutually exclusive states):
+- [lead + closed] span.tag.lead-tag (click reopens picker) — Avatar 16 + name + span.lead-x "×" (stopPropagation; clears lead) -> ui-chip (input variant, removable, with ui-avatar)
+- [no lead + closed] button.tag.lead-tag.lead-empty "Assign lead…" -> ui-chip (assist, interactive)
+- [open] div.lead-picker > PlanAutocomplete (dark) -> ui-autocomplete (token-driven dark surface)
+
+TREE 4 — PLAN REVIEW (PlanReview, mode "review"):
+- div.sheet-wrap — page root
+  - div.sheet-toolbar — button.btn.btn-ghost (Icon chevron-left + "Plans", title "All plans"; onBack) + span title (fontWeight 500) + div.spacer + button.btn.btn-primary (Icon edit + "Edit plan"; onEdit) -> ui-app-bar (text ui-button + title text + filled ui-button)
+  - div.plan-review-body — the review runway -> layout column
+    - div.plan-review-doc — the document column -> white content surface
+      - header.plan-review-head
+        - h1 — plan title
+        - div.muted — assembled meta line (workspace · market/region · site · state abbr · geography · "Updated {date}")
+        - [conditional: summary] p.plan-review-summary
+        - div.plan-review-models — goal-model span.tag (PLAN_GOAL_COLORS or fallback) + span.comm-stage-text status + span.spacer + OwnersDisplay (owners, 26) -> ui-chip + token-inked status + ui-avatar stack
+        - div.plan-algobar (marginTop 12) — span.plan-algobar-tag "SEP model" (RENAME per naming rule) + code sector formula + span.plan-algobar-sep "·" + code goal formula -> token-inked formula bar (tnum)
+      - section.plan-review-section × 8 (the RS shell: h2 title + content), in order:
+        - "Scenario & Context" — div.plan-review-scenario with up to three blocks (span.lbl + p.plan-review-prose) or "Not written yet."
+        - "Aligning With Organizational Goals" — div.plan-goal-list > div.plan-goal-item per goal (subheader-text title + prose or muted "No approach described yet."); whole section "No goals listed." when ORG_GOALS empty
+        - "Stakeholders In This Plan" — div.plan-sh-table (overflow visible) with plan-sh-thead + plan-sh-trow × N (cursor default, NOT clickable; name · muted type · StatusPill · PriorityPill) or "No stakeholders in this workspace." -> ui-data-table (read-only)
+        - "Cross-functional Team" — div.plan-review-team > div.plan-review-teamrow per member (Avatar 28 + name 500/13px + muted 11.5px role||title) or "No team assigned." -> ui-list
+        - "Tactics" — div.plan-review-strat per strategy (div.plan-review-strat-title or "Untitled" + optional prose + div.plan-review-strat-meta.muted "Timing: …" / "Lead: …") or "No tactics yet."
+        - "Issues" — inline-flex wrap of Tags or "None." -> ui-chip-set
+        - "Community Investment" — div.plan-review-comm per linked entry ("{name} - {kind} · {stage} · {amount}") or "No community investments linked."
+        - "Measurement & Reporting" — p.plan-review-prose or "Not written yet."
+
+ABSORBED / DEAD REGIONS (every remaining className in plan.jsx accounted for): PlanList (div.plan-list > div.plan-list-item {span.plan-list-bullet + input + btn-ghost remove}) is DEFINED BUT NEVER RENDERED anywhere in the module — dead component (its internal add()/draft has no rendered input either); DO NOT REPLICATE. The addExisting state + the "addExisting && false" fragment are dead (no true-setter). PlanSection's wide/tag props are never passed. onDelete/deletePlan is threaded to PlanHome but NO delete control exists on the landing (or anywhere in plan.jsx) — deletePlan is unreachable from the Plan UI; the rebuild decides a real delete affordance with the user rather than replicating the dead prop. LandingView's onNew/newLabel props are DEAD in landing.jsx (destructured, never rendered) — the "New plan" affordance actually comes from the APP SHELL's add control via the addNonce/addNonceFor effect (addNonceFor === "plan" -> newPlan()); newLabel "New plan" never appears on screen in the oracle.
+
+================================================================
+UX HANDLER CENSUS (module set: archive/src/plan.jsx — every event handler, grep-verified: 22 onClick + 30 onChange + 1 onFocus + 1 onBlur + 1 onMouseDown = 55 JSX handler attributes, + 1 document-level listener = 56 HANDLERS; 54 reachable + 2 inside the dead PlanList). Enumerated with exact behavior:
+
+LANDING / CARD (3): (1) card title click -> onReview(p.id) opens the review (tooltip "Open plan"); (2) card "Review" link -> stopPropagation + onReview; (3) card "Edit" link -> stopPropagation + onOpen (editor). [The landing shell's own handlers — search input, Filter/Sort buttons + popover onMouseLeave closes + Clear-alls, "See all" toggle, table-row click -> onRowClick — live in the SHARED landing.jsx (1 onChange + 6 onClick + 2 onMouseLeave) plus FilterSection/SortFieldList in components.jsx, and are censused with that shared shell, not double-counted here.]
+
+EDITOR TOOLBAR (4): (4) "‹ All plans" -> onBack; (5) title input onChange -> set({title}); (6) sector select onChange; (7) goal select onChange; (8) "Save" click -> onBack (disabled until planValid; saving is continuous via updatePlan).
+
+LEFT SIDEBAR (11): (9) summary textarea onChange; (10) status select; (11) workspace select; (12) market select (RESETS region to ""); (13) region select; (14) site select (CASCADES state from the site); (15) state select; (16) geography select; (17) MultiOwnerPicker onChange -> set({owners}); (18) IssueSelector onChange -> set({issues}); (19) PlanCommunity onChange -> set({communityIds}).
+
+MAIN SECTIONS (10): (20)(21)(22) the three scenario textareas onChange; (23) per-goal alignment-note textarea onChange (the BROKEN two-arg set call — goalNotes never persists; fix at rebuild, see the goalNotes ORACLE BUG); (24) stakeholder row click -> setViewShId -> StakeholderProfile overlay (title "Open stakeholder"); (25) "Add New Stakeholder" click -> opens StakeholderModal (onCancel closes; onSubmit -> addStakeholder(data, p.workspaceId) + close); (26) PlanStrategies onChange -> set({strategies}); (27) strategy title input onChange; (28) strategy "how" textarea onChange; (29) strategy timing input onChange; plus (30) strategy remove click -> filter by id; (31) measurement textarea onChange.
+
+PRIORITY CELL (5): (32) cell click -> stopPropagation; managers-only toggles the popover; (33) popover body click -> stopPropagation only (keeps it open); (34) High/Medium/Low option click -> onSet(band === suggestion.band ? null : band) then close (picking the suggested band CLEARS the override); (35) "Use suggestion" revert click -> onSet(null) + close; (36) document mousedown listener (active only while open) -> closes the popover on any outside click.
+
+PLANAUTOCOMPLETE (4, shared by add-existing-stakeholder + LeadPick): (37) query input onChange -> set query + open; (38) input onFocus -> open; (39) wrapper onBlur -> 150ms-delayed close; (40) option onMouseDown -> onPick(id), clear query, close. Its onPick wirings: add-existing row -> assignExisting(id) (adds the stakeholder to the WORKSPACE — no plan field); LeadPick -> sets the strategy ownerId + closes.
+
+LEADPICK (3): (41) assigned-tag body click -> reopen the picker; (42) lead-x "×" click -> stopPropagation + onChange(null) clears the lead; (43) "Assign lead…" empty-state click -> open the picker.
+
+RIGHT SIDEBAR / TEAM (4): (44) team-role inline input onChange -> edits that member's role in place; (45) member remove click -> filters the member out by userId; (46) "Add Teammate" click -> swaps to the UserAutocomplete; (47) UserAutocomplete onChange (pick) -> pushes { userId, role: "" } + closes.
+
+COMMUNITY LINKER (3): (48) linked-row remove click -> onChange(ids minus this one); (49) "Add Community Investment" click -> swaps to the autocomplete; (50) UserAutocomplete onChange (pick) -> appends the id + closes.
+
+REVIEW (2): (51) "Plans" back click -> onBack; (52) "Edit plan" click -> onEdit (flips to the editor).
+
+DEAD (2, inside the never-rendered PlanList): (53) item input onChange; (54) item remove onClick — unreachable; DO NOT REPLICATE.
+
+NON-HANDLER REACTIVE TRIGGERS (2 effects, captured for completeness): addNonceFor === "plan" && addNonce -> newPlan() (the app-shell "+" control is the real New-plan affordance — LandingView's onNew/newLabel are dead props); window.__pendingPlanId -> open that plan in review mode, then clear (the DEEP-LINK BRIDGE above).
+
+COUNT: 56 handlers (55 JSX attributes + 1 document listener), all accounted — 54 reachable and described above (every one already covered by or now added to this box), 2 dead in PlanList (flagged DO-NOT-REPLICATE). No handler silently dropped. CORRECTIONS SURFACED BY THE CENSUS (additive; nothing above is disproved): (a) deletePlan/onDelete is threaded but has NO control — plan deletion is impossible in the oracle UI; (b) LandingView never renders onNew/newLabel — creation is app-shell-driven via addNonce; (c) the prio-pop body's stopPropagation-only click and the LeadPick tag-body reopen click are now explicit.` },
       { t: "Stakeholder Plan — worked-example reference (structure to preserve from the doc)", done: true, d:
 `Reusable STRUCTURE pulled from the doc's worked example (Gold Coast Refinery), captured so it survives without the PDF. This is element SKELETON, not the illustrative narrative.
 
@@ -889,7 +1323,7 @@ COMPANY GOALS / ENGAGEMENT-PLAN / CROSS-FUNCTIONAL TEAM (elements 3/4/5) — the
 EXECUTION CHECKLIST (element 10) & COMMUNITY INVESTMENT (element 11) — checklist = action items (finalize internal plan · run listening sessions · launch targeted communication · announce support/community programs · establish a feedback loop). Community investment focus-area pattern: environmental/education · economic development/workforce · health & safety.
 
 COMMUNICATION STRATEGY (reference for a LATER marketing/comms capability beyond element 13's key messages) — PAID MEDIA: targeted digital campaigns (social), search engine marketing, native advertising, out-of-home, sponsorships. INFLUENCER OUTREACH: identify aligned influencers → personalized outreach → collaboration (visits/co-created content) → monitor engagement. INTEGRATION: consistent messaging across all channels tied to the plan's goals. (Not a built plan element now; captured so the strategy detail isn't lost.)` },
-                              { t: "Community — invest in the community: applications → manager approval → tracked investments (FX-aware)", d:
+                                    { t: "Community — invest in the community: applications → manager approval → tracked investments (FX-aware)", d:
 `WHAT IT IS — the COMMUNITY module is where the org INVESTS in the community in different ways: Philanthropy · Volunteering · Corporate Giving · Political Action (PAC) · Sustainability · Social Impact (the kinds). Teammates create APPLICATIONS proposing an investment; the team reviews and VOTES (advisory); an application moved to a committed stage becomes a tracked INVESTMENT the org accomplishes and tracks. Nav = "Community." Surfaces: a LANDING grid of applications + the record (record.community.view/.edit). Linked to stakeholders (represented + linked) and to plans (plan.communityIds, plan element 11). TITLE NOTE: the "manager approval" and "FX-aware" in this box's title are FORWARD-DESIGN targets, NOT oracle behavior — see the STAGES and FORWARD-DESIGN paragraphs below for what the oracle actually does.
 
 STAGES — Idea -> Proposed -> Under Review -> Approved -> Active -> Complete -> Declined. "DECIDED / COMMITTED" = Approved, Active, or Complete (drives the rollups + approved label). ORACLE GROUND TRUTH ON APPROVAL: Stage is a PLAIN SELECT in the edit modal (options = D.COMMUNITY_STAGES) that ANY user can change freely — there is NO manager check, NO formal Approve action, and NO approverId/approvedAt stamping anywhere in community.jsx or community-modal.jsx. "Approving" in the oracle = someone hand-setting stage to Approved and hand-entering approvedAmount + dateApproved. MANAGER-GATED APPROVAL IS FORWARD-DESIGN (NOT in the oracle): the rebuild adds a formal MANAGER-ONLY Approve action that moves an application to Approved and stamps approverId + approvedAt; votes inform that decision, they do not make it. Until that gate is built, the oracle-faithful baseline is the free stage select.
@@ -993,8 +1427,106 @@ RETARGET UI BUILD-MAP TO CANONICAL UI (ui-*) — the old code uses raw <select>/
 FORM (record.community.edit): ui-select for kind/stage/givingMode/askType/unit/recurrence/submitter/site/state/geography; ui-text-field for single-line text, number, and date fields. DECLARED GAP — MULTILINE + LIVE CHAR COUNTER: the record needs multiline textareas with live character counters ("Description" rows 4 / maxLength 1500 / "{len}/1500", "Why this, why now" rows 2 / maxLength 500 / "{len}/500", and the conditional "Describe the conflict" rows 2), but manifest.json has NO ui-textarea component and ui-text-field's contract (props: label, value, placeholder, type, error, supporting-text, disabled) has NO multiline/rows mode and NO counter slot. Per the CLAUDE.md gap rule this MUST be resolved BEFORE assembling the community record: EITHER extend ui-text-field with a multiline/rows mode + char-counter (and update its manifest entry), OR build a new ui-textarea into design-system/ to the ui-button quality bar and register it in manifest.json — never a raw <textarea> or an ad-hoc counter span. (The Plan page box declares the SAME gap; resolve once for both.) Continuing: ui-slider for the two value inputs; ui-chip / ui-chip-set for markets/regions multiselect and issue badges; ui-autocomplete for the StakeholderPicker / Connected-stakeholders picker (configured per the STAKEHOLDERPICKER paragraph); ui-checkbox for conflict/attestation; ui-progress (determinate, value = vs*10, or a token-driven bar) for the value score readout; and — FORWARD-DESIGN, NOT in the oracle — a manager-only Approve action (stage in the oracle is just a free ui-select; the gate is added at rebuild per the STAGES paragraph).
 VOTE GROUP: the oracle renders EXACTLY TWO vote buttons — "for" and "against" — each a ui-button (variant text) composing the count + a leading ui-icon (Material Symbols ligatures keyboard_arrow_up / keyboard_arrow_down, replacing the oracle's chevronUp/chevron glyphs), selected/.on state token-driven, each wrapped in a ui-tooltip ("Align / support" / "Object"). A THIRD abstain button is MAKE-REAL / FORWARD-DESIGN, NOT oracle behavior (see VOTE CONTROL: no control ever sets abstain; the dead .comm-vote-btn.abstain.on CSS shows it was planned but never rendered) — if the rebuild adds it, it is a third ui-button in the same group and its clear/overwrite semantics are decided with the user then.
 READ-ONLY SURFACES (card / profile / chrome — exact ui-* per element): CommunityCard = a composed card surface on --ui-sys-surface-card (composed in the domain-component layer, never loose divs): head = the application name as a clickable token-inked text control wrapped in ui-tooltip ("Open application") over the muted recipient line, plus the owners avatar stack (ui-avatar, --ui-sys-avatar-size-* tokens); badges row = ui-chip (assist variant, non-interactive) for the kind badge and the conditional givingMode chip, stage as token-inked text driven by the --ui-sys-* stage tokens; the Ask/Approved/Value and Markets/Regions/Site meta rows = ui-list two-column key/value rows; Issues = ui-chip-set (non-interactive chips); Engaged = plain token-inked text (NOT clickable in the oracle card); value bar = ui-progress (determinate, value = vs*10) with the numeric readout as token-inked tnum text; foot = the vote ui-button group above + "Review" / "Edit" as ui-button (variant text). CommunityProfile: the Row k/v detail rows (.detail-row) = ui-list two-column key/value rows (the same key/value composition the stakeholder-profile box uses — one composition, never re-implemented per screen); the section labels (cm-section-label: Overview / The ask / Description / Why this, why now / Alignment / Budget / Owners) = token-inked label text (--ui-sys-on-surface-muted, label-scale type token) — never an invented heading component; the Targets/Stakeholders StakeholderPills = ui-chip (assist variant, INTERACTIVE — click fires the COMMUNITY -> STAKEHOLDER BRIDGE above; plain non-interactive ui-chip when no handler is wired); the Alignment value-bar row = ui-progress + token-inked "{vs.toFixed(1)} / 10". PAGE/MODAL CHROME: the asPage sheet-toolbar (profile AND editor) = ui-app-bar with the back control as ui-button (variant text, leading ui-icon chevron_left; profile label "Community" with ui-tooltip "All engagements"; editor label "All community") and the primary action as ui-button (variant filled: "Edit engagement" with leading ui-icon edit / Save / Create), the "{N} left" missing readout as persistent token-inked text with the full list in a ui-tooltip; the MODAL variant = ui-dialog (headline = app name, optional back ui-icon-button chevron_left, "Edit application" / "View application" as ui-button variant text, close ui-icon-button with aria-label "Close", footer actions = Cancel + the primary ui-button). ROLLUP STRIP: the Requested / Annual / 3YR Total strip = a token-inked text group in the ui-app-bar's trailing slot (labels --ui-sys-on-surface-muted, values tnum numerals). LANDING: the shared LandingView composition — ui-data-table for the table mode (exact columns above), filter chips = ui-chip (filter variant), landing footer = ui-status-bar.
-NEVER md-*/shadcn, never raw <select>/<span>/<div> as UI primitives, never inline hexes — all kind/stage colors come from --ui-sys-* tokens.` },
-                              { t: "Workspaces — the team's working surface (segment/BU scope, workHQ, Setup sub-page, roles)", d:
+NEVER md-*/shadcn, never raw <select>/<span>/<div> as UI primitives, never inline hexes — all kind/stage colors come from --ui-sys-* tokens.
+
+================================================================
+SKELETON TREE (ORIGINAL-DESIGN STRUCTURE CENSUS — the literal region tree extracted from archive/src/community.jsx + community-modal.jsx JSX, plus the shared archive/src/landing.jsx shell. One tree per surface, nested in source order; every className region appears or is explicitly absorbed. Each node: region -> contents -> Canonical UI mapping. The build assembles against THESE trees, never prose.)
+
+TREE 1 — COMMUNITY LANDING (CommunityView -> shared LandingView; renders ONLY when no profile, no editor, no new-modal is open — the page swaps whole surfaces, it does not stack them):
+- div.community-wrap — landing root (LandingView) -> layout column, token-only container (the page's main region inside ui-app-shell)
+  - [PORTAL via ReactDOM.createPortal into the explainerSlot DOM node — the app header's explainer region] div.community-toolbar — toolbar row -> ui-app-bar content row
+    - div.search — Icon search + input "Search…" (live over searchKeys name/recipient/summary) + span.kbd.kbd-cmdk (cmdKeyLabel) -> ui-text-field (search variant, leading ui-icon search) + token-inked kbd hint
+    - div.filter-button-wrap — button.btn "Filter"/"Filter (n)" (+.filter-active) toggling div.filter-popover (onMouseLeave close): div.filter-pop-head (strong "Filter" + btn-ghost "Clear all") + div.filter-pop-body (FilterSection per filterDef) -> ui-button + ui-menu of ui-chip (filter variant) groups
+    - div.filter-button-wrap — button.btn "Sort" toggling div.filter-popover.sort-popover: div.filter-pop-head (strong "Sort by" + "Clear all") + div.filter-pop-body (SortFieldList) -> ui-button + ui-menu
+    - button.btn "See all" (+.filter-active in table mode; title "See all in a table") — cards <-> table toggle -> ui-button (variant text, selected state)
+    - div.spacer (flex 1)
+    - {toolbarRight} = div.comm-rollup-inline — three spans, each span.comm-rollup-lbl label + moneyK value: "Requested" · "Annual" · "3YR Total" -> token-inked text group in the ui-app-bar trailing slot (tnum values)
+  - {headerSlot} — Community passes null — absorbed
+  - ONE OF (body states): div.comm-empty.muted (emptyText "No applications yet. Create one to begin.") / [table] div.landing-table-scroll > div.profile-table.landing-table.landing-table-flex (div.profile-trow.profile-thead of span.profile-th-label per col; div.profile-trow per app, onClick -> setViewId read-only profile, title "Open", one span.profile-td per col) -> ui-data-table / [cards, default] div.comm-grid of CommunityCard (TREE 2) -> layout grid
+  - {footerSlot} div.sheet-footer.comm-footer — div.group (Icon community + strong count + " applications") · div.group "·" · div.group.muted flex 1 (the Value explainer sentence) -> ui-status-bar
+- [SIBLING SURFACE: viewApp] CommunityProfile asPage (TREE 4, page shell) replaces the landing
+- [SIBLING SURFACE: newOpen || editing] CommunityModal asPage (TREE 3) replaces the landing
+- [OVERLAY: viewStakeholder] StakeholderProfile — the bridge target overlay (props per the COMMUNITY -> STAKEHOLDER BRIDGE paragraph)
+
+TREE 2 — COMMUNITY CARD (CommunityCard, one per application in the grid):
+- div.comm-card — card root -> composed card surface on --ui-sys-surface-card (domain-component layer)
+  - div.comm-card-head — left column (minWidth 0): div.comm-card-name (CLICK -> onOpen read-only profile; title "Open application") + div.comm-card-recipient.muted (recipient) · right: OwnersDisplay (owners, 24) -> clickable token-inked text in ui-tooltip + muted text + ui-avatar stack
+  - div.comm-card-badges — KindBadge .tag (KIND_COLORS) + [conditional: Corporate Giving + givingMode] plain .tag givingMode + span.spacer + span.comm-stage-text (STAGE_COLORS fg) -> ui-chip (assist) + conditional ui-chip + spacer + token-inked stage text
+  - p.comm-card-summary — app.summary
+  - div.comm-card-meta — three div.comm-meta-row (.comm-meta-k + .comm-meta-v): "Ask" (money/unit + muted recurrence/years suffix) · "Approved" (approvedLabel text, tone color) · "Value" (span.comm-value-bar with inner span width vs*10 % + mono 11px readout) -> ui-list key/value rows; value bar = ui-progress (determinate) + tnum text
+  - [conditional: issues] div.comm-card-linked — "Issues" + span.comm-card-issues (Tags) -> key + ui-chip-set
+  - [conditional: any linked resolves] div.comm-card-linked — "Engaged" + span.comm-linked-names (names comma-joined; NOT clickable) -> key + token-inked text
+  - div.comm-card-meta.plan-meta-nobottom — conditional div.comm-meta-row per: "Markets" (when non-empty) · "Regions" (when non-empty) · "Site" (when site + D.SITES) -> ui-list key/value rows
+  - div.comm-card-foot — div.comm-vote (button.comm-vote-btn.for {span.comm-vote-n count + Icon chevronUp; title "Align / support"; +.on when myVote} + button.comm-vote-btn.against {count + Icon chevron; title "Object"; +.on}) + div.spacer + span.plan-card-actions ("Review" + "Edit" explainer-links, both stopPropagation) -> the vote ui-button group (per the VOTE GROUP build-map) + two ui-button (variant text)
+
+TREE 3 — COMMUNITY RECORD EDITOR (CommunityModal, create/edit; TWO chrome variants around ONE form stack):
+- [MODAL variant only] div.modal-veil.show — click -> onCancel (dismiss) -> ui-dialog scrim
+- div: asPage -> .sheet-wrap.community-edit-page / modal -> .modal.community-modal — the editor shell -> asPage: record page region; modal: ui-dialog
+  - [asPage] div.sheet-toolbar — button.plan-back "‹ All community" (onCancel) + div.spacer + [edit mode] explainer-link "View application" (flips to TREE 4) + button.btn.btn-primary "Save"/"Create" (disabled !valid; onSubmit(d)) + [conditional: !valid] span.modal-missing "{N} left" (full list in title) -> ui-app-bar (text ui-button back · spacer · text ui-button · filled ui-button · token-inked readout + ui-tooltip)
+  - [modal] div.modal-head — div.row (h2 "New application"/"Edit application" + [edit] explainer-link "View application") + btn-ghost close (Icon close, aria-label "Close"; onCancel) -> ui-dialog headline + text ui-button + close ui-icon-button
+  - div: asPage -> .plan-body.community-edit-body / modal -> .modal-body — the scroll body
+    - div: asPage -> .plan-main / modal -> (unclassed wrapper div — absorbed: pure grouping) — the SINGLE-COLUMN FORM STACK, sections in order (SectionLabel = div.cm-section-label; Designed = label.login-field {span.lbl + div.designed-select > select}, or bare div.designed-select when inline; plain fields = label.login-field {span.lbl + input/textarea}):
+      - cm-section-label "Project overview" · login-field "Project name" (autoFocus) -> ui-text-field · div.cm-row.cm-row-2 (Designed "Engagement type" + Designed "Stage") -> ui-select ×2 · [conditional: Corporate Giving] Designed "Giving mode" -> ui-select · login-field "One-line summary" -> ui-text-field
+      - cm-section-label "Applicant & sponsor" · cm-row-2 (Designed "Submitter" [cascades submitterRole] + login-field "Submitter role") · login-field "Date submitted" (date) · login-field "Stakeholder / Organization Targeted" > Designed inline select -> ui-select/ui-text-field per field
+      - cm-section-label "The ask" · cm-row-3 (Designed "Support requested" + login-field "Amount" number + Designed "Unit") · cm-row-3 (Designed "Recurrence" + login-field "Years" number min 1 + login-field "Decision deadline" date) · login-field "Timeline"
+      - cm-section-label "Description & rationale" · login-field "Description" (lbl carries span.cm-charcount "{len}/1500"; textarea.cm-textarea rows 4 maxLength 1500) · login-field "Why this, why now" (cm-charcount "{len}/500"; rows 2 maxLength 500) -> the MULTILINE + COUNTER gap component ×2
+      - cm-section-label "Beneficiary & relationships" · login-field "Recipient organization or cause" · login-field "Connected stakeholders" (muted 11px helper + StakeholderPicker, TREE 3a)
+      - cm-section-label "Strategic alignment" · cm-row-2 (ScoreSlider ×2 — each a login-field: lbl + mono current value + input type=range .cm-range) -> ui-slider ×2 · div.cm-valuescore (span.comm-meta-k "Value score" + comm-value-bar flex 1 + mono 12 "{vs}/10") -> ui-progress + tnum text · login-field "Issues" (IssueSelector) · cm-row-2 (login-field "Markets" + "Regions", each a ChipMultiSelect: div.cm-chip-select of button.filter-chip toggles, +.on; Regions empty-state "Pick a market first") -> ui-chip (filter variant) sets · cm-row-3 (login-field "Site" designed-select [cascades state] + "State" designed-select + "Geography" designed-select) -> ui-select ×3
+      - cm-section-label "Resources & budget" · cm-row-3 ("Total project cost" + "Requested amount" + "Approved amount", numbers) · [conditional: stage Approved/Active/Complete] cm-row-2 ("Date approved" date + muted helper) · cm-row-2 ("Other funding / partners" number + "In-kind contributions" text)
+      - cm-section-label "Risk & compliance" · login-field "Reputational / political risk" · login-field "Legal & disclosure considerations" · div.cm-attest-row (label.cm-check {checkbox + span.cm-check-box + "Conflict of interest disclosed"} + [conditional: checked] login-field marginLeft 26 "Describe the conflict" textarea rows 2 + label.cm-check {checkbox + "I attest this information is accurate"}) -> ui-checkbox ×2 + conditional multiline gap component
+      - cm-section-label "Owners" · MultiOwnerPicker size 26 -> owners picker composition
+  - [modal variant only] div.modal-foot — [conditional: !valid] span.modal-missing "{N} field{s} left: {first 3}…" (full list in title) + button.btn "Cancel" + button.btn.btn-primary "Save application"/"Create application" (disabled !valid) -> ui-dialog footer (token-inked readout + ui-button + filled ui-button)
+- [STATE SWAP: viewMode && isEdit] the whole editor is REPLACED by CommunityProfile (TREE 4) with onEdit flipping back to the form
+
+TREE 3a — StakeholderPicker (Connected-stakeholders typeahead multi-select):
+- div.sh-picker (ref; document-mousedown outside-close) -> ui-autocomplete (multi, chips)
+  - div.sh-picker-chips — chosen .tag chips (name + trailing "×" span; click removes; title "Remove") + the query input (onChange opens; onFocus opens; placeholder "Link stakeholders…" only when no chips)
+  - [conditional: open && matches] div.sh-picker-menu — button.sh-picker-row × up-to-8 (onMouseDown preventDefault -> append id + clear query; name 500/12.5px + muted 11px "{org} · {type}") -> two-line option rows
+
+TREE 4 — COMMUNITY PROFILE (CommunityProfile, read-only; ONE content stack in TWO shells):
+- CONTENT (shared by both shells, in order):
+  - div.comm-card-badges (marginBottom 4) — KindBadge + [conditional] givingMode tag + spacer + stage text -> ui-chip + token-inked stage text
+  - [conditional: summary] p.comm-card-summary
+  - div.cm-section-label "Overview" + Row ×: "Recipient" (always) · [conditional: target resolves] "Targets" (StakeholderPills, clickable — TREE 4a) · "Submitter" (+ " · {submitterRole}") · "Submitted" — Row = div.detail-row {div.k + div.v} -> ui-list two-column key/value rows
+  - div.cm-section-label "The ask" + Row ×4 (always): "Support" · "Amount" (+ muted recurrence/years) · "Approved" (tone-colored) · "Timeline" (+ " · decide by {deadline}" when set)
+  - [conditional: description] cm-section-label "Description" + p.comm-card-summary
+  - [conditional: rationale] cm-section-label "Why this, why now" + p.comm-card-summary
+  - div.cm-section-label "Alignment" + div.cm-valuescore (key "Value" + comm-value-bar flex 1 + mono "{vs}/10") — UNCONDITIONAL -> ui-progress row; then conditional Rows: "Issues" (Tags) · "Markets" · "Regions" · "Stakeholders" (StakeholderPills, clickable)
+  - div.cm-section-label "Budget" + Rows: "Total cost" (always) · "Requested" (always) · [conditional] "Other funding" · [conditional] "In-kind"
+  - div.cm-section-label "Owners" + OwnersDisplay (24) -> ui-avatar stack
+- AS-PAGE SHELL: div.sheet-wrap > div.sheet-toolbar (btn-ghost Icon chevron-left + "Community", title "All engagements", onBack · span app name 500 · spacer · [when onEdit] btn-primary Icon edit + "Edit engagement") + div.plan-review-body > div.plan-review-doc > CONTENT -> ui-app-bar + white document column
+- MODAL SHELL: div.modal-veil.show (click -> onClose) + div.modal.community-modal.profile-modal > div.modal-head (div.row: [when onBack] btn-ghost chevron-left title "Back" + h2 app name; div.row: [when onEdit] explainer-link "Edit application" + btn-ghost close aria-label "Close") + div.modal-body > CONTENT -> ui-dialog (scrim + headline + text ui-button + close ui-icon-button)
+
+TREE 4a — StakeholderPills:
+- span inline-flex wrap — span.tag (+.tag-clickable + onClick ONLY when onOpen passed) per stakeholder, text displayName||name -> ui-chip (assist; interactive when the bridge handler is wired, plain otherwise)
+
+ABSORBED / DEAD REGIONS (every remaining className accounted for): CommunityView's local search/kindFilter/stageFilter state + toggle() helper + the unused "filtered" memo carry NO rendered regions and NO wired handlers (the DEAD CODE note above). KindBadge/StageBadge are the .tag pill leaf components already mapped. The modal-body's unclassed inner div (non-asPage) is pure grouping — absorbed. LandingView's onNew/newLabel props are DEAD in landing.jsx (destructured, never rendered) — the "New application" affordance actually comes from the APP SHELL's add control via the addNonce/addNonceFor effect (addNonceFor === "community" -> setNewOpen(true)); newLabel "New application" never appears on screen in the oracle. There is NO delete affordance anywhere in the module set (no delete handler exists; applications can only be Declined by stage).
+
+================================================================
+UX HANDLER CENSUS (module set: archive/src/community.jsx + community-modal.jsx — every event handler, grep-verified: community.jsx 12 onClick; community-modal.jsx 10 onClick + 42 onChange + 1 onFocus + 1 onMouseDown; = 66 JSX handler attributes + 1 document-level listener = 67 HANDLERS, all reachable). Enumerated with exact behavior:
+
+CARD (5): (1) name click -> onOpen = setViewId (read-only profile; title "Open application"); (2) vote "for" click -> vote(id, "for") toggle (re-click clears; overwrites any other choice); (3) vote "against" click -> vote(id, "against") toggle; (4) "Review" link -> stopPropagation + onOpen; (5) "Edit" link -> stopPropagation + onEdit = setEditId + setEditViewFirst(false) (form mode).
+
+PROFILE — AS-PAGE (2): (6) back "Community" -> onBack = setViewId(null) (returns to the landing); (7) "Edit engagement" -> onEdit = close profile + setEditId (opens the editor).
+
+PROFILE — MODAL SHELL (4, live when CommunityProfile renders as a modal, e.g. via the view/edit flip in modal context): (8) veil click -> onClose; (9) back chevron -> onBack (only when passed); (10) "Edit application" -> onEdit; (11) close button -> onClose. [Veil-click dismissal was implicit before — now explicit.]
+
+STAKEHOLDER PILLS (1): (12) pill click -> onOpen(s.id) — the COMMUNITY -> STAKEHOLDER BRIDGE (closes the profile or discards the editor draft and opens the StakeholderProfile overlay; wired ONLY when a handler is passed).
+
+EDITOR CHROME (8): (13) [modal] veil click -> onCancel (dismisses; draft discarded, no confirm); (14) [asPage] "‹ All community" -> onCancel; (15) [asPage] "View application" -> setViewMode(true) (flip to read-only profile); (16) [asPage] Save/Create -> onSubmit(d) (disabled until valid; hands the draft to the page upsert — see PAGE UPSERT quirk); (17) [modal] "View application" -> setViewMode(true); (18) [modal] head close -> onCancel; (19) [modal foot] "Cancel" -> onCancel; (20) [modal foot] Save/Create -> onSubmit(d). [That is 8 listed as (13)–(20); the two Save paths and two View-application buttons are distinct attributes in the two chrome variants.]
+
+FORM FIELDS — native onChange (33): (21) Project name; (22) kind select; (23) stage select; (24) givingMode select; (25) One-line summary; (26) Submitter select (CASCADES submitterRole to the picked user's title); (27) Submitter role; (28) Date submitted; (29) Stakeholder/Organization Targeted select; (30) askType select; (31) Amount (Number-coerced); (32) Unit select; (33) Recurrence select; (34) Years (Number); (35) Decision deadline; (36) Timeline; (37) Description (counter live); (38) Rationale (counter live); (39) Recipient; (40) Site select (CASCADES state from the site); (41) State select; (42) Geography select; (43) budget.total; (44) budget.requested; (45) approvedAmount; (46) dateApproved; (47) budget.otherFunding; (48) budget.inKind; (49) conflictOfInterest checkbox (reveals the conflict textarea); (50) conflictDetail textarea; (51) attestation checkbox; (52) risk.reputational; (53) risk.legal. Plus inside leaf components: (54) ScoreSlider range input onChange -> Number (serves both sliders).
+
+FORM FIELDS — component-callback onChange wirings (7): (55) StakeholderPicker -> set linkedStakeholders; (56) licenseToOperate ScoreSlider; (57) relationshipImpact ScoreSlider; (58) IssueSelector -> set issues; (59) Markets ChipMultiSelect -> set markets; (60) Regions ChipMultiSelect -> set regions; (61) MultiOwnerPicker -> set owners.
+
+STAKEHOLDERPICKER INTERNALS (4): (62) chosen-chip click -> remove that id (title "Remove"); (63) query input onChange -> set query + open menu; (64) input onFocus -> open menu; (65) option row onMouseDown (preventDefault, keeps input focus) -> append id + clear query; plus (66) the document mousedown listener -> close the menu on any outside click.
+
+CHIPMULTISELECT INTERNAL (1): (67) filter-chip click -> toggle the value in/out of the selected array (used by both Markets and Regions).
+
+NON-HANDLER REACTIVE TRIGGERS (2 effects, captured for completeness): addNonceFor === "community" && addNonce -> setNewOpen(true) (the app-shell "+" control is the real New-application affordance — LandingView's onNew/newLabel are dead props); window.__pendingCommunityId -> setViewId (the DEEP-LINK BRIDGE above). [The landing shell's own handlers — search input, Filter/Sort buttons + popover onMouseLeave closes + Clear-alls, "See all" toggle, table-row click -> setViewId — live in the SHARED landing.jsx (1 onChange + 6 onClick + 2 onMouseLeave) plus FilterSection/SortFieldList in components.jsx, censused with that shared shell, not double-counted here.]
+
+COUNT: 67 handlers (66 JSX attributes + 1 document listener), all accounted and all reachable — every one already covered by or now added to this box. No handler silently dropped. CORRECTIONS SURFACED BY THE CENSUS (additive; nothing above is disproved): (a) veil-click dismissal on BOTH modal shells (profile onClose / editor onCancel — the editor veil discards the draft with no confirm, consistent with the bridge's discard behavior) is now explicit; (b) LandingView never renders onNew/newLabel — creation is app-shell-driven via addNonce; (c) there is NO delete handler anywhere in the module set — an application can never be deleted from the oracle UI, only staged to Declined; the rebuild decides a real delete affordance with the user rather than inventing one.` },
+                                    { t: "Workspaces — the team's working surface (segment/BU scope, workHQ, Setup sub-page, roles)", d:
 `WORKSPACES (the Setup sub-page) — the team's working surface. A workspace pairs a SEGMENT with a BUSINESS UNIT and owns a set of assigned stakeholders. Component SetupView(props). Wrapper "setup-wrap"; a toolbar is portaled into explainerSlot (the app's header explainer region); the body is a scroll of segment-grouped workspace cards; a footer; plus a create modal, an edit modal, and a delete-confirm dialog.
 
 === SEGMAP (segment source — DO NOT hardcode) ===
@@ -1116,8 +1648,87 @@ GeographyChip(value). Per-value {bg, fg}, fallback "National (all)":
 === workHQ (intel.jsx) ===
 The team's working HQ surface lives in intel.jsx; its full capture is its own box (scope with the user). Here note only that Workspaces is the team's working surface that workHQ complements.
 
-CANONICAL UI: all of the above maps to ui-* components (ui-card, ui-dialog, ui-text-field, ui-select, ui-button, ui-icon-button, ui-chip, ui-menu/ui-sheet, ui-snackbar). NEVER md-*/shadcn. Segment/Geography color literals → tokens. Shared primitives (MultiOwnerPicker, ConfirmDialog, Avatar) are specified in the shared-primitives box; referenced here by name only.` },
-                        { t: "App shell & routing — the top-level frame (nav, tabs, login gate, command bridge, explainer bars)", d:
+CANONICAL UI: all of the above maps to ui-* components (ui-card, ui-dialog, ui-text-field, ui-select, ui-button, ui-icon-button, ui-chip, ui-menu/ui-sheet, ui-snackbar). NEVER md-*/shadcn. Segment/Geography color literals → tokens. Shared primitives (MultiOwnerPicker, ConfirmDialog, Avatar) are specified in the shared-primitives box; referenced here by name only.
+
+=== SKELETON TREE (Setup — the literal region tree from archive/src/setup.jsx; the build assembles against THIS tree, never prose) ===
+Legend: each node = className/element — what it contains — Canonical UI mapping. "layout row/column — token-only container" = a pure-layout region (spacing from tokens, no visual decision, absorbed into the parent component's slot where noted).
+
+TREE 1 — THE SETUP PAGE (SetupView render root):
+div.setup-wrap — page root inside the app shell's main slot — layout column, token-only container
+  PORTAL (ReactDOM.createPortal into explainerSlot, rendered only when explainerSlot exists): div.sheet-toolbar — the toolbar mounts INSIDE the app shell's explainer region, NOT inside setup-wrap's own box — page-scaffold toolbar slot (ui-app-bar secondary row)
+    div.search — search Icon + input (placeholder "Search workspaces…") — ui-text-field with leading ui-icon "search"
+    div.filter-button-wrap x3 (in order: Segments · Markets · Regions), each:
+      button.btn (+.filter-active when its filter is non-empty) — label + conditional span.filter-count badge — ui-button (text/outlined) with count badge (ui-chip/count token)
+      div.filter-popover (conditional; width 240; onMouseLeave closes) — ui-menu surface (light-dismiss per the DISMISSAL MAP retarget above)
+        div.filter-pop-head — strong label + button.btn.btn-ghost "Clear all" (fontSize 11) — menu header row: token-inked label + ui-button (text)
+        div.filter-pop-body — layout column — token-only container
+          div.cat-opt-list — the option list — ui-menu selectable items
+            button.cat-opt (+.on when selected) x N — Icon "check" (class "ico cat-check") + span label — selectable ui-menu item with leading check ui-icon
+    div.spacer (flex 1) — pure flex filler — absorbed by the toolbar's flex layout (no component)
+  div.setup-scroll — the scrolling body — layout column with overflow scroll, token-only container
+    div.setup-section — section stack — token-only container
+      div.comm-empty.muted (conditional, only when visibleWorkspaces is empty) — "No workspaces match." — token-inked empty-state text
+      div.seg-group x (one per segment in Object.keys(SEGMAP) order that has matching workspaces), each:
+        div.seg-group-head — SegmentBadge + muted count span (fontSize 11.5, "{n} workspace(s)") — ui-chip (segment-token variant) + token-inked label
+        div.ws-grid — the card grid — layout grid, token-only container
+          WorkspaceCard x N — TREE 2
+  div.sheet-footer.comm-footer — ui-status-bar
+    div.group — Icon "grid" + strong (color var(--ink)) workspaces.length + " workspaces" — status-bar cell: ui-icon + tnum text
+    div.group — the literal "·" — status-bar divider cell
+    div.group.muted (flex 1) — the explainer sentence ("Workspaces pair a segment…") — status-bar text cell
+  WorkspaceModal (mode "create", open=createOpen) — TREE 3
+  WorkspaceModal (mode "edit", open when editingWs resolves) — TREE 3
+  ConfirmDialog (shared primitive; open when confirmDeleteId is set) — ui-dialog (danger variant); its internal tree is owned by the shared-primitives box
+
+TREE 2 — WorkspaceCard:
+div.comm-card.ws-card (cursor pointer; whole-card onClick = onActivate) — composed card in the domain-component layer on --ui-sys-surface-card, never loose divs
+  div.comm-card-head — layout row — absorbed into the card's header slot
+    div (style minWidth 0, flex 1) — name/subtitle column — layout column, token-only container
+      span.comm-card-name.plan-card-title — ws.name; onClick (stopPropagation) = onEdit; title "Open / edit workspace" — clickable token-inked text control wrapped in ui-tooltip
+      div.comm-card-recipient.muted — ws.businessUnit — token-inked muted text
+    MultiOwnerPicker — shared primitive (ui-avatar stack + add affordance); onChange → onUpdate({ owners })
+  div.comm-card-badges — layout row — token-only container
+    SegmentBadge (small) — ui-chip (segment-token variant, non-interactive)
+    span.spacer (flex 1) — flex filler — absorbed
+    span.comm-stage-text (conditional, only when isActive) — "Active", color var(--accent) — token-inked accent text
+  div.comm-card-linked (Markets) — span.comm-meta-k "Markets" + span.comm-linked-names (markets.join(", ") or "—") — ui-list two-column key/value row
+  div.comm-card-linked (Regions) — same shape, key "Regions" — ui-list two-column key/value row
+  div.comm-card-foot — layout row — token-only container
+    span.muted (fontSize 11.5) — strong (ink, mono family in oracle) count + " stakeholders" — token-inked text, count in tnum numerals (the mono family does NOT survive; type law)
+    span.spacer (flex 1) — flex filler — absorbed
+    span.muted (fontSize 11, mono in oracle; title "Date created") — formatCreated(ws.createdAt) — token-inked tnum text wrapped in ui-tooltip
+    button.btn.btn-ghost (conditional, only when canDelete; onClick stopPropagation → onDelete; aria-label "Delete", title "Delete workspace", marginLeft 4) — Icon "close" — ui-icon-button
+
+TREE 3 — WorkspaceModal (create/edit; returns null when !open):
+Fragment
+  div.modal-veil.show — backdrop scrim; onClick = onClose — ui-dialog scrim (scrim-dismiss ENABLED, per the modal section above)
+  div.modal.workspace-modal — ui-dialog
+    div.modal-head — headline row — dialog headline slot
+      div.row (gap 10) — SegmentBadge (small, tracks live draft.segment) + h2 ("New workspace" / "Edit workspace") — ui-chip + dialog headline text
+      button.btn.btn-ghost (aria-label "Close") — Icon "close" — ui-icon-button
+    div.modal-body — the field stack — dialog content slot
+      label.login-field — span.lbl "Workspace name" + input (autoFocus; placeholder "e.g. GA&PP - North America") — ui-text-field
+      div (grid, gridTemplateColumns 1fr 1fr, gap 12) — layout row — token-only container
+        label.login-field — span.lbl "Segment" + div.designed-select > select — ui-select
+        label.login-field — span.lbl "Business unit" + div.designed-select > select — ui-select
+      div (grid 1fr 1fr, gap 12) — layout row — token-only container
+        label.login-field — span.lbl "Scope (optional)" + div.designed-select > select — ui-select
+        label.login-field (CONDITIONAL, only when draft.scope === "State") — span.lbl "State" + div.designed-select > select — ui-select
+      div.login-field — span.lbl "Owners" + muted helper span (fontSize 11) + MultiOwnerPicker (size 28) — field label + helper + shared primitive
+      div (conditional; one variant per mode) — the muted created-by line (fontSize 11.5, paddingTop 4, borderTop 1px var(--rule-2), marginTop 4) — token-inked footnote above the action row (the borderTop → ui-divider or the dialog's rule token)
+    div.modal-foot — button.btn "Cancel" + button.btn.btn-primary ("Create workspace"/"Save changes", disabled when !valid) — dialog action slot, 2x ui-button
+
+CLASSNAME ACCOUNTING: every className region in setup.jsx appears above (setup-wrap, sheet-toolbar, search, filter-button-wrap, btn, filter-active, filter-count, filter-popover, filter-pop-head, btn-ghost, filter-pop-body, cat-opt-list, cat-opt, on, ico, cat-check, spacer, setup-scroll, setup-section, comm-empty, muted, seg-group, seg-group-head, ws-grid, sheet-footer, comm-footer, group, comm-card, ws-card, comm-card-head, comm-card-name, plan-card-title, comm-card-recipient, comm-card-badges, comm-stage-text, comm-card-linked, comm-meta-k, comm-linked-names, comm-card-foot, modal-veil, show, modal, workspace-modal, modal-head, row, modal-body, login-field, lbl, designed-select, modal-foot, btn-primary). SegmentBadge and GeographyChip render style-only spans with NO className (inline-styled pills → ui-chip token variants per their sections above). None silently dropped.
+
+=== UX HANDLER CENSUS (archive/src/setup.jsx — every event handler in the module) ===
+DOM-level JSX handlers, 25 total:
+Toolbar (13): 1 search input onChange (sets search state) · 2 Segments toggle onClick (flips segOpen; closes marketOpen + regionOpen) · 3 Segments popover onMouseLeave (closes it) · 4 Segments "Clear all" onClick (segFilter = []) · 5 Segments cat-opt onClick (toggleSeg — add/remove that segment) · 6 Markets toggle onClick (flips marketOpen; closes the other two) · 7 Markets popover onMouseLeave · 8 Markets "Clear all" onClick · 9 Markets cat-opt onClick (toggleMarket) · 10 Regions toggle onClick (flips regionOpen; closes the other two) · 11 Regions popover onMouseLeave · 12 Regions "Clear all" onClick · 13 Regions cat-opt onClick (toggleRegion).
+WorkspaceCard (3): 14 card root onClick → onActivate (setActiveWorkspaceId(ws.id)) · 15 name span onClick (e.stopPropagation) → onEdit (setEditWorkspaceId(ws.id)) · 16 delete ghost button onClick (e.stopPropagation) → onDelete (attemptDelete(ws.id)).
+WorkspaceModal (9): 17 veil onClick → onClose (scrim dismiss) · 18 head close onClick → onClose · 19 name input onChange · 20 Segment select onChange (resets businessUnit to the new segment's first unit) · 21 Business-unit select onChange · 22 Scope select onChange (clears scopeState unless the new value is "State") · 23 State select onChange · 24 footer "Cancel" onClick → onClose · 25 primary onClick → submit() (guarded by valid; the button also carries disabled=!valid).
+Shared-primitive callback props wired in this module (4 — their internal DOM handlers live in users.jsx and are censused in the shared-primitives box): MultiOwnerPicker onChange on the card (→ onUpdate({ owners: next })) and in the modal (→ setDraft owners); ConfirmDialog onConfirm (→ removeWorkspace(confirmDeleteId); setConfirmDeleteId(null)) and onCancel (→ setConfirmDeleteId(null)).
+Non-JSX interaction: attemptDelete's blocked-path alert("Only the workspace creator or a manager can delete this workspace.") fires inside handler 16's chain when !canDelete (→ ui-snackbar at rebuild, per the Delete section). WorkspaceModal's useEffect (re-seed draft on open) is state plumbing, not a handler.
+25 DOM handlers + 4 shared-primitive callback props = 29 interaction bindings. ALL accounted — every one is described in the sections above; the tree confirms the box with NO corrections (the dead showAll state and dead toggleAssignment findings stand; no sort control exists, as already corrected).` },
+                              { t: "App shell & routing — the top-level frame (nav, tabs, login gate, command bridge, explainer bars)", d:
 `THE TOP-LEVEL WIRING [CODE — archive/src/app.jsx]. This is the frame every screen renders inside: the auth gate, brand bar, fixed nav-tab row, the per-view content switch, the bottom workspace-tab strip, the detail drawer, and all the global bridges (command palette, @-mentions, keyboard). Captured here exhaustively so a cold rebuild reconstructs the shell with the old file gone. CANONICAL UI mapping is stated per element (ui-app-shell / ui-app-bar / ui-tabs / ui-sidebar / ui-sheet / ui-dialog / ui-icon — NEVER md-*/shadcn).
 
 ══ AUTH GATE & SESSION ══
@@ -1342,15 +1953,231 @@ The field ENUM CONTENTS (D.CATEGORIES / D.MARKETS / D.GEOGRAPHIES) live in the C
 openDetail(id) — sets selectedId AND detailId together; full spec in the DETAIL DRAWER section above; passed to SheetView and MapView. deleteStakeholder (removes from stakeholders + deletes scores[id] + stakeholderWorkspaces[id]); updateStakeholder/updateScore/updateTeam/updateWorkspace/removeWorkspace (cascades to stakeholderWorkspaces + plans + open tabs + active fallback)/updateCommunityApp (upsert by id)/updatePlan (upsert by id, one plan per workspace)/deletePlan; messaging sendMessage/startConversation (DM dedupe by participant pair)/messageUser. The delete-guard effect (full spec in the DETAIL DRAWER section): selectedId falls back to the first stakeholder's id (or null when the list is empty); detailId is CLEARED — the drawer closes. These are captured fully in the Lists / Scoring / Plans / Community / Messaging boxes; listed here only to show they are wired from the shell. (The detail drawer is NOT a pointer — it is captured in full in the DETAIL DRAWER section above.)
 
 ══ CANONICAL UI BUILD MAP ══
-ui-app-shell = the whole frame · ui-app-bar = brand bar (Row 1) · ui-tabs = nav-tab row (Row 2) and bottom workspace-tab strip (Row 4) · ui-sidebar = IntelPanel / messaging sidebar hosts · ui-sheet (right) or ui-inspector = the detail drawer · ui-dialog = OpenWorkspaceModal, CommandPalette, EditProfileModal, StakeholderModal, UserListPopup · ui-menu = every shell dropdown (workspace selector, profile menu, add menu — native outside-click dismiss) · ui-icon = every glyph (Material Symbols ligatures per the ALIAS→LIGATURE table in the NAV_TABS section — never the raw alias strings) · ui-icon-button = close/create/message/fan-toggle controls. No md-*, no shadcn, no hand-rolled glyphs.` },
-                  { t: "workHQ (IntelPanel) — the workspace intelligence band [CODE — archive/src/intel.jsx; captured as-is per the 2026-06-13 \"no preference\" ruling, reshape allowed at build]", d:
+ui-app-shell = the whole frame · ui-app-bar = brand bar (Row 1) · ui-tabs = nav-tab row (Row 2) and bottom workspace-tab strip (Row 4) · ui-sidebar = IntelPanel / messaging sidebar hosts · ui-sheet (right) or ui-inspector = the detail drawer · ui-dialog = OpenWorkspaceModal, CommandPalette, EditProfileModal, StakeholderModal, UserListPopup · ui-menu = every shell dropdown (workspace selector, profile menu, add menu — native outside-click dismiss) · ui-icon = every glyph (Material Symbols ligatures per the ALIAS→LIGATURE table in the NAV_TABS section — never the raw alias strings) · ui-icon-button = close/create/message/fan-toggle controls. No md-*, no shadcn, no hand-rolled glyphs.
+
+══ SKELETON TREE (ORIGINAL-DESIGN CENSUS, sweep b — the literal region tree extracted from archive/src/app.jsx; the build assembles against THIS tree, never prose) ══
+Legend: one node per line; indentation (". ") = nesting; "?" = conditional render; classes are the oracle classNames — every className region in app.jsx appears below or is explicitly absorbed; "→" = Canonical UI mapping. Where the SHELL DESIGN RULINGS (2026-07-02) deliberately supersede the oracle arrangement, the OLD node is kept and the RULED mapping is recorded beside it — capture both, build the RULED one.
+
+ROOT MOUNT
+RootErrorBoundary (class component; inline styles only, no classNames — full spec in the ROOT ERROR BOUNDARY section)
+. App (auth gate)
+. . ? LoginView — the ONLY mount when !currentUser (its tree lives in the Users & People box)
+. . ? AppLoggedIn — the frame below when signed in
+
+APPLOGGEDIN FRAME — div.app (vertical stack: 4 rows + overlay mounts) → ui-app-shell
+. ROW 1 (brand bar) — div.brand-bar → ui-app-bar. RULED (2026-07-02 #5): the chrome is IDENTICAL on every screen; composition = mark + name + workspace selector LEFT, search RIGHT.
+. . div.brand (onClick → Home: setActiveWorkspaceId(MASTER)+setActiveView("sheet"); inline cursor:pointer; title "Home — Master")
+. . . div.brand-mark — RULED (#4): becomes the "Sr" monogram (capital S + lowercase ITALIC r, title typeface, on a colored field; field color = app-title color, BOTH read --ui-sys-on-surface so they can never drift)
+. . . . ? img.brand-mark-img (when cfg.brandIcon set; alt "App icon")
+. . . . ? Icon "brandmark" .brand-glyph (fallback) → old ui-icon id_card — RULED: superseded by the Sr monogram
+. . . div.brand-name — text = cfg.appName || "Stakeholdr"
+. . div.ws-selector (onClick toggles wsMenuOpen) → ui-menu anchored to a top-bar control. RULED (#1): the workspace selector lives in the TOP BAR next to the brand — the oracle ALREADY matches this position; what the ruling RETIRES is the bottom tab strip (Row 4 below), whose switching duties consolidate into THIS selector + the sidebar Workspaces section.
+. . . ? (master) span.ws-selector-kind "All" + span.ws-selector-name "Master"
+. . . ? (workspace) SegmentBadge small + span.ws-selector-name name (marginLeft 6) + span.muted businessUnit (fontSize 10.5, marginLeft 6)
+. . . Icon "chevron" .ico.ws-selector-caret → ui-icon expand_more
+. . . ? div.ws-menu (when wsMenuOpen; onClick stopPropagation — see census #8)
+. . . . div.ws-menu-item (+.active when active) per workspace — span.nm name + span.sub segment; onClick → openWorkspaceTab(w.id)+close
+. . . . div.ws-menu-divider → ui-divider
+. . . . div.ws-menu-item "+ New workspace…" (accent ink; onClick → setup view + new-ws modal + close)
+. . div.brand-spacer (flex spacer)
+. . div.ws-selector.scaffold-selector (Dev dropdown; onClick toggles scaffoldMenuOpen) — span.ws-selector-kind "Dev" + span.ws-selector-name "Scaffolds" + caret Icon chevron + ? div.ws-menu (stopPropagation, census #12) holding ONE div.ws-menu-item (span.nm "Sample record" + span.sub "read + edit shell") — RULED: DROPPED at rebuild (see the DEV SCAFFOLDS flag above)
+. . div.utility-cluster
+. . . span.muted "Saved · 1m ago" (fontSize 11) — the HARDCODED STUB (see flag above)
+. . . UserStack (max 3, size 22, ring; onClick opens UserListPopup) → ui-avatar-stack (GAP) — RULED chrome names only mark/name/selector left + search right; the stack's ruled placement is an OPEN decision at build (record: old = top-right utility cluster) — never silently dropped
+. . . div.profile-button (onClick toggles profileMenuOpen)
+. . . . Avatar currentUser (size 26, ring) → ui-avatar — RULED (#3): the signed-in identity appears in ONE place, an avatar pinned BOTTOM-LEFT of the ui-sidebar (identity footer); the ProfileMenu anchors THERE at rebuild (old = top-right)
+. . . . ? ProfileMenu (when open; renders INSIDE .profile-button — popover tree in the Users & People box) → ui-menu
+. ROW 2 (fixed nav tabs) — div.nav-tabs → OLD: a horizontal ui-tabs row under the app bar. RULED (#2): primary nav moves INTO the expanded ui-sidebar (Claude-like but proportional, --ui-sys-sidebar-width clamp(208px, 18vw, 288px); the rail never sits hollow — full nav + a Workspaces section + the identity footer fill it); the right-cluster controls below remain shell chrome.
+. . button.tab (+.active when activeView === t.id) per visibleNavTabs — Icon (alias per the ALIAS→LIGATURE table) + label + ? span.count.count-alert (Scoring only, when unscoredCount > 0); attr data-screen-label={t.label}
+. . div.nav-tabs-spacer (flex spacer)
+. . ? button.nav-tabs-right-button (explainer toggle; only when hasExplainer) — ui-icon expand_less (open) / expand_more (closed)
+. . ? button.nav-tabs-right-button (create; only when activeView in sheet|scoring|plan|community|setup) — ui-icon add
+. . button.nav-tabs-right-button (messages toggle; always) — ui-icon chat + ? span.msg-badge unreadCount (when > 0)
+. EXPLAINER BAR SLOT (between Row 2 and Row 3; at most ONE renders, per activeView + isExplainerOpen) — div.scoring-explainer-bar → tokened inline banner
+. . ? scoring (and !master): div.scoring-explainer-bar > p.scoring-intro (the scoring copy, x/impact + y/influence bolded)
+. . ? setup: div.scoring-explainer-bar.explainer-controls — EMPTY portal slot (ref → explainerSlotEl; the view portals its controls in)
+. . ? map: div.scoring-explainer-bar > p.scoring-intro (the map copy; drag clause stale per the Map ruling)
+. . ? help: div.scoring-explainer-bar > p.scoring-intro "Share code coming soon."
+. . ? record-sample: div.scoring-explainer-bar > p.scoring-intro (empty)
+. . ? settings: div.scoring-explainer-bar > p.scoring-intro (the settings copy)
+. . ? sheet|plan|community: div.scoring-explainer-bar.explainer-controls — EMPTY portal slot (ref → explainerSlotEl)
+. ROW 3 (view mount) — div.workspace (+.has-explainer when hasExplainer && isExplainerOpen) — exactly ONE child per activeView:
+. . ? sheet && !master: div.intel-split (attr data-mode = intelMode) > IntelPanel + SheetView (side by side; the workHQ box owns IntelPanel's tree)
+. . ? sheet && master: SheetView (alone)
+. . ? scoring: ScoringView · ? map: MapView · ? plan: PlanView · ? community: CommunityView · ? setup: SetupView · ? help: HelpView · ? record-sample: SampleRecord · ? profile: ProfilePage · ? settings (manager-gated): SettingsView · ? messages: MessagingPage (each view's internal tree lives in its own box)
+. ROW 4 (bottom workspace tab strip / footer) — div.ws-tab-bar → OLD: ui-tabs/ui-bottom-bar styling. RULED (2026-07-02): RETIRED as chrome — workspace switching consolidates into the top-bar selector + the ui-sidebar Workspaces section; the strip's DATA (open-set membership, per-tab counts, active fallback, the computed Updated meta) must survive in those ruled surfaces. Both visual states captured:
+. . div.ws-tab-stack (+.stacked when isStacked — ONLY the Master tab renders; +.expanded otherwise — ALL openWorkspaceIds render in order)
+. . . MASTER tab — div.ws-tab.master (+.active when master && view sheet; onClick activateWorkspaceTab(MASTER); title "Master pool - all stakeholders. Cannot be closed.") > Icon "table" (→ ui-icon table_rows) + "Master" + span.muted "· {stakeholders.length}" (fontSize 10.5, marginLeft 2)
+. . . WORKSPACE tab — div.ws-tab (+.active; onClick activateWorkspaceTab(id); title "{name} - {segment} · {businessUnit}") > span.seg-dot (inline background = segmentColor(w.segment)) + span.ws-tab-label name + span.muted "· {count}" (fontSize 10.5) + button.ws-tab-close (onClick closeWorkspaceTab(id, e); aria-label "Close", title "Close tab") > Icon "close" .ico.ws-tab-close-icon
+. . ? button.ws-fan-toggle (when openWorkspaceIds.length > 1; onClick toggles tabsExpanded) > Icon "double-left" .ico (expanded → collapse) | Icon "double-right" .ico (collapsed → expand)
+. . button.ws-tab-add (onClick → setOpenWsModalOpen(true)) > Icon "plus" .ico + "Open workspace"
+. . div.ws-tab-bar-spacer (flex spacer)
+. . div.ws-tab-meta > span "Updated {formatDateLong(…)}" (COMPUTED — see the tab-bar META rule above)
+. OVERLAY MOUNTS (siblings AFTER Row 4, in JSX ORDER — stacking comes from styles.css z-index values; at equal z the later sibling paints on top; each is always-mounted unless noted):
+. . 1 OpenWorkspaceModal (returns null unless open) → ui-dialog
+. . . div.modal-veil.show (onClick onClose)
+. . . div.modal (inline width 560)
+. . . . div.modal-head > h2 "Open a workspace" + button.btn.btn-ghost (aria-label "Close", Icon close)
+. . . . div.modal-body.open-ws-modal-body > per segment with workspaces: div.open-ws-group > div.open-ws-group-head (SegmentBadge small) + div.open-ws-list > button.open-ws-item (+.is-open when already open; onClick onPick(w.id)) > span.open-ws-item-name + span.open-ws-item-meta "{businessUnit} · {count} stakeholder(s)" + span.open-ws-item-cta "Switch to"|"Open →"
+. . . . div.modal-foot > button.btn "Cancel" + button.btn.btn-primary (Icon plus) "Create new workspace"
+. . 2 CommandPalette (⌘K; its tree lives in the command-palette box) → ui-dialog
+. . 3 ? StakeholderModal (mounted only while scoringProfileShId resolves to a stakeholder; initialView read mode; tree owned by the Lists box) → ui-dialog
+. . 4 EditProfileModal (null unless open; tree in the Users & People box) → ui-dialog
+. . 5 UserListPopup (ALWAYS mounted; .show toggles; tree in the Users & People box) → ui-sheet (right) with scrim
+. . 6 MessagingSidebar (tree owned by the Messaging box) → ui-sidebar / ui-sheet (right)
+. . 7 DETAIL DRAWER — div.drawer-veil (+.show when detailId) then div.drawer (+.show) → ui-sheet (right) / ui-inspector
+. . . ? (when detailStakeholder resolves) div.drawer-head > h2 displayName + StatusPill(_status) + button.btn.btn-ghost (Icon close)
+. . . . div.drawer-body > 3 × div.drawer-section (h4 "Identity" / "Relationship" / "Position on map"); each field row = div.detail-row > div.k label + div.v control (exact fields, cascades, and the Region two-select row in the DETAIL DRAWER section above)
+. . 8 ? TweaksPanel (map view only; TweakSection/TweakRadio/TweakSlider/TweakToggle/TweakColor children) — RETIRED at rebuild (see TWEAK_DEFAULTS above)
+CLASSNAME ACCOUNTING — every className literal in app.jsx appears above or in its referenced section; NONE silently dropped: app · brand-bar · brand · brand-mark · brand-mark-img · brand-glyph · brand-name · ws-selector · ws-selector-kind · ws-selector-name · ws-selector-caret · ws-menu · ws-menu-item · nm · sub · ws-menu-divider · brand-spacer · scaffold-selector · utility-cluster · muted · profile-button · nav-tabs · tab · count · count-alert · nav-tabs-spacer · nav-tabs-right-button · msg-badge · scoring-explainer-bar · scoring-intro · explainer-controls · workspace · has-explainer · intel-split · ws-tab-bar · ws-tab-stack · stacked · expanded · ws-tab · master · active · seg-dot · ws-tab-label · ws-tab-close · ws-tab-close-icon · ws-fan-toggle · ws-tab-add · ico · ws-tab-bar-spacer · ws-tab-meta · drawer-veil · show · drawer · drawer-head · drawer-body · drawer-section · detail-row · k · v · modal-veil · modal · modal-head · modal-body · open-ws-modal-body · open-ws-group · open-ws-group-head · open-ws-list · open-ws-item · is-open · open-ws-item-name · open-ws-item-meta · open-ws-item-cta · modal-foot · btn · btn-ghost · btn-primary.
+
+══ UX HANDLER CENSUS (ORIGINAL-DESIGN CENSUS, sweep c — EVERY event handler in archive/src/app.jsx, in source order) ══
+A. JSX DOM HANDLERS (36):
+OpenWorkspaceModal — #1 modal-veil onClick → onClose · #2 head close onClick → onClose · #3 open-ws-item onClick → onPick(w.id) · #4 foot "Cancel" onClick → onClose · #5 foot "Create new workspace" onClick → onCreateNew.
+Brand bar — #6 div.brand onClick → Home (Master + sheet; title "Home — Master", inline cursor:pointer) · #7 div.ws-selector onClick → toggle wsMenuOpen · #8 div.ws-menu onClick → e.stopPropagation() [APPENDED DETAIL: the menu renders INSIDE the selector div whose own onClick toggles; without this stop, any in-menu click would bubble up and re-toggle the menu] · #9 ws-menu-item onClick → openWorkspaceTab(w.id) + setWsMenuOpen(false) · #10 "+ New workspace…" onClick → setActiveView("setup") + setNewWsModalOpen(true) + close menu · #11 scaffold-selector onClick → toggle scaffoldMenuOpen · #12 scaffold div.ws-menu onClick → stopPropagation [same bubbling guard as #8] · #13 "Sample record" onClick → setActiveView("record-sample") + close menu · #14 div.profile-button onClick → toggle profileMenuOpen.
+Nav tabs — #15 button.tab onClick → setActiveView(t.id) · #16 explainer-toggle onClick → toggleExplainer · #17 create onClick → setup ? setNewWsModalOpen(true) : setAddNonceFor(activeView) + addNonce++ · #18 messages onClick → toggle msgSidebarOpen.
+Tab strip — #19 ws-fan-toggle onClick → toggle tabsExpanded · #20 ws-tab-add onClick → setOpenWsModalOpen(true).
+Detail drawer — #21 drawer-veil onClick → setDetailId(null) · #22 drawer-head close onClick → setDetailId(null) · #23 Organization input onChange → patch org · #24 Category select onChange → patch category + TYPE CASCADE (first option) · #25 Type select onChange → patch type · #26 Market select onChange → patch market + REGION CASCADE (first option) · #27 Region select onChange → patch region · #28 Geography select onChange → patch geography · #29 Tags input onChange → comma-split/trim/filter patch tags · #30 Last-contact date input onChange → patch lastContact · #31 Status select onChange → patch status · #32 Priority select onChange → patch priority · #33 Notes textarea onChange → patch notes.
+renderTab — #34 Master tab onClick → activateWorkspaceTab(MASTER_ID) · #35 workspace tab onClick → activateWorkspaceTab(id) · #36 button.ws-tab-close onClick → closeWorkspaceTab(id, e) (e.stopPropagation() inside so the tab-activate click never fires).
+B. DOCUMENT/WINDOW LISTENERS (3): #37 window "open-stakeholder-profile" → setScoringProfileShId(e.detail) (the Scoring drill; cleaned up on unmount) · #38 document mousedown → the four-menu outside-click dismiss (SHELL DROPDOWN DISMISS section, incl. the missing-dep quirk) · #39 document keydown → cmd/ctrl-K opens the palette (preventDefault).
+C. SHELL→CHILD CALLBACK WIRINGS (48 — the interaction callbacks DEFINED at the mount sites; the receiving component's own DOM handlers are censused in that component's box): UserStack onClick → open UserListPopup (1). ProfileMenu onClose / onEditProfile / onMessages / onSettings / onLogOut (5 — exact wiring in the PROFILE MENU section). IntelPanel onAddStakeholder → addNonceFor "sheet" + bump (1). SheetView split mount: onConsumeOpen → clear pendingShId, onOpenWorkspace → openWorkspaceTab (2). SheetView master mount: the same two (2). ScoringView onDeleteWorkspace → removeWorkspace(active) — null on Master (1). PlanView onOpenWorkspace (1). SetupView setActiveWorkspaceId → openWorkspaceTab (1). ProfilePage onEdit → open EditProfileModal, onOpenWorkspace, onOpenPlan → window.__pendingPlanId + view plan, onOpenCommunity → window.__pendingCommunityId + view community, onOpenStakeholder → Master + sheet + pendingShId (5). SettingsView updateUserRole + updateCompanyIssues/Tags/Functions/Segments/Markets/Sites/Categories/Goals → updateAppConfig patches (9). OpenWorkspaceModal onPick / onClose / onCreateNew (3). CommandPalette onClose, onGo = paletteGo (2). StakeholderModal onOpenWorkspace / onDelete / onCancel / onSubmit (4). EditProfileModal onClose, onSave (the 4-step save — EDIT-PROFILE MODAL MOUNT section) (2). UserListPopup onClose, onMessage = messageUser (2). MessagingSidebar onClose, onOpenPage → view messages + close (2). TweaksPanel children: TweakRadio mapStyle, TweakSlider dotSize, TweakToggle showLabels, TweakToggle showZoneLabels, TweakColor accent — each onChange → setTweak (5).
+COUNT: 36 JSX DOM handlers + 3 document/window listeners = 39 handlers in app.jsx, plus 48 shell→child callback wirings = 87 interactions. ALL ACCOUNTED — every interaction was already described in this box's prose except three micro-details appended by this census: the two in-menu stopPropagation guards (#8, #12) and the brand div's title attribute "Home — Master" with inline cursor:pointer (#6). No tree or handler finding disproves any statement in this box; no corrections required.` },
+      { t: "Original-design CONNECTIVITY CENSUS — every cross-record edge (real / fragile / fake→make-real)", d:
+`WHAT THIS BOX IS — the complete edge list of every place a user can travel from one record/surface to another in the ORIGINAL app (archive/src, all modules swept 2026-07-03: app.jsx, palette.jsx, profiles.jsx, profile-page.jsx, sheet.jsx + sheet-modals.jsx, community.jsx + community-modal.jsx, plan.jsx, setup.jsx, messaging.jsx, intel.jsx, help.jsx, users.jsx, map.jsx, scoring.jsx, landing.jsx, record.jsx, settings.jsx). Format per edge: SOURCE (surface + trigger) -> TARGET · MECHANISM (exact code path) · STATUS. Statuses: REAL (works as designed) · FRAGILE (works via a global-window bridge or DOM event bus — replace with first-class routing/state at rebuild, observable behavior preserved) · FAKE-OR-DEAD (the design implies the connection but the code never wires it — MAKE-REAL, or record an explicit ruling to drop) · ONE-WAY (a path exists in one direction where the design implies a return or a symmetric path). Edges already specified inside another guide box are cross-referenced; edges found here that NO other box captures are marked LEAK and this box is their capture. help.jsx has zero cross-record edges (pure reference page); landing.jsx is a generic shell whose only edge is the caller-supplied onRowClick (counted under Plans/Community).
+
+══ A. SHELL AND GLOBAL BRIDGES (app.jsx) ══
+A1. Brand mark + app name (brand-bar, onClick, title "Home — Master") -> Master Lists · setActiveWorkspaceId(MASTER_ID) + setActiveView("sheet") · REAL · captured (App shell box, BRAND BAR).
+A2. Workspace-selector dropdown item -> that workspace's Lists · openWorkspaceTab(w.id) (adds to openWorkspaceIds if absent, activates, view "sheet") · REAL · captured.
+A3. Workspace-selector "+ New workspace…" -> Setup page WITH the create modal open · setActiveView("setup") + setNewWsModalOpen(true) · REAL · captured.
+A4. Dev "Scaffolds" menu "Sample record" -> record-sample view · setActiveView("record-sample") · REAL (dev-only; ruled DROPPED at rebuild) · captured.
+A5. UserStack avatar row (utility cluster) -> UserListPopup people panel (right-edge) · setUsersPopupOpen(true) · REAL · captured (Users box).
+A6. Profile avatar button -> ProfileMenu dropdown · setProfileMenuOpen toggle · REAL · captured.
+A7. ProfileMenu "View profile" -> own profile page · onEditProfile prop = setProfileUserId(currentUser.id) + setActiveView("profile") · REAL · captured.
+A8. ProfileMenu "Messages" -> full Messages page · setActiveView("messages") · REAL · captured.
+A9. ProfileMenu "Settings" (manager only) -> Settings · setActiveView("settings") · REAL · captured.
+A10. ProfileMenu "Log out" -> login gate · logOut() clears currentUser + hp_map_user · REAL · captured.
+A11. Nav tabs (Lists / Scoring / Map / Plans / Community / Workspaces / Help) -> the 7 views · setActiveView(t.id); Scoring hidden on Master · REAL · captured.
+A12. AUTO-REDIRECT: on Master while on Scoring -> Map · effect: if (isMaster && activeView === "scoring") setActiveView("map") · REAL · captured.
+A13. Nav-bar "+" (context-aware create) -> active view's create flow · setup: setNewWsModalOpen(true); else setAddNonceFor(activeView) + bump addNonce (consumed by Sheet/Scoring/Plan/Community effects to open their create modal/flow) · REAL · captured.
+A14. Nav-bar messages icon (with unread badge) -> MessagingSidebar toggle · setMsgSidebarOpen(o => !o) · REAL · captured.
+A15. Bottom workspace tab click (Master or workspace) -> that scope's Lists · activateWorkspaceTab(wsId): setActiveWorkspaceId + setActiveView("sheet") · REAL · captured.
+A16. Workspace tab close (×) -> neighbor tab fallback · closeWorkspaceTab: remaining[max(0, idx-1)] || MASTER_ID, view "sheet"; Master never closable · REAL · captured.
+A17. "Open workspace" button -> OpenWorkspaceModal -> picked workspace · onPick = openWorkspaceTab(wsId) + close modal · REAL · captured.
+A18. OpenWorkspaceModal "Create new workspace" -> Setup + create modal · setOpenWsModalOpen(false) + setNewWsModalOpen(true) + setActiveView("setup") · REAL · captured.
+A19. Cmd/Ctrl-K anywhere -> CommandPalette · global keydown effect -> setPaletteOpen(true) · REAL · captured (palette box).
+A20. paletteGo("stakeholder", id) [from palette row, @-mention, profile-page relationship row] -> Master Lists + that stakeholder's record · setActiveWorkspaceId(MASTER_ID) + setActiveView("sheet") + setPendingShId(id); SheetView effect consumes openStakeholderId -> setEditId -> StakeholderModal · REAL (React state handoff, not a window global) · captured — BUT FLAG: this deep link opens the stakeholder in the EDIT modal, not the read-only StakeholderProfile; the Scoring drill (A25) opens the READ view (initialView). Asymmetric by mechanism, not design — at rebuild the ruling is: deep links land on the READ view with Edit one click away.
+A21. paletteGo("plan", id) -> Plans view with that plan open in REVIEW · window.__pendingPlanId = id + setActiveView("plan"); PlanView effect: if plan exists setOpenId + mode "review", then null the global · FRAGILE (window global; silent no-op if plan deleted) · captured (App shell + Plans boxes; ruled: becomes real router state).
+A22. paletteGo("community", id) -> Community view with that entry open read-only · window.__pendingCommunityId = id + setActiveView("community"); CommunityView effect: if exists setViewId, then null · FRAGILE (same pattern) · captured.
+A23. paletteGo("workspace", id) -> that workspace's Lists tab · openWorkspaceTab(id) · REAL · captured — BUT FLAG (LEAK, this box is the capture): NO EXISTENCE GUARD. A stale id (workspace deleted after being mentioned in a message) is appended to openWorkspaceIds and activated; activeWorkspace resolves undefined while isMaster is false, and the brand-bar ws-selector then reads activeWorkspace.segment unguarded -> RENDER CRASH (caught only by the root error boundary). MAKE-REAL guard at rebuild: every deep-link resolver verifies the record exists (as the plan/community bridges already do) and falls back gracefully (toast + stay put).
+A24. paletteGo("user", id) -> that user's profile page · setProfileUserId(id) + setActiveView("profile") · REAL · captured.
+A25. window "open-stakeholder-profile" CustomEvent (dispatched by Scoring name cells) -> read-only StakeholderModal overlay · shell effect: setScoringProfileShId(e.detail) -> StakeholderModal existing + initialView, with full profile wiring (onOpenWorkspace = openWorkspaceTab, onDelete, onSubmit=updateStakeholder) · FRAGILE (DOM event bus; replace with a prop callback / route) · captured.
+A26. window.__openMention(type, id) [mention chips in message bodies] -> paletteGo with code map stk->stakeholder · wsp->workspace · pln->plan · cmy->community · FRAGILE (global fn installed by an every-render effect) · captured.
+A27. window.__mentionSources() -> supplies { stakeholders, workspaces, plans, community } to the mention autocomplete in every Composer · FRAGILE (global fn; becomes context/props) · captured.
+A28. LEAK — SheetView's openDetail prop is DEAD CODE: the shell passes openDetail (the detail-drawer opener) to BOTH SheetView and MapView, but SheetView NEVER CALLS IT (its name double-click / edit icon go to the StakeholderModal via local setEditId instead). In the oracle the right-hand DETAIL DRAWER is reachable from EXACTLY ONE trigger in the whole app: Map dot double-click (B2). STATUS: FAKE-OR-DEAD (Lists half). The App-shell box's drawer section says the shell passes openDetail to SheetView and MapView as "their row/dot open-detail click-through" — the Sheet half of that sentence overstates the oracle; AMEND that box to read: passed to both, CALLED only by MapView. Rebuild ruling needed with the user: either wire a Lists trigger to the drawer (make-real) or accept map-only entry (and record it).
+A29. Detail drawer "Workspaces" row chips (SegmentBadge + name spans) -> nowhere · no onClick; the SAME workspace list rendered in StakeholderProfile IS clickable (C8) · FAKE-OR-DEAD as connectivity — already ruled READ-ONLY in the drawer's own capture (App shell box), so this is a RECORDED drop, not a silent one; if the drawer survives the rebuild, decide chip navigation explicitly.
+A30. LoginView submit -> the app · logIn(u) sets currentUser + hp_map_user · REAL · captured (Users box).
+
+══ B. MAP (map.jsx) ══
+B1. Dot single click -> selects the stakeholder; scorecard rail shows its record · setSelectedId (selection shared app-wide with Lists) · REAL · captured (Map box).
+B2. Dot double-click -> app detail drawer for that stakeholder · onDoubleClick={() => openDetail(r.id)} — the ONLY drawer entry point in the app (see A28) · REAL · captured.
+B3. LEAK — Scorecard -> full record: MapView passes onOpenFull={() => selected && openDetail(selected.id)} into MapDetail, but MapDetail NEVER RENDERS ANY CONTROL that calls it — the prop is accepted and dropped. The scorecard rail therefore has NO affordance to open the selected stakeholder's full record (drawer or profile); the only escape is re-finding the dot and double-clicking. STATUS: FAKE-OR-DEAD — design intends scorecard -> full record (the wiring exists, the button was never built). MAKE-REAL at rebuild: an explicit "Open record" action in the ui-inspector scorecard (title area or actions slot). No other guide box mentions onOpenFull; this box is its capture.
+B4. Scorecard "Visit Website" link -> external site · href = normalizeUrl(stakeholder.url), target _blank rel noopener noreferrer · REAL · captured.
+B5. Scorecard EMPTY state "Recently scored" rows (first 6 stakeholders) -> selects that stakeholder on the map · onClick setSelectedId(s.id) · REAL (in-page) · captured.
+
+══ C. LISTS (sheet.jsx + sheet-modals.jsx + profiles.jsx) ══
+C1. Frozen edit-icon cell click (stopPropagation) OR stakeholder-name cell double-click -> StakeholderModal (EDIT mode) for that row · local setEditId(row.id) · REAL · captured (Lists box).
+C2. Row click -> selection · setSelectedId(row.id) (shared with Map) · REAL · captured.
+C3. Notes cell click (stopPropagation, title "Click to view notes & history") -> NotesModal (history + add note) · setNotesId(row.id) · REAL · captured.
+C4. Row contact links -> external: Email = mailto:{email}; Phone = tel:{digits}; X account = https://x.com/{handle} new tab; Website = normalizeUrl(url) new tab (all stopPropagation so the row does not select) · REAL · captured.
+C5. "Community investment" column pills (affiliatedCommunity names as .tag spans, title = entry name) -> nowhere · NO onClick — yet the identical affiliated-entry list inside StakeholderProfile (C9) opens the entry modal · FAKE-OR-DEAD — MAKE-REAL at rebuild: clicking a pill opens that community entry (read view), matching the profile behavior. The Lists box captures the render but not the missing click; this box is the capture of that gap.
+C6. External open request (pendingShId from A20/I4) -> auto-opens that row's StakeholderModal · effect on openStakeholderId: setEditId(id) + onConsumeOpen() clears the shell state · REAL · captured.
+C7. StakeholderModal "View Stakeholder" <-> StakeholderProfile "Edit stakeholder" · setViewMode(true/false) flip inside the one modal mount · REAL · captured (stakeholder-record boxes).
+C8. StakeholderProfile "Workspaces" chips (tag tag-clickable) -> that workspace's Lists tab · onOpenWorkspace(w.id) = openWorkspaceTab, then onClose() closes the profile · REAL where wired (Lists edit modal, Scoring drill A25) · captured — see E7/F7 for the two call sites that OMIT this wiring.
+C9. StakeholderProfile "Community engagements" rows (first 5, button profile-entry) -> that community entry read-only (CommunityModal initialView) · setEntryId(a.id) · REAL · captured.
+C10. StakeholderProfile "View all N engagements" -> overlay listing the FULL affiliated list -> any entry -> C9 modal · setShowAllEntries(true); entry click closes overlay + setEntryId · REAL · captured.
+C11. Community entry opened FROM a stakeholder profile: its Targets/Stakeholders pills -> SWAPS the profile subject in place · onOpenStakeholder = (id) => { setSubject(next); setEntryId(null) } — profile now shows the other stakeholder (a real record-to-record hop that stays inside one modal) · REAL · captured (stakeholder-profile box).
+
+══ D. SCORING (scoring.jsx) ══
+D1. Stakeholder name cell (sh-cell sh-cell-link, title "Open stakeholder") -> read-only stakeholder record overlay · window.dispatchEvent(new CustomEvent("open-stakeholder-profile", { detail: s.id })) -> shell listener A25 · FRAGILE (DOM event bus) · captured (Scoring + App shell boxes).
+D2. Remove-last-teammate confirm "Delete workspace" -> workspace deleted -> shell falls back (removeWorkspace: cascades plans, closes tab, active -> Master) · onDeleteWorkspace prop (only passed when not Master) · REAL · captured (Scoring/Workspaces boxes).
+D3. Nav-bar "+" on Scoring -> new-stakeholder modal · addNonceFor === "scoring" effect -> setNewShOpen(true) · REAL · captured.
+
+══ E. PLANS (plan.jsx) ══
+E1. Plan card title click / card "Review" / landing-table row click -> PlanReview (read-only page) · setOpenId(p.id) + setMode("review"); table via LandingView onRowClick · REAL · captured (Plan page box).
+E2. Plan card "Edit" -> PlanEditor · setOpenId + setMode("edit") · REAL · captured.
+E3. "New plan" (landing button or nav "+") -> creates a seeded plan and opens the editor · newPlan(): updatePlan(blank) + setOpenId + mode "edit" · REAL · captured.
+E4. Editor "‹ All plans" back AND the Save button -> plan landing · both call onBack = setOpenId(null) (Save is gated by planValid) · REAL · captured.
+E5. Review "Plans" back -> landing; Review "Edit plan" -> editor; Editor -> review via onReview · setMode flips on the same openId · REAL · captured.
+E6. Editor "Stakeholders In This Plan" row click (title "Open stakeholder") -> StakeholderProfile overlay · setViewShId(s.id) · REAL · captured.
+E7. ONE-WAY — the plan-editor StakeholderProfile instance (E6) is a DEAD END: the call site passes NO onEdit and NO onOpenWorkspace, so the profile shows no "Edit stakeholder" action and its workspace chips render as plain non-clickable tags (StakeholderProfile only wires them when the handler exists). Same modal, three behaviors by call site (full from Lists/Scoring; inert here and in F7). MAKE-REAL at rebuild: ONE profile contract everywhere — workspace chips always navigate, Edit always available (permissions permitting). The Plans box lists the exact props (so the omission is recorded implicitly); this box flags it as the connectivity decision.
+E8. ONE-WAY — PlanReview stakeholder rows are NOT clickable (cursor default, no onClick) while the SAME table in the editor opens the profile (E6) · captured in the Plans box ("REVIEW rows are NOT clickable") · rebuild ruling: review rows should open the read-only profile (a read surface linking to read surfaces); make-real unless explicitly dropped.
+E9. PlanReview "Community Investment" rows ("{c.name} - {c.kind} · {c.stage} · {amount}") -> nowhere · plain text, no onClick, though each row IS a community record that has its own read page · FAKE-OR-DEAD — MAKE-REAL: link each row to the community entry read view (F1 target). The Plans box captures the render only; this box is the capture of the missing edge.
+E10. PlanEditor "Linked community investment" rows (plan-comm-row: name + kind/stage/amount + remove ×) -> nowhere · only the remove × is interactive; the row never opens the entry · FAKE-OR-DEAD — MAKE-REAL same as E9. LEAK; this box is the capture.
+E11. window.__pendingPlanId consumption (from A21/I2) -> auto-open review · FRAGILE · captured.
+E12. Editor "Add New Stakeholder" -> StakeholderModal (create) -> addStakeholder(data, plan.workspaceId) (forced into the plan's workspace) · REAL · captured.
+E13. Editor "Add existing stakeholder…" autocomplete row -> assigns that stakeholder to the plan's workspace (data edge, row appears in the plan table) · assignExisting: setStakeholderWorkspaces append · REAL · captured.
+
+══ F. COMMUNITY (community.jsx + community-modal.jsx) ══
+F1. Card name click / card "Review" / landing-table row click -> CommunityProfile read-only PAGE (asPage) · setViewId(app.id) · REAL · captured (Community boxes).
+F2. Card "Edit" -> CommunityModal editor page · setEditId(app.id), editViewFirst false · REAL · captured.
+F3. Read page "‹ Community" back -> landing (setViewId null); read page "Edit engagement" -> editor (setViewId null + setEditId) · REAL · captured.
+F4. Read page Targets / Stakeholders pills (tag tag-clickable) -> StakeholderProfile overlay for that stakeholder · onOpenStakeholder = setViewId(null) + setViewStakeholderId(id) · REAL · captured (Community->stakeholder bridge section).
+F5. Editor "View application" flip -> read profile; pills from the editor path DISCARD any unsaved draft (setEditId(null), no confirm; the profile shows the SAVED entry) · REAL mechanically, data-loss hazard · captured verbatim in the Community box.
+F6. window.__pendingCommunityId consumption (from A22/I3) -> auto-open read page · FRAGILE · captured.
+F7. ONE-WAY — the Community-page StakeholderProfile instance (target of F4) is a DEAD END like E7: call site passes NO onEdit and NO onOpenWorkspace (workspace chips inert, no edit bridge), and onClose returns to the COMMUNITY LANDING, not to the profile/editor the click came from (that return-path asymmetry is already captured in the Community box; the inert-chips half is flagged HERE). MAKE-REAL per the E7 single-contract ruling.
+F8. Community card "Engaged" row -> nowhere · linked stakeholder names comma-joined as plain text (captured as "Plain text, not clickable" in the Community box) while the read page renders the same list as clickable pills (F4) · FAKE-OR-DEAD (card-level) — at rebuild either make the names pills (consistent with F4) or record the drop; never silent.
+
+══ G. WORKHQ (intel.jsx) ══
+G1. IntelPanel card contents — Alerts development lines ("{stakeholder}: {note…}"), "Need your score" stakeholder names, Tasks "Vote: {entry}" — ALL inert .intel-name spans with NO onClick · the band is pure display; none of its signals navigate to the stakeholder, the Scoring row, or the community vote it names · FAKE-OR-DEAD — the whole point of an intelligence band is drill-through; MAKE-REAL at rebuild (Alerts/Need-score -> stakeholder record or Scoring row; Vote tasks -> community entry). The workHQ box captures the band as-is per the no-preference ruling; this box records the connectivity requirement.
+G2. IntelPanel "+ Stakeholder" quick button -> Lists create modal · onAddStakeholder = shell bumps addNonceFor "sheet" + addNonce · REAL · captured.
+
+══ H. SETUP / WORKSPACES (setup.jsx) ══
+H1. WorkspaceCard body click (cursor pointer) -> that workspace's Lists tab · onActivate -> shell prop setActiveWorkspaceId = openWorkspaceTab(ws.id) · REAL · captured (Workspaces box).
+H2. WorkspaceCard NAME click (stopPropagation, title "Open / edit workspace") -> WorkspaceModal edit · setEditWorkspaceId(ws.id) · REAL · captured.
+H3. Card delete (×, canDelete-gated) -> ConfirmDialog -> removeWorkspace cascade (plans deleted, tab closed, active falls back to Master) · REAL · captured.
+H4. Create workspace (from A3/A13/A18 or Setup) -> addWorkspace -> AUTO-OPENS the new workspace as a tab · addWorkspace calls openWorkspaceTab(id) · REAL · captured.
+
+══ I. PROFILE PAGE (profile-page.jsx) ══
+I1. Workspaces tab row click -> that workspace's Lists tab · onOpenWorkspace(r.id) = openWorkspaceTab · REAL · captured (Profile page box).
+I2. SEP (plans) tab row click -> that plan's REVIEW · onOpenPlan = window.__pendingPlanId + setActiveView("plan") · FRAGILE (window bridge) · captured.
+I3. Community tab row click -> that entry's read page · onOpenCommunity = window.__pendingCommunityId + setActiveView("community") · FRAGILE · captured.
+I4. Relationships tab row click -> Master Lists + that stakeholder's EDIT modal · onOpenStakeholder = Master + sheet + setPendingShId (same path and same edit-not-read flag as A20) · REAL · captured.
+I5. "Edit profile" (isSelf only) -> EditProfileModal (shell-mounted) · onEdit = setEditProfileOpen(true) · REAL · captured.
+I6. ONE-WAY (LEAK, this box is the capture) — OTHER USERS' PROFILE PAGES ARE NEARLY UNREACHABLE: the ONLY route to another user's profile is a command-palette "Person" result (A24). Nothing else navigates to a user: UserListPopup rows offer ONLY "Message" (no view-profile), OwnersDisplay avatar clusters (Lists owner column, workspace/plan/community cards, plan teams) have no click-through, message-thread author avatars/names have none, and Settings' user table has none. The design gives every user a rich profile page (4 tabbed assignment tables) and then hides it behind one search surface. MAKE-REAL at rebuild: avatars/owner chips and people-panel rows open the user profile (Message stays as the secondary action).
+
+══ J. MESSAGING (messaging.jsx) ══
+J1. Sidebar conversation row -> thread (in-panel); "← All conversations" back · setActiveConversationId / null · REAL · captured (Messaging box).
+J2. Sidebar expand icon -> full Messages page (sidebar closes; the active conversation CARRIES OVER because both surfaces share activeConversationId in the shell) · onOpenPage = setActiveView("messages") + setMsgSidebarOpen(false) · REAL · captured.
+J3. Messages-page conversation row -> thread pane · setActiveConversationId · REAL · captured.
+J4. "New" / "New conversation" -> NewConversationModal -> startConversation (dedupes 2-person DMs to the existing conversation) -> thread opens · REAL · captured.
+J5. UserListPopup "Message" button -> DM thread in the sidebar · messageUser(userId): startConversation([userId]) + setActiveConversationId + close popup + setMsgSidebarOpen(true) · REAL · captured.
+J6. Mention chips in message bubbles (tokens {{stk|wsp|pln|cmy:id|label}} rendered as mention-chip buttons) -> the named record via window.__openMention -> paletteGo · FRAGILE (window global) AND inherits A23's stale-workspace crash: a /workspace mention whose workspace was later deleted crashes the shell render; stale stakeholder/plan/community mentions silently no-op (plan/community guards check existence; the stakeholder path consumes pendingShId against a missing row) · chips + token grammar captured in the Messaging box; the stale-id behavior is captured HERE.
+J7. Composer mention autocomplete -> reads live entity lists through window.__mentionSources (A27) · FRAGILE · captured.
+J8. System "Reminders" messages (kind "scoring-needed": "New stakeholder added: {name} ({type}). Please score them on the Scoring tab.") -> nowhere · pure text; no link to the Scoring tab, no mention token for the stakeholder, even though both routes exist (nav tab; mention chips) · FAKE-OR-DEAD — MAKE-REAL at rebuild: system notifications deep-link to their subject (stakeholder mention chip) and their action surface (Scoring). The Messaging box captures the message text; this box records the missing edge.
+J9. addStakeholder (any path: Lists, Scoring, Plan editor) -> posts the J8 system message into conversation c-system · record-creation -> notification edge, intentionally one-directional · REAL (data edge) · captured.
+
+══ K. SETTINGS (settings.jsx) ══
+K1. Three mailto links -> external mail client: "contact@stakeholdr.com" (support copy) and two "Email us" invite-code links (mailto with subject New invite code request) · plain anchors · REAL · captured (Settings box).
+
+══ L. RECORD SCAFFOLD (record.jsx — dev surface, ruled dropped) ══
+L1. RecordShell back control ("Samples") -> nowhere · onBack={() => {}} literal no-op · FAKE-OR-DEAD by design (dev scaffold; the scaffold box records the pattern; product records built from it must wire a real back).
+L2. Embedded SheetView inside SampleRecord -> all navigation props stubbed · openDetail/onOpenWorkspace/updateStakeholder/addStakeholder etc = noop, getWorkspacesForStakeholder = () => [] · FAKE-OR-DEAD by design (dev) · captured (Record scaffold box).
+
+══ TOTALS ══
+Edges found: 94.
+REAL: 67 (A1–A20, A23, A24, A30 · B1, B2, B4, B5 · C1–C4, C6–C11 · D2, D3 · E1–E6, E12, E13 · F1–F5 · G2 · H1–H4 · I1, I4, I5 · J1–J5, J9 · K1).
+FRAGILE (window/global-event bridges — replace with first-class routing at rebuild, behavior preserved): 12 (A21, A22, A25, A26, A27 · D1 · E11 · F6 · I2, I3 · J6, J7).
+FAKE-OR-DEAD (design intends it, code never wires it — MAKE-REAL or explicit recorded drop): 11 (A28 Lists->drawer dead prop · A29 drawer ws chips [ruled read-only] · B3 scorecard onOpenFull · C5 Lists community pills · E9 review linked-community rows · E10 editor linked-community rows · F8 card Engaged names · G1 workHQ card names · J8 Reminders no deep link · L1, L2 dev-scaffold noops [ruled dropped]).
+ONE-WAY (path exists one direction; design implies symmetry): 4 (E7 plan-drill profile dead end · E8 review stakeholder rows inert vs editor · F7 community-drill profile dead end + close-to-landing · I6 user profiles reachable only via palette).
+MAKE-REAL WORKLIST (the build must wire these; each is flagged at its edge above): B3, C5, E7+F7 (one profile contract), E8, E9, E10, F8, G1, I6, J8, plus the A23/J6 stale-id guard and the A20/I4 read-not-edit deep-link ruling. LEAKS newly captured by THIS box (no other box holds them): A23 stale-id crash, A28 correction, B3, C5 click gap, E10, I6, J6 stale-id behavior, J8 gap.` },
+                        { t: "workHQ (IntelPanel) — the workspace intelligence band [CODE — archive/src/intel.jsx; captured as-is per the 2026-06-13 \"no preference\" ruling, reshape allowed at build]", d:
 `WHAT IT IS — a "Workspace Intelligence" band (the IntelPanel) that renders as a separate section ABOVE the Lists table and divided from it; the table component (.sheet-wrap) is untouched and renders BELOW the band. Every card is COMPUTED from data already in the Store (stakeholders, scores, team, community, plans, currentUser) — there is NO backend and no new data. Props: mode, setMode, stakeholders, scores, team, community, plans, currentUser, isMaster, workspaceLabel, workspaceId, onAddStakeholder.
 
 THREE VIEW MODES — driven by data-mode on the parent .intel-split: "split" (default — band and table share the screen) · "intel" (the band takes over; cards show more rows) · "table" (the band collapses to a single summary line and the table takes over). The cards render only when mode !== "table".
 
 THE HEAD (.intel-head) — left to right: the title "WorkHQ" (.intel-title); when mode === "table", the one-line summary (.intel-summary) shows here inline; a flexible spacer (.intel-spacer); a quick-add button (.intel-quick) with the plus icon + label "Stakeholder" calling onAddStakeholder (title "Add stakeholder"); then the mode toggle group (.intel-modes, role="group", aria-label "Intelligence layout") = three buttons, the active one carries the "on" class: dashboard icon → setMode("intel") (title "Expand intelligence") · splitscreen icon → setMode("split") (title "Split view") · table_rows icon → setMode("table") (title "Expand table").
 
-CONSTANTS & HELPERS — COLD_DAYS = 90. now = new Date(). daysSince(d): if !d return Infinity; parse t = new Date( (d matches the regex /^\\\\d{4}-\\\\d{2}-\\\\d{2}$/ ? d + "T00:00:00" : d) ); if isNaN(t) return Infinity; else return Math.floor((now - t) / 86400000) (whole days). THE REGEX, spelled in words so no escaping ambiguity survives transcription: start-anchor, digit-class backslash-d repeated {4} (four digits), a literal hyphen, backslash-d{2} (two digits), a literal hyphen, backslash-d{2} (two digits), end-anchor — ONE backslash before each d (a double-backslash pattern would match a literal backslash + letter d and NEVER match a date). It matches ISO date-ONLY strings like 2026-07-02; those get "T00:00:00" appended so they parse as LOCAL midnight — without this normalization a bare ISO date parses as UTC and lastContact staleness reads a day off in western timezones. nameOf(s) = displayName(s) || s.name.
+CONSTANTS & HELPERS — COLD_DAYS = 90. now = new Date(). daysSince(d): if !d return Infinity; parse t = new Date( (d matches the regex /^\\\\\\\\d{4}-\\\\\\\\d{2}-\\\\\\\\d{2}$/ ? d + "T00:00:00" : d) ); if isNaN(t) return Infinity; else return Math.floor((now - t) / 86400000) (whole days). THE REGEX, spelled in words so no escaping ambiguity survives transcription: start-anchor, digit-class backslash-d repeated {4} (four digits), a literal hyphen, backslash-d{2} (two digits), a literal hyphen, backslash-d{2} (two digits), end-anchor — ONE backslash before each d (a double-backslash pattern would match a literal backslash + letter d and NEVER match a date). It matches ISO date-ONLY strings like 2026-07-02; those get "T00:00:00" appended so they parse as LOCAL midnight — without this normalization a bare ISO date parses as UTC and lastContact staleness reads a day off in western timezones. nameOf(s) = displayName(s) || s.name.
 
 THE SIGNALS (all derived each render) —
 • COLD ENGAGEMENT — stakeholders.filter(priority === "High" AND daysSince(lastContact) >= 90), sorted by daysSince(lastContact) DESCENDING (stalest first). [Computed; note: not currently rendered as its own card — it feeds only the summary line. Preserve the computation; it becomes a real card at build.]
@@ -1371,7 +2198,33 @@ IntelCard PROP SURFACE (capture the FULL surface; today only label/tone/wide/nam
 
 NAMING NOTE — the UI label is "WorkHQ" (the head title); the source-file comment calls it the "Workspace Intelligence band"; the build-phase row and this guide call it "workHQ". One feature, three names — standardize on "workHQ" at build.
 
-REBUILD BUILD-MAP (Canonical UI, ui-* only — NEVER md-*/shadcn): the band = a tokened surface-container section (a step darker than the white table runway) sitting above the ui-stakeholder-table, with a divider between. Head: the title in --ui-sys-font-title; the quick-add = a ui-button (tonal/text) with a leading ui-icon (plus → add); the mode toggle = a ui-icon-button group (dashboard / splitscreen / table_rows ligatures via ui-icon, the active one selected). Each IntelCard = a tokened ui-* card composition: label in --ui-sys-font-label, the name list as a compact ui-list (or chip row), the overflow as a ui-chip "+N more", the mix bar as a small tokened segmented bar using --ui-sys-pos / --ui-sys-neg and a neutral; the two card tones ("data" for Alerts/Need-your-score, "calm" default for Tasks) become two token-driven card variants — preserve the distinction rather than flattening all three to one tone. At build, promote the already-computed COLD and RELATIONSHIP-MIX and ACTIVE-PLANS signals into their own cards (they are computed today but unshown). Layout mode (split/intel/table) = a host data-attribute swapping CSS-grid track sizes — token-only, no ad-hoc styling.` },
+REBUILD BUILD-MAP (Canonical UI, ui-* only — NEVER md-*/shadcn): the band = a tokened surface-container section (a step darker than the white table runway) sitting above the ui-stakeholder-table, with a divider between. Head: the title in --ui-sys-font-title; the quick-add = a ui-button (tonal/text) with a leading ui-icon (plus → add); the mode toggle = a ui-icon-button group (dashboard / splitscreen / table_rows ligatures via ui-icon, the active one selected). Each IntelCard = a tokened ui-* card composition: label in --ui-sys-font-label, the name list as a compact ui-list (or chip row), the overflow as a ui-chip "+N more", the mix bar as a small tokened segmented bar using --ui-sys-pos / --ui-sys-neg and a neutral; the two card tones ("data" for Alerts/Need-your-score, "calm" default for Tasks) become two token-driven card variants — preserve the distinction rather than flattening all three to one tone. At build, promote the already-computed COLD and RELATIONSHIP-MIX and ACTIVE-PLANS signals into their own cards (they are computed today but unshown). Layout mode (split/intel/table) = a host data-attribute swapping CSS-grid track sizes — token-only, no ad-hoc styling.
+
+SKELETON TREE (ORIGINAL-DESIGN STRUCTURE CENSUS, 2026-07-03 — the literal region tree extracted from archive/src/intel.jsx (IntelPanel + IntelCard), in render order; [brackets] = conditional; the build assembles against THIS tree, never prose). HOST NOTE: the ".intel-split" parent that carries the data-mode attribute lives in the HOST page composition (the Lists page), NOT in this module — intel.jsx renders the BAND only; the table (.sheet-wrap) is a sibling BELOW the band, untouched.
+div "intel-band" — the band container. Canonical UI: a tokened surface-container section above ui-stakeholder-table, with a divider between (per the REBUILD BUILD-MAP above).
+. div "intel-head" — the header strip (layout row — token-only container). Children in order:
+. . span "intel-title" — the text "WorkHQ". Maps to title-token text.
+. . [mode === "table"] span "intel-summary" — the one-line summary. Maps to tokened label text.
+. . span "intel-spacer" — the flexible spacer. Layout only.
+. . button "intel-quick" — Icon "plus" + text "Stakeholder", title "Add stakeholder". Maps to a ui-button (tonal/text) with a leading ui-icon (add).
+. . span "intel-modes" (role="group", aria-label "Intelligence layout") > 3 x button "intel-mode" (the active one + " on"): Icon "dashboard" (title "Expand intelligence") / Icon "splitscreen" (title "Split view") / Icon "table_rows" (title "Expand table"). Maps to a ui-icon-button group, active = selected state (ink change only).
+. [mode !== "table"] div "intel-cards" — the cards grid (layout row — token-only container) > exactly 3 IntelCard instances (Alerts, Need your score, Tasks), each rendering:
+. . div "intel-card tone-data" or "intel-card tone-calm" (+ " intel-card-wide" on Alerts and Need-your-score only) — the token-driven card variant (two tones, preserved per the box).
+. . . div "intel-card-label" — the card title.
+. . . ONE mutually-exclusive content variant (part of IntelCard's full prop surface; today's three cards use NONE of these — they render names only):
+. . . . [stack] div "intel-stack" > N x div "intel-stack-row" > span "intel-stack-v" + span "intel-stack-k".
+. . . . [mix] div "intel-mix" > 3 x span "intel-mix-seg" (variant classes "pos" / "neu" / "neg"), each = an i swatch (inline background var(--pos) / var(--neu) / var(--neg)) + the count. Maps to the tokened segmented bar.
+. . . . [value defined] div "intel-card-value".
+. . . [sub] div "intel-card-sub".
+. . . names branch: [names.length > 0] div "intel-card-names" > N x span "intel-name" + [span "intel-name more" showing "+{more} more" when more > 0] — ELSE [empty text set] div "intel-card-empty". Maps to a compact ui-list / chip row with a ui-chip "+N more" overflow.
+CLASSNAME ACCOUNTING — every className region in intel.jsx appears in the tree above: intel-band, intel-head, intel-title, intel-summary, intel-spacer, intel-quick, intel-modes, intel-mode, on, intel-cards, intel-card, tone-data/tone-calm, intel-card-wide, intel-card-label, intel-stack, intel-stack-row, intel-stack-v, intel-stack-k, intel-mix, intel-mix-seg pos/neu/neg, intel-card-value, intel-card-sub, intel-card-names, intel-name, more, intel-card-empty — NONE dropped. The tree CONFIRMS the box (head order, table-mode summary placement, three cards with the two-tone split, IntelCard's full prop surface); no corrections required. (Module trivia: intel.jsx imports useState but never uses it — a dead import; nothing to capture.)
+
+UX HANDLER CENSUS (ORIGINAL-DESIGN UX CENSUS, 2026-07-03 — every event handler in archive/src/intel.jsx) —
+1. quick-add button (intel-quick) onClick → onAddStakeholder (the app-level handler runs setAddNonceFor("sheet") + an addNonce bump, opening the create-stakeholder modal — the same route captured in the StakeholderModal box).
+2. mode button (dashboard icon) onClick → setMode("intel").
+3. mode button (splitscreen icon) onClick → setMode("split").
+4. mode button (table_rows icon) onClick → setMode("table").
+4 handlers, all accounted — all four are described in THE HEAD section above; IntelCard contains NO handlers (the cards are display-only; title attributes are tooltips, not handlers). No other on* props, listeners, or effects exist in the module.` },
                   { t: "Whiteboard — team collaboration white-space (NEW; articulated, not designed yet)", d:
 `=== FORWARD-DESIGN (NO ORACLE) === There is NO oracle module for this feature. Nothing in archive/src/ or project/ implements a whiteboard — no component, no store slice, no route, no CSS. This box is NOT captured code; it is a NEW feature articulated with the user, recorded here so the requirement survives the rebuild. Do NOT go hunting for a source file to audit against; the audit standard for this box is fidelity to the articulated intent below, which is preserved verbatim. Design happens deliberately, WITH the user, at build time.
 
@@ -1414,7 +2267,7 @@ REAL-TIME ENGINE (cross-reference, already ruled) — per the concurrency box's 
 The NEWS/SOCIAL CAPTURE requires a link-unfurling / oEmbed / page-metadata API, which lives in the Integrations/APIs bucket and is an OPEN decision — nothing here is implemented; the rebuild must make it real, not stub it. Whatever provider is chosen, third-party content NEVER executes in the app's context: embeds render sandboxed (sandboxed iframe or a server-generated preview card — outlet name + headline + image), no third-party scripts injected into the whiteboard document, fetched metadata sanitized before render, and the per-URL embed-vs-generated-card decision made by the app, not by the pasted page. Team visibility/edit rights on a board are governed through the share dialog (ui-dialog above) under the same workspace/role model as the rest of the app (managers administer; membership decided at design time with the user).
 
 STATUS OF THIS BOX — forward-design: requirements are the contract; the concrete ui-whiteboard spec, the ui-avatar-stack presence-group decision (ui-avatar itself is already built), the comment/idea interaction design, the Messages-vs-Whiteboard relationship, and the embed API choice are designed WITH the user before build, then this box is amended with the final ui-* build-map and sealed.` },
-                              { t: "Settings — manager-only org config hub (9 oracle panes + Integrations as forward-design) + the design dashboard", d:
+                                    { t: "Settings — manager-only org config hub (9 oracle panes + Integrations as forward-design) + the design dashboard", d:
 `SETTINGS — manager-only org configuration hub. Component SettingsView(props). Two-column layout: a left rail "settings-nav" (aside) and a right "settings-panes" column, inside a wrapper div with classes "setup-wrap settings-wrap single-page settings-layout". State: filter (string, "") for the Roles search; pane (string, default "identity") selecting which pane shows. Managers only — this whole view is gated by the app shell (only role==="manager" can open Settings; see the App-shell/ProfileMenu box: the "Settings" menu item only renders when isManager).
 
 PANE COUNT — RECONCILED. The ORACLE settings-nav array has EXACTLY 9 panes, in this order, each [id, label]:
@@ -1505,7 +2358,7 @@ One setup-section "Issues". count (companyIssues||[]).length + " issue(s)". Intr
 
 === PANE "tags" (rail "Tags") ===
 One setup-section "Tags". count (companyTags||[]).length + " tag(s)". Intro: "The shared tag vocabulary used across stakeholder lists. These appear as suggested pills on every stakeholder card. Users can still type their own custom tags per stakeholder." → <IssueSettings ... transform={SLUG} placeholder="Type and add with a comma or pressing Enter" />.
-TAGS SLUG TRANSFORM (this is the ONLY caller that passes a transform): s.trim().toLowerCase().replace(/\\s+/g,"-").replace(/[^a-z0-9-]/g,"") — i.e. trim, lowercase, collapse whitespace runs (the backslash-s-plus class) to single "-", then strip every char not in [a-z0-9-]. So "Public Affairs!" → "public-affairs". Issues/Goals/Functions/Categories/Segments/Markets are PLAIN-trim only (NOT slugified).
+TAGS SLUG TRANSFORM (this is the ONLY caller that passes a transform): s.trim().toLowerCase().replace(/\\\\s+/g,"-").replace(/[^a-z0-9-]/g,"") — i.e. trim, lowercase, collapse whitespace runs (the backslash-s-plus class) to single "-", then strip every char not in [a-z0-9-]. So "Public Affairs!" → "public-affairs". Issues/Goals/Functions/Categories/Segments/Markets are PLAIN-trim only (NOT slugified).
 
 === PANE "management" (rail "Team Management") ===
 TWO sections: Invite Code, then Roles (seg-substack).
@@ -1584,8 +2437,145 @@ SettingsView receives the catalogs as SEPARATE derived props, each paired with i
 The props are DERIVED in app.jsx from cfg = appConfig || {} with seed-catalog fallbacks when the stored key is absent/empty: cfg.issues → D.ISSUES, cfg.tags → D.TAGS, cfg.functions → D.FUNCTIONS, cfg.segments → D.SEGMENTS, cfg.markets → D.MARKETS, cfg.sites → D.SITES, cfg.categories → D.CATEGORIES, cfg.orgGoals → D.ORG_GOALS. Fallback tests: array-shaped catalogs (issues/tags/functions/sites/orgGoals) fall back when the key is missing OR has length 0; object-shaped catalogs (segments/markets/categories) fall back when missing OR Object.keys(...).length is 0. app.jsx then MUTATES the shared module catalog so every other view reading STAKEHOLDER_DATA sees the manager-configured lists (single source of truth): D.CATEGORIES = companyCategories; D.SEGMENTS = companySegments; D.MARKETS = companyMarkets; D.SITES = companySites; D.ORG_GOALS = companyGoals (issues/tags/functions are NOT written back onto D — their consumers receive them as props). Cross-ref the Enterprise state model box, which states the same appConfig key set.
 The identity/theme/timezone/fiscal/inviteCode values live on the SAME appConfig blob (keys: appName, brandIcon, brand, accent, theme, autoNightShift, nightShiftAt, timeZone, fiscalStartMonth, fiscalStartDay, inviteCode) and are written by the panes directly via updateAppConfig({...}). updateAppConfig(patch) shallow-merges: setAppConfig(prev => ({...(prev||{}), ...patch})). Roles are the exception — updateUserRole(id, "member"|"manager") writes to the users store, not appConfig. currentUser supplies the self-demote guard and (upstream) the manager gate.
 
-CANONICAL UI: all controls map to ui-* components (ui-text-field, ui-select, ui-switch, ui-button, ui-chip, ui-dialog, ui-data-table/ui-list, ui-nav-rail, ui-icon "science"/"search"/"check", plus the ui-swatch-card GAP defined above — build into design-system/ and register in manifest.json BEFORE first use). NEVER md-*/shadcn. One styling surface = --ui-sys-* tokens; the brand/accent/theme/zone literals captured here become tokens, not inline colors, in the rebuild.` },
-                  { t: "Users & People — user model, roles, presence, avatars/stack/profile, removeUser cascade", d:
+CANONICAL UI: all controls map to ui-* components (ui-text-field, ui-select, ui-switch, ui-button, ui-chip, ui-dialog, ui-data-table/ui-list, ui-nav-rail, ui-icon "science"/"search"/"check", plus the ui-swatch-card GAP defined above — build into design-system/ and register in manifest.json BEFORE first use). NEVER md-*/shadcn. One styling surface = --ui-sys-* tokens; the brand/accent/theme/zone literals captured here become tokens, not inline colors, in the rebuild.
+
+=== SKELETON TREE (Settings — the literal region tree from archive/src/settings.jsx; the build assembles against THIS tree, never prose) ===
+Legend: each node = className/element — what it contains — Canonical UI mapping. "layout row/column — token-only container" = pure layout, no visual decision.
+
+TREE 1 — THE TWO-COLUMN SHELL (SettingsView render root):
+div.setup-wrap.settings-wrap.single-page.settings-layout — page root inside the app shell's main slot — layout row (rail + panes), token-only container
+  aside.settings-nav — the left settings rail — ui-nav-rail / ui-list of selectable items (active state via ink only, never a background swap, per design law)
+    button.settings-nav-item (+.active when pane === id) x 9 — the 9 rail labels in oracle order (App Settings · Fiscal Calendar · Stakeholders · Your Structure · Geography · Issues · Tags · Team Management · Contact) — selectable nav items
+  div.settings-panes — the right column — layout column (scroll), token-only container
+    the ACTIVE pane renders 1–3 div.setup-section blocks; the 2nd+ in a pane carry .seg-substack. EVERY section opens with div.setup-section-head (h3 + optional muted count span whose number is strong ink-2, tnum) and (all panes except identity) a p.muted intro (12.5px, lineHeight 1.5, maxWidth 720) — section scaffold: token-inked heading (title typeface) + label text
+
+TREE 2 — REPRESENTATIVE PANE (the generic section pattern; panes "stakeholders", "structure", "geography" 1st section, "issues", and "tags" are EXACTLY this shape):
+div.setup-section (+.seg-substack when stacked)
+  div.setup-section-head — h3 + conditional muted count span — heading row
+  p.muted — the pane's intro copy (verbatim strings in the pane sections above) — token-inked paragraph
+  EDITOR BODY — IssueSettings (TREE 8) or SegmentSettings (TREE 9) or SiteSettings (TREE 5), per the pane sections above
+
+TREE 3 — PANE "identity" (three stacked sections; the one pane with NO p.muted intro):
+Section "Identity" — div.setup-section
+  div.setup-section-head > h3 "Identity"
+  div.settings-grid — the field grid — layout grid, token-only container
+    label.login-field (App name) — span.lbl + input + muted helper span (12.5px) — ui-text-field with supporting text
+    div.login-field (Brand icon)
+      span.lbl
+      div.brand-icon-row — layout row — token-only container
+        span.brand-icon-preview (background = appConfig.brand || "#000000") — img (brandIcon) OR Icon "brandmark" class .brand-glyph — token-tinted preview circle (the brand-mark composition)
+        label.btn.brand-icon-btn — hidden input[type=file, accept image/*, display none] + "Upload icon"/"Replace icon" — ui-button hosting the file input
+        button.btn.btn-ghost.brand-icon-btn (conditional when brandIcon set) — "Remove" — ui-button (text)
+      muted helper span
+    div.login-field (Brand color (app icon)) AND div.login-field (Accent color) — IDENTICAL shape, each:
+      span.lbl
+      div (flex row, alignItems center, gap 10) — layout row — token-only container
+        span.settings-swatch-preview (background = current value) — token-tinted preview tile
+        input[type=text] (width 100, fontSize 12) — ui-text-field (hex entry)
+        BeakerColorField — TREE 10
+      div.settings-swatch-row — button.settings-swatch (+.active on match, title = hex) x 7 — 7x ui-swatch-card (dot/circle-only variant, per the GAP contract above)
+      muted helper span
+Section "Theme" — div.setup-section.seg-substack
+  div.setup-section-head > h3 "Theme"
+  div.settings-grid
+    div.login-field (Choose One)
+      span.lbl
+      div.theme-choices — layout row; role radiogroup in the rebuild — token-only container
+        button.theme-swatch (+.active; carries --theme-border custom prop) x 3 — span.theme-circle (background = preview bg) > span.theme-circle-dot (background = preview dot), span.theme-name, span.theme-sub — ui-swatch-card (card variant), the declared GAP component
+    div.login-field (Auto-switch to Night Shift)
+      span.lbl
+      div.theme-auto-row — layout row — token-only container
+        div.yesno-toggle (role="group") — button.yesno-opt (+.on) x 2 ("Yes"/"No") — 2-button segmented ui-button group (or ui-switch)
+        div.theme-time-group (conditional, only when autoNightShift) — layout row — token-only container
+          div.designed-select.theme-time-hr > select (1..12) — ui-select
+          div.designed-select.theme-time-min > select ("00"/"30") — ui-select
+          div.designed-select.theme-time-ap > select ("AM"/"PM") — ui-select
+Section "Time Zone" — div.setup-section.seg-substack
+  div.setup-section-head > h3 "Time Zone"
+  div.settings-grid
+    label.login-field — span.lbl "Record timestamps in" + div.designed-select > select (the 8 zones) + muted helper — ui-select with supporting text
+    div (empty) — the second grid column filler — absorbed by the layout grid
+
+TREE 4 — PANE "fiscal":
+div.setup-section
+  div.setup-section-head > h3 "Fiscal Calendar"
+  p.muted intro
+  div.settings-grid
+    label.login-field (Fiscal year starts)
+      span.lbl
+      div (flex row, gap 8) — layout row — token-only container
+        div.designed-select (flex 1) > select month (January..December → values 1..12) — ui-select
+        div.designed-select (width 90) > select day (1..31) — ui-select
+      muted helper
+    div.login-field (Resulting quarters)
+      span.lbl
+      QuartersPreview: div.quarters-list — read-only derived list — ui-list of two-column key/value rows
+        div.quarter-row x 4 — span.quarter-label ("Q1".."Q4") + span.quarter-range ("Mmm D → Mmm D") — key/value row, range in tnum numerals
+
+TREE 5 — SITES EDITOR (pane "geography", 2nd section body; SiteSettings):
+div.site-settings — editor root — layout column, token-only container
+  div.issue-settings-list — the saved sites — ui-chip-set
+    span.tag (inline-flex, cursor default) x N — "City, ST" (STATE_ABBR) or "City, Country" + button.tag-x "×" (aria-label "Remove {city}") — ui-chip with trailing remove
+  div.site-add-row — the add row — layout row, token-only container
+    input.site-city-input (placeholder "City"; Enter commits) — ui-text-field
+    div.designed-select > select mode (United States / Canada / Mexico / Other country) — ui-select
+    EITHER div.designed-select > select country (mode intl; "Select country…") OR div.designed-select.site-state-select > select state/province ("Select state…"/"Select province…") — ui-select (conditional alternate, exactly one renders)
+    button.btn — Icon "plus" + "Add site" — ui-button with leading ui-icon
+
+TREE 6 — ROLES TABLE (pane "management", 2nd section body):
+div.settings-search — search Icon + input (placeholder "Search by name, title, or email…") — ui-text-field with leading ui-icon "search"
+div.roles-table — ui-data-table (or ui-list rows)
+  div.roles-row.roles-head — header cells "Person" / "Email" / "Role" (Role centered) — table header row
+  div.roles-row (+.self when u.id === currentUser.id) x N — table row
+    div.roles-person — Avatar (28) + UserName (12) — cell of shared primitives
+    div.muted (fontSize 12) — u.email — token-inked cell text
+    div (flex, justifyContent center) — layout cell — token-only container
+      div.role-toggle — the segmented pair — 2-button segmented ui-button group
+        button.role-toggle-btn (+.on when u.role !== "manager"; disabled for self, with the two title strings above) — "User"
+        button.role-toggle-btn (+.on when u.role === "manager") — ManagerStar (11) + "Manager"
+
+TREE 7 — INVITE CODE (pane "management", 1st section body; InviteCode):
+div.invite-code — layout column — token-only container
+  div.invite-code-display — layout row — token-only container
+    code.invite-code-value — the code or placeholder "STKH-7XQ4-9KMP" — token-inked tnum text (RECORD: the oracle used a <code> element; no mono family ships, per type law)
+    button.btn — Icon "content_copy"/"check" + "Copy"/"Copied" — ui-button with leading ui-icon
+    button.btn — "Regenerate" — ui-button
+  CONDITIONAL request modal (askOpen): div.modal-veil.show (onClick closes — scrim dismiss) + div.modal (width 440, maxWidth calc(100% - 32px)) — ui-dialog
+    div.modal-head — h2 "Request a new invite code" + button.btn.btn-ghost (Icon "close", aria-label "Close") — headline + ui-icon-button
+    div.modal-body — p (13px, lineHeight 1.6) containing an a.plain-link mailto (accent ink, subject "New invite code request") — dialog content
+    div.modal-foot — button.btn "Close" + a.btn.btn-primary "Email us" (a mailto ANCHOR styled as the primary button, textDecoration none) — action slot: ui-button + ui-button (filled) rendered as a link
+
+TREE 8 — SHARED FLAT-LIST EDITOR (IssueSettings; body of Issues / Tags / Goals / Functions):
+div (unclassed root) — layout column — token-only container (absorbed)
+  div.issue-settings-list — span.tag (inline-flex, cursor default) x N — the item text + an "×" REMOVE SPAN (aria-label "Remove {i}"; marginLeft 4, ink-mute, cursor pointer — NOTE: a span, NOT a button, in the oracle) — ui-chip with a REAL trailing remove control in the rebuild (a11y upgrade, recorded here, not silent)
+  div.issue-settings-add — input (comma / Enter / blur commit, per the COMMIT BEHAVIORS above) — ui-text-field (chip input)
+
+TREE 9 — SHARED 2-LEVEL EDITOR (SegmentSettings + UnitAdder; body of Categories / Segments / Markets):
+div.segset — editor root — layout column, token-only container
+  div.segset-seg x (one per level-1 key)
+    div.segset-seg-head — strong (the level-1 name) + button.btn.btn-ghost "Remove" (fontSize 12.5, title "Remove {SEG}") — row: token-inked label + ui-button (text)
+    div.issue-settings-list — span.tag x N (unit text + button.tag-x "×", aria-label "Remove {u}") + input.segset-unit-input (UnitAdder; placeholder "+ {UNIT}"; Enter-only commit) — ui-chip-set + inline ui-text-field adder
+  div.segset-add — input bound to newSeg (placeholder "New {SEG} name, add with a comma or Enter"; Enter-only commit — the fake-comma-promise correction above stands) — ui-text-field
+
+TREE 10 — BeakerColorField:
+span.beaker-color (CSS color = value; title "Pick a custom color") — span.material-symbols-outlined.msym.beaker-glyph with ligature "science" + an overlaid hidden input[type=color] — ui-icon "science" tinted to the current value hosting the native color input (or a ui-color-field GAP if built)
+
+PANE "contact" — div.setup-section > div.setup-section-head > h3 "Contact"; then p.muted (13px, lineHeight 1.6, maxWidth 640) support copy + p (13px, marginTop 12) "Email us at" with a.plain-link mailto in accent ink — token-inked text + link.
+
+CLASSNAME ACCOUNTING: every className region in settings.jsx appears above (setup-wrap, settings-wrap, single-page, settings-layout, settings-nav, settings-nav-item, active, settings-panes, setup-section, setup-section-head, seg-substack, settings-grid, login-field, lbl, muted, brand-icon-row, brand-icon-preview, brand-glyph, btn, brand-icon-btn, btn-ghost, settings-swatch-preview, settings-swatch-row, settings-swatch, theme-choices, theme-swatch, theme-circle, theme-circle-dot, theme-name, theme-sub, theme-auto-row, yesno-toggle, yesno-opt, theme-time-group, designed-select, theme-time-hr, theme-time-min, theme-time-ap, settings-search, roles-table, roles-row, roles-head, self, roles-person, role-toggle, role-toggle-btn, quarters-list, quarter-row, quarter-label, quarter-range, plain-link, beaker-color, material-symbols-outlined, msym, beaker-glyph, site-settings, issue-settings-list, tag, tag-x, site-add-row, site-city-input, site-state-select, invite-code, invite-code-display, invite-code-value, modal-veil, show, modal, modal-head, modal-body, modal-foot, segset, segset-seg, segset-seg-head, segset-add, segset-unit-input, issue-settings-add). None silently dropped.
+
+=== UX HANDLER CENSUS (archive/src/settings.jsx — every event handler in the module) ===
+DOM-level JSX handlers, 43 total:
+SettingsView (20): 1 settings-nav-item onClick (setPane — one attribute mapped over the 9 rail buttons) · 2 App-name input onChange (updateAppConfig appName) · 3 brand-icon file input onChange (onPickBrandIcon → FileReader.readAsDataURL → updateAppConfig brandIcon) · 4 brand-icon "Remove" onClick (brandIcon: null) · 5 brand hex text input onChange · 6 brand swatch onClick (one attribute over the 7 swatches) · 7 accent hex text input onChange · 8 accent swatch onClick (x7) · 9 theme-swatch onClick (x3 → theme: id) · 10 "Yes" onClick (autoNightShift: true) · 11 "No" onClick (autoNightShift: false) · 12 hour select onChange (→ compose) · 13 minute select onChange (→ compose) · 14 AM/PM select onChange (→ compose) · 15 timeZone select onChange · 16 fiscalStartMonth select onChange (Number()) · 17 fiscalStartDay select onChange (Number()) · 18 roles filter input onChange · 19 "User" role button onClick (updateUserRole(id, "member"); disabled for self) · 20 "Manager" role button onClick (updateUserRole(id, "manager")).
+BeakerColorField (1): 21 input[type=color] onChange → onChange(e.target.value) (the component is instantiated twice — brand and accent — one DOM handler in its definition).
+SiteSettings (7): 22 saved-site tag-x onClick (remove by id) · 23 city input onChange · 24 city input onKeyDown (Enter → preventDefault → add() — the city field commits on Enter in ADDITION to the Add button) · 25 mode select onChange (sets mode AND clears state + country) · 26 country select onChange (intl mode only) · 27 state/province select onChange (us/ca/mx modes only) · 28 "Add site" onClick (add()).
+InviteCode (5): 29 "Copy" onClick (guarded silent no-op when code unset; clipboard.writeText; copied flag resets after 1500ms) · 30 "Regenerate" onClick (setAskOpen(true) — opens the request modal; performs NO regeneration) · 31 request-modal veil onClick (setAskOpen(false) — scrim click dismisses) · 32 request-modal head close onClick (setAskOpen(false)) · 33 request-modal footer "Close" onClick (setAskOpen(false)). The "Email us" action is a plain mailto anchor — no JS handler.
+SegmentSettings (4): 34 level-1 "Remove" onClick (removeSegment) · 35 unit tag-x onClick (removeUnit) · 36 newSeg input onChange · 37 newSeg input onKeyDown (Enter-only commit).
+UnitAdder (2): 38 input onChange · 39 input onKeyDown (Enter → preventDefault → onAdd(v), clear).
+IssueSettings (4): 40 item "×" span onClick (remove) · 41 input onChange (the comma-split commit path, incl. the recorded paste-clobber bug) · 42 input onKeyDown (Enter → add()) · 43 input onBlur (commits a non-empty draft).
+Non-JSX: FileReader reader.onload (the continuation of handler 3); the Copy button's setTimeout(1500) copied-state reset. Internal callback-prop chains (DOM ends already counted): SegmentSettings onChange (3 callers), IssueSettings onChange (4 callers), SiteSettings onChange (1), BeakerColorField onChange (2), InviteCode onRegenerate (wired but NEVER invoked, per the Regenerate correction above).
+43 handlers, all accounted. Census additions now explicit (previously implicit in the box): the invite-request modal dismisses THREE ways — veil/scrim click (31), head close (32), footer "Close" (33); the SiteSettings city input's own Enter commit (24); and the IssueSettings remove affordance being a bare span (rebuild as the ui-chip's real remove control — recorded a11y upgrade). No tree or census finding disproves any statement in the box.` },
+                        { t: "Users & People — user model, roles, presence, avatars/stack/profile, removeUser cascade", d:
 `USERS & PEOPLE (users.jsx) — the user model and its presentation surfaces: avatars, presence, the user stack + people popup, profile menu, login gate, edit-profile, manager badges, and (cross-referenced) the removeUser cascade.
 
 === USER MODEL ===
@@ -1685,8 +2675,100 @@ role: "manager" | "member" | "system" (member = UI "User"). presence: "online" |
 === removeUser CASCADE (TRACEABILITY) ===
 The removeUser cascade (what happens to owned workspaces, stakeholder assignments, messages, etc. when a user is deleted) lives in app.jsx, NOT in users.jsx. users.jsx contains no removeUser. The cascade itself is captured in the App-shell box; this box flags the cross-reference so a cold-session reader looks in app.jsx for the deletion logic.
 
-CANONICAL UI: every user-facing surface here maps to ui-* (ui-menu, ui-dialog, ui-text-field, ui-select, ui-chip, ui-icon, ui-button). NEVER md-*/shadcn. The amber manager color (#E0A21A) and avatar text color (#FAF8F2) become tokens. UserStack → ui-avatar-stack (overlap + "+N" overflow — GAP registered in the shared-primitives build-map); UserListPopup → ui-sheet (right-edge side panel with scrim) hosting ui-list rows (36px avatar + name + title) each with a trailing ui-icon-button "message" action. Other shared primitives (Avatar, UserAutocomplete, MultiOwnerPicker, OwnerPicker, ConfirmDialog, OwnersDisplay, FilterSection, SortFieldList) are fully specified in the shared-primitives box and referenced here by name — UserStack and UserListPopup are fully specified HERE.` },
-      { t: "User profile page (record.user) — hero, tabs, assignment logic", d:
+CANONICAL UI: every user-facing surface here maps to ui-* (ui-menu, ui-dialog, ui-text-field, ui-select, ui-chip, ui-icon, ui-button). NEVER md-*/shadcn. The amber manager color (#E0A21A) and avatar text color (#FAF8F2) become tokens. UserStack → ui-avatar-stack (overlap + "+N" overflow — GAP registered in the shared-primitives build-map); UserListPopup → ui-sheet (right-edge side panel with scrim) hosting ui-list rows (36px avatar + name + title) each with a trailing ui-icon-button "message" action. Other shared primitives (Avatar, UserAutocomplete, MultiOwnerPicker, OwnerPicker, ConfirmDialog, OwnersDisplay, FilterSection, SortFieldList) are fully specified in the shared-primitives box and referenced here by name — UserStack and UserListPopup are fully specified HERE.
+
+══ SKELETON TREE (ORIGINAL-DESIGN CENSUS, sweep b — the literal region trees extracted from archive/src/users.jsx; the build assembles against THESE trees, never prose) ══
+Legend: one node per line; indentation (". ") = nesting; "?" = conditional render; classes are the oracle classNames — every className region in users.jsx appears below or is explicitly absorbed; "→" = Canonical UI mapping. RULED corrections (SHELL DESIGN RULINGS 2026-07-02) are recorded beside the old nodes.
+
+AVATAR (micro-tree; composed by every surface below) — span.av (+.av-ring when ring) [inline: width/height = size; background = photo cover or avatarColor; color #FAF8F2; fontSize bucket; cursor pointer only when onClick] > initials text (when no avatarUrl) + ? span.av-presence (when online) [inline dot geometry per the formulas above] → ui-avatar (a real manifest-registered component per ruling #3; sizes from --ui-sys-avatar-size-*)
+USERSTACK (micro-tree) — span.user-stack (role="button", title "People in this workspace", onClick) > Avatar × visible (ring) + ? span.av.av-more "+{overflow}" → ui-avatar-stack (GAP, registered in the shared-primitives build-map)
+
+LOGINVIEW — the full-page gate (the ONLY mount when signed out) → assembled from ui-* on tokened surfaces
+div.login-shell (full-viewport runway)
+. div.login-bg-grid (decorative backdrop layer; empty element)
+. div.login-card (the centered card) → surface-card
+. . div.login-brand
+. . . div.brand-mark (? inline background = loginBrand.brand + color #FAF8F2 ONLY when brandIcon set) > ? img.brand-mark-img (alt "App icon") | ? Icon "brandmark" .brand-glyph — RULED (#4): the Sr monogram replaces the icon fallback (S + italic r, title typeface, field color = title ink, both --ui-sys-on-surface)
+. . . div (unclassed wrapper)
+. . . . div.login-app-name "HP's Map" — HARDCODED (rebind to appConfig.appName per the flag above)
+. . . . div.muted "Stakeholder mapping & engagement" (fontSize 11, marginTop 2)
+. . h1.login-h1 "Sign in"
+. . p.login-sub "Tell us who you are to get started."
+. . form.login-form (onSubmit = submit)
+. . . label.login-field > span.lbl "Full name" + input (placeholder "Jordan Kim", autoFocus) → ui-text-field
+. . . label.login-field > span.lbl "Title" + input (placeholder "Director, GA&PP North America") → ui-text-field
+. . . label.login-field > span.lbl "Work email" + input type=email (placeholder "jordan.kim@hp.com") → ui-text-field
+. . . div.login-field > span.lbl "Profile photo (optional)"
+. . . . div.login-avatar-row
+. . . . . span.av.login-av-preview [inline background = photo cover | chosen color; color #FAF8F2] > abbrev(name) or "··" (no photo) — the live preview circle
+. . . . . div (unclassed; flex column, gap 6)
+. . . . . . label.btn > input type=file accept image/* (display:none) + text "Upload photo" | "Replace photo" → ui-button
+. . . . . . ? button.btn.btn-ghost "Remove" (only when photo set)
+. . . . . . ? div.login-color-row (only when NO photo) > 8 × button.login-swatch (+.active on selected) [inline background = swatch hex; aria-label "Pick color {hex}"] → small color ui-buttons
+. . . button type=submit .btn.btn-primary.login-submit "Enter HP's Map →" (disabled when !valid) — HARDCODED name, rebind
+. . div.login-sample
+. . . span.muted "Or continue as one of the demo accounts:" (fontSize 11)
+. . . div.login-sample-row > 5 × button.login-sample-chip (first 5 seeded users) > Avatar 24 + first name → ui-chip
+
+PROFILEMENU — anchored popover (returns null unless open; renders INSIDE div.profile-button in the brand bar) → ui-menu. RULED (#3): at rebuild it anchors to the identity avatar pinned BOTTOM-LEFT of the ui-sidebar (the ONE identity surface); old anchor = top-right of the brand bar.
+div.profile-menu (onClick stopPropagation — census #6)
+. div.profile-menu-head
+. . Avatar 46
+. . div (unclassed; minWidth 0, flex 1)
+. . . div name (weight 500, fontSize 14, nowrap)
+. . . title — ONE div.muted line (fontSize 12, nowrap), OR TWO div.muted lines when the title contains "," AND length > 24 (split at the FIRST comma, both halves trimmed)
+. . . div.muted email (fontSize 12, nowrap)
+. . . ? ManagerBadge (when isManager) — span.manager-badge > ManagerStar (span.material-symbols-outlined.msym.mgr-star, ligature "star", amber #E0A21A, FILL 1) + "Manager" → ui-chip with leading filled star ui-icon
+. div.profile-menu-divider → ui-divider
+. button.profile-menu-item "View profile" (Icon user)
+. button.profile-menu-item "Messages" (Icon message)
+. ? button.profile-menu-item "Settings" (Icon build; rendered ONLY when isManager)
+. div.profile-menu-divider
+. button.profile-menu-item.logout "Log out" (Icon logout)
+
+EDITPROFILEMODAL — (returns null unless open && user) → ui-dialog (title "Edit profile", footer Cancel / Save profile)
+Fragment
+. div.modal-veil.show (onClick onClose — scrim cancel, census #19)
+. div.modal
+. . div.modal-head > h2 "Edit profile" + button.btn.btn-ghost (aria-label "Close", Icon close)
+. . div.modal-body
+. . . div.login-avatar-row (marginBottom 12) — SAME anatomy as the login photo row: span.av.login-av-preview [draft photo | draft.avatarColor] + div (unclassed column) > label.btn (hidden file input; "Replace photo" | "Upload photo") + ? button.btn.btn-ghost "Remove" (only when avatarUrl set) + ? div.login-color-row (only when NO avatarUrl) > 8 × button.login-swatch (+.active)
+. . . div.sh-form-row.sh-form-row-2 (two-column row)
+. . . . label.login-field > span.lbl "First name" + input (fallback = name split, per the FIRST/LAST rule above)
+. . . . label.login-field > span.lbl "Last name" + input
+. . . label.login-field > span.lbl "Title" + input
+. . . label.login-field > span.lbl "Work email" + input
+. . . label.login-field > span.lbl "Function" > div.designed-select > select (placeholder option "Select a function…" + companyFunctions) → ui-select
+. . . div.login-field > span.lbl "Markets" > div.profile-chip-pick > button.filter-chip (+.on when selected) per Object.keys(MARKETS) → ui-chip toggles
+. . . ? div.login-field "Regions" (ONLY when draft.markets has >= 1) > div.profile-chip-pick > button.filter-chip (+.on) per region of the SELECTED markets (the MARKET → REGION CASCADE; carries the STALE-REGIONS BUG above)
+. . div.modal-foot > button.btn "Cancel" + button.btn.btn-primary "Save profile" (the SAVE merge — name recomposition)
+
+USERLISTPOPUP — the right-edge people panel (ALWAYS mounted; the " show" class toggles both nodes) → ui-sheet (right) with scrim, hosting ui-list rows
+Fragment
+. div.side-veil (+.show when open) (onClick onClose)
+. aside.side-popup (+.show when open)
+. . div.side-popup-head > strong "People · {others.length}" + button.btn.btn-ghost (aria-label "Close", Icon close)
+. . div.side-popup-body > div.user-row per other user (currentUser + system bot excluded)
+. . . Avatar 36 (online = presence === "online")
+. . . div.user-row-meta > div.user-row-name (u.name) + div.user-row-title (u.title)
+. . . button.btn.btn-ghost.user-row-msg (title "Send message", Icon message .ico; onClick onMessage(u.id)) → trailing ui-icon-button
+
+CLASSNAME ACCOUNTING — users.jsx classNames appearing in the trees above: av · av-ring · av-presence · user-stack · av-more · side-veil · show · side-popup · side-popup-head · side-popup-body · user-row · user-row-meta · user-row-name · user-row-title · user-row-msg · profile-menu · profile-menu-head · profile-menu-divider · profile-menu-item · logout · muted · login-shell · login-bg-grid · login-card · login-brand · brand-mark · brand-mark-img · brand-glyph · login-app-name · login-h1 · login-sub · login-form · login-field · lbl · login-avatar-row · login-av-preview · login-color-row · login-swatch · active · login-submit · login-sample · login-sample-row · login-sample-chip · btn · btn-ghost · btn-primary · ico · material-symbols-outlined · msym · mgr-star · manager-badge · modal-veil · modal · modal-head · modal-body · modal-foot · sh-form-row · sh-form-row-2 · designed-select · profile-chip-pick · filter-chip · on. EXPLICITLY ABSORBED by the shared-primitives box (their trees live there; also in users.jsx): ws-owner-control (OwnerPicker) · user-autocomplete, ua-clear, ua-clear-icon, ua-menu, ua-empty, ua-row, hover, ua-row-name, ua-row-title (UserAutocomplete) · multi-owner, multi-owner-stack, multi-owner-av, confirm, multi-owner-remove, multi-owner-add, multi-owner-picker (MultiOwnerPicker) · confirm-modal (ConfirmDialog) · owners-display, owners-popover, owners-popover-head, owners-popover-row (OwnersDisplay). NONE silently dropped.
+
+══ UX HANDLER CENSUS (ORIGINAL-DESIGN CENSUS, sweep c — EVERY event handler in archive/src/users.jsx: 50 total = 47 JSX handlers + 3 document listeners) ══
+Avatar — #1 root span onClick (optional passthrough; cursor becomes pointer only when provided).
+UserStack — #2 root span onClick (the caller opens UserListPopup).
+UserListPopup — #3 side-veil onClick → onClose · #4 head close onClick → onClose · #5 user-row-msg onClick → onMessage(u.id).
+ProfileMenu — #6 root div onClick → e.stopPropagation() [APPENDED DETAIL: the menu renders INSIDE .profile-button whose own onClick toggles profileMenuOpen — without the stop, clicking anywhere in the menu would ALSO re-toggle via the parent. ALSO NOTED: the onClose and anchor props are ACCEPTED BUT NEVER USED inside ProfileMenu — dismissal is the shell's document-mousedown listener, and item-driven closing happens in the shell's wrapped callbacks] · #7 "View profile" onClick → onEditProfile · #8 "Messages" onClick → onMessages · #9 "Settings" onClick → onSettings · #10 "Log out" onClick → onLogOut.
+LoginView — #11 form onSubmit → submit(e) [APPENDED DETAIL: e?.preventDefault(); early-return unless valid; builds the new-user object and calls onLogin — pressing Enter in any field submits via this form handler; the submit button is type=submit with no onClick of its own] · #12 name input onChange → setName · #13 title input onChange → setTitle · #14 email input onChange → setEmail · #15 hidden file input onChange → onPickPhoto (FileReader → dataURL → setPhoto) · #16 "Remove" onClick → setPhoto(null) · #17 login-swatch onClick → setColor(c) · #18 login-sample-chip onClick → onLogin(u) (demo account; bypasses the form entirely).
+EditProfileModal — #19 modal-veil onClick → onClose [APPENDED DETAIL: scrim click cancels the edit — previously only implicit in the chrome description] · #20 head close onClick → onClose · #21 hidden file input onChange → onPickPhoto → draft.avatarUrl · #22 "Remove" onClick → draft.avatarUrl = null · #23 login-swatch onClick → draft.avatarColor = c · #24 first-name input onChange → draft.firstName · #25 last-name input onChange → draft.lastName · #26 title input onChange → draft.title · #27 email input onChange → draft.email · #28 Function select onChange → draft.function · #29 Markets filter-chip onClick → toggle the market in draft.markets (this handler carries the dead-code regions filter — the STALE-REGIONS BUG above) · #30 Regions filter-chip onClick → toggle the region in draft.regions · #31 foot "Cancel" onClick → onClose · #32 foot "Save profile" onClick → the SAVE merge (fn/ln fallbacks, NAME RECOMPOSED) + onSave(merged) + onClose.
+UserAutocomplete [handlers owned by the shared-primitives box; censused here for file completeness] — #33 document mousedown → close on outside click · #34 input onChange → set query + open + hoverIdx 0 · #35 input onFocus → clear query + open · #36 input onKeyDown → ArrowDown/ArrowUp move hoverIdx (clamped), Enter picks matches[hoverIdx], Escape closes · #37 ua-clear onClick → clear() (onChange(null)) · #38 ua-row onMouseDown → preventDefault + pick(u) (mousedown so the pick lands before the input blurs) · #39 ua-row onMouseEnter → setHoverIdx(i).
+MultiOwnerPicker [shared-primitives box] — #40 document mousedown → outside click resets adding + confirmRemove · #41 owner-avatar span onClick → first click ARMS confirmRemove(oid), second click removes · #42 owner-avatar span onMouseLeave → disarm confirm · #43 multi-owner-add "+" onClick → toggle the add autocomplete.
+ConfirmDialog [shared-primitives box] — #44 modal-veil onClick → onCancel · #45 "Cancel" onClick → onCancel · #46 confirm button onClick → onConfirm.
+OwnersDisplay [shared-primitives box] — #47 document mousedown → close the popover on outside click · #48 root span onClick → stopPropagation + toggle open · #49 root onMouseEnter → open · #50 root onMouseLeave → close.
+(ManagerStar, ManagerBadge, UserName, OwnerPicker define NO handlers of their own.)
+COUNT: 50 handlers, ALL ACCOUNTED — every interaction was already described in this box or in the shared-primitives box, except three micro-details appended by this census: the ProfileMenu root stopPropagation plus its unused onClose/anchor props (#6), the EditProfileModal scrim-click cancel (#19), and the explicit Enter-to-submit note on the login form (#11). No tree or handler finding disproves any statement in this box; no corrections required.` },
+            { t: "User profile page (record.user) — hero, tabs, assignment logic", d:
 `ProfilePage (archive/src/profile-page.jsx) is the full-page record surface for ONE user (record.user), rendered as a class "single-page". It shows who the person is plus everything assigned to them across four entity classes, each in its own tab with a live count, searchable/filterable/sortable.
 
 PROPS: user (subject), isSelf (bool — is this the logged-in user viewing themselves), currentUser, users, workspaces, plans, community, stakeholders, scores, team, stakeholderWorkspaces (map stakeholderId -> [workspaceId]), getWorkspacesForStakeholder, onEdit, onOpenWorkspace, onOpenPlan, onOpenCommunity, onOpenStakeholder. D = STAKEHOLDER_DATA. If no user, render null.
@@ -1792,8 +2874,69 @@ REBUILD BUILD-MAP (Canonical UI — never md-*/shadcn):
 - The sh table = ui-data-table whose Relationship cell is the StatusPill and Priority cell is the PriorityPill (zone/status token components), single-sourced with Map/Lists.
 - Search = ui-text-field with leading ui-icon "search" and a trailing kbd hint (cmdKeyLabel).
 - Filter & Sort = ui-menu (popover) hosting the shared FilterSection / SortFieldList controls; the active-state highlight is a token, not an inline color.
-- PLAN_STAGE_FG colors migrate to --ui-sys-* status tokens (Idea #54524A, Proposed/Under Review #6E5419, Active #2f5a26, Complete #2E3F66) rather than literal hex in markup.` },
-                              { t: "Messaging — conversations, threads, @ / # / $ / mention links (built + developer-inferred)", d:
+- PLAN_STAGE_FG colors migrate to --ui-sys-* status tokens (Idea #54524A, Proposed/Under Review #6E5419, Active #2f5a26, Complete #2E3F66) rather than literal hex in markup.
+
+SKELETON TREE (literal region tree extracted from the archive/src/profile-page.jsx JSX — the build assembles against THIS tree, never prose. One node per line, nested in source order. Each node: what it is → what it contains → Canonical UI mapping. "layout row/column — token-only container" nodes are pure layout wrappers; wrapper structure otherwise lives inside the mapped ui-* component's shadow DOM. Bracketed [conditions] gate a node.)
+
+SURFACE — THE FULL PAGE (in-main stack; the app shell around it is owned by the app-shell box):
+div.single-page — the page column, top-to-bottom stack: hero → info grid → tabs → controls → table → ui-app-shell main content region (layout column — token-only container)
+  header.profile-hero — hero row (layout row — token-only container)
+    Avatar(user, 64) → ui-avatar size 64 (photo/initials, presence rules per the Shared-UI-primitives box)
+    div [inline minWidth:0; flex:1] — titles block (layout column — token-only container)
+      div.profile-name — user.name → title text (Newsreader title token)
+      div.profile-sub — user.title || "Team member" → body muted text
+      div.profile-meta — (layout row) span user.email + [role==="manager"] ManagerBadge → muted text + ui-chip "Manager"
+    [isSelf] button.btn.btn-primary — Icon "edit" + "Edit profile" → ui-button filled/primary with leading ui-icon
+  div.profile-info-grid — 3-cell info strip (layout grid — token-only container)
+    div.profile-info — span.lbl "Function" + span.profile-info-v fnLabel → labeled value cell
+    div.profile-info — span.lbl "Markets" + span.profile-tags of span.tag ×markets or span.muted "-" → ui-chip group
+    div.profile-info — span.lbl "Regions" + span.profile-tags of span.tag ×regions or span.muted "-" → ui-chip group
+  div.profile-tabs — tab strip (→ ui-tabs)
+    button.profile-tab[.active] ×4 — each contains span.tab-long (long label) + span.tab-short (short label) + span.profile-tab-count (count badge) → ui-tabs tab with count badge; long/short = responsive label variants
+  div.profile-controls — controls bar: search · Filter · Sort (layout row — token-only container)
+    div.search — Icon "search" + input [placeholder "Search…", bound to q] + span.kbd.kbd-cmdk cmdKeyLabel → ui-text-field with leading ui-icon and trailing kbd hint
+    div.filter-button-wrap — filter anchor (layout wrapper — anchors the popover)
+      button.btn[.filter-active] — Icon "filter" + "Filter" (+" (n)") → ui-button (menu anchor)
+      [filterOpen] div.filter-popover [onMouseLeave closes] → ui-menu popover
+        div.filter-pop-head — strong "Filter" + button.btn.btn-ghost [inline fontSize:11] "Clear all" → popover head + ui-button text
+        div.filter-pop-body — [no filterCols] p.muted [inline 12px; margin 0] "No filters for this view." ; else FilterSection ×filterCols → ui-chip filter groups (shared primitive)
+    div.filter-button-wrap — sort anchor (layout wrapper)
+      button.btn[.filter-active when sort.key] — Icon "sort" + "Sort" → ui-button (menu anchor)
+      [sortOpen] div.filter-popover.sort-popover [onMouseLeave closes] → ui-menu popover
+        div.filter-pop-head — strong "Sort by" + button.btn.btn-ghost [fontSize:11] "Clear all" → popover head + ui-button text
+        div.filter-pop-body — SortFieldList(sortFields, sort.key, sort.dir) → shared sort-field primitive
+  [tab==="sh"] div.plan-sh-table [inline overflow:visible] — the DISTINCT stakeholder table → ui-data-table (pill cells)
+    div.plan-sh-thead — 4 header spans: "Stakeholder" "Type" "Relationship" "Priority" → data-table header row
+    [view empty] div.profile-empty.muted "No stakeholder relationships." → empty state text
+    div.plan-sh-trow ×view [onClick → onRowClick(r); title "Open stakeholder"] → data-table interactive row
+      span.plan-sh-name — r.name
+      span.muted — r.type
+      span containing StatusPill(r.relationship) → ui-chip zone variant
+      span containing PriorityPill(r.priority) → ui-chip priority variant
+  [other tabs] div.profile-table — the generic grid table → ui-data-table
+    div.profile-trow.profile-thead [inline gridTemplateColumns = grid] — span.profile-th-label ×cols → data-table header row (columns = the per-tab cols widths verbatim)
+    [view empty] div.profile-empty.muted "Nothing here yet." → empty state text
+    div.profile-trow ×view [inline gridTemplateColumns = grid; cursor:pointer; onClick → onRowClick(r); title "Open"] → data-table interactive row
+      span.profile-td ×cols — owner col → OwnersDisplay(users, r._owners, 22) (ui-avatar-stack); status col → span.comm-stage-text [inline color PLAN_STAGE_FG[r.status] || var(--ink-2)] (token-mapped colored text cell); else r[c.key] text
+
+CLASSNAME ACCOUNTING: every className region in profile-page.jsx appears above — single-page, profile-hero, profile-name, profile-sub, profile-meta, profile-info-grid, profile-info, lbl, profile-info-v, profile-tags, tag, muted, profile-tabs, profile-tab (active), tab-long, tab-short, profile-tab-count, btn, btn-primary, btn-ghost, filter-active, profile-controls, search, kbd, kbd-cmdk, filter-button-wrap, filter-popover, sort-popover, filter-pop-head, filter-pop-body, plan-sh-table, plan-sh-thead, plan-sh-trow, plan-sh-name, profile-empty, profile-table, profile-trow, profile-thead, profile-th-label, profile-td, comm-stage-text. None silently dropped; FilterSection/SortFieldList/Avatar/ManagerBadge/OwnersDisplay/StatusPill/PriorityPill internals are absorbed into their own primitives (Shared-UI-primitives box). The tree confirms the box body — no corrections needed.
+
+UX HANDLER CENSUS (archive/src/profile-page.jsx — every event handler in the module, enumerated with exact behavior):
+1. Hero "Edit profile" button onClick → onEdit (rendered ONLY when isSelf).
+2. Tab button onClick (one JSX site, rendered ×4) → setTab(t.id) AND resetView() (clears sort, filters, and q on every switch).
+3. Search input onChange → setQ(e.target.value).
+4. Filter button onClick → setFilterOpen(o => !o) AND setSortOpen(false) (mutual exclusion).
+5. Filter popover onMouseLeave → setFilterOpen(false) (hover-off dismissal; no click-outside handler).
+6. Filter "Clear all" ghost button onClick → setFilters({}).
+7. FilterSection onToggle(v) callback (per filter column) → toggleFilter(c.key, v) (Set-based toggle into filters[c.key]).
+8. Sort button onClick → setSortOpen(o => !o) AND setFilterOpen(false) (mutual exclusion).
+9. Sort popover onMouseLeave → setSortOpen(false).
+10. Sort "Clear all" ghost button onClick → setSort({ key: null, dir: "asc" }).
+11. SortFieldList onSet(k, d) callback → setSort({ key: k, dir: d }).
+12. plan-sh-trow onClick (sh tab rows) → onRowClick(r) = onOpenStakeholder(r.id).
+13. profile-trow onClick (ws/plans/comm rows) → onRowClick(r) = onOpenWorkspace / onOpenPlan / onOpenCommunity per tab.
+13 handlers (11 DOM handler sites + 2 shared-component callback props), all accounted — every one is already described in the body above; no missing interactions found.` },
+                                    { t: "Messaging — conversations, threads, @ / # / $ / mention links (built + developer-inferred)", d:
 `MESSAGING (oracle: archive/src/messaging.jsx + the store writers in archive/src/app.jsx). Two surfaces share ONE conversation+message store, so a message sent in the right-edge sidebar is instantly visible on the full page and vice-versa: (A) MessagingSidebar — a right-edge overlay panel (.messaging-sidebar with a .side-veil scrim; toggles .show); head shows the message icon + "Conversation" when a conv is open else "Messages", plus an expand-to-page button (Icon "expand" → Material Symbols ligature open_in_full; the button carries the tooltip title="Open full Messages page" — capture this string verbatim; its onClick is the onOpenPage prop, which the app shell wires to setActiveView("messages") AND setMsgSidebarOpen(false) — i.e. expanding navigates to the full Messages page and CLOSES the sidebar in the same click, it never leaves the overlay open behind the page) and a close button (Icon "close", aria-label "Close", onClick = onClose). With no active conv it renders ConversationList (compact); with one open it shows a "← All conversations" back button, a .messaging-conv-head (ConversationAvatars + title + subline "{n} people · group" or "Direct message"), the MessageThread, and a Composer (placeholder "Reply…"). (B) MessagingPage — full page: left pane (.messaging-list-pane) with "Messages" h2 + a primary "New" button (Icon "plus") + ConversationList; right pane (.messaging-thread-pane) with either an empty state (message icon, "Select a conversation", muted "Or start a new one. Group messages let you bring in multiple teammates.", a primary "New conversation" button) or the open conversation: a .messaging-page-head (ConversationAvatars large + serif 18px 500-weight title + a muted subline: for groups "{n} people · " + comma-joined participant names, else "Direct message"), the MessageThread, and a Composer (placeholder "Message " + conversationTitle).
 
 STORE WRITERS (oracle: archive/src/app.jsx — sendMessage / startConversation / messageUser; the app-shell box name-drops these and delegates their FULL capture to THIS box):
@@ -1822,9 +2965,9 @@ MessageThread(conversation, messages, users, currentUserId): auto-scrolls to bot
 
 MENTION TRIGGERS (MENTION_TRIGGERS map): "@" → { type "stk", src "stakeholders" }; "/" → { type "wsp", src "workspaces" }; "#" → { type "pln", src "plans" }; "$" → { type "cmy", src "community" }. (At-sign = stakeholders, slash = workspaces, hash = plans, dollar = community.)
 
-renderMentions(body): if no body or body has no "{{" → return body unchanged. Otherwise scan with the global regex — EXACT, with ONE backslash per escape: /\\{\\{(stk|wsp|pln|cmy):([^|}]+)\\|([^}]*)\\}\\}/g. Spelled out in words so no escaping layer can corrupt it in transcription: backslash open-brace, backslash open-brace, capture group (stk|wsp|pln|cmy), a literal colon, capture group = character class NOT pipe NOT close-brace one-or-more, backslash pipe, capture group = character class NOT close-brace zero-or-more, backslash close-brace, backslash close-brace, global flag. ESCAPING WARNING: exactly ONE backslash before each escaped brace/pipe — a doubled (or quadrupled) backslash makes the pattern match literal backslash characters instead, the {{type:id|label}} tokens NEVER match, and mention chips never render. Token format is {{type:id|label}} with type one of the FOUR codes stk/wsp/pln/cmy. Each match becomes a <button type="button" class="mention-chip t-{type}"> containing a <span class="mention-dot" /> then the label, whose onClick calls window.__openMention(type, id) (opens the read-only page for that entity). Plain text between/around matches is preserved.
+renderMentions(body): if no body or body has no "{{" → return body unchanged. Otherwise scan with the global regex — EXACT, with ONE backslash per escape: /\\\\{\\\\{(stk|wsp|pln|cmy):([^|}]+)\\\\|([^}]*)\\\\}\\\\}/g. Spelled out in words so no escaping layer can corrupt it in transcription: backslash open-brace, backslash open-brace, capture group (stk|wsp|pln|cmy), a literal colon, capture group = character class NOT pipe NOT close-brace one-or-more, backslash pipe, capture group = character class NOT close-brace zero-or-more, backslash close-brace, backslash close-brace, global flag. ESCAPING WARNING: exactly ONE backslash before each escaped brace/pipe — a doubled (or quadrupled) backslash makes the pattern match literal backslash characters instead, the {{type:id|label}} tokens NEVER match, and mention chips never render. Token format is {{type:id|label}} with type one of the FOUR codes stk/wsp/pln/cmy. Each match becomes a <button type="button" class="mention-chip t-{type}"> containing a <span class="mention-dot" /> then the label, whose onClick calls window.__openMention(type, id) (opens the read-only page for that entity). Plain text between/around matches is preserved.
 
-COMPOSER (this IS built — capture as built, NOT deferred). State: text, mq (the active mention query { trigger, query, start } or null), hi (highlighted match index). A textarea (rows 1, grows; placeholder from prop or "Write a message…") + a primary "Send" submit button (disabled when text is blank). Submit/go: trims text, if non-empty calls onSend(text.trim()), clears text and mq. onType (onChange): set text to value; read caret = selectionStart; take substring up to caret; test it against the regex — EXACT, ONE backslash before the w: /([@/#$])([\\w .'-]*)$/. Group 1 = one of the four trigger chars at-sign slash hash dollar; group 2 = zero-or-more of backslash-w (word characters), space, dot, apostrophe, hyphen; end-anchored at the caret. ESCAPING WARNING: the class opens with backslash-w — if transcription doubles the backslash the class degrades to {literal backslash, literal w, space, dot, apostrophe, hyphen}, real letters stop matching, and the mention search closes after the first typed letter. On match → mq = { trigger: m[1], query: m[2], start: caret − m[0].length } and hi reset to 0; on no match → mq = null.
+COMPOSER (this IS built — capture as built, NOT deferred). State: text, mq (the active mention query { trigger, query, start } or null), hi (highlighted match index). A textarea (rows 1, grows; placeholder from prop or "Write a message…") + a primary "Send" submit button (disabled when text is blank). Submit/go: trims text, if non-empty calls onSend(text.trim()), clears text and mq. onType (onChange): set text to value; read caret = selectionStart; take substring up to caret; test it against the regex — EXACT, ONE backslash before the w: /([@/#$])([\\\\w .'-]*)$/. Group 1 = one of the four trigger chars at-sign slash hash dollar; group 2 = zero-or-more of backslash-w (word characters), space, dot, apostrophe, hyphen; end-anchored at the caret. ESCAPING WARNING: the class opens with backslash-w — if transcription doubles the backslash the class degrades to {literal backslash, literal w, space, dot, apostrophe, hyphen}, real letters stop matching, and the mention search closes after the first typed letter. On match → mq = { trigger: m[1], query: m[2], start: caret − m[0].length } and hi reset to 0; on no match → mq = null.
 MATCH SOURCING: sources = window.__mentionSources() (an object of arrays keyed by src name) or {}. labelFor(type, o): stk → displayName(o) || o.name; pln → o.title; wsp → o.name; cmy (else) → o.name. matches: take MENTION_TRIGGERS[mq.trigger], pull sources[cfg.src] (or []), lowercase the query q; map each option to { id, label: labelFor(cfg.type,o) }, keep those whose label exists and (no query OR label.toLowerCase().includes(q)), slice to UP TO 6, attach type=cfg.type.
 KEYBOARD (textarea onKeyDown): when mq is active and matches exist — ArrowDown → hi = (hi+1) % len; ArrowUp → hi = (hi−1+len) % len; Enter OR Tab → pick(matches[hi]) (each prevents default); Escape → close mq. Independent of mentions: Enter without Shift → submit (Shift+Enter inserts a newline).
 PICK(o): builds token {{type:id|label}}, splices it into text at mq.start replacing the typed trigger fragment, appends a trailing space, clears mq, refocuses the textarea. The popover (.mention-pop) appears below the field when mq is active and matches exist: each option is a button (.mention-opt, adds .on when i===hi) with a colored dot (.mention-dot.t-{type}) + label; onMouseDown (preventDefault) picks it.
@@ -1835,7 +2978,99 @@ NewConversationModal(users, currentUserId, onClose, onCreate): a modal (.modal w
 - "Or pick from the list": a .user-picker full checkbox list of every other user — each row (.user-picker-row, adds .picked when selected) = a checkbox (checked = picked includes id; onChange toggles) + a 28px Avatar with online={presence==="online"} + name (12.5px 500) + muted title (11px).
 - Footer: "Cancel" button (onClose) + a primary "Start conversation" button DISABLED until picked.length>=1 (i.e. at least one participant); on click calls onCreate(picked, title.trim() || null). The page wires onCreate → startConversation(participants, title) (the STORE WRITER above — auto-adds the current user, dedupes DMs by participant pair) → setActiveConversationId to the RETURNED id (which may be an EXISTING DM's id via the dedupe, not necessarily a new one) → close the modal.
 
-BUILD-MAP (Canonical UI, ui-* only — NEVER md-*/shadcn). Conversation list → ui-list (each conv-row a list item with leading avatar/avatar-stack, trailing time-or-pending badge as a ui-chip/count). Thread bubbles → tokened surfaces (mine vs other = different --ui-sys surface roles, never inline color). Composer → a ui-text-field (multiline) plus a ui-button primary "Send"; the mention popover → a ui-menu/autocomplete anchored to the field; NO composer renders on the system conversation per the read-only ruling above. Mention chips (rendered + in-popover) → ui-chip variants keyed by type token (t-stk/t-wsp/t-pln/t-cmy map to distinct --ui-sys accent/zone tokens, never inline hex). New-conversation → ui-dialog containing a ui-autocomplete (add-by-search, placeholder "Start typing a name or title…"), ui-chip removable chips, and a ui-list of ui-checkbox rows; the "Start conversation" action is a ui-button disabled until >=1 picked. Avatars/avatar-stacks and the presence dot are shared primitives (see the Shared UI primitives box). No ad-hoc styling, no shadows beyond the shipped ramp.` },
+BUILD-MAP (Canonical UI, ui-* only — NEVER md-*/shadcn). Conversation list → ui-list (each conv-row a list item with leading avatar/avatar-stack, trailing time-or-pending badge as a ui-chip/count). Thread bubbles → tokened surfaces (mine vs other = different --ui-sys surface roles, never inline color). Composer → a ui-text-field (multiline) plus a ui-button primary "Send"; the mention popover → a ui-menu/autocomplete anchored to the field; NO composer renders on the system conversation per the read-only ruling above. Mention chips (rendered + in-popover) → ui-chip variants keyed by type token (t-stk/t-wsp/t-pln/t-cmy map to distinct --ui-sys accent/zone tokens, never inline hex). New-conversation → ui-dialog containing a ui-autocomplete (add-by-search, placeholder "Start typing a name or title…"), ui-chip removable chips, and a ui-list of ui-checkbox rows; the "Start conversation" action is a ui-button disabled until >=1 picked. Avatars/avatar-stacks and the presence dot are shared primitives (see the Shared UI primitives box). No ad-hoc styling, no shadows beyond the shipped ramp.
+
+=== SKELETON TREE (Messaging — the literal region tree from archive/src/messaging.jsx; the build assembles against THIS tree, never prose) ===
+Legend: each node = className/element — what it contains — Canonical UI mapping. "layout row/column — token-only container" = pure layout, no visual decision.
+
+TREE 1 — SIDEBAR VARIANT (MessagingSidebar render root):
+Fragment
+  div.side-veil (+.show when open) — the scrim; onClick = onClose — ui-sheet scrim (click dismisses the sidebar)
+  aside.messaging-sidebar (+.show when open) — the right-edge overlay panel — ui-sheet (right-anchored)
+    div.messaging-sidebar-head — layout row — sheet header slot
+      div.row (gap 8) — Icon "message" + strong ("Conversation" when a conv is open, else "Messages") — ui-icon + token-inked title
+      div.row (gap 4) — button.btn.btn-ghost expand (Icon "expand" → open_in_full; title "Open full Messages page") + button.btn.btn-ghost close (Icon "close", aria-label "Close") — 2x ui-icon-button, each wrapped in ui-tooltip
+    BRANCH (no active conv): ConversationList with compact — TREE 3
+    BRANCH (conv open):
+      button.messaging-back — "← All conversations" — ui-button (text) with leading chevron ui-icon
+      div.messaging-conv-head — layout row — token-only container
+        ConversationAvatars — TREE 4 (per the RULING above: the system conv shows the sparkle system avatar here in the rebuild)
+        div (minWidth 0, flex 1) — the title column — layout column, absorbed
+          div (fontWeight 500, fontSize 13, ellipsis/nowrap) — conversationTitle — token-inked title text
+          div.muted (fontSize 11) — "{n} people · group" / "Direct message" (system → "Automated reminders" per the RULING) — token-inked subline
+      MessageThread — TREE 5
+      Composer (placeholder "Reply…") — TREE 6 (does NOT mount when kind === "system", per the read-only RULING)
+
+TREE 2 — FULL PAGE VARIANT (MessagingPage render root):
+div.messaging-page — two-pane layout row — token-only container (page root in the shell's main slot)
+  aside.messaging-list-pane — the left list pane — pane surface on --ui-sys-surface-container (sidebars never white)
+    div.messaging-list-head — h2 "Messages" + button.btn.btn-primary (Icon "plus" + "New") — pane header: title-typeface heading + ui-button (filled) with leading ui-icon
+    ConversationList — TREE 3
+  section.messaging-thread-pane — the thread pane — layout column on --ui-sys-surface-card (main content white)
+    BRANCH (no conv): div.messaging-empty — Icon "message" + h3 "Select a conversation" + p.muted ("Or start a new one. Group messages let you bring in multiple teammates.") + button.btn.btn-primary (Icon "plus" + "New conversation") — empty-state composition: ui-icon + heading + label text + ui-button (filled)
+    BRANCH (conv open):
+      div.messaging-page-head — layout row — token-only container
+        ConversationAvatars (large) — TREE 4
+        div (minWidth 0, flex 1) — h3 (serif/title typeface, fontWeight 500, fontSize 18, margin 0) conversationTitle + div.muted (fontSize 12) subline (group: "{n} people · " + comma-joined names; else "Direct message"; system per the RULING) — heading + token-inked subline
+      MessageThread — TREE 5
+      Composer (placeholder "Message " + conversationTitle) — TREE 6
+  NewConversationModal (conditional, newOpen) — TREE 7
+
+TREE 3 — ConversationList (shared by both variants):
+div.conv-list (+.compact in the sidebar) — ui-list
+  button.conv-row (+.active when conv.id === activeId; +.system for the system conv) x N, ordered system-first then last-message-desc — ui-list interactive item
+    LEADING (system conv): span.av.av-system (28x28, fontSize 11) holding Icon "sparkle" class .brand-glyph — token-tinted system avatar circle · LEADING (all others): ConversationAvatars — TREE 4
+    div.conv-row-body — layout column — absorbed into the list item's content slot
+      div.conv-row-top — span.conv-row-title ("Reminders" for system, else conversationTitle) + span.conv-row-time (formatTime(preview.at) OR, when system pending > 0, span.conv-row-pending count badge in its place) — headline + trailing meta (badge = ui-chip/count token)
+      div.conv-row-preview — the preview line (system pending sentence, or optional "Firstname: " prefix + preview.body) — supporting text
+
+TREE 4 — ConversationAvatars (shared):
+EITHER a single Avatar (size 36 when large, else 28; online dot when that user's presence === "online") — shared primitive (ui-avatar)
+OR span.conv-multi-avatar (width/height = size) — the FIRST 2 others each as Avatar at Math.round(size * 0.7) — avatar-stack composition of the shared primitive
+(returns nothing when others is empty)
+
+TREE 5 — MessageThread (shared):
+EITHER div.thread-empty.muted — "No messages yet. Say hello." — token-inked empty state
+OR div.message-thread — the scroll column — token-only container (auto-scrolls to the trailing anchor on message count change)
+  div.msg (+.mine when the author is the current user; +.grouped per the 60s same-author rule) x N — message row — layout row, token-only container
+    Avatar (26) when NOT grouped and NOT mine and the author resolves · span (width 26, flex 0 0 26px) alignment spacer when grouped and not mine — shared primitive / layout filler (absorbed)
+    div.msg-body — layout column — absorbed
+      div.msg-meta (only when not grouped) — span.msg-author ("You" when mine, else author.name or "?") + span.msg-time (formatTime(m.at)) — token-inked meta line
+      div.msg-bubble — renderMentions(m.body): plain text interleaved with button.mention-chip.t-{stk|wsp|pln|cmy} (span.mention-dot + label) — tokened bubble surface (mine vs other = different --ui-sys surface roles, never inline color); mention chips = ui-chip variants keyed by type token
+  div (endRef) — the scroll anchor — behavior only, no region (absorbed)
+
+TREE 6 — Composer (shared):
+form.composer (onSubmit) — layout row — token-only container
+  div.composer-field — the field wrapper (popover anchor) — token-only container
+    textarea (rows 1; placeholder from prop or "Write a message…") — ui-text-field (multiline; see the shared multiline GAP resolution in the Community/Plan boxes)
+    div.mention-pop (conditional: mq active AND matches non-empty) — button.mention-opt (+.on when i === hi) x up-to-6 (span.mention-dot.t-{type} + label) — ui-menu/autocomplete surface anchored below the field
+  button.btn.btn-primary (type submit, "Send", disabled when text is blank) — ui-button (filled)
+
+TREE 7 — NewConversationModal:
+Fragment
+  div.modal-veil.show — the scrim; onClick = onClose — ui-dialog scrim (scrim-dismiss ENABLED)
+  div.modal — ui-dialog
+    div.modal-head — h2 "New conversation" + button.btn.btn-ghost (Icon "close", aria-label "Close") — headline + ui-icon-button
+    div.modal-body — dialog content slot
+      div.login-field (title) — span.lbl ("Group name (optional)" when isGroup, else "Title (optional)") + input (placeholder "EMEA pre-meeting" when group, else "") — ui-text-field
+      div.login-field (add people) — span.lbl "Add people (type to search)" + div.ws-owner-control (padding 4px 8px) hosting UserAutocomplete (shared primitive → ui-autocomplete; placeholder "Start typing a name or title…") + conditional chip wrap (flex, wrap, gap 6, marginTop 8; a styled layout row — token-only container) of span.picked-chip x N (Avatar 20 + name + span.picked-chip-x "×"; whole chip click removes) — ui-chip removable chips
+      div.login-field (pick list) — span.lbl "Or pick from the list" + div.user-picker — ui-list of ui-checkbox rows
+        label.user-picker-row (+.picked when selected) x N — input[type=checkbox] + Avatar (28, online dot when presence === "online") + div (minWidth 0, flex 1: name 12.5px/500 + muted title 11px) — checkbox row with avatar + two-line text
+    div.modal-foot — button.btn "Cancel" + button.btn.btn-primary "Start conversation" (disabled until picked.length >= 1) — action slot, 2x ui-button
+
+CLASSNAME ACCOUNTING: every className region in messaging.jsx appears above (side-veil, show, messaging-sidebar, messaging-sidebar-head, row, btn, btn-ghost, messaging-back, messaging-conv-head, muted, messaging-page, messaging-list-pane, messaging-list-head, btn-primary, messaging-thread-pane, messaging-empty, messaging-page-head, conv-list, compact, conv-row, active, system, av, av-system, brand-glyph, conv-row-body, conv-row-top, conv-row-title, conv-row-time, conv-row-pending, conv-row-preview, conv-multi-avatar, thread-empty, message-thread, msg, mine, grouped, msg-body, msg-meta, msg-author, msg-time, msg-bubble, mention-chip, t-stk / t-wsp / t-pln / t-cmy, mention-dot, composer, composer-field, mention-pop, mention-opt, on, modal-veil, modal, modal-head, modal-body, modal-foot, login-field, lbl, ws-owner-control, picked-chip, picked-chip-x, user-picker, user-picker-row, picked). None silently dropped.
+
+=== UX HANDLER CENSUS (archive/src/messaging.jsx — every event handler in the module) ===
+DOM-level JSX handlers, 19 total:
+MessagingSidebar (4): 1 side-veil onClick → onClose (PREVIOUSLY IMPLICIT, NOW EXPLICIT: clicking the scrim closes the sidebar exactly like the close button) · 2 expand button onClick → onOpenPage (navigates to the full page AND closes the sidebar, per the head description above) · 3 close button onClick → onClose · 4 messaging-back onClick → setActiveConversationId(null) (returns to the list WITHOUT closing the sidebar).
+MessagingPage (2): 5 list-head "New" onClick → setNewOpen(true) · 6 empty-state "New conversation" onClick → setNewOpen(true).
+ConversationList (1): 7 conv-row onClick → onPick(conv.id) (both variants wire it to setActiveConversationId).
+renderMentions (1): 8 mention-chip onClick → window.__openMention(type, id) (the global bridge; opens the read-only entity page).
+Composer (4): 9 form onSubmit → go() (preventDefault, trim/guard, onSend, clear text + mq) · 10 textarea onChange → onType (caret-anchored trigger-regex scan → mq/hi) · 11 textarea onKeyDown (when mention popover active: ArrowDown/ArrowUp cycle hi, Enter/Tab pick, Escape closes; otherwise Enter-without-Shift submits, Shift+Enter inserts a newline) · 12 mention-opt onMouseDown (preventDefault → pick(o) — mousedown, not click, so the textarea never blurs before the pick).
+NewConversationModal (7): 13 modal-veil onClick → onClose (PREVIOUSLY IMPLICIT, NOW EXPLICIT: a scrim click discards the draft picks/title, same as Cancel and the head close — three dismissal paths total) · 14 head close onClick → onClose · 15 title input onChange · 16 picked-chip onClick → toggle(id) (removes that person) · 17 user-picker-row checkbox onChange → toggle(id) · 18 "Cancel" onClick → onClose · 19 "Start conversation" onClick → onCreate(picked, title.trim() || null).
+Shared-primitive callback prop (1): UserAutocomplete onChange → if (id) toggle(id) (its internal DOM handlers are censused in the shared-primitives box).
+Non-JSX interaction machinery (all captured in the sections above): MessageThread's useEffect scrollIntoView on messages.length; Composer pick()'s setTimeout textarea refocus; the window.__openMention / window.__mentionSources globals (app-shell bridges).
+19 DOM handlers + 1 shared-primitive callback prop = 20 interaction bindings, all accounted. Census corrections/additions to the box: the TWO scrim-click dismissals (handlers 1 and 13) are now explicit; everything else was already captured verbatim. Per the read-only Reminders RULING above, when the open conversation's kind === "system" the rebuild does not mount the Composer at all, so handlers 9–12 have no system-thread surface — a recorded deviation by ruling, not drift. No tree or census finding disproves any statement in the box.` },
                         { t: "Persistence & realtime — the ONE transport boundary (Store now · Supabase swap · the traps)", d:
 `THE PRINCIPLE (this is what stops the backend from becoming a patch-by-patch death spiral) — the UI talks to EXACTLY ONE interface: usePersistentState(table, seed), a drop-in for useState. It NEVER touches the transport. Every entity flows through the SAME generic path (load / save / subscribe by table). So moving from localStorage to Supabase is a SINGLE-FILE change in the Store — there are NO per-entity connectors to build or patch one-by-one. Get the one transport right (row-level + RLS) and every module is correct at once. Do NOT introduce bespoke per-feature persistence — that is the anti-pattern that kills the build.
 
@@ -2231,7 +3466,7 @@ ONE FULLY-WORKED STAKEHOLDER RECORD (sh-01, every field populated — the canoni
   (Its SEED_SCORES row, for reference: tm-alex {x:3,y:8}, tm-jordan {x:4,y:9}, tm-sam {x:2,y:8}, tm-priya {x:3,y:8}, tm-devon {x:2,y:7} → weightedCoord places the dot in the positive/upper band. An org-type record drops isPerson/firstName/lastName/title and may omit state/site; otherwise the shape is identical.)
 
 REGENERATION NOTE — the remaining fixtures (the other 19 stakeholders + their scores, the full user/team/workspace/community/conversation/message seeds) are of the IDENTICAL SHAPE shown above and are REGENERATED at rebuild — fresh, plausible HP-flavored sample data, not transcribed. State explicitly: the seed fixtures are illustrative, not app logic; the CATALOGS / HELPERS / LOGIC (Catalogs box, Relationship-engine, Plan-algorithm, location helpers, scoring math) are the lossless part and are captured verbatim in their own boxes. The only seed values pinned verbatim here because downstream features depend on them: the TEAM weights (drive weightedCoord) and the three Map-history trails (drive the Map history path).` },
-                        { t: "Record scaffold, landing pages & page shells — the universal layout (LAYOUT IS CRUCIAL)", d:
+                              { t: "Record scaffold, landing pages & page shells — the universal layout (LAYOUT IS CRUCIAL)", d:
 `RECORD SCAFFOLD + LANDING SHELL (oracle: archive/src/record.jsx + archive/src/landing.jsx). record.jsx is the single source of design for every read/edit record page; ALL visual rules live in the AUTHORITATIVE RECORD SCAFFOLD block in styles.css. Tables are NEVER re-implemented inside a record — records embed the REAL app table (SheetView) verbatim.
 
 MetaField(label, value, editing, type="text", options=[], placeholder, onChange) — one field, two states. TYPE VOCABULARY: text | long | select | tags | date. emptiness test: value is undefined OR null OR "" OR (an array with length 0). Wrapper is a <label class="mf"> with a .mf-label span = label.
@@ -2263,7 +3498,103 @@ LandingView(items, searchKeys, filterDefs, sortFields, cols, renderCard, onRowCl
 - RESULTS: if filtered list empty → .comm-empty.muted = emptyText. Else if view==="table" → .landing-table-scroll > a .profile-table.landing-table.landing-table-flex grid: the header row (.profile-trow.profile-thead) and each data row (.profile-trow, onClick → onRowClick(it), cursor pointer, title "Open") use gridTemplateColumns "minmax(180px,2fr) " + one "max-content" per remaining col (FIRST column is a flexible minmax(180px,2fr), the REST are max-content). Each cell = c.render(it) if given else it[c.key]. Else (cards) → a grid (gridClass || "comm-grid") of renderCard(it) per item.
 - SLOT/API SURFACE: renderCard(item), onRowClick(item), emptyText, gridClass, headerSlot, footerSlot, toolbarRight, explainerSlot (portal target). cols = [{ key, label, render? }]. DEAD PROPS — DO-NOT-REPLICATE FLAG: onNew and newLabel are accepted (destructured in the signature) but NEVER RENDERED anywhere in LandingView — no New button, no new-item control of any kind exists in the landing shell. Both callers pass them into a void: the Plan landing passes onNew (its newPlan handler) with newLabel "New plan"; the Community landing passes onNew (opens the new-application modal) with newLabel "New application". Other capture boxes quote those newLabel strings — be aware they never surface in the oracle UI; plan/application creation actually happens via the app shell's context-aware create (+) and the pages' own controls. REBUILD DECISION (make-real-or-drop, decide with the user): either give the rebuilt landing shell a REAL new-item action (a ui-button "filled" in the toolbar, labelled newLabel, firing onNew) or drop both props from the API entirely — do not silently carry the fake plumbing forward, and do not invent a button the oracle never had without ruling it first.
 
-BUILD-MAP (Canonical UI, ui-* only — NEVER md-*/shadcn). The 3-region RecordShell maps to the scaffold components: ui-app-shell (the page), ui-sidebar (left section-nav rail, collapsible), ui-inspector (right metadata rail, collapsible) around the white center content; the top bar is the ui-app-bar with its toolbar slot. MetaField becomes the field primitive set: read = tokened value/chip, edit = ui-text-field (text/long/date), ui-select (select), ui-chip set (tags) — single field component switching on type. The "Table embed" mode embeds ui-stakeholder-table / ui-data-table verbatim (8-row cap), never a markup table. LandingView's table view → ui-data-table (first col minmax(180px,2fr), rest max-content); the toolbar → ui-app-bar/ui-text-field search + ui-menu filter/sort popovers + ui-chip filter chips (preserving the mutual-exclusion and mouse-leave dismissal semantics above, or upgrading dismissal to ui-menu's standard click-outside if ruled with the user); card view → tokened ui cards in a grid. All collapse/toggle states and surfaces come from --ui-sys tokens; sidebars are never white (surface-container), center content is white (surface-card). No ad-hoc CSS, no shadows beyond the shipped ramp.` },
+BUILD-MAP (Canonical UI, ui-* only — NEVER md-*/shadcn). The 3-region RecordShell maps to the scaffold components: ui-app-shell (the page), ui-sidebar (left section-nav rail, collapsible), ui-inspector (right metadata rail, collapsible) around the white center content; the top bar is the ui-app-bar with its toolbar slot. MetaField becomes the field primitive set: read = tokened value/chip, edit = ui-text-field (text/long/date), ui-select (select), ui-chip set (tags) — single field component switching on type. The "Table embed" mode embeds ui-stakeholder-table / ui-data-table verbatim (8-row cap), never a markup table. LandingView's table view → ui-data-table (first col minmax(180px,2fr), rest max-content); the toolbar → ui-app-bar/ui-text-field search + ui-menu filter/sort popovers + ui-chip filter chips (preserving the mutual-exclusion and mouse-leave dismissal semantics above, or upgrading dismissal to ui-menu's standard click-outside if ruled with the user); card view → tokened ui cards in a grid. All collapse/toggle states and surfaces come from --ui-sys tokens; sidebars are never white (surface-container), center content is white (surface-card). No ad-hoc CSS, no shadows beyond the shipped ramp.
+
+SKELETON TREE (literal region trees extracted from the archive/src/record.jsx + archive/src/landing.jsx JSX — the build assembles against THESE trees, never prose. One node per line, nested in source order. Each node: what it is → what it contains → Canonical UI mapping. "layout row/column — token-only container" nodes are pure layout wrappers; wrapper structure otherwise lives inside the mapped ui-* component's shadow DOM. Bracketed [conditions] gate a node.)
+
+SURFACE 1 — RECORDSHELL (the universal 3-region record page):
+div.record-wrap — the whole record page: top bar → 3-region body → pinned footer → ui-app-shell record variant (layout column)
+  div.record-topbar — static top bar; NO title ever lives here → ui-app-bar (toolbar slot)
+    [onBack] button.plan-back — Icon "chevron-left" + (backLabel||"Back") → ui-button text with leading ui-icon
+    span [inline flex:1] — spacer (layout spacer — token-only)
+    [toolbar] span.record-toolbar — wraps the passed toolbar slot content → app-bar slot (host of the caller's search/Filter/Sort)
+    [onToggleEdit] button.btn[.btn-primary while editing] — Icon "check"+"Done" (editing) | Icon "edit"+"Edit" (read) → ui-button (filled while editing) with leading ui-icon
+  div.record-body — 3-region row: left rail · center · right rail (layout row — token-only container)
+    nav.record-nav[.collapsed] — LEFT RAIL, sub-page navigation → ui-sidebar (collapsible; surface-container, never white)
+      div.record-nav-head — (layout row) [not collapsed] span.record-nav-title (navTitle||"Sections") + button.record-nav-collapse [title Expand|Collapse] containing Icon chevron-left (open) | chevron-right (collapsed) → sidebar header + ui-icon-button collapse toggle
+      button.record-nav-item[.on when active] ×sections [title s.label] — Icon (s.icon||"chevron-right") + span.record-nav-label (s.label) → ui-sidebar nav items (selection = ink state, no bg swap)
+    div.record-main — CENTER, the ONLY width-flexible region; full-width white; reflows as rails toggle → main content region (surface-card)
+      div.record-page-head — the in-content page header (layout row — token-only container)
+        [pageIcon] span.record-page-icon — Icon pageIcon → ui-icon
+        div.record-page-titles — (layout column) [subtitle] span.record-page-eyebrow (eyebrow above) + [title] span.record-page-title → eyebrow + Newsreader title
+      [section] div.record-section-head — active section.label → section heading text
+      div.record-section-body — section.render(editing) — the active section's own subtree mounts HERE → section host (layout region)
+    [rightRail] aside.record-rail[.collapsed] — RIGHT RAIL, metadata → ui-inspector (collapsible; surface-container)
+      div.record-rail-head — (layout row) [not collapsed] span.record-nav-title (railTitle||"Details") + button.record-nav-collapse [title Expand|Collapse] containing Icon chevron-right (open) | chevron-left (collapsed) → inspector header + ui-icon-button
+      [not collapsed] {rightRail} — the caller's rail content mounts here → inspector body slot
+  [footer] div.record-footer — pinned footer → ui-status-bar / footer bar
+
+SURFACE 1a — METAFIELD (the field primitive that populates record sections and rails):
+label.mf — one field → the single field component switching on type
+  span.mf-label — the field label → field label (token type style)
+  [read] span.mf-value — [empty] span.mf-empty "—" | [type tags] span.mf-tags of span.tag ×values (ui-chip set) | raw value text
+  [edit, long] textarea.mf-input.mf-long [rows 4] → ui-text-field multiline
+  [edit, select] span.designed-select.mf-input — wraps select ([placeholder] leading empty option + option ×options) → ui-select
+  [edit, date|text|tags] input.mf-input [type date|text] → ui-text-field (date variant for date)
+
+SURFACE 1b — SAMPLERECORD SECTION BODIES (what mounts into .record-section-body per nav item, in order):
+prose ("Single column", icon notes): div.record-prose — p ×2 (lorem) + div.record-prose-tags of span.tag ×3 → prose region + ui-chip row
+fields ("Field stack", icon tune): div.record-fields — MetaField ×4 (Name text · Status select · Summary long · Tags tags/inert) → vertical field stack (layout column)
+twocol ("Two column", icon view_column): div.record-twocol — (layout row) div.record-fields (Name · Status · Priority) + div.record-fields (Owner · Summary · Tags) → two field stacks side by side
+table ("Table embed", icon table_rows): div.record-table-embed — the REAL SheetView verbatim (8 stakeholders) → embedded ui-stakeholder-table (its internal tree is owned by the Lists box)
+rightRail: div.record-rail-inner — (layout column) div.record-rail-sec ("Metadata": div.record-rail-title + div.mf read rows Created/Updated/Owner) + div.record-rail-sec ("Notes": div.record-rail-title + textarea.mf-input.mf-long rows 3 "Add a note…") → inspector sections
+toolbar slot: span.scaffold-controls — (layout row) span.search (Icon "search" .ico + input "Search…" + span.kbd.kbd-cmdk "⌘K") + button.btn "Filter" + button.btn "Sort" → decorative toolbar chrome (see ORACLE-HONESTY)
+footer slot: span "Universal scaffold preview" + span [flex:1] spacer + span "Updated June 10, 2026" → footer texts
+
+SURFACE 2 — LANDINGVIEW (the shared Plan/Community landing shell):
+div.community-wrap — the landing surface (layout column)
+  [explainerSlot truthy] PORTAL → the toolbar subtree below is rendered via ReactDOM.createPortal INTO the explainerSlot DOM node, NOT inline in community-wrap; the entire toolbar is CONDITIONAL on explainerSlot — no slot, no toolbar renders at all (clarification the tree surfaces; the body text above implies but does not state it)
+    div.community-toolbar — search · Filter · Sort · See all · spacer · toolbarRight → ui-app-bar toolbar row
+      div.search — Icon "search" + input [placeholder "Search…", bound to search] + span.kbd.kbd-cmdk cmdKeyLabel → ui-text-field with leading ui-icon + kbd hint
+      div.filter-button-wrap — filter anchor (layout wrapper — anchors the popover)
+        button.btn[.filter-active] — "Filter" (+" (n)") → ui-button (menu anchor); NOTE: unlike ProfilePage's controls bar, this button has NO leading Icon
+        [filterOpen] div.filter-popover [onMouseLeave closes] → ui-menu popover
+          div.filter-pop-head — strong "Filter" + button.btn.btn-ghost [fontSize:11] "Clear all" → popover head + ui-button text
+          div.filter-pop-body — FilterSection ×filterDefs → ui-chip filter groups (shared primitive)
+      div.filter-button-wrap — sort anchor (layout wrapper)
+        button.btn[.filter-active when sort.key] — "Sort" (no leading Icon here either) → ui-button (menu anchor)
+        [sortOpen] div.filter-popover.sort-popover [onMouseLeave closes] → ui-menu popover
+          div.filter-pop-head — strong "Sort by" + button.btn.btn-ghost [fontSize:11] "Clear all" → popover head + ui-button text
+          div.filter-pop-body — SortFieldList(sortFields, sort.key, sort.dir) → shared sort-field primitive
+      button.btn[.filter-active when table] [title "See all in a table"] "See all" → ui-button toggle (cards ↔ table)
+      div.spacer [inline flex:1] — spacer (layout spacer)
+      {toolbarRight} — caller slot → toolbar trailing slot
+  {headerSlot} — caller slot rendered above the results → header slot
+  [filtered list empty] div.comm-empty.muted — emptyText → empty state text
+  [view==="table"] div.landing-table-scroll — horizontal scroll container → data-table scroll wrapper (overflow-x auto)
+    div.profile-table.landing-table.landing-table-flex — the grid table → ui-data-table
+      div.profile-trow.profile-thead [inline gridTemplateColumns "minmax(180px,2fr) " + "max-content" ×(cols−1)] — span.profile-th-label ×cols → header row
+      div.profile-trow ×items [same gridTemplateColumns; cursor pointer; onClick → onRowClick(it); title "Open"] — span.profile-td ×cols (c.render(it) if given else it[c.key]) → interactive rows
+  [view==="cards"] div[gridClass || "comm-grid"] — renderCard(it) ×items (each card subtree is owned by the caller's box) → card grid (layout grid — token-only container)
+  {footerSlot} — caller slot rendered below the results → footer slot
+
+CLASSNAME ACCOUNTING: every className region in record.jsx appears above — record-wrap, record-topbar, plan-back, record-toolbar, btn, btn-primary, record-body, record-nav (collapsed), record-nav-head, record-nav-title, record-nav-collapse, record-nav-item (on), record-nav-label, record-main, record-page-head, record-page-icon, record-page-titles, record-page-eyebrow, record-page-title, record-section-head, record-section-body, record-rail (collapsed), record-rail-head, record-footer, mf, mf-label, mf-value, mf-empty, mf-tags, tag, mf-input, mf-long, designed-select, record-prose, record-prose-tags, record-fields, record-twocol, record-table-embed, record-rail-inner, record-rail-sec, record-rail-title, scaffold-controls, search, ico, kbd, kbd-cmdk. And in landing.jsx — community-wrap, community-toolbar, search, kbd, kbd-cmdk, filter-button-wrap, filter-active, filter-popover, filter-pop-head, filter-pop-body, btn-ghost, sort-popover, spacer, comm-empty, muted, landing-table-scroll, profile-table, landing-table, landing-table-flex, profile-trow, profile-thead, profile-th-label, profile-td, comm-grid. None silently dropped; FilterSection/SortFieldList/SheetView internals are absorbed into their own capture boxes. TREE-SURFACED CLARIFICATION (not a contradiction, a sharpening): the LandingView toolbar renders ONLY when explainerSlot is truthy — the portal expression is explainerSlot && createPortal(...), so a caller passing no explainerSlot gets NO toolbar (no search, no Filter/Sort, no See-all). Both oracle callers pass a real slot, so this never shows in the running app, but the rebuild must keep the toolbar conditional on the slot (or rule with the user that the rebuilt shell always owns its toolbar).
+
+UX HANDLER CENSUS (archive/src/record.jsx + archive/src/landing.jsx — every event handler in the module set, enumerated with exact behavior):
+record.jsx — 9 DOM handler sites:
+1. MetaField long textarea onChange → onChange(e.target.value) (guarded: only if onChange passed).
+2. MetaField select onChange → onChange(e.target.value) (guarded).
+3. MetaField text/date/tags-edit input onChange → onChange(e.target.value) (guarded).
+4. RecordShell back button onClick → onBack (rendered only when onBack given).
+5. RecordShell view↔edit toggle onClick → onToggleEdit (rendered only when onToggleEdit given).
+6. RecordShell left-rail collapse toggle onClick → setNavCollapsed(c => !c).
+7. RecordShell nav-item onClick (×sections) → setActive(s.id).
+8. RecordShell right-rail collapse toggle onClick → setRailCollapsed(c => !c).
+9. SampleRecord rail Notes textarea onChange → set("note", e.target.value) (the ONE wired rail control).
+record.jsx — callback wiring (no new DOM handlers, routed through the sites above or deliberately inert): SampleRecord passes onBack = () => {} (no-op — the back button goes nowhere), onToggleEdit → setEditing(e => !e), and 8 live MetaField onChange bindings (Field stack: name/status/summary; Two column: name/status/priority/owner/summary — all set(k, v)); the 2 Tags MetaFields get NO onChange (inert edit inputs); the embedded SheetView receives ALL its handler props as no-ops (updateStakeholder, openDetail, setSelectedId, addStakeholder, onConsumeOpen, updateCommunityApp, onOpenWorkspace; getWorkspacesForStakeholder returns []); the scaffold-controls search input and Filter/Sort buttons carry NO handlers at all (decorative — see ORACLE-HONESTY).
+landing.jsx — 11 handler sites (9 DOM + 2 shared-component callbacks):
+10. Search input onChange → setSearch(e.target.value).
+11. Filter button onClick → setFilterOpen(o => !o) AND setSortOpen(false) (mutual exclusion).
+12. Filter popover onMouseLeave → setFilterOpen(false) (hover-off dismissal).
+13. Filter "Clear all" onClick → setFilters({}).
+14. FilterSection onToggle(v) callback (×filterDefs) → toggleFilter(def.key, v) (Set-based toggle).
+15. Sort button onClick → setSortOpen(o => !o) AND setFilterOpen(false) (mutual exclusion).
+16. Sort popover onMouseLeave → setSortOpen(false).
+17. Sort "Clear all" onClick → setSort({ key: null, dir: "asc" }) (clears key AND resets direction).
+18. SortFieldList onSet(k, d) callback → setSort({ key: k, dir: d }).
+19. "See all" button onClick → setView(v => v === "table" ? "cards" : "table").
+20. Table row (profile-trow) onClick → onRowClick(it) (card clicks belong to the caller's renderCard, not this module).
+20 handler sites across the module set (record.jsx 9 + landing.jsx 11), all accounted — every one is already described in the body above (including the inert/no-op ones flagged under ORACLE-HONESTY and DEAD PROPS); no missing interactions found.` },
                         { t: "Shared UI primitives — the component dictionary (pills, dots, avatars, pickers, icon map)", d:
 `SHARED UI PRIMITIVES (oracle: archive/src/components.jsx + archive/src/users.jsx). The small reusable elements every screen composes from. EVERY hex below is a START-STATE value that MUST become a --ui-sys-* token at rebuild (flagged "→token"); no inline hex survives into Canonical UI.
 
@@ -2333,7 +3664,114 @@ BUILD-MAP (Canonical UI, ui-* only — NEVER md-*/shadcn). At rebuild these beco
 - MultiOwnerPicker / OwnerPicker → ui-owner-picker (avatar-stack + add-via-autocomplete with placeholder "Search people to add…" + autofocus-on-open + the "Add owner" labelled add button + per-avatar name/"Click to remove" tooltips + arm-then-confirm remove; single-owner mode = the OwnerPicker config: placeholder "Unassigned", clearable, showAvatar) — GAP. OwnersDisplay popover → ui-avatar-stack + ui-menu/popover.
 - ManagerStar → ui-icon (filled star token #E0A21A) + ManagerBadge = ui-chip "Manager". Count/overflow badges ("+N", pending count) → a ui-badge/count primitive — GAP.
 - FilterSection / SortFieldList → ui-chip groups + a ui-menu/segmented control inside the filter/sort popovers; the "All" clear-chip and direction segments are token-driven, not ad-hoc. coordToPct/pctToCoord, normalizeUrl, formatPhone, and formatDateLong stay pure functions (single-sourced here), not components. No inline hex, no shadows beyond the shipped ramp, no md-*/shadcn.` },
-                              { t: "Help — the engagement framework + how to read the map + zone key/strategy reference", d:
+      { t: "Original-design COLOR CENSUS — all ~187 literals reconciled (tokenized / needs-token / superseded / decision)", d:
+`ORIGINAL-DESIGN COLOR CENSUS (sweep a of the ruled 2026-07-02 census). SCOPE: every color literal (hex, rgb/rgba, color-mix) in the ORIGINAL app oracle — archive/src/styles.css, tweaks-panel.jsx, data.js, app.jsx, community.jsx, components.jsx, map.jsx, plan.jsx, profile-page.jsx, scoring.jsx, settings.jsx, setup.jsx, sheet.jsx, sheet-modals.jsx, users.jsx (the remaining archive/src modules — intel, landing, help, palette, record, messaging, profiles, community-modal, store, db — contain NO color literals; verified by grep). METHOD: grep -rhoE for #hex(3-8), rgb/rgba(...), color-mix(...) over archive/src, sort -u. RESULT: 187 DISTINCT LITERAL STRINGS. Case variants (#2F5A26 vs #2f5a26) and spacing variants (rgba(20,16,10,.12) vs rgba(20, 16, 10, .12)) are distinct strings and are each accounted for; one match, the bare string "rgb()" inside a tweaks-panel code comment, is a grep artifact (not a color) and is carried in the SUPERSEDED-DEV line so the arithmetic stays checkable. Every literal below has exactly ONE disposition; multi-context literals name all their uses. NOTHING IS SILENTLY DROPPED.
+
+DISPOSITION KEY: TOKENIZED = already a design-system token in design-system/tokens.css (token named). CAPTURED→TOKEN = already written in a guide box and flagged/destined to become a token (box + future token named). NEEDS-TOKEN (NEW) = meaningful color surfaced by THIS sweep, not yet in any box (original location + meaning + proposed token). SUPERSEDED = incidental old-wrapper styling replaced by the token start-state (grouped by family; values recorded here so they are not lost). DECISION = the user must rule at the Design-page step.
+
+================ A. SURFACE GREYS — the neutral ramp (9 literals, all TOKENIZED) ================
+#FFFFFF (4x: --paper-2 content/cards; zone-ink on the two darkest zone extremes) = --ui-ref-neutral-0 (role --ui-sys-surface-card) and --ui-sys-zone-ink-on-strong.
+#fff (25x: white ink/strokes ON colored fills — checkbox/cm-check/add-person checkmark strokes, comm-vote .on text, btn-danger text, prio-pop-opt.on, yesno-opt.on, filter/sort .on text, impact-chip.on text, cell-cal-day on/hover text, multi-owner-remove icon, twk knob) = the same #FFFFFF value in its "on-fill ink" role → --ui-sys-on-primary / --ui-sys-handle / --ui-sys-zone-ink-on-strong (all resolve to neutral-0). TOKENIZED.
+#FFF (1x: .sheet-cell input.cell-input:focus background — the in-cell editor goes white on focus) = --ui-ref-neutral-0 (--ui-sys-surface-card). TOKENIZED.
+#FEFDFC (3x: html/body runway; .ws-selector:hover; :root --bg-hover) = --ui-ref-neutral-1 (--ui-sys-surface). TOKENIZED.
+#FCFBF9 (1x: --bg) = --ui-ref-neutral-2 (--ui-sys-surface-field). TOKENIZED.
+#F8F7F3 (1x: --paper) = --ui-ref-neutral-3 (--ui-sys-surface-container). TOKENIZED.
+#F4F3ED (4x: :root --paper-hover; explainer/scaffold .btn:hover; .kbd backgrounds) = --ui-ref-neutral-4 (--ui-sys-surface-hover). TOKENIZED.
+#F0EEE6 (1x: --bg-2) = --ui-ref-neutral-5 (--ui-sys-surface-container-highest / outline-subtle). TOKENIZED.
+#E8E6DE (1x: --rule) = --ui-ref-neutral-6 (--ui-sys-outline). TOKENIZED.
+
+================ B. INKS (3 literals, all TOKENIZED) ================
+#666361 (4x: --ink, --ink-2, --ink-3, --ink-4 — the oracle collapsed all four ink slots to one value) = --ui-ref-ink-strong (--ui-sys-on-surface). TOKENIZED.
+#ABA9A4 (1x: --ink-mute) = --ui-ref-ink-muted (--ui-sys-on-surface-muted). TOKENIZED.
+#DFDDD6 (1x: --rule-2) = --ui-ref-ink-faint (--ui-sys-divider / on-surface-faint). TOKENIZED.
+
+================ C. VALENCE + ACCENT CORE (3 TOKENIZED · 3 NEEDS-TOKEN · 1 DECISION) ================
+#3E7A2E (5x: --pos; avatar-palette slot 3; accent-option 3) = --ui-sys-pos. TOKENIZED.
+#B33C3C (1x: --neg) = --ui-sys-neg. TOKENIZED.
+#B5552C (5x: terracotta — the tokens.css accent; Active→Watch dot color Watch in components.jsx StatusDot; avatar-palette DEFAULT slot 1; accent-option 2) = --ui-sys-accent. TOKENIZED (the dot/palette uses are also captured in the Shared-primitives and Users boxes).
+#B07E1F (3x: --neu — the amber neutral-band valence tone, used via var(--neu) by band UI; also avatar-palette slot 6) — tokens.css ships pos/neg/accent but NO neu. NEEDS-TOKEN: --ui-sys-neu = #B07E1F (the third valence tone; help-card.mid borders and band chips key off it).
+#962B2B (1x: .btn-danger:hover — darkened negative) — NEEDS-TOKEN: --ui-sys-neg-hover = #962B2B (danger-button hover tone; note a SECOND danger-hover mechanism exists, filter brightness(0.95) on the sheet-modals btn-danger — unify on the token at build).
+#022B7E (1x: --accent-ink — the darker accent used as TEXT on accent tints, e.g. .tab.active .count color) — NEEDS-TOKEN: --ui-sys-accent-ink (a text-safe dark sibling of the accent; must be re-derived when the accent hue is ruled, never frozen at the blue-era value).
+#024AD8 (7x: the shipped --accent DEFAULT (blue) in styles.css; appConfig fallback accent in app.jsx (3 sites); users.jsx login-brand fallback (2); accent swatch option 1) — DECISION: the accent start-hue is the already-open Design-page ruling (tokens ship #B5552C terracotta; design.md proposed #D96B43; the ORACLE actually shipped #024AD8 blue). The appConfig default + swatch list are captured in the App-shell box (accent "#024AD8", options ["#024AD8","#B5552C","#3E7A2E","#7A2E12","#1F1A14"]); what the user must rule is which hue is the REBUILD start-state. DECISION.
+
+================ D. RELATIONSHIP ZONES (20 literals, all TOKENIZED — single-sourced, never theme-touched) ================
+The 14 zone fills, verbatim data.js STATUSES → tokens.css:
+#D26A6A Proactively Defend = --ui-sys-zone-proactively-defend (also avatar-palette slot 2 — captured in Users box).
+#E29A9A Defend = --ui-sys-zone-defend. #EFBEBE Protect = --ui-sys-zone-protect. #F4D6D6 Respond = --ui-sys-zone-respond. #F8E4E4 Identify = --ui-sys-zone-identify. #F4DBB0 Monitor = --ui-sys-zone-monitor. #F9E4BD Maintain = --ui-sys-zone-maintain (also the impact-chip.on.neu chip background — the band-neutral chip literally wears the Maintain zone tint). #FAEACA Commit = --ui-sys-zone-commit. #FCEFD1 Connect = --ui-sys-zone-connect. #DDE7C2 Cooperate = --ui-sys-zone-cooperate (also KIND_COLORS Philanthropy bg, STAGE_COLORS Approved bg, plan-goal shared-value bg — those pill catalogs reuse the hex and are captured in their boxes). #C2D9A4 Collaborate = --ui-sys-zone-collaborate (also STAGE_COLORS Active bg). #B1CF92 Valuable Relationship = --ui-sys-zone-valuable-relationship. #97C57A High Value Relationship = --ui-sys-zone-high-value-relationship. #74B556 Strategic Partner = --ui-sys-zone-strategic-partner.
+Zone inks/borders: #7a2424 (9x: zone text negative band; zone border negative; PAC/Declined pill fg; app.jsx crash-screen text) = --ui-sys-zone-ink-negative + --ui-sys-zone-border-negative. #7a4a14 (8x: zone text neutral band; impact-chip.on.neu ink; funnel-arrow label ink) = --ui-sys-zone-ink-neutral. #2f5a26 (12x: zone text positive band; the green fg of many pills — Philanthropy/Sustainability/Approved/Active/shared-value/union) = --ui-sys-zone-ink-positive. #1f3f17 (1x: Strategic Partner border) = --ui-sys-zone-border-positive.
+color-mix(in oklch, zoneColor NN%, #F2EFE7) (1x, map.jsx density heatmap — NN = 20 + t*80 where t = cellCount/maxCount; exact formula captured in the sealed Map box) — the mix base #F2EFE7 = --ui-sys-zone-density-base. TOKENIZED.
+
+================ E. PILL CATALOGS — priority / community-stage / kind / plan-goal / segment / geography (30 literals, all CAPTURED→TOKEN) ================
+Every literal here is already written, with its catalog, in a guide box; the box flags "every hex maps to --ui-sys-* tokens; do NOT inline". Future token families: --ui-sys-priority-*-surface/-ink, --ui-sys-stage-*-surface/-ink, --ui-sys-kind-*-surface/-ink, --ui-sys-goal-*-surface/-ink, --ui-sys-segment-*-surface/-ink, --ui-sys-geo-*-surface/-ink.
+PRIORITY (components.jsx PrioPill; Shared-primitives box): #F1DBD0 High bg · #7A2E12 High ink (also accent-option 4) · #EEE6D2 Medium bg (also STAGE Proposed bg) · #6E5419 Medium ink (8x — also segment Corporate Functions ink, STAGE Proposed ink, prof-avatar.org background #6E5419: the org profile-avatar wears the CF-brown — note this avatar reuse, captured field-wise in the Stakeholder-profile box) · #E1E1DA Low bg (also STAGE Idea bg, goal general bg) · #54524A Low ink (also Idea/general ink).
+COMMUNITY KIND_COLORS (community.jsx; Community box): #C2D9E8 Volunteering bg (also goal community bg) · #23496e Volunteering ink (also goal community ink) · #E8DEC2 Corporate Giving bg (also STAGE Under Review bg, goal activist bg) · #6e5419 lowercase Corporate Giving ink (5x — also Under Review ink, goal activist ink; case-distinct from #6E5419) · #E5D0D0 PAC bg (also STAGE Declined bg, goal crisis bg) · #C9E3CC Sustainability bg (also goal union bg) · #DCD3E0 Social Impact bg (also goal dei bg) · #4F3F69 Social Impact ink (also goal dei ink, avatar-palette slot 4).
+COMMUNITY STAGE_COLORS (community.jsx + plan.jsx + profile-page.jsx STAGE text maps; Community box): #D9DEE8 Complete bg (also segment Personal Systems bg) · #2E3F66 Complete ink (7x — also segment Personal Systems ink, seg-dot color, prof-avatar.person background: the person profile-avatar wears the PS-navy) · (Idea/Proposed/Under Review/Approved/Active/Declined all covered above).
+SEGMENT (setup.jsx SEG pills + app.jsx segmentColor; Workspaces box): #E5D6DC Printing bg · #682E45 Printing ink (also avatar-palette slot 7) · #D6E2D2 Corporate Investments bg · #2F5A26 uppercase Corporate Investments ink (case-distinct from zone ink #2f5a26) · #EAE0CB Corporate Functions bg · #7A7164 segment fallback (unknown segment).
+GEOGRAPHY (setup.jsx GEO pills; Workspaces box): #E2DFD7 National bg · #3A3528 National ink · #D5DCEA Federal bg · #2A3E66 Federal ink · #E2D9E8 State bg · #4F2D6E State ink · #DDE7D2 Local bg · #34571F Local ink.
+
+================ F. IDENTITY + CONFIG CATALOGS — status dots, brand/accent swatches, theme presets, avatar palette (17 literals CAPTURED→TOKEN · 1 SUPERSEDED) ================
+#9B9684 (2x: components.jsx StatusDot Dormant + the unknown-status fallback) — Shared-primitives box → --ui-sys-status-dormant (Active = --ui-sys-pos, Watch = --ui-sys-accent, per the same box). CAPTURED→TOKEN.
+#000000 (9x: appConfig BRAND default in app.jsx (3 sites) + settings.jsx brand fallbacks (5) + brand/accent swatch 1) — App-shell + Settings boxes → --ui-sys-brand start-state. CAPTURED→TOKEN.
+SETTINGS 7-SWATCH CATALOG (settings.jsx, shared by brand AND accent pickers; Settings box lists all seven verbatim) → swatch catalog constants (data), rendered via tokens at build: #1976D2 (3x: swatch 2; ALSO mention-dot t-wsp; ALSO seed avatar Devon) · #E64A19 (3x: swatch 3; ALSO mention-dot t-cmy; ALSO seed avatar Jordan) · #AD1457 (2x: swatch 4; seed avatar Alex) · #388E3C (2x: swatch 5; seed avatar Sam) · #00897B (2x: swatch 6; seed avatar Kenji) · #BF360C (1x: swatch 7). All CAPTURED→TOKEN (the two doing double duty as mention dots get their mention tokens in group K).
+#1F1A14 (2x: accent-option 5 in app.jsx; seed avatar u-system Reminders bot) — App-shell box accent options. CAPTURED→TOKEN.
+THEME PRESET SWATCHES (settings.jsx THEMES preview cards; Settings box): #ECE8DD Soapbox bg · #E6E6E8 Undecideds bg · #F1F1F3 Undecideds dot · #7A787E Undecideds border · #262624 Night Shift bg · #52504A Night Shift dot · #C2C0B6 Night Shift border. All CAPTURED→TOKEN (theme-preview card constants; the presets themselves are named token SETS per the wrapper-theme decision).
+AVATAR 8-PALETTE (users.jsx Login + EditProfile, verbatim in the Users box): slots are #B5552C(default)/#D26A6A/#3E7A2E/#4F3F69/#2A6FDB/#B07E1F/#682E45/#5A8F8F. New-to-this-table literals: #2A6FDB (3x: palette slot 5; also a commented tweaks preset) and #5A8F8F (2x: palette slot 8) — CAPTURED→TOKEN → --ui-sys-avatar-1..8 (other slots dispositioned in their primary groups above).
+#FAF8F2 (19x — the WARM NEAR-PAPER INK on accent/colored fills: avatar initials ink (users.jsx Avatar), av-system glyph, msg.mine bubble text, btn-danger text, count-alert/msg-badge/conv-row-pending numerals, filter-chip.on/sort-field.on text, map-history-btn.active text, prof-avatar/sh-photo-preview ink, brand-icon-preview glyph, Soapbox theme dot, app.jsx crash-screen bg) — flagged →token in the Users + Shared-primitives boxes → --ui-sys-on-accent. CAPTURED→TOKEN.
+#F9A825 (1x: data.js seed avatarColor for Marisol) — demo fixture data only, never a design surface; the Demo-seed box regenerates fixtures at rebuild. SUPERSEDED (value recorded here).
+
+================ G. SCORING + LISTS WORKING SURFACES (8 CAPTURED→TOKEN · 3 NEEDS-TOKEN) ================
+#FBF7EB (6x: THE universal row-hover tint — sheet-row hover, scoring-table row hover, ws-menu-item hover, profile-trow hover, plan-sh-trow hover) — flagged →token in the Scoring box → --ui-sys-row-hover. CAPTURED→TOKEN.
+rgba(0,0,0,0.018) (1x: .scoring-cell-ro — the read-only teammate-cell wash) — flagged in the Scoring box → --ui-sys-cell-readonly-wash. CAPTURED→TOKEN.
+#FBF6E6 (2x: computed/derived body cells — Weighted(x,y) + Relationship td.computed; scoring.jsx inline) — flagged in the Scoring box → the derived-cell surface token. CAPTURED→TOKEN.
+#F4EFE0 + #ECE6D4 (2x each: teammate-column header gradient linear-gradient(180deg, #F4EFE0, #ECE6D4)) and #F1E7CD + #E8DCB7 (2x each: computed-column header gradient — the deeper gold tier) — captured in the Scoring box WITH the standing flag: the "no gradients ever" start-state means these resolve to FLAT tokens WITH THE USER (one computed/derived header-surface token family; never silently kept as gradients, never silently flattened). CAPTURED→TOKEN.
+rgba(0,0,0,.04) (6x: weight === 1 baseline tint on the "% of team" readout (scoring.jsx) — flagged in the Scoring box → --ui-sys-weight-baseline; ALSO btn-ghost:hover, plan-back/record-nav-item hover washes, login-bg-grid hairlines — those extra uses are generic 4% ink hover washes superseded by --ui-sys-state-hover-opacity). Primary disposition CAPTURED→TOKEN.
+rgba(62,122,46,.1) (1x: weight > 1 green tint) → --ui-sys-weight-over; rgba(176,126,31,.1) (1x: weight < 1 amber tint) → --ui-sys-weight-under — both flagged in the Scoring box. CAPTURED→TOKEN.
+#FCEFD6 (2x: .sheet-row.selected .sheet-cell — the SELECTED-ROW tint on every cell of a checked Lists row; also .ws-menu-item.active) — deeper sibling of the hover cream; NOT yet in any box. NEEDS-TOKEN: --ui-sys-row-selected = #FCEFD6.
+#ECE2C6 (2x: .sheet-row.selected .sheet-cell.idx — the selected row's index cell goes a step deeper; also .sheet-cell.edit:hover — the editable-cell hover) — NEEDS-TOKEN: --ui-sys-row-selected-strong = #ECE2C6 (doubles as the edit-affordance hover tint).
+#EBE4D2 (1x: .sheet-head .sheet-cell:hover — sortable column-header hover) — NEEDS-TOKEN: --ui-sys-header-hover = #EBE4D2.
+
+================ H. MAP SURFACES (3 CAPTURED→TOKEN · 1 NEEDS-TOKEN) ================
+rgba(250,248,242,.92) (1x: .dot-label — the translucent paper pill under a dot's name) — captured verbatim in the sealed Map box → the map-label surface token. CAPTURED→TOKEN.
+rgba(255,255,255,.5) (2x: .zone-count pill background on zone fills; also a tweaks-panel inset highlight) and rgba(0,0,0,.32) (1x: .zone-count numeral ink) — both captured verbatim in the Map box → --ui-sys-zone-count-surface / --ui-sys-zone-count-ink. CAPTURED→TOKEN.
+rgba(0,0,0,.18) (11x — PRIMARY: the map's structural hairlines: .zone right/bottom borders (both the main map and the help-page grid) and .axis-lines crosshair; ALSO minor 18%-black shadows: dot-inner, slider thumbs, ws-selector — those shadow uses fold into the elevation ramp) — the zone-grid hairline over colored fills is a real design value no neutral token covers. NEEDS-TOKEN: --ui-sys-zone-grid-line = rgba(0,0,0,.18).
+
+================ I. ACCENT-TINTED WASHES — TWO FROZEN RGB FAMILIES (20 literals, all NEEDS-TOKEN as ONE accent-derived scale) ================
+SWEEP FINDING: the oracle hardcodes accent washes as raw RGB in TWO hue families — rgba(2,74,216,x) (the blue-era accent) and rgba(181,85,44,x) (the terracotta-era accent) — so NONE of them re-derive when --accent changes (a live theming BUG: re-accenting the oracle left every focus ring and selected-wash frozen). REBUILD RULE: all 20 collapse into ONE accent-derived alpha scale computed from --ui-sys-accent (color-mix in the token layer), e.g. --ui-sys-accent-tint-faint (~4-8%), --ui-sys-accent-tint-soft (~10-15%), --ui-sys-accent-tint-strong (~18-30%), plus --ui-sys-focus-wash for the focus ring. Every literal + exact home:
+BLUE FAMILY (12): rgba(2,74,216,.15) (17x — THE universal focus ring, box-shadow 0 0 0 2-3px, on detail-row/cm-textarea/xy-input/plan+site+record inputs and selects) → --ui-sys-focus-wash. rgba(2,74,216,.12) (2x: subheader-field + mf-input focus — the 12% focus variant). rgba(2,74,216,0.12) (1x: .profile-tab.active .profile-tab-count background). rgba(2,74,216,.1) (1x: .plan-tag background). rgba(2, 74, 216, 0.08) (1x: .view-all-link:hover). rgba(2,74,216,.07) (1x: .record-nav-item.on — active record-nav wash). rgba(2,74,216,0.06) (1x: column drag-over target). rgba(2, 74, 216, 0.05) (1x: .open-ws-item.is-open). rgba(2, 74, 216, 0.04) (2x: .roles-row.self + open-ws-item hover). rgba(2,74,216,0.04) (1x: .profile-entry:hover / file-entry hover).
+TERRACOTTA FAMILY (8): rgba(181,85,44,.2) (1x: selected map-dot ring). rgba(181, 85, 44, 0.3) (1x: .picked-chip border). rgba(181, 85, 44, 0.18) (1x: picked-chip hover). rgba(181,85,44,.15) (2x: login-field focus rings). rgba(181,85,44,.12) (2x: .tab.active .count bg + .ws-card.active ring). rgba(181, 85, 44, 0.1) (1x: picked-chip bg). rgba(181,85,44,.06) (3x: user-picker-row.picked + conv-row.active washes + the login-bg radial glow). rgba(181,85,44,0.04) (1x: .team-add-card:hover).
+
+================ J. VALENCE TINTS (3 NEEDS-TOKEN) + MENTION DOTS (2 NEEDS-TOKEN) + MANAGER AMBER (1 CAPTURED→TOKEN · 2 NEEDS-TOKEN) ================
+rgba(179,60,60,.5) / rgba(176,126,31,.5) / rgba(62,122,46,.5) (1x each: help-card.neg/.mid/.pos borders — 50% neg/neu/pos card outlines on the Help page) — NEEDS-TOKEN: valence border tints --ui-sys-neg-border-soft / --ui-sys-neu-border-soft / --ui-sys-pos-border-soft (build as 50% color-mix of the valence tokens).
+rgba(179, 60, 60, 0.85) (1x: .multi-owner-remove — the red hover overlay that covers an owner avatar with an X) — NEEDS-TOKEN: --ui-sys-neg-overlay (85% neg scrim on the avatar circle).
+MENTION DOTS (messaging composer + rendered chips; the Messaging box rules they map to distinct tokens but records no values — THIS table is the value record): #2E7D32 t-stk stakeholder (1x) → --ui-sys-mention-stakeholder; #6A1B9A t-pln plan (2x — also seed avatar Priya) → --ui-sys-mention-plan; (t-wsp #1976D2 → --ui-sys-mention-workspace and t-cmy #E64A19 → --ui-sys-mention-community share the swatch literals dispositioned in group F). NEEDS-TOKEN x2 here.
+MANAGER AMBER: #E0A21A (1x: ManagerStar filled star) — flagged in the Users box → --ui-sys-manager-amber. CAPTURED→TOKEN. rgba(224,162,26,0.14) (1x: .manager-badge background — 14% amber wash) and #7A5414 (1x: .manager-badge ink — deep amber-brown) — the badge pair was NOT value-recorded in any box. NEEDS-TOKEN: --ui-sys-manager-badge-surface = rgba(224,162,26,.14) / --ui-sys-manager-badge-ink = #7A5414.
+
+================ K. FUNNEL RAMP + SCROLLBAR (5 literals: 1 CAPTURED→TOKEN · 4 NEEDS-TOKEN) ================
+#E2A85F (2x: the Lists "Winnable middle" band swatch (sheet.jsx inline) AND .funnel-1 "Purpose" arrow fill on Help) — already flagged →token in the Lists box → --ui-sys-band-middle (doubles as funnel stage 1). CAPTURED→TOKEN.
+#F0C988 (1x: .funnel-2 "Plan" arrow) and #F8E2B0 (1x: .funnel-3 "Execute" arrow) — the Help box rules the funnel becomes a tokened SVG but did not record the original amber ramp. NEEDS-TOKEN: --ui-sys-funnel-2 = #F0C988 / --ui-sys-funnel-3 = #F8E2B0 (with --ui-sys-band-middle as stage 1 — a 3-step amber ramp).
+#DCD3BF (2x: webkit scrollbar thumb + Firefox .is-scrolling scrollbar-color — the warm auto-hiding thumb) and #C5BBA3 (1x: thumb hover) — the whole reveal-on-scroll scrollbar treatment is a deliberate design feature not yet tokenized anywhere. NEEDS-TOKEN: --ui-sys-scrollbar-thumb = #DCD3BF / --ui-sys-scrollbar-thumb-hover = #C5BBA3.
+
+================ L. SUPERSEDED — old-wrapper incidental styling, replaced by the token start-state (21 literals, grouped; every value recorded) ================
+System-conversation washes — EXCEPTION, these two are CAPTURED→TOKEN not superseded: rgba(31, 26, 20, 0.03) (conv-row.system bg) + rgba(31, 26, 20, 0.08) (its hover) are captured verbatim in the Messaging/Cadence boxes → system-row wash tokens. (Counted under CAPTURED→TOKEN.)
+SHADOWS → the tokens.css elevation ramp (--ui-sys-elevation-1/2/3) replaces every bespoke shadow; originals recorded: rgba(50,40,20,.06) (3x, --shadow-card two-layer card shadow) · rgba(50,40,20,.10) (1x, login-card 60px drop) · rgba(0,0,0,.14) (2x, cell-dd-menu + cell-cal popover shadows) · rgba(0,0,0,.16) (1x, prio-pop) · rgba(0,0,0,.28) (1x, cmdk + record-modal 60px) · rgba(0,0,0,.12) (7x, mention-pop/drawer shadows + tweaks chrome) · rgba(20,16,10,.10) (2x, drawer/side-pop shadows) · rgba(20,16,10,.22) (1x, modal shadow) · rgba(20,16,10,.12) + rgba(20, 16, 10, .12) (1x each, spacing variants — drawer shadow + side-veil).
+SCRIMS → --ui-sys-scrim replaces: rgba(20,16,10,.32) (1x, modal-veil) · rgba(20,16,10,.18) (1x, drawer-veil) · rgba(31,26,20,.28) (1x, cmdk-backdrop — NOTE it adds backdrop-blur 5px; carry the blur decision to the palette build box).
+STATE WASHES → --ui-sys-state-hover/pressed-opacity replace: rgba(0,0,0,.08) (4x: ws-tab-close hover; weight-track rail; comm-value-bar track — the two TRACK uses map to --ui-sys-track-off) · rgba(0,0,0,.06) (7x: .tab .count + .filter-count neutral count-pill backgrounds (→ the ui-badge neutral-tone token, value recorded here) + tweaks chrome) · rgba(0,0,0,.05) (1x: record-nav-collapse hover) · rgba(0,0,0,.1) (7x: settings-swatch-preview border + tweaks chrome) · rgba(0,0,0,.4) (1x: sheet-modals option-count muted text → --ui-sys-on-surface-muted).
+ONE-OFFS: rgba(255,255,255,.85) (2x: impact-chip.on white swatch — resolves to on-fill white at 85%, a chip-internal detail owned by the tokened chip; + tweaks field focus) · #000 (1x: .btn-primary:hover — "darken to black" hover, replaced by the pressed state layer on --ui-sys-primary) · #F9A825 (dispositioned in group F, demo seed).
+
+================ M. SUPERSEDED-DEV — the Tweaks panel's own floating chrome (28 literals, one block; dev-only, never app UI) ================
+tweaks-panel.jsx styles ITS OWN floating dev panel (glassy card, iOS-style toggle, its own scrollbars/knobs/chips) plus commented-out Claude-theme preset arrays. All replaced wholesale: the rebuild's Design page is a Canonical-UI Settings pane. Recorded: rgba(250,249,247,.78) panel glass bg · #29261b (4x) panel ink · rgba(41,38,27,.72/.6/.55/.5/.45) label/value inks · rgba(255,255,255,.6/.9) field fills · rgba(0,0,0,.15/.25/.2/.3/.5/.78/.85/.88) borders/knobs/scrollbars/buttons/caret-svg · #34c759 iOS toggle-on green · #111 + #fafafa (contrast-check comment pair) · commented preset palettes #D97757 (4x, Claude terracotta) / #f6f4ef (2x) / #1F8A5B / #7A5AE0 / #475569 / #0f172a / #f1f5f9 · plus the literal string rgb() inside a comment (grep artifact, not a color — carried here so the census arithmetic is checkable).
+
+================ TOTALS — coverage check ================
+Distinct literal strings found by the sweep: 187 (matches the expected ~187; = 186 true color literals + 1 comment artifact).
+TOKENIZED ................ 34  (9 surfaces + 3 inks + 3 valence/accent core + 19 zone family incl. the color-mix density formula)
+CAPTURED→TOKEN ........... 66  (30 pill catalogs + 17 identity/config catalogs + 8 scoring/lists + 3 map + 2 system-row washes + #FAF8F2 + #E0A21A + #E2A85F + 2 weight tints + #9B9684 + #000000... itemized above)
+NEEDS-TOKEN (NEW) ........ 37  (20 accent-wash family + 4 valence tints/overlay + 2 mention dots + 2 manager badge + 3 selection/header tints + 2 funnel + 2 scrollbar + --ui-sys-neu + neg-hover + accent-ink + zone-grid-line)
+DECISION ................. 1   (#024AD8 — the accent start-hue ruling)
+SUPERSEDED ............... 21  (shadows/scrims/state-washes/one-offs — replaced by elevation ramp, scrim, state layers; all values recorded)
+SUPERSEDED-DEV ........... 28  (tweaks-panel chrome + commented presets + 1 grep artifact)
+SUM = 34 + 66 + 37 + 1 + 21 + 28 = 187. Nothing dropped: every distinct literal appears exactly once above (multi-context literals carry all their uses in their one entry).
+This box is entirely lossless for sweep (a) COLORS of the original-design census.` },
+                                    { t: "Help — the engagement framework + how to read the map + zone key/strategy reference", d:
 `HELP SCREEN (oracle: archive/src/help.jsx — HelpView). This is the static "How to read this" reference page. It reads STAKEHOLDER_DATA (D) for STATUS_ORDER, STATUSES, and GRID — every color/strategy/action shown here is single-sourced from the Relationship-engine box (the STATUSES catalog); this page only RENDERS them, it does not define them. The page is a centered reading column (outer .help-wrap, inner .help-inner) holding EXACTLY FIVE rendered blocks beneath an opening prelude: prelude + (1) framework funnel + (2) how to read the map (spectrum + three help-cards) + (3) the 24-zones grid + (4) strategy reference + (5) how scores become coordinates.
 
 PRELUDE (.help-prelude > p) — VERBATIM, with three emphasized words wrapped in <em>:
@@ -2375,7 +3813,26 @@ Then a <pre> formula block (styled: background var(--bg-2), border 1px solid var
   zone    = lookup(final.x, final.y)
 (The math: weighted mean of each axis over team members, then the (x,y) pair is looked up against GRID to name the zone.)
 
-BUILD-MAP (Canonical UI, ui-* only — NEVER md-*/shadcn). Render this as a ui-* page shell MINUS the right inspector rail (this is a reading page, no metadata rail): use the standard app-shell/sidebar content region with a single centered reading column. The spectrum strip and any zone-key swatches are ui-chip swatches tinted from the --ui-sys-zone-* tokens (the 14 zone colors are first-class tokens — never inline hex). The 24-zone 4x6 grid is the SANCTIONED tokened inline SVG, drawn identically to the Map box's grid so the two surfaces stay visually consistent (same cell fills from --ui-sys-zone-*, same proportions). THE ENGAGEMENT FUNNEL FIGURE (Block 1) — ruled build, nothing left to invent: the three arrow stages ("Purpose" / "Plan" / "Execute") are a SANCTIONED tokened inline SVG figure, the same treatment as the 24-zone grid — three chevron/arrow shapes laid left-to-right, every fill and label ink drawn from --ui-sys-* tokens (surface-container fills stepping toward the accent role for stage emphasis; never inline hex, no gradients), with the stage labels set in the body face (Inter) inside the SVG; the three 4-step columns beneath are tokened panels (--ui-sys-surface-card on the runway), each holding a ui-list of exactly four rows, where the lead step (.funnel-step-lead) is a token-driven emphasized list-row variant (stronger ink + fill from --ui-sys-* tokens) — never ad-hoc CSS, never a bespoke div stack. Titles use the Newsreader title typeface token; body uses Inter. The formula <pre> becomes a tokened code/quote surface (no mono family is shipped — render it in the body face at a fixed/tabular setting or as a plain bordered panel; do NOT introduce a mono token; the three formula STRINGS above stay character-for-character verbatim, including the Σ/× glyphs and the alignment spaces). Help-cards become tokened panels (ui surface-card on the runway), bullets as ui-list. No gradients, no shadows beyond the shipped elevation ramp, no ad-hoc color.` },
+BUILD-MAP (Canonical UI, ui-* only — NEVER md-*/shadcn). Render this as a ui-* page shell MINUS the right inspector rail (this is a reading page, no metadata rail): use the standard app-shell/sidebar content region with a single centered reading column. The spectrum strip and any zone-key swatches are ui-chip swatches tinted from the --ui-sys-zone-* tokens (the 14 zone colors are first-class tokens — never inline hex). The 24-zone 4x6 grid is the SANCTIONED tokened inline SVG, drawn identically to the Map box's grid so the two surfaces stay visually consistent (same cell fills from --ui-sys-zone-*, same proportions). THE ENGAGEMENT FUNNEL FIGURE (Block 1) — ruled build, nothing left to invent: the three arrow stages ("Purpose" / "Plan" / "Execute") are a SANCTIONED tokened inline SVG figure, the same treatment as the 24-zone grid — three chevron/arrow shapes laid left-to-right, every fill and label ink drawn from --ui-sys-* tokens (surface-container fills stepping toward the accent role for stage emphasis; never inline hex, no gradients), with the stage labels set in the body face (Inter) inside the SVG; the three 4-step columns beneath are tokened panels (--ui-sys-surface-card on the runway), each holding a ui-list of exactly four rows, where the lead step (.funnel-step-lead) is a token-driven emphasized list-row variant (stronger ink + fill from --ui-sys-* tokens) — never ad-hoc CSS, never a bespoke div stack. Titles use the Newsreader title typeface token; body uses Inter. The formula <pre> becomes a tokened code/quote surface (no mono family is shipped — render it in the body face at a fixed/tabular setting or as a plain bordered panel; do NOT introduce a mono token; the three formula STRINGS above stay character-for-character verbatim, including the Σ/× glyphs and the alignment spaces). Help-cards become tokened panels (ui surface-card on the runway), bullets as ui-list. No gradients, no shadows beyond the shipped elevation ramp, no ad-hoc color.
+
+SKELETON TREE (ORIGINAL-DESIGN STRUCTURE CENSUS, 2026-07-03 — the literal region tree extracted from archive/src/help.jsx (HelpView), in render order; the build assembles against THIS tree, never prose) —
+div "help-wrap" — the outer PAGE CONTAINER. Canonical UI: the app-shell content region (layout row — token-only container; no inspector rail on this page).
+. div "help-inner" — the centered reading column. Layout column — token-only container.
+. . div "help-prelude" > p — the verbatim prelude with the three em-wrapped words. Maps to tokened body text on the runway.
+. . div "help-title" — "How to plan for and engage stakeholders". Maps to a title-typeface heading (Newsreader token).
+. . div "engage-funnel" — the funnel figure. Maps to the SANCTIONED tokened inline-SVG figure + panels per the BUILD-MAP above.
+. . . div "funnel-arrows" > 3 x div "funnel-arrow" (also "funnel-1" / "funnel-2" / "funnel-3") > span — "Purpose" / "Plan" / "Execute".
+. . . div "funnel-cols" > 3 x div "funnel-col" > 4 x div "funnel-step" each (the FIRST step per column also carries "funnel-step-lead"). Maps to three tokened panels each holding a ui-list of exactly four rows (lead row = the emphasized list-row variant).
+. . div "help-title" — "How to read the stakeholder map".
+. . div "spectrum" > one div "sw" per D.STATUS_ORDER entry (inline background/color from STATUSES) — the horizontal zone legend. Maps to ui-chip swatches tinted from the --ui-sys-zone-* tokens.
+. . div "help-cols" > 3 x div "help-card" (variant classes "neg" / "mid" / "pos"): each = h3 + ul "bullets" (4 / 5 / 5 li respectively) + [div "influencer-tag" on the neg and pos cards ONLY]. Maps to tokened panels with ui-list bullets.
+. . div "help-grid-section" (the 24 zones) — h2 + p (the x/y strong-emphasis paragraph) + div "help-grid-figure" > div "grid-body" > 24 x div "zone" (inline zone colors) each holding div "zone-label" (inline fontSize 11.5); then div "map-axis-legend" (inline marginTop 12) > 3 spans (justifySelf start / center / end legend strings). Maps to the sanctioned tokened inline-SVG grid, drawn identically to the Map box's grid.
+. . div "help-grid-section" (strategy reference) — h2 + p + one ANONYMOUS inline-styled grid div (gridTemplateColumns "1fr 1fr", gap 10) > 14 x ANONYMOUS inline-styled card div (1px var(--rule) border, radius 10, padding 12px 14px, paper background, inner grid "8px 1fr" gap 12, align start), each = spine div (8px wide, full height, radius 4, zone color) + content div > header div (flex gap 8: strong zone name 13px + span "muted" "·" 11px + em strategy 12px in the zone text color) + div "muted" action line (12px, line-height 1.45). Maps to token-driven card composition with --ui-sys-zone-* spines — the anonymous inline-styled divs are absorbed into that composition, never rebuilt as ad-hoc divs.
+. . div "help-grid-section" (formula) — h2 + p + pre (the ANONYMOUS inline-styled formula block: var(--bg-2) background, 1px var(--rule) border, radius 8, padding 12px 14px, mono face, 12px, var(--ink-2), margin 0, overflowX auto) holding the three verbatim formula lines. Maps to the tokened code/quote surface per the BUILD-MAP (no mono family shipped).
+CLASSNAME ACCOUNTING — every className region in help.jsx appears in the tree above: help-wrap, help-inner, help-prelude, help-title, engage-funnel, funnel-arrows, funnel-arrow funnel-1/-2/-3, funnel-cols, funnel-col, funnel-step, funnel-step-lead, spectrum, sw, help-cols, help-card neg/mid/pos, bullets, influencer-tag, help-grid-section, help-grid-figure, grid-body, zone, zone-label, map-axis-legend, muted — NONE dropped. The three ANONYMOUS inline-styled regions (the strategy-reference outer grid, its 14 cards, and the formula pre) are named explicitly above. The tree CONFIRMS the box (prelude + exactly five blocks, in the stated order, with the stated strings and per-card bullet counts); no corrections required.
+
+UX HANDLER CENSUS (ORIGINAL-DESIGN UX CENSUS, 2026-07-03 — every event handler in archive/src/help.jsx) —
+0 handlers, all accounted — the module contains NO event handlers of any kind: no onClick / onPointer* / onChange props, no addEventListener, no effects, no local state, no refs. HelpView is a 100% static render from STAKEHOLDER_DATA (STATUS_ORDER, STATUSES, GRID); the only interactivity on the page is browser-default scrolling and text selection, exactly as the box describes.` },
       { t: "Design system — RULED: Canonical UI (design-system/) is the go-forward; shadcn/Tailwind plan superseded (history preserved)", d:
 `RULING (2026-06-13) — the go-forward design system is CANONICAL UI: this repo's design-system/ (un-branded ui-* web components + the --ui-ref-*/--ui-sys-* token contract + the binding manifest.json), built in PRs #1–#6 and previewable at design-system/preview.html + wireframes.html. It absorbed everything this box authorized: the Soapbox surface/ink palette is encoded verbatim in tokens.css (--ui-ref-neutral-0..6, --ui-ref-ink-strong/muted/faint); the layout depth rules (sidebars never white · main runway #FEFDFC · cards/papers #FFFFFF · sidebar fields #FCFBF9) map to --ui-sys-surface-container / -surface / -surface-card / -surface-field; the 14 zone + priority colors are first-class --ui-sys-zone-* tokens; themes (Soapbox/Undecideds/Night Shift) = token-set swaps via the Settings → Design dashboard. The shadcn/ui + Tailwind implementation plan below is SUPERSEDED (Tailwind utilities = a thousand styling surfaces; it drifted — see design-system/README) and is preserved for losslessness only. Its open DECISIONS resolve as: titles = Newsreader (encoded in tokens.css) · mono = REJECTED, Inter tnum only · accent = tokens.css ships --ui-sys-accent #B5552C vs design.md's #D96B43 — pick at the Design-page pass (token edit; must never collide with the zone colors) · shadows = tokens.css ships a subtle elevation ramp for overlays vs the "no shadows ever" start-state rule — pick at the Design-page pass (token edit). Component vocabulary translation: shadcn Button→ui-button · Input/Textarea→ui-text-field · Select→ui-select · Combobox/Command→ui-autocomplete (+ ui-dialog for the ⌘K palette) · TanStack Table→ui-data-table / ui-stakeholder-table · tooltips/popovers/dialogs/menus/tabs/chips/etc.→ the matching ui-* component · lucide-react→<ui-icon> Material Symbols. The rule that every box carries its VISUAL CUES still binds — cues now name ui-* components + --ui-sys-* tokens.
 
@@ -2476,6 +3933,8 @@ No functional build in the demo — the demo renders the locked affordances only
 
 VERIFICATION LOOP RESULT (2026-07-02/03) — the capture ran a 3-round adversarial verify-fix loop against the oracle (90 agents; 225 findings raised, 126 high/medium). Round 1 caught structural misses (dead writes, fake wiring, missing anatomies); round 2 precision residue; round 3 a 26-finding tail whose fixes were applied with per-finding oracle evidence (file+line) after a usage-limit interruption. Clusters that passed a BLIND clean verify: engine-data (data.js catalogs/zones/formulas), users, cross-consistency. All other clusters: every confirmed finding repaired; a fourth blind pass has not been run — order one on demand before sealing if desired. Every UNFLAGGED-FAKE found (theme/timeZone dead writes · showAll dead state · toggleAssignment dead code · plan-level stakeholder wiring absent · community manager-gating unenforced · comma-commit promised but unimplemented · Store.reset() unwired · abstain vote unreachable · first-touch 0,0 write · missing updatedAt stamps) is now recorded in its box as an explicit DO-NOT-REPLICATE / MAKE-REAL rule — per the standing law: the ORIGINAL DESIGN IS ACCURATE, the plumbing often is not; the rebuild wires it for real.
 
+ORIGINAL-DESIGN CENSUS RESULT (2026-07-03) — four sweeps over the ORIGINAL app completed and written into the boxes: COLORS — all 187 distinct literals reconciled (34 tokenized · 66 captured→token · 37 new needs-token · 1 user decision (#024AD8 vs terracotta accent) · 21 superseded with rationale · 28 dev-only) in the Color-census box, including the frozen accent-wash theming bug now collapsed to an accent-derived tint scale. STRUCTURE — a SKELETON TREE (nested region tree from the literal JSX, every className accounted or explicitly absorbed into a ui-* shadow DOM) now sits in every screen box: the build assembles against trees, never prose. UX — the handler census is complete per box (app shell 87 · community 67 · plan 56 · lists 48 · modal 43 · settings 43 · workspaces 29 · messaging 20 · scoring 19 · profiles/record/palette 52 · map 9 · workHQ 4 · users 50 — every binding accounted). CONNECTIVITY — 94 cross-record edges mapped in the Connectivity-census box: 67 real · 12 fragile (window-bridges → first-class routing) · 11 fake-or-dead (make-real list) · 4 one-way; plus a latent stale-mention render crash flagged do-not-replicate.
+
 TRACEABILITY (domain → box → oracle → ui-* → status):
 • Component law / design system → Box 1 "Canonical UI is the ONLY kit" + "Design system" box → CLAUDE.md + design-system/ (tokens.css, manifest.json) → ALL ui-* → RULED 2026-06-13 (history preserved).
 • Type & icon system → "Type & Icon system" box → design-system/tokens.css → ui-icon (Material Symbols) → ruled, re-confirm.
@@ -2520,7 +3979,7 @@ COVERAGE GATES (must pass before the build phases start):
 5) The recorded ORACLE BUGS deliberately NOT replicated: goalNotes set() called with two args (never persists); demo auto-promote-to-manager (3 sites); the stale hp_map_col_order_v2 prose comment in project/db.js (the live code — archive/src/sheet.jsx read AND write — plus APP_SPEC.md use hp_map_col_order_v3; v3 is the captured truth, ship exactly one key).
 
 OUTSTANDING (after this pass): forward-design boxes (Whiteboard, Enterprise ×2, Demo features, Paid add-ons, Database schema) get their UI build-maps retargeted to ui-* as they are sealed; the longform book docs/STAKEHOLDR_BOOK.md Parts III–IX remain to be written as the prose mirror.` },
-      { t: "Command palette (⌘K) — global search across 5 entity types", d:
+            { t: "Command palette (⌘K) — global search across 5 entity types", d:
 `CommandPalette (archive/src/palette.jsx) is the universal Cmd/Ctrl-K command palette: a thin centered search bar over a blurred backdrop, with grouped autocomplete across five entity types. Arrow keys move the active row, Enter goes, click goes. It is GLOBAL and independent of the per-page inline search bars (those keep working on their own).
 
 PROPS: open (bool), onClose, stakeholders, plans, community, workspaces, users, onGo. onGo(type, id) is the single navigation callback — type is one of "stakeholder" / "plan" / "community" / "workspace" / "user".
@@ -2559,7 +4018,35 @@ STRUCTURE / RENDER:
   - Else map capped to buttons (key = r.type + r.id), class "cmdk-row" (+ " active" when i === active). onMouseEnter sets active=i (hover updates the highlight); onClick calls go(i). Row contents: span.cmdk-type = r.type (the small type chip e.g. Stakeholder/Plan/...); span.cmdk-label = r.label; and if r.sub, span.cmdk-sub.muted = r.sub.
   - When ql is empty (no query yet) the results block is not rendered at all — empty query shows nothing.
 
-REBUILD BUILD-MAP (Canonical UI ruling — never md-*/shadcn): compose from existing components. The backdrop + centered bar = a ui-dialog variant (scrim with backdrop-blur; click-scrim and Escape close; autofocus the field on open). The search field + live grouped results list = ui-autocomplete (input with leading ui-icon "search", a capped result list, keyboard-navigable active row with clamped Arrow keys, Enter to commit, mouse-enter to set active). Each result row's type tag = ui-chip (small, the entity type), with a label and a muted ui-* secondary sub line. The trailing "Enter" affordance = a ui-button (disabled when no results). All icons via ui-icon ligatures (search). No raw div/span UI primitives, no ad-hoc styling — backdrop blur, sizing, and the active-row highlight all live in --ui-sys-* tokens.` },
+REBUILD BUILD-MAP (Canonical UI ruling — never md-*/shadcn): compose from existing components. The backdrop + centered bar = a ui-dialog variant (scrim with backdrop-blur; click-scrim and Escape close; autofocus the field on open). The search field + live grouped results list = ui-autocomplete (input with leading ui-icon "search", a capped result list, keyboard-navigable active row with clamped Arrow keys, Enter to commit, mouse-enter to set active). Each result row's type tag = ui-chip (small, the entity type), with a label and a muted ui-* secondary sub line. The trailing "Enter" affordance = a ui-button (disabled when no results). All icons via ui-icon ligatures (search). No raw div/span UI primitives, no ad-hoc styling — backdrop blur, sizing, and the active-row highlight all live in --ui-sys-* tokens.
+
+SKELETON TREE (literal region tree extracted from the archive/src/palette.jsx JSX — the build assembles against THIS tree, never prose. One node per line, nested in source order. Each node: what it is → what it contains → Canonical UI mapping. Bracketed [conditions] gate a node. The whole surface renders null when open is false.)
+
+SURFACE — THE PALETTE OVERLAY:
+div.cmdk-backdrop [onClick=onClose] — the full-screen blurred veil; the ONLY top-level node → ui-dialog variant scrim (backdrop-blur token)
+  div.cmdk [onClick stopPropagation] — the centered thin bar/card; clicks inside never close → ui-dialog surface hosting the ui-autocomplete
+    div.cmdk-input — the input row (layout row — token-only container)
+      Icon "search" class ico → leading ui-icon
+      input [ref=inputRef; value=q; onChange; onKeyDown=onKey; placeholder "Search names, orgs, tags, issues, sites, states…"] → ui-autocomplete input / ui-text-field
+      button.cmdk-go "Enter" [disabled when capped.length===0; onClick → go(active)] → ui-button (trailing commit affordance)
+    [ql truthy] div.cmdk-results — the results list; NOT rendered at all on an empty query → autocomplete menu / ui-list
+      [capped empty] div.cmdk-empty.muted "No matches." → empty state text
+      [else] button.cmdk-row[.active when i===active] ×capped (≤24) [key r.type+r.id; onMouseEnter; onClick] → ui-list interactive row (active-row highlight via token)
+        span.cmdk-type — r.type ("Stakeholder"/"Plan"/"Community"/"Workspace"/"Person") → ui-chip small (entity-type tag)
+        span.cmdk-label — r.label → primary row text
+        [r.sub] span.cmdk-sub.muted — r.sub → secondary muted text
+
+CLASSNAME ACCOUNTING: every className region in palette.jsx appears above — cmdk-backdrop, cmdk, cmdk-input, ico, cmdk-go, cmdk-results, cmdk-empty, muted, cmdk-row (active), cmdk-type, cmdk-label, cmdk-sub. None silently dropped. The tree confirms the box body — no corrections needed.
+
+UX HANDLER CENSUS (archive/src/palette.jsx — every event handler in the module, enumerated with exact behavior):
+1. Backdrop (cmdk-backdrop) onClick → onClose.
+2. Inner box (cmdk) onClick → e.stopPropagation() (clicks inside never bubble to the backdrop, so they never close).
+3. Input onChange → setQ(e.target.value) AND setActive(0) (every keystroke resets the highlight to the first row).
+4. Input onKeyDown → onKey: ArrowDown = preventDefault + clamp active up to capped.length−1; ArrowUp = preventDefault + clamp active down to 0; Enter = preventDefault + go(active); Escape = onClose(). (Escape is handled on the focused input — which is always focused after the 20ms open-focus effect.)
+5. "Enter" button (cmdk-go) onClick → go(active); disabled when capped.length === 0.
+6. Result row (cmdk-row) onMouseEnter → setActive(i) (hover moves the highlight).
+7. Result row (cmdk-row) onClick → go(i).
+Plus the per-result go closures (r.go = () => onGo(type, id), built during matching, invoked by go(i) which then calls onClose()) and the [open] effect (reset q/active + 20ms focus — state sync, not an event handler; captured under OPEN/CLOSE BEHAVIOR). 7 handlers (7 DOM handler sites), all accounted — every one is already described in the body above; no missing interactions found.` },
     ]
   },
   {
