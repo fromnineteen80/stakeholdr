@@ -160,12 +160,17 @@ the guide source.
   box.
 - **Book: COMPLETE.** Parts I–IX (~17k words) in `docs/STAKEHOLDR_BOOK.md`, written from
   the verified boxes.
-- **Design system:** 36 components (ui-avatar added) + manifest + preview; Cream + Modern
-  theme token sets with a toggle on preview.html/wireframes.html; shell rulings implemented
-  in the wireframes. Known GAPs to build before use (see INDEX gate 2): ui-textarea/
-  multiline, plain field variant, badge/count, owner-picker, coachmark, whiteboard canvas.
+- **Design system:** 41 components + manifest + preview; Cream + Modern theme token sets
+  with a toggle on preview.html/wireframes.html; shell rulings implemented in the
+  wireframes. GAP kit BUILT 2026-07-03 (registered + gallery'd + smoke-tested): ui-card,
+  ui-textarea, ui-text-field variant=plain, ui-badge (+ --ui-sys-badge-* tokens),
+  ui-owner-picker, ui-coachmark; the 37 census needs-token literals live in tokens.css as
+  23 tokens (washes = accent-derived color-mix scale). Remaining GAPs (INDEX gate 2):
+  dashed callout, drag-reorder grip, ui-swatch-card, whiteboard canvas (awaits ruling);
+  command palette = composition, no new component. BLIND VERIFY PASS DONE (9 cold
+  auditors + independent census recount; 56 findings repaired; see the INDEX stamp).
 - **WHAT REMAINS (in order):** (1) USER SEALING — the user confirms boxes on the `.io`
-  (merge the branch to publish; a fourth blind verify pass is available on demand);
+  (merge the branch to publish);
   (2) the three OPEN DESIGN DECISIONS (accent hue incl. the #024AD8-vs-terracotta census
   find; shadows vs flat; Cream vs Modern wrapper); (3) BUILD PHASES executed from the
   sealed boxes only — assemble against the skeleton trees, honor every do-not-replicate /
