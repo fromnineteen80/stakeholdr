@@ -172,6 +172,31 @@ the guide source.
   make-real flag, close the INDEX coverage gates (GAP components registered first, all
   needs-token hexes tokenized, no literal hex in app code).
 
+## BUILD PROTOCOL (binding on every build session — this is how the rebuild "works as planned")
+1. **Build ONLY from the sealed boxes** in `src/guide.jsx` (+ the book/APP_SPEC as prose
+   context). After sealing, `archive/` + `project/` are never read again.
+2. **Per screen: assemble against the SKELETON TREE, node by node.** Open the box, read
+   its tree, place each node as its mapped `ui-*` component/slot. Never author layout
+   divs — structure lives inside components. A tree node with no component = STOP: build
+   the GAP into `design-system/`, register it in `manifest.json`, then continue.
+3. **Every element = the exact `ui-*` tag + variant + props the box names.** The manifest
+   is the contract; inventing an element or hand-rolling a lookalike is a build failure.
+4. **Zero literal hex/px styling in app code.** All look via `--ui-sys-*` tokens; the
+   Color-census box's needs-token entries must exist in `tokens.css` BEFORE the screen
+   that uses them. No `!important`, no component overrides, no utility classes.
+5. **Honor every DO-NOT-REPLICATE / MAKE-REAL flag.** The original design is accurate;
+   its broken plumbing is not. Dead writes get wired, fake links get real routes
+   (first-class routing — no `window.__*` bridges), unreachable controls become real.
+6. **Per-phase acceptance, before moving on:** `npm run build` green → headless-Chromium
+   smoke (zero real console errors — the script pattern lives in this session's history;
+   re-create as `scripts/smoke.mjs`) → tree-check (every skeleton node for the new screen
+   present) → connectivity check (that screen's census edges wired REAL) → push small →
+   the user confirms on the `.io` before the next phase begins.
+7. **Order:** the guide's build phases (foundation/tokens → app shell → pages → record
+   scaffold + workHQ → demo features → backend → paid add-ons). State A (demo,
+   client-side) completes before State B (Supabase); backend work honors the two
+   BACKEND_TODO gates (row-level writes; RLS mirroring UI roles).
+
 ## Engineering discipline
 Work in the code, fix at the source, single-source, replace-don't-duplicate, verify it
 renders with zero console errors, confirm with the user. The `.io` is the review surface;
