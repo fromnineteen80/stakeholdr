@@ -265,6 +265,17 @@
      Zone-adjacent: lives outside every theme swap, like the zone tokens). */
   --ui-sys-zone-grid-line: rgba(0,0,0,.18);
 
+  /* Map chrome (Map box, sealed GRID CHROME / THE DOT values — census-mapped
+     additions 2026-07-03, Phase 5; single-sourced here for ui-stakeholder-map).
+     Zone-adjacent (drawn over/beside zone fills): outside every theme swap. */
+  --ui-sys-outline-strong:     var(--ui-ref-ink-strong); /* map-grid OUTER border (oracle 1px var(--ink-2)) */
+  --ui-sys-zone-count-surface: rgba(255,255,255,.5);     /* zone-count pill bg (oracle rgba(255,255,255,.5)) */
+  --ui-sys-zone-count-ink:     rgba(0,0,0,.32);          /* zone-count numeral ink (oracle rgba(0,0,0,.32)) */
+  --ui-sys-map-label-surface:  rgba(250,248,242,.92);    /* dot-label translucent paper pill (oracle rgba(250,248,242,.92)) */
+  --ui-sys-map-dot-shadow: 0 1px 3px rgba(0,0,0,.18);    /* resting dot drop shadow (oracle exact) — SUBJECT TO the open
+                                                            shadows-vs-flat ruling at the Design-page step; flip to
+                                                            --ui-sys-elevation-0 if "no shadows ever" is ruled */
+
   /* Valence border tints + negative overlay (census group J — DERIVED from the
      valence tokens per the census rule, never frozen rgba) */
   --ui-sys-neg-border-soft: color-mix(in srgb, var(--ui-sys-neg) 50%, transparent); /* help-card.neg border */

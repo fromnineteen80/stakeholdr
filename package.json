@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/guard.mjs && vite build",
+    "build": "node scripts/guard.mjs && node scripts/run-tests.mjs && vite build",
     "preview": "vite preview",
+    "test": "node scripts/run-tests.mjs",
     "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {

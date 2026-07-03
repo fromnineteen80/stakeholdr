@@ -2,6 +2,9 @@
  * <ui-inspector> — right-hand detail / inspector panel.
  *
  * attrs: open (boolean) — present = panel visible; absent = collapsed to 0.
+ *        close-label (string) — accessible name + hover title for the
+ *        built-in close ×; default "Close inspector" (the Map sets the
+ *        sealed "Hide scorecard panel").
  * slots: title (header text), default (content), actions (header right side)
  * emits: close { detail: {} }   (composed, bubbles)
  *
@@ -138,7 +141,9 @@ template.innerHTML = `
 `;
 
 class UiInspector extends HTMLElement {
-  static observedAttributes = ['open'];
+  static observedAttributes = ['open', 'close-label'];
+
+  static #DEFAULT_CLOSE_LABEL = 'Close inspector';
 
   #closeBtn;
   #titleSlot;
@@ -155,6 +160,7 @@ class UiInspector extends HTMLElement {
     this.#titleSlot.addEventListener('slotchange', this.#syncAriaLabel);
     // Set initial aria role on the aside
     this.#syncAriaLabel();
+    this.#syncCloseLabel();
   }
 
   disconnectedCallback() {
@@ -162,7 +168,8 @@ class UiInspector extends HTMLElement {
     this.#titleSlot.removeEventListener('slotchange', this.#syncAriaLabel);
   }
 
-  attributeChangedCallback() {
+  attributeChangedCallback(name) {
+    if (name === 'close-label') { this.#syncCloseLabel(); return; }
     // Nothing to do beyond CSS :host([open]) which handles visibility.
     // aria-hidden mirrors open state for assistive tech.
     const aside = this.shadowRoot.querySelector('aside');
@@ -173,6 +180,19 @@ class UiInspector extends HTMLElement {
 
   get open() { return this.hasAttribute('open'); }
   set open(v) { this.toggleAttribute('open', Boolean(v)); }
+
+  get closeLabel() {
+    return this.getAttribute('close-label') || UiInspector.#DEFAULT_CLOSE_LABEL;
+  }
+  set closeLabel(v) {
+    v ? this.setAttribute('close-label', v) : this.removeAttribute('close-label');
+  }
+
+  #syncCloseLabel() {
+    const label = this.closeLabel;
+    this.#closeBtn.setAttribute('aria-label', label);
+    this.#closeBtn.setAttribute('title', label);
+  }
 
   #onClose = () => {
     this.removeAttribute('open');

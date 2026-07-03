@@ -4,6 +4,7 @@ import { useState } from 'react';
 import '../../design-system/entry.js';
 import './app.css';
 import { SheetPage } from './pages/sheet.jsx';
+import { MapPage } from './pages/map.jsx';
 
 // NAV_TABS per the sealed App-shell box (icons = the captured semantic→ligature
 // map). Scoring carries hideWhenMaster (sealed rule) — enforced when workspace
@@ -106,6 +107,9 @@ export function AppShell() {
             faking a screen. */}
         {view === 'sheet' ? (
           <SheetPage createNonce={createNonce} />
+        ) : view === 'map' ? (
+          /* Sealed: the Map IS available on Master (the org-wide overview). */
+          <MapPage />
         ) : (
           <ui-card variant="outlined">
             <div className="ph-title">
@@ -121,7 +125,7 @@ export function AppShell() {
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Build: Phase 4 — stakeholder create/edit modal</span>
+        <span>Build: Phase 5 — the Map (read-only)</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
     </ui-app-shell>

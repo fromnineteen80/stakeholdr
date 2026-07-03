@@ -28,6 +28,10 @@
  *              read the single-sourced --ui-sys-zone-* + band-ink tokens.
  *              SEALED NULL-GUARD: a zone with no catalog entry renders
  *              NOTHING (display:none), never an empty pill.
+ *   size     — zone variant only: "lg" for the sealed LARGE StatusPill
+ *              (size "lg" = 12px font, 3px 10px padding — the Map scorecard's
+ *              status-pill-row pill); absent/other = the small default.
+ *              Sizing is token-derived (space-scale calcs), never literal px.
  *
  * filter chips: click toggles selected, emits change(detail:{selected})
  * input chips: show × remove button, emits remove (composed:true)
@@ -238,6 +242,14 @@ chipTpl.innerHTML = `
        single-sourced --ui-sys-zone-* fills + band inks. */
     :host([variant="zone"]) { display: none; --_border: var(--ui-sys-outline-subtle); }
     :host([variant="zone"]) .chip { padding: 2px var(--ui-sys-space-2); }
+    /* size="lg" — the sealed LARGE StatusPill (Shared-UI-primitives:
+       size "lg" = 12px font, padding "3px 10px"; default stays the small
+       pill above). Token-derived: --ui-sys-font-caption is the 12px step;
+       3px = 0.75 × space-1 (4px) · 10px = 1.25 × space-2 (8px). */
+    :host([variant="zone"][size="lg"]) .chip {
+      font: var(--ui-sys-font-caption);
+      padding: calc(var(--ui-sys-space-1) * 0.75) calc(var(--ui-sys-space-2) * 1.25);
+    }
     :host([variant="zone"][data-zone="Proactively Defend"])      { display: inline-flex; --_bg: var(--ui-sys-zone-proactively-defend);      --_fg: var(--ui-sys-zone-ink-on-strong); }
     :host([variant="zone"][data-zone="Defend"])                  { display: inline-flex; --_bg: var(--ui-sys-zone-defend);                  --_fg: var(--ui-sys-zone-ink-negative); }
     :host([variant="zone"][data-zone="Protect"])                 { display: inline-flex; --_bg: var(--ui-sys-zone-protect);                 --_fg: var(--ui-sys-zone-ink-negative); }
