@@ -299,7 +299,7 @@ sidebarTemplate.innerHTML = `
       border-right: 1px solid var(--ui-sys-outline-subtle);
       overflow: hidden;
       /* Animate width */
-      width: var(--ui-sys-sidebar-width, 248px);
+      width: var(--ui-sys-sidebar-width, clamp(208px, 18vw, 288px));
       min-width: 0;
       transition: width var(--ui-sys-motion-emphasis);
     }
