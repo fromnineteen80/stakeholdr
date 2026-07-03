@@ -121,9 +121,17 @@ The Settings → Design page tunes tokens later; the start-state is already in t
   mark is the "Sr" monogram** — capital S + lowercase *italic* r, title typeface, on a
   colored field that is **the SAME color as the app title** (both read
   `--ui-sys-on-surface`, encoded in CSS so they can never drift; re-themes together); (5) the chrome is **identical on
-  every screen** (same app-bar composition: mark + name + workspace selector left, search
-  right) — Slack-competitive consistency is the bar for everything wrapped AROUND the
-  map/tables.
+  every screen** — Slack-competitive consistency is the bar for everything wrapped AROUND
+  the map/tables. **AMENDED 2026-07-03 (Claude form factor, user-ruled on the live app):**
+  the sidebar is FULL-HEIGHT and STATIC (nav column spans all rows; the content area gets
+  its own thin header carrying the workspace selector + search); the **brand (Sr mark +
+  name) lives at the TOP OF THE RAIL**, not in a top bar; the collapse control is a quiet
+  **left_panel_close/open panel icon next to the brand — the edge-chevron is RETIRED**;
+  the **mark is a CIRCLE** (--ui-sys-shape-pill), matching the avatar language; **icon
+  hover = INK ONLY, never a background** (ui-icon-button standard variant + the sidebar
+  toggle enforce this in the components); and per the make-real law, **a control that is
+  not wired yet must LOOK inert** (disabled + phase note) — never a live-looking dead
+  affordance.
 
 ## HANDSHAKE / submit control
 The guide (`src/guide.jsx`, the `.io`) carries a confirm control so the user can signal

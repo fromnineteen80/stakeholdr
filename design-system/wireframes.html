@@ -56,7 +56,6 @@
       display: inline-flex; align-items: center; gap: var(--ui-sys-space-1);
       font: var(--ui-sys-font-label);
       padding: var(--ui-sys-space-1) var(--ui-sys-space-2);
-      margin-left: var(--ui-sys-space-3);
       border-radius: var(--ui-sys-shape-control);
       border: 1px solid var(--ui-sys-outline-subtle);
       background: var(--ui-sys-surface-field);
@@ -80,7 +79,7 @@
        (and both re-theme together with the wrapper). */
     .brand { color: var(--ui-sys-on-surface); }
     .brand .mark {
-      width: 24px; height: 24px; border-radius: 6px; display: inline-flex;
+      width: 26px; height: 26px; border-radius: var(--ui-sys-shape-pill); display: inline-flex; /* CIRCLE (RULED) */
       align-items: center; justify-content: center;
       background: var(--ui-sys-on-surface); color: var(--ui-sys-surface-card);
       font-family: var(--ui-ref-typeface-title); font-weight: 500; font-size: 13px;
@@ -133,13 +132,13 @@
     </div>
     <div class="screen">
       <ui-app-shell>
-        <ui-app-bar slot="header" variant="elevated">
-          <span slot="leading" class="brand"><span class="mark">S<i>r</i></span> Stakeholdr</span>
-          <span class="ws-select">Cedarville <ui-icon size="sm">expand_more</ui-icon></span>
+        <ui-app-bar slot="header" variant="flat">
+          <span slot="leading" class="ws-select">Cedarville <ui-icon size="sm">expand_more</ui-icon></span>
           <ui-icon-button slot="trailing" variant="standard" aria-label="Search"><ui-icon>search</ui-icon></ui-icon-button>
         </ui-app-bar>
 
         <ui-sidebar slot="nav">
+          <span slot="brand" class="brand"><span class="mark">S<i>r</i></span> Stakeholdr</span>
           <ui-sidebar-item active href="#"><ui-icon slot="icon">table_rows</ui-icon>List</ui-sidebar-item>
           <ui-sidebar-item href="#"><ui-icon slot="icon">scatter_plot</ui-icon>Map</ui-sidebar-item>
           <ui-sidebar-item href="#"><ui-icon slot="icon">insights</ui-icon>Scoring</ui-sidebar-item>
@@ -172,13 +171,13 @@
     </div>
     <div class="screen">
       <ui-app-shell>
-        <ui-app-bar slot="header" variant="elevated">
-          <span slot="leading" class="brand"><span class="mark">S<i>r</i></span> Stakeholdr</span>
-          <span class="ws-select">Cedarville <ui-icon size="sm">expand_more</ui-icon></span>
+        <ui-app-bar slot="header" variant="flat">
+          <span slot="leading" class="ws-select">Cedarville <ui-icon size="sm">expand_more</ui-icon></span>
           <ui-icon-button slot="trailing" variant="standard" aria-label="Search"><ui-icon>search</ui-icon></ui-icon-button>
         </ui-app-bar>
 
         <ui-sidebar slot="nav" collapsed>
+          <span slot="brand" class="brand"><span class="mark">S<i>r</i></span> Stakeholdr</span>
           <ui-sidebar-item href="#"><ui-icon slot="icon">table_rows</ui-icon>List</ui-sidebar-item>
           <ui-sidebar-item active href="#"><ui-icon slot="icon">scatter_plot</ui-icon>Map</ui-sidebar-item>
           <ui-sidebar-item href="#"><ui-icon slot="icon">insights</ui-icon>Scoring</ui-sidebar-item>

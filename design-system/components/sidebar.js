@@ -355,31 +355,35 @@ sidebarTemplate.innerHTML = `
       transition: color var(--ui-sys-motion-control);
       /* keep the button accessible when brand text is hidden */
     }
-    .toggle-btn::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      background: currentColor;
-      opacity: 0;
-      transition: opacity var(--ui-sys-motion-control);
-      z-index: -1;
-    }
-    .toggle-btn:hover::before  { opacity: var(--ui-sys-state-hover-opacity); }
-    .toggle-btn:active::before { opacity: var(--ui-sys-state-pressed-opacity); }
+    /* Hover shown by INK, never a background (start-state design rule). */
+    .toggle-btn:hover  { color: var(--ui-sys-on-surface); }
+    .toggle-btn:active { color: var(--ui-sys-on-surface); }
     .toggle-btn:focus-visible {
       outline: 2px solid var(--ui-sys-focus-ring);
       outline-offset: 2px;
     }
 
-    /* Chevron rotates on collapse */
+    /* Panel toggle glyphs (Material Symbols ligatures; the document loads the
+       font — same pattern as ui-icon). The edge-chevron is RETIRED (RULED). */
     .toggle-icon {
-      display: inline-block;
-      transition: transform var(--ui-sys-motion-emphasis);
+      font-family: 'Material Symbols Outlined';
+      font-weight: normal;
       font-style: normal;
+      font-size: var(--ui-sys-icon-size-md, 20px);
+      line-height: 1;
+      letter-spacing: normal;
+      white-space: nowrap;
+      display: block;
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      user-select: none;
     }
-    :host([collapsed]) .toggle-icon {
-      transform: rotate(180deg);
+    .ti-open { display: none; }
+    :host([collapsed]) .ti-close { display: none; }
+    :host([collapsed]) .ti-open  { display: block; }
+    :host([collapsed]) .header {
+      justify-content: center;
+      padding-left: 0;
+      padding-right: 0;
     }
 
     /* Nav list */
@@ -416,7 +420,8 @@ sidebarTemplate.innerHTML = `
         <slot name="brand"></slot>
       </div>
       <button class="toggle-btn" part="toggle" aria-label="Toggle navigation">
-        <i class="toggle-icon" aria-hidden="true">&#x276E;</i>
+        <span class="toggle-icon ti-close" aria-hidden="true">left_panel_close</span>
+        <span class="toggle-icon ti-open" aria-hidden="true">left_panel_open</span>
       </button>
     </div>
 

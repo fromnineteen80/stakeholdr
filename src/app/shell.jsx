@@ -27,19 +27,24 @@ export function AppShell() {
     <ui-app-shell>
       {/* RULED chrome — identical on every screen: mark + name + workspace
           selector left, search right. */}
+      {/* RULED (Claude form factor): the rail is full-height; the brand lives at
+          the TOP OF THE RAIL; the content area gets its own thin header carrying
+          the workspace selector + search. */}
       <ui-app-bar slot="header" variant="flat">
-        <span slot="leading" className="brand">
-          <span className="mark">S<i>r</i></span> Stakeholdr
-        </span>
-        <span className="ws-select" role="button" tabIndex={0} aria-label="Switch workspace">
+        <span slot="leading" className="ws-select is-pending" aria-disabled="true"
+              title="Workspace switching arrives with the shell-state phase">
           Master <ui-icon size="sm">expand_more</ui-icon>
         </span>
-        <ui-icon-button slot="trailing" variant="standard" aria-label="Search">
+        <ui-icon-button slot="trailing" variant="standard" disabled aria-label="Search"
+                        title="Search (⌘K) arrives with the command-palette phase">
           <ui-icon>search</ui-icon>
         </ui-icon-button>
       </ui-app-bar>
 
       <ui-sidebar slot="nav">
+        <span slot="brand" className="brand">
+          <span className="mark">S<i>r</i></span> Stakeholdr
+        </span>
         {visibleTabs.map(t => (
           <ui-sidebar-item
             key={t.id}

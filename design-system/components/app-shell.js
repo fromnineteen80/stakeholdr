@@ -22,10 +22,12 @@ template.innerHTML = `
       /* Default grid: header / (nav | main | aside) / footer
          Row tracks: auto for header/footer (collapse to 0 when empty).
          Column tracks: auto for nav/aside (collapse to 0 when empty). */
+      /* Claude form factor (RULED 2026-07-03): the nav rail is FULL-HEIGHT and
+         static; header/footer belong to the content area, never above the rail. */
       grid-template-areas:
-        "header header  header"
-        "nav    main    aside"
-        "footer footer  footer";
+        "nav header header"
+        "nav main   aside"
+        "nav footer footer";
       grid-template-rows:    auto 1fr auto;
       grid-template-columns: auto 1fr auto;
       background: var(--ui-sys-surface);
@@ -35,15 +37,18 @@ template.innerHTML = `
     /* Collapse empty header / footer rows */
     :host([no-header]) {
       grid-template-areas:
-        "nav  main  aside"
-        "nav  main  aside"
-        "footer footer footer";
+        "nav main   aside"
+        "nav footer footer";
       grid-template-rows: 1fr auto;
     }
     :host([no-footer]) {
+      grid-template-areas:
+        "nav header header"
+        "nav main   aside";
       grid-template-rows: auto 1fr;
     }
     :host([no-header][no-footer]) {
+      grid-template-areas: "nav main aside";
       grid-template-rows: 1fr;
     }
 

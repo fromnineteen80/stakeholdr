@@ -27,9 +27,10 @@ template.innerHTML = `
       justify-content: center;
       vertical-align: middle;
 
-      /* variant defaults: standard */
+      /* variant defaults: standard — quiet ink that strengthens on hover
+         (state shown by INK, never a background: start-state design rule) */
       --_bg:     transparent;
-      --_fg:     var(--ui-sys-on-surface);
+      --_fg:     var(--ui-sys-on-surface-muted);
       --_border: transparent;
       /* selected state overrides */
       --_bg-sel: var(--ui-sys-primary-container);
@@ -73,6 +74,7 @@ template.innerHTML = `
       color: var(--_fg);
       cursor: pointer;
       user-select: none;
+      line-height: 0;
       transition: background var(--ui-sys-motion-control),
                   border-color var(--ui-sys-motion-control),
                   color var(--ui-sys-motion-control);
@@ -99,6 +101,18 @@ template.innerHTML = `
     }
     button:hover::before  { opacity: var(--ui-sys-state-hover-opacity); }
     button:active::before { opacity: var(--ui-sys-state-pressed-opacity); }
+
+    /* Standard (bare-icon) variant: NO hover background — ink only. */
+    :host(:not([variant])) button::before,
+    :host([variant="standard"]) button::before { display: none; }
+    :host(:not([variant])) button:hover,
+    :host([variant="standard"]) button:hover,
+    :host(:not([variant])) button:active,
+    :host([variant="standard"]) button:active { color: var(--ui-sys-on-surface); }
+
+    /* Optical centering: the slotted icon is a block inside a zero-line-height
+       flex center, so glyph baselines can't skew it. */
+    ::slotted(*) { display: block; }
 
     button:focus-visible {
       outline: 2px solid var(--ui-sys-focus-ring);
