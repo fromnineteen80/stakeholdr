@@ -169,13 +169,16 @@ the guide source.
   dashed callout, drag-reorder grip, ui-swatch-card, whiteboard canvas (awaits ruling);
   command palette = composition, no new component. BLIND VERIFY PASS DONE (9 cold
   auditors + independent census recount; 56 findings repaired; see the INDEX stamp).
-- **WHAT REMAINS (in order):** (1) USER SEALING — the user confirms boxes on the `.io`
-  (merge the branch to publish);
-  (2) the three OPEN DESIGN DECISIONS (accent hue incl. the #024AD8-vs-terracotta census
-  find; shadows vs flat; Cream vs Modern wrapper); (3) BUILD PHASES executed from the
-  sealed boxes only — assemble against the skeleton trees, honor every do-not-replicate /
-  make-real flag, close the INDEX coverage gates (GAP components registered first, all
-  needs-token hexes tokenized, no literal hex in app code).
+- **SEALED (2026-07-03).** The user reviewed and confirmed the capture; done:true is
+  committed on all 39 Foundation + Capture boxes (commit 77cff95). The capture phase is
+  CLOSED — the rebuild executes from the sealed boxes only, per the BUILD PROTOCOL.
+- **WHAT REMAINS (in order):** (1) MERGE the session branch to main so the sealed guide,
+  wireframes, theme toggle, and gallery publish to the `.io`; (2) the three OPEN DESIGN
+  DECISIONS (accent hue incl. the #024AD8-vs-terracotta census find; shadows vs flat;
+  Cream vs Modern wrapper) — ruled on the preview pages; (3) BUILD PHASES executed from
+  the sealed boxes only — assemble against the skeleton trees, honor every
+  do-not-replicate / make-real flag, close the remaining INDEX gate-2 GAPs at their
+  phases, no literal hex in app code.
 
 ## BUILD PROTOCOL (binding on every build session — this is how the rebuild "works as planned")
 1. **Build ONLY from the sealed boxes** in `src/guide.jsx` (+ the book/APP_SPEC as prose
