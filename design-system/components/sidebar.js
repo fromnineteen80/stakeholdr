@@ -141,10 +141,11 @@ itemTemplate.innerHTML = `
     :host([sidebar-collapsed]) .item {
       justify-content: center;
       padding: 0;
+      /* kill the phantom flex gap: the zero-width label is still a flex item,
+         so the base gap would shove the icon off the axis */
+      gap: 0;
       width: 40px;
       /* center the 40px box in the rail so the icon stays on the SAME axis */
-      margin-left: auto;
-      margin-right: auto;
       margin: 0 auto;
     }
     :host([sidebar-collapsed]) .label {
@@ -338,10 +339,14 @@ sidebarTemplate.innerHTML = `
       max-width: 200px;
       opacity: 1;
     }
+    /* Collapsed: the brand MARK stays visible (the app hides its text via
+       ui-sidebar[collapsed] .brand-text) — Claude keeps the logo at the top
+       of the collapsed rail; the header stacks mark over toggle on the axis. */
     :host([collapsed]) .brand-wrap {
-      max-width: 0;
-      opacity: 0;
-      pointer-events: none;
+      flex: 0 0 auto;
+      max-width: none;
+      display: flex;
+      justify-content: center;
     }
 
     /* Toggle button */
@@ -390,9 +395,11 @@ sidebarTemplate.innerHTML = `
     :host([collapsed]) .ti-close { display: none; }
     :host([collapsed]) .ti-open  { display: block; }
     :host([collapsed]) .header {
+      flex-direction: column;
       justify-content: center;
-      padding-left: 0;
-      padding-right: 0;
+      height: auto;
+      padding: var(--ui-sys-space-2) 0;
+      gap: var(--ui-sys-space-1);
     }
 
     /* Nav list */

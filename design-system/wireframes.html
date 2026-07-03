@@ -82,6 +82,8 @@
       letter-spacing: 0; line-height: 1;
     }
     .brand .mark i { font-style: italic; font-weight: 500; }
+    ui-sidebar[collapsed] .brand-text { display: none; }
+    ui-sidebar[collapsed] .brand { margin-left: 0; }
     .insp-strategy {
       background: var(--ui-sys-surface-container); border-radius: var(--ui-sys-shape-card);
       padding: var(--ui-sys-space-3); margin-top: var(--ui-sys-space-3);
@@ -134,7 +136,7 @@
         </ui-app-bar>
 
         <ui-sidebar slot="nav">
-          <span slot="brand" class="brand"><span class="mark">S<i>r</i></span> Stakeholdr</span>
+          <span slot="brand" class="brand"><span class="mark">S<i>r</i></span><span class="brand-text">Stakeholdr</span></span>
           <ui-sidebar-item active href="#"><ui-icon slot="icon">table_rows</ui-icon>List</ui-sidebar-item>
           <ui-sidebar-item href="#"><ui-icon slot="icon">scatter_plot</ui-icon>Map</ui-sidebar-item>
           <ui-sidebar-item href="#"><ui-icon slot="icon">insights</ui-icon>Scoring</ui-sidebar-item>
@@ -173,7 +175,7 @@
         </ui-app-bar>
 
         <ui-sidebar slot="nav" collapsed>
-          <span slot="brand" class="brand"><span class="mark">S<i>r</i></span> Stakeholdr</span>
+          <span slot="brand" class="brand"><span class="mark">S<i>r</i></span><span class="brand-text">Stakeholdr</span></span>
           <ui-sidebar-item href="#"><ui-icon slot="icon">table_rows</ui-icon>List</ui-sidebar-item>
           <ui-sidebar-item active href="#"><ui-icon slot="icon">scatter_plot</ui-icon>Map</ui-sidebar-item>
           <ui-sidebar-item href="#"><ui-icon slot="icon">insights</ui-icon>Scoring</ui-sidebar-item>

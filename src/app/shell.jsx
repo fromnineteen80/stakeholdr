@@ -43,7 +43,8 @@ export function AppShell() {
 
       <ui-sidebar slot="nav">
         <span slot="brand" className="brand">
-          <span className="mark">S<i>r</i></span> Stakeholdr
+          <span className="mark">S<i>r</i></span>
+          <span className="brand-text">Stakeholdr</span>
         </span>
         {visibleTabs.map(t => (
           <ui-sidebar-item
