@@ -321,8 +321,9 @@ sidebarTemplate.innerHTML = `
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: var(--ui-sys-space-3) var(--ui-sys-space-3);
-      min-height: 56px;
+      box-sizing: border-box;
+      padding: 0 var(--ui-sys-space-3);
+      height: var(--ui-sys-header-height, 56px);
       flex-shrink: 0;
       gap: var(--ui-sys-space-2);
       overflow: hidden;

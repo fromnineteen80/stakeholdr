@@ -30,7 +30,7 @@ template.innerHTML = `
       display: flex;
       align-items: center;
       gap: var(--ui-sys-space-2);
-      min-height: 56px;
+      min-height: var(--ui-sys-header-height, 56px);
       padding: 0 var(--ui-sys-space-2);
     }
 

@@ -138,6 +138,10 @@
   /* Control sizing role (consistent control height across the kit) */
   --ui-sys-control-height: 36px;
 
+  /* Header row height — the rail header and the content app-bar share this
+     so the brand and the workspace selector sit on ONE horizontal centerline. */
+  --ui-sys-header-height: 56px;
+
   /* Sidebar width roles (RULED 2026-07-02: Claude-LIKE but PROPORTIONAL — grows
      with the window up to Claude's 18rem, never below a tight floor; and the rail
      must never sit hollow: nav + workspace section + identity fill it) */
