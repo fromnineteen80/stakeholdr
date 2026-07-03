@@ -247,6 +247,9 @@ class UiTextField extends HTMLElement {
   get value()       { return this.#input.value; }
   set value(v)      { this.#input.value = v; this.#updateHasValue(); this.#internals?.setFormValue(v); }
 
+  /* Delegate programmatic focus to the real input (autoFocus, dialog focus). */
+  focus(options)    { this.#input.focus(options); }
+
   #sync() {
     const label         = this.getAttribute('label') || '';
     const placeholder   = this.getAttribute('placeholder') || '';

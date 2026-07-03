@@ -248,6 +248,12 @@
   --ui-sys-priority-low-surface:    #E1E1DA;
   --ui-sys-priority-low-ink:        #54524A;
 
+  /* StatusDot (manual stakeholder status; census CAPTURED→TOKEN, sealed
+     Shared-primitives box): Active reads --ui-sys-pos, Watch reads
+     --ui-sys-accent; Dormant + any unknown status read this grey.
+     Status-semantic: never touched by any theme swap. */
+  --ui-sys-status-dormant:          #9B9684;
+
   /* Lists selection/header tints (census group G — deeper siblings of the
      --ui-sys-row-hover cream working surface) */
   --ui-sys-row-selected:        #FCEFD6;  /* selected-row tint on every cell of a checked Lists row; also ws-menu-item.active */

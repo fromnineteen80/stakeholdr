@@ -22,21 +22,19 @@ import { usePersistentState, uid, nowStamp, cmdKeyLabel } from '../data/store.js
 import { weightedCoord, statusFor } from '../data/engine.js';
 import {
   SEED_STAKEHOLDERS, SEED_SCORES, SEED_TEAM, SEED_USERS, SEED_COMMUNITY,
+  SEED_WORKSPACES, SEED_STAKEHOLDER_WORKSPACES, SEED_MESSAGES,
 } from '../data/seed.js';
-import { CATEGORIES, MARKETS, GEOGRAPHIES, US_STATES, SITES, siteLabel } from '../data/catalogs.js';
+import {
+  CATEGORIES, MARKETS, GEOGRAPHIES, US_STATES, SITES, siteLabel,
+  ISSUES, TAGS,
+} from '../data/catalogs.js';
 // displayName is single-sourced with the design-system's pure Lists logic
 // (the sealed Shared-primitives formula lives beside the table that renders it).
 import { displayName } from '../../../design-system/components/stakeholder-table.js';
-
-/* affiliatedCommunity (sealed cross-link formula): applications where the
- * stakeholder is REPRESENTED (representedStakeholderId, the primary) OR
- * LINKED (linkedStakeholders).                                               */
-function affiliatedCommunity(stakeholderId, community) {
-  return (community || []).filter(
-    (a) => a.representedStakeholderId === stakeholderId ||
-           (a.linkedStakeholders || []).includes(stakeholderId),
-  );
-}
+// affiliatedCommunity + the create-side-effect copy are single-sourced in the
+// modal's pure-logic module (sealed cross-link formulas).
+import { affiliatedCommunity, scoringNeededBody } from '../modals/stakeholder-logic.js';
+import { StakeholderModal } from '../modals/stakeholder-modal.jsx';
 
 /* Sealed NotesModal date stamp: toLocaleDateString {month:short, day:numeric,
  * year:numeric}, or "-" when the entry has no date.                          */
@@ -47,12 +45,16 @@ function noteDate(at) {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export function SheetPage() {
+export function SheetPage({ createNonce = 0 }) {
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
-  const [scores] = usePersistentState('scores', SEED_SCORES);
+  const [scores, setScores] = usePersistentState('scores', SEED_SCORES);
   const [team] = usePersistentState('team', SEED_TEAM);
   const [users] = usePersistentState('users', SEED_USERS);
   const [community] = usePersistentState('community', SEED_COMMUNITY);
+  const [workspaces] = usePersistentState('workspaces', SEED_WORKSPACES);
+  const [stakeholderWorkspaces, setStakeholderWorkspaces] =
+    usePersistentState('stakeholderWorkspaces', SEED_STAKEHOLDER_WORKSPACES);
+  const [, setMessages] = usePersistentState('messages', SEED_MESSAGES);
 
   const tableRef = useRef(null);
   const dialogRef = useRef(null);
@@ -64,6 +66,13 @@ export function SheetPage() {
   const [, setSelectedId] = useState(null);
   const [notesFor, setNotesFor] = useState(null);
   const [noteDraft, setNoteDraft] = useState('');
+
+  // StakeholderModal routing state: null | { mode:'create' } |
+  // { mode:'edit', id, view? }. The Lists edit routes (frozen edit icon +
+  // name dblclick) open EDIT MODE directly (no view flag — sealed census C1);
+  // view:true (the sealed initialView read-only profile) is reserved for the
+  // profile's own sealed openers when their phases land (e.g. Scoring drill).
+  const [shModal, setShModal] = useState(null);
 
   // currentUser = the seeded first user UNTIL THE LOGIN PHASE lands the real
   // signed-in identity (sealed build order; do not invent auth here).
@@ -116,9 +125,14 @@ export function SheetPage() {
       setNotesFor(e.detail.id);
     };
     const onSelect = (e) => setSelectedId(e.detail.id);
-    // Honest pending affordance (make-real law: no silent dead click) — the
-    // full stakeholder record opens in the RECORD phase.
-    const onOpenRecord = () => snackRef.current?.show('Stakeholder record — opens in the Record build phase');
+    // SEALED EDIT ROUTE (replaces the Phase-3 pending snackbar): the row's
+    // frozen edit icon AND the name-cell double-click both emit open-record —
+    // both open the StakeholderModal directly in EDIT MODE (sealed census C1:
+    // "StakeholderModal (EDIT mode) for that row"; NO initialView here). The
+    // read-only profile stays reachable via its own sealed routes when they
+    // land (e.g. the Scoring drill / Plan row click in later phases) and via
+    // the form's "View Stakeholder" flip.
+    const onOpenRecord = (e) => setShModal({ mode: 'edit', id: e.detail.id });
     const onCommunityOpen = (e) =>
       snackRef.current?.show(`"${e.detail.name}" — the community entry view opens in the Community build phase`);
     el.addEventListener('row-change', onRowChange);
@@ -189,6 +203,97 @@ export function SheetPage() {
 
   const userById = (id) => users.find((u) => u.id === id);
 
+  /* ── STAKEHOLDER CREATE / EDIT / DELETE (Phase 4) ─────────────────────── */
+
+  // currentUser: the seeded first user until the login phase (as above).
+  // CREATE ROUTE (sealed addNonceFor adaptation): the shell's context-aware
+  // (+) bumps createNonce; every bump opens the modal in create mode.
+  // STALE-NONCE GUARD: the ref captures the nonce as it stood when THIS
+  // SheetPage mounted, and the modal opens only when the nonce INCREASES past
+  // it — so remounting the page (press +, cancel, go to Map, come back) can
+  // never replay an already-consumed create request.
+  const seenNonce = useRef(createNonce);
+  useEffect(() => {
+    if (createNonce > seenNonce.current) {
+      seenNonce.current = createNonce;
+      setShModal({ mode: 'create' });
+    }
+  }, [createNonce]);
+
+  /* addStakeholder (sealed): mint uid("sh"); stamp createdBy + createdAt/
+   * updatedAt; owners default to [currentUser.id] when empty; PREPEND to the
+   * collection; write the workspace join; post the SYSTEM MESSAGE to c-system
+   * from u-system, kind "scoring-needed" (sealed body, verbatim).            */
+  const addStakeholder = (data) => {
+    const id = uid('sh');
+    const rec = {
+      ...data,
+      id,
+      createdBy: currentUser ? currentUser.id : null,
+      createdAt: nowStamp(),
+      updatedAt: nowStamp(),
+      owners: (data.owners && data.owners.length)
+        ? data.owners
+        : (currentUser ? [currentUser.id] : []),
+    };
+    setStakeholders((prev) => [rec, ...prev]);
+    // Sealed join rule: ws = forceWorkspaceId || (isMaster ? null :
+    // activeWorkspaceId). This shell is still pinned to MASTER (workspace
+    // state lands with the shell-state phase), so the sealed result is
+    // UNASSIGNED — an empty membership array. When the workspace selector
+    // goes live, creating from a non-Master workspace auto-assigns here.
+    setStakeholderWorkspaces((prev) => ({ ...prev, [id]: [] }));
+    // Sealed system-message side effect (drives the Scoring badge + Reminders).
+    setMessages((prev) => ({
+      ...prev,
+      'c-system': [
+        ...(prev['c-system'] || []),
+        {
+          id: uid('m'),
+          from: 'u-system',
+          body: scoringNeededBody(rec.name, rec.type),
+          at: nowStamp(),
+          kind: 'scoring-needed',
+        },
+      ],
+    }));
+    return id;
+  };
+
+  const updateStakeholder = (id, patch) => {
+    setStakeholders((prev) => prev.map((s) => (
+      s.id === id ? { ...s, ...patch, updatedAt: nowStamp() } : s
+    )));
+  };
+
+  /* deleteStakeholder — the SEALED CASCADE (App-shell box): remove the
+   * stakeholder, purge scores[id], purge stakeholderWorkspaces[id]. (The
+   * wider owners-reference scrub belongs to the removeUser cascade, not this
+   * one.)                                                                    */
+  const deleteStakeholder = (id) => {
+    setStakeholders((prev) => prev.filter((s) => s.id !== id));
+    setScores((prev) => {
+      if (!prev[id]) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setStakeholderWorkspaces((prev) => {
+      if (!prev[id]) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
+  // Sealed cross-link: workspaces that contain this stakeholder (join map).
+  const getWorkspacesForStakeholder = (id) =>
+    workspaces.filter((w) => (stakeholderWorkspaces[id] || []).includes(w.id));
+
+  const shExisting = shModal && shModal.id
+    ? stakeholders.find((s) => s.id === shModal.id) || null
+    : null;
+
   return (
     <div className="sheet-wrap">
       {/* kbd-label: the cmd-key hint is single-sourced in the store
@@ -258,7 +363,38 @@ export function SheetPage() {
         )}
       </ui-dialog>
 
-      {/* Pending-affordance surface for record/community opens (make-real law). */}
+      {/* CREATE / EDIT STAKEHOLDER MODAL (sealed StakeholderModal). The
+          sealed MAKE-REAL wiring: companyTags IS passed (Tags usable from
+          Lists) and onDelete IS passed (the Delete section is reachable) —
+          the oracle's unflagged omissions are not replicated. Until the
+          Settings phase lands appConfig, the company sets are the seeded
+          catalogs (the sealed present-AND-non-empty fallback resolves to
+          exactly these when nothing is configured). */}
+      <StakeholderModal
+        open={!!shModal}
+        existing={shExisting}
+        initialView={!!(shModal && shModal.view)}
+        users={users}
+        currentUser={currentUser}
+        companyIssues={ISSUES}
+        companyTags={TAGS}
+        community={community}
+        scores={scores}
+        team={team}
+        getWorkspacesForStakeholder={getWorkspacesForStakeholder}
+        onCancel={() => setShModal(null)}
+        onSubmit={(data) => {
+          if (shModal && shModal.id) updateStakeholder(shModal.id, data);
+          else addStakeholder(data);
+          setShModal(null);
+        }}
+        onDelete={(id) => {
+          deleteStakeholder(id);
+          setShModal(null);
+        }}
+      />
+
+      {/* Pending-affordance surface for community opens (make-real law). */}
       <ui-snackbar ref={snackRef}></ui-snackbar>
     </div>
   );

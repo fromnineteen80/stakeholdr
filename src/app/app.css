@@ -119,6 +119,147 @@ ui-sidebar[collapsed] .me { justify-content: center; padding: var(--ui-sys-space
   margin-right: auto;
 }
 
+/* ══ STAKEHOLDER MODAL (sealed StakeholderModal; ui-dialog composition) ══
+ * Layout-only, token-only classes. All real chrome lives in the components. */
+
+/* Shared small-text helpers (sealed muted ink). */
+.muted { color: var(--ui-sys-on-surface-muted); }
+
+/* Form body: the scrolling stack inside the dialog's content slot. */
+.sh-body {
+  display: flex; flex-direction: column; gap: var(--ui-sys-space-4);
+  width: min(520px, 82vw);
+  padding: var(--ui-sys-space-2) 0 var(--ui-sys-space-4);
+}
+.sh-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ui-sys-space-3); }
+.sh-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--ui-sys-space-3); }
+.sh-field { display: flex; flex-direction: column; gap: var(--ui-sys-space-1); min-width: 0; }
+.sh-field ui-text-field, .sh-field ui-select, .sh-field ui-textarea { width: 100%; }
+.sh-lbl { font: var(--ui-sys-font-label); color: var(--ui-sys-on-surface); }
+.sh-help { font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted); }
+
+/* Head: title · [edit] View Stakeholder · close. */
+.sh-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--ui-sys-space-3); min-width: 0;
+}
+.sh-head-left { display: flex; align-items: center; gap: var(--ui-sys-space-2); min-width: 0; }
+.sh-head-col { flex-direction: column; align-items: flex-start; gap: 2px; }
+.sh-title { font: var(--ui-sys-font-title); }
+.sh-eyebrow {
+  font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+
+/* Photo row (sealed row 1). */
+.sh-photo-row { display: flex; align-items: center; gap: var(--ui-sys-space-3); }
+.sh-photo-actions { display: flex; align-items: center; gap: var(--ui-sys-space-2); }
+
+/* Add-a-person toggle sub-copy. */
+.sh-toggle-text { display: flex; flex-direction: column; gap: 2px; }
+.sh-sub { font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted); }
+
+/* IssueSelector (sealed sub-control). */
+.issue-selector { display: flex; flex-direction: column; gap: var(--ui-sys-space-2); }
+.issue-custom { width: 100%; }
+
+/* Create-only notice (sealed row 15: muted line over a top border). */
+.sh-notice {
+  font: var(--ui-sys-font-caption);
+  border-top: 1px solid var(--ui-sys-outline-subtle);
+  padding-top: var(--ui-sys-space-3);
+}
+
+/* Delete section (sealed row 16). */
+.sh-delete {
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: var(--ui-sys-space-2);
+  border-top: 1px solid var(--ui-sys-outline-subtle);
+  padding-top: var(--ui-sys-space-3);
+}
+.sh-delete-copy { margin: 0; font: var(--ui-sys-font-caption); }
+
+/* Foot: Required readout · Cancel · primary. */
+.sh-foot { display: flex; align-items: center; gap: var(--ui-sys-space-2); width: 100%; }
+.sh-missing { font: var(--ui-sys-font-caption); margin-right: auto; }
+
+/* Stacked dialogs sit a LAYER above the main stakeholder dialog: their scrim
+ * must cover the main card (sealed: a stray click during confirm can never
+ * reach — let alone discard — the edit session underneath). */
+.sh-confirm, .sh-viewall-dialog { --ui-dialog-layer: 20; }
+
+/* Delete-confirm body. */
+.sh-confirm-body {
+  margin: 0; max-width: 340px;
+  font: var(--ui-sys-font-body); color: var(--ui-sys-on-surface-muted);
+  padding-bottom: var(--ui-sys-space-2);
+}
+
+/* ══ READ-ONLY STAKEHOLDER PROFILE (sealed StakeholderProfile) ══ */
+.prof-header {
+  display: flex; align-items: flex-start; gap: var(--ui-sys-space-3);
+  min-width: 0;
+}
+.prof-titles { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.prof-title { font: var(--ui-sys-font-title); }
+.prof-sub { font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted); }
+.prof-tagline { display: flex; align-items: center; gap: var(--ui-sys-space-2); margin-top: 2px; }
+.prof-coords {
+  font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted);
+  font-feature-settings: "tnum";
+}
+.prof-actions { display: flex; align-items: center; gap: var(--ui-sys-space-1); }
+
+.prof-body {
+  display: flex; flex-direction: column; gap: var(--ui-sys-space-2);
+  width: min(520px, 82vw);
+  padding: var(--ui-sys-space-2) 0 var(--ui-sys-space-4);
+}
+.cm-section-label {
+  font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted);
+  text-transform: uppercase; letter-spacing: .08em;
+  margin-top: var(--ui-sys-space-3);
+}
+.prof-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ui-sys-space-2) var(--ui-sys-space-4); }
+.prof-row { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.prof-fullrow { grid-column: 1 / -1; }
+.prof-k { font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted); }
+.prof-v { font: var(--ui-sys-font-body); color: var(--ui-sys-on-surface); overflow-wrap: anywhere; }
+.plain-link { color: var(--ui-sys-primary); text-decoration: none; }
+.plain-link:hover { text-decoration: underline; }
+.prof-tagsissues { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ui-sys-space-4); }
+.prof-ti-col { display: flex; flex-direction: column; gap: var(--ui-sys-space-1); }
+.prof-legacy-note { margin: 0; font: var(--ui-sys-font-body); white-space: pre-wrap; }
+.sh-empty-line { font: var(--ui-sys-font-caption); padding: var(--ui-sys-space-1) 0; }
+
+/* Pill/dot VISUALS live in the design system, not here (composition law):
+ * ui-chip variant=tag|priority|zone and ui-status-dot
+ * (design-system/components/chips.js) are the single source. This layer keeps
+ * only the layout wrapper below. */
+.pills-inline { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--ui-sys-space-1); }
+
+/* Community engagements (sealed profile section). */
+.profile-cumulative { display: flex; align-items: baseline; gap: var(--ui-sys-space-2); }
+.profile-cumulative-val {
+  font: var(--ui-sys-font-label); font-feature-settings: "tnum";
+  color: var(--ui-sys-on-surface-muted);
+}
+.profile-cumulative-val.is-pos { color: var(--ui-sys-pos); }
+.profile-entry-list { display: flex; flex-direction: column; }
+.profile-entry {
+  display: flex; align-items: center; gap: var(--ui-sys-space-3);
+  padding: var(--ui-sys-space-2) 0;
+  border-bottom: 1px solid var(--ui-sys-outline-subtle);
+  color: var(--ui-sys-on-surface);
+}
+.profile-entry:last-of-type { border-bottom: none; }
+.profile-entry ui-icon { color: var(--ui-sys-on-surface-faint); }
+.profile-entry-main { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.profile-entry-name { font: var(--ui-sys-font-label); }
+.profile-entry-meta { font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted); }
+.profile-entry-amt { font: var(--ui-sys-font-caption); font-feature-settings: "tnum"; }
+.sh-viewall { align-self: flex-start; margin-top: var(--ui-sys-space-1); }
+
 /* Honest pending state — a control that is not wired yet must LOOK inert
  * (make-real law: never a live-looking dead affordance). Removed per phase. */
 .ws-select.is-pending { opacity: .55; cursor: default; }

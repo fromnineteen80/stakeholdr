@@ -158,7 +158,14 @@ selectTemplate.innerHTML = `
     }
     :host([open]) .arrow { transform: rotate(180deg); }
 
-    /* popup */
+    /* popup
+     * KNOWN EDGE (recorded 2026-07-03, for the design pass): the popup is
+     * position:absolute inside the host, so when the select sits near the
+     * bottom edge of a SCROLLING container that clips (e.g. a ui-dialog
+     * body with overflow:auto), the open popup can be clipped by that
+     * container instead of overlaying it. The fix (portal/fixed-position
+     * flip-up placement) is a component-level change to take at the design
+     * pass — do not patch per-screen. */
     .popup {
       display: none;
       position: absolute;
@@ -247,6 +254,9 @@ class UiSelect extends HTMLElement {
       this.#field.setAttribute('tabindex', this.hasAttribute('disabled') ? '-1' : '0');
     }
   }
+
+  /* Delegate programmatic focus to the real field (dialog focus pass etc.). */
+  focus(options) { this.#field.focus(options); }
 
   get value() { return this.getAttribute('value') ?? ''; }
   set value(v) { this.setAttribute('value', v); }

@@ -214,6 +214,9 @@ class UiTextarea extends HTMLElement {
 
   attributeChangedCallback() { this.#sync(); }
 
+  /* Delegate programmatic focus to the real control (dialog focus pass etc.). */
+  focus(options) { this.#textarea.focus(options); }
+
   get value()  { return this.#textarea.value; }
   set value(v) {
     this.#textarea.value = v ?? '';
