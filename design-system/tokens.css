@@ -149,6 +149,20 @@
   --ui-sys-avatar-size-md: 32px;
   --ui-sys-avatar-size-lg: 40px;
 
+  /* Badge/count-indicator roles (start-state from the original msg-badge /
+     count-alert values captured in the Scoring-cadence box) */
+  --ui-sys-on-accent: #FAF8F2;
+  --ui-sys-badge-alert-surface: var(--ui-sys-accent);
+  --ui-sys-badge-alert-ink: var(--ui-sys-on-accent);
+  --ui-sys-badge-neutral-surface: var(--ui-sys-surface-container-highest);
+  --ui-sys-badge-neutral-ink: var(--ui-sys-on-surface);
+  --ui-sys-badge-size: 16px;
+  --ui-sys-badge-pad-inline: 4px;
+  --ui-sys-badge-font-size: 9.5px;
+  --ui-sys-badge-dot-size: 8px;
+  --ui-sys-badge-offset-block: -4px;
+  --ui-sys-badge-offset-inline: -4px;
+
   /* Icon sizing scale (modest, ~1em-relative; the ONE place icon px live).
      Every icon — inline SVG or <ui-icon> — sizes from these, never ad-hoc. */
   --ui-sys-icon-size-sm: 18px;

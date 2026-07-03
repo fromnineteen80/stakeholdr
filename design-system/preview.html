@@ -128,6 +128,13 @@
       <a href="#sheet">ui-sheet</a>
       <a href="#bottom-bar">ui-bottom-bar</a>
       <a href="#date-picker">ui-date-picker</a>
+      <span class="grp">Gap fill — new</span>
+      <a href="#card">ui-card</a>
+      <a href="#textarea">ui-textarea</a>
+      <a href="#text-field-plain">ui-text-field (plain)</a>
+      <a href="#badge">ui-badge</a>
+      <a href="#owner-picker">ui-owner-picker</a>
+      <a href="#coachmark">ui-coachmark</a>
     </nav>
   </aside>
 
@@ -486,6 +493,198 @@
         <ui-date-picker label="End date" value="2026-06-15"></ui-date-picker>
       </div>
     </section>
+  
+
+    <!-- ========================= GAP FILL (2026-07-03) ========================= -->
+    <h2>Gap fill — capture-demanded components</h2>
+    <section id="card">
+  <h3>ui-card <span class="hint">— outlined / filled / elevated; media + body + actions slots; `interactive` = whole card clickable</span></h3>
+  <div class="row" style="align-items:stretch;gap:var(--ui-sys-space-4);flex-wrap:wrap">
+    <ui-card variant="outlined" style="width:240px">
+      <strong>Outlined</strong>
+      <p class="hint" style="margin:var(--ui-sys-space-1) 0 0">surface-card + outline-subtle border. The workhorse: workspace, plan and community landing cards.</p>
+      <div slot="actions">
+        <ui-button variant="text">Open</ui-button>
+      </div>
+    </ui-card>
+
+    <ui-card variant="filled" style="width:240px">
+      <strong>Filled</strong>
+      <p class="hint" style="margin:var(--ui-sys-space-1) 0 0">surface-container fill, no border — for cards sitting on the white content surface.</p>
+      <div slot="actions">
+        <ui-button variant="text">Open</ui-button>
+      </div>
+    </ui-card>
+
+    <ui-card variant="elevated" style="width:240px">
+      <strong>Elevated</strong>
+      <p class="hint" style="margin:var(--ui-sys-space-1) 0 0">surface-card + elevation-1 shadow — subtle lift for overlay-adjacent cards.</p>
+      <div slot="actions">
+        <ui-button variant="text">Open</ui-button>
+      </div>
+    </ui-card>
+  </div>
+
+  <div class="row" style="align-items:stretch;gap:var(--ui-sys-space-4);flex-wrap:wrap;margin-top:var(--ui-sys-space-4)">
+    <ui-card variant="outlined" interactive style="width:240px" onclick="this.querySelector('.hint').textContent='Clicked — event retargeted to the host.'">
+      <strong>Interactive</strong>
+      <p class="hint" style="margin:var(--ui-sys-space-1) 0 0">Whole card is the control: hover/pressed state layer, focus ring, Enter/Space. Try tabbing to it.</p>
+    </ui-card>
+
+    <ui-card variant="outlined" interactive disabled style="width:240px">
+      <strong>Disabled</strong>
+      <p class="hint" style="margin:var(--ui-sys-space-1) 0 0">Inert: no pointer, no tab stop, faint ink.</p>
+    </ui-card>
+
+    <!-- Composition: the Paid add-ons locked panel (guide: lock + upgrade CTA on a tokened card) -->
+    <ui-card variant="filled" style="width:300px">
+      <div style="display:flex;align-items:flex-start;gap:var(--ui-sys-space-3)">
+        <ui-icon size="lg">lock</ui-icon>
+        <div style="min-width:0">
+          <strong>Paid add-ons</strong>
+          <p class="hint" style="margin:var(--ui-sys-space-1) 0 0">Messaging, Community and Profiles are locked on this plan. Upgrade to unlock them for every workspace member.</p>
+        </div>
+      </div>
+      <div slot="actions">
+        <ui-button variant="text">Learn more</ui-button>
+        <ui-button variant="filled">Upgrade</ui-button>
+      </div>
+    </ui-card>
+  </div>
+</section>
+
+    <section id="textarea">
+  <h3>ui-textarea <span class="hint">— multiline field with floating label, live maxlength counter, optional auto-grow</span></h3>
+  <div class="col">
+    <ui-textarea label="One-line summary" rows="2" placeholder="" supporting-text="What this plan is, in a sentence or two"></ui-textarea>
+    <ui-textarea label="Description" rows="4" maxlength="1500" value="A community investment supporting local watershed restoration, pairing employee volunteer hours with a three-year grant."></ui-textarea>
+    <ui-textarea label="Why this, why now" rows="2" maxlength="500" auto-grow error supporting-text="Rationale is required" value="Aligns with our license-to-operate priorities in the region."></ui-textarea>
+  </div>
+</section>
+
+    <section id="text-field-plain">
+  <h3>ui-text-field — outlined vs plain</h3>
+  <div class="row">
+    <div class="col">
+      <ui-text-field label="Plan name"></ui-text-field>
+      <ui-text-field label="Role" value="Community lead"></ui-text-field>
+      <ui-text-field label="Role" error supporting-text="Required"></ui-text-field>
+      <ui-text-field label="Locked" value="Cannot edit" disabled></ui-text-field>
+    </div>
+    <div class="col">
+      <ui-text-field variant="plain" placeholder="Insert Plan Name"></ui-text-field>
+      <ui-text-field variant="plain" placeholder="Role on this plan" value="Community lead"></ui-text-field>
+      <ui-text-field variant="plain" placeholder="Role on this plan" error></ui-text-field>
+      <ui-text-field variant="plain" placeholder="Locked" value="Cannot edit" disabled></ui-text-field>
+    </div>
+  </div>
+</section>
+
+    <section id="badge">
+      <h3>ui-badge</h3>
+      <div class="row">
+        <!-- inline count pill (alert tone default) -->
+        <ui-badge count="3"></ui-badge>
+        <!-- inline overflow cap -->
+        <ui-badge count="120"></ui-badge>
+        <!-- neutral tone -->
+        <ui-badge count="7" tone="neutral"></ui-badge>
+        <!-- dot-only mode -->
+        <ui-badge dot></ui-badge>
+        <!-- anchored on a ui-icon-button (the Messages unread badge composition) -->
+        <ui-badge count="4" aria-label="4 unread messages">
+          <ui-icon-button variant="standard" aria-label="Messages"><ui-icon>chat</ui-icon></ui-icon-button>
+        </ui-badge>
+        <!-- anchored dot on a ui-avatar -->
+        <ui-badge dot>
+          <ui-avatar name="Maria Chen"></ui-avatar>
+        </ui-badge>
+        <!-- hidden at zero: the child renders alone -->
+        <ui-badge count="0">
+          <ui-icon-button variant="standard" aria-label="Notifications"><ui-icon>notifications</ui-icon></ui-icon-button>
+        </ui-badge>
+      </div>
+    </section>
+
+    <section id="owner-picker">
+  <h2>Owner picker</h2>
+  <p class="demo-note">
+    <code>&lt;ui-owner-picker&gt;</code> — owner avatar multi-select. Click an avatar once to
+    arm removal (X overlay), click again to remove; the dashed "+" opens a typeahead over
+    the remaining candidates (system-role users excluded). <code>readonly</code> renders a
+    display-only stack with a "+N" overflow.
+  </p>
+
+  <div class="demo-row">
+    <div>
+      <h3>Editable (md)</h3>
+      <ui-owner-picker id="op-edit"></ui-owner-picker>
+    </div>
+    <div>
+      <h3>Read-only (sm, max 4)</h3>
+      <ui-owner-picker id="op-read" readonly size="sm" max="4"></ui-owner-picker>
+    </div>
+  </div>
+
+  <p class="demo-note">Last <code>change</code>: <code id="op-log">—</code></p>
+
+  <script type="module">
+    import './components/owner-picker.js';
+
+    const USERS = [
+      { id: 'u1', name: 'Maria Chen',    title: 'Director, Government Affairs', email: 'maria.chen@example.com' },
+      { id: 'u2', name: 'Jordan Kim',    title: 'Director, GA&PP North America', email: 'jordan.kim@example.com' },
+      { id: 'u3', name: 'Sam Okafor',    title: 'Community Investment Lead',    email: 'sam.okafor@example.com' },
+      { id: 'u4', name: 'Alex Rivera',   title: 'Public Policy Manager',        email: 'alex.rivera@example.com' },
+      { id: 'u5', name: 'Dana Novak',    title: 'Regional Affairs Manager',     email: 'dana.novak@example.com' },
+      { id: 'u6', name: 'Quinn Torres',  title: 'Stakeholder Analyst',          email: 'quinn.torres@example.com' },
+      { id: 'u7', name: 'Taylor Okonjo', title: 'Communications Lead',          email: 'taylor.okonjo@example.com' },
+      { id: 'u-system', name: 'Reminders', title: 'System', email: '', role: 'system' }
+    ];
+
+    const edit = document.getElementById('op-edit');
+    edit.users = USERS;
+    edit.value = ['u1', 'u3'];
+    edit.addEventListener('change', (e) => {
+      document.getElementById('op-log').textContent = JSON.stringify(e.detail.value);
+    });
+
+    const read = document.getElementById('op-read');
+    read.users = USERS;
+    read.value = ['u1', 'u2', 'u3', 'u4', 'u5', 'u6', 'u7']; // 7 owners, max 4 → "+3"
+  </script>
+</section>
+
+    <section id="coachmark">
+  <h3>ui-coachmark</h3>
+  <div class="row">
+    <ui-button id="coachmark-target" variant="tonal">Tour target</ui-button>
+    <ui-button variant="outlined"
+      onclick="const c=document.getElementById('coachmark-demo'); c.setAttribute('step','1'); c.setAttribute('open','');">
+      Start tour
+    </ui-button>
+    <ui-coachmark id="coachmark-demo" for="coachmark-target" step="1" steps="3" heading="Pin what you use daily">
+      This is the tour target. Back is hidden on the first step, Next becomes Done on the
+      last, and Escape or the × dismisses the tour.
+    </ui-coachmark>
+  </div>
+  <script>
+    (() => {
+      const cm = document.getElementById('coachmark-demo');
+      const headings = ['Pin what you use daily', 'Step counters stay in sync', 'That is the whole tour'];
+      const sync = () => cm.setAttribute('heading', headings[cm.step - 1] || '');
+      cm.addEventListener('next', (e) => {
+        if (e.detail.step >= e.detail.steps) { cm.removeAttribute('open'); return; }
+        cm.setAttribute('step', String(e.detail.step + 1));
+        sync();
+      });
+      cm.addEventListener('back', (e) => {
+        cm.setAttribute('step', String(Math.max(1, e.detail.step - 1)));
+        sync();
+      });
+    })();
+  </script>
+</section>
   </main>
 
   <!-- Seed data for property-driven gap-fill components -->

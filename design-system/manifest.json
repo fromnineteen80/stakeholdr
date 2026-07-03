@@ -33,7 +33,8 @@
       "snackbar",
       "linear-progress",
       "circular-progress",
-      "avatar"
+      "avatar",
+      "card"
     ],
     "gapFill": [
       "autocomplete",
@@ -44,7 +45,11 @@
       "nav-drawer",
       "sheet",
       "bottom-bar",
-      "date-picker"
+      "date-picker",
+      "textarea",
+      "badge",
+      "owner-picker",
+      "coachmark"
     ],
     "scaffold": [
       "app-shell",
@@ -295,8 +300,17 @@
       "tag": "ui-text-field",
       "status": "built",
       "category": "native",
-      "summary": "Outlined text input; floating label, leading/trailing slots, error state, supporting text, form-associated.",
+      "summary": "Text input; outlined variant with floating label, plain variant for label-less chrome-light inline fields (hairline outline strengthening on focus), leading/trailing slots, error state, supporting text, form-associated.",
       "props": [
+        {
+          "name": "variant",
+          "type": "enum",
+          "values": [
+            "outlined",
+            "plain"
+          ],
+          "default": "outlined"
+        },
         {
           "name": "label",
           "type": "string",
@@ -1072,6 +1086,263 @@
         "lg"
       ],
       "import": "./components/avatar.js"
+    },
+    "textarea": {
+      "tag": "ui-textarea",
+      "status": "built",
+      "category": "gapFill",
+      "summary": "Outlined multiline text field, visually consistent with ui-text-field; floating label, error state, supporting text, rows, maxlength with live right-aligned 'N / MAX' counter (error ink at limit), optional auto-grow, form-associated.",
+      "props": [
+        {
+          "name": "label",
+          "type": "string",
+          "default": ""
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "default": ""
+        },
+        {
+          "name": "placeholder",
+          "type": "string",
+          "default": ""
+        },
+        {
+          "name": "rows",
+          "type": "number",
+          "default": 3
+        },
+        {
+          "name": "maxlength",
+          "type": "number",
+          "default": null
+        },
+        {
+          "name": "supporting-text",
+          "type": "string",
+          "default": ""
+        },
+        {
+          "name": "error",
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "name": "auto-grow",
+          "type": "boolean",
+          "default": false
+        }
+      ],
+      "states": [
+        "default",
+        "focused",
+        "has-value",
+        "error",
+        "at-limit",
+        "disabled"
+      ],
+      "import": "./components/textarea.js"
+    },
+    "badge": {
+      "tag": "ui-badge",
+      "status": "built",
+      "category": "gapFill",
+      "summary": "Count/dot notification indicator (oracle msg-badge/count-alert): accent pill ~16px with 9.5px weight-600 tabular numerals, caps at 99+, hidden when count is 0/absent unless dot; inline on its own or anchored -4px/-4px over a wrapped child's top-right corner (nav items, icon buttons, avatars, list rows); non-interactive (pointer-events none); tones alert/neutral via --ui-sys-badge-* tokens; auto aria-label \"N notifications\" on an inner role=status, overridable via host aria-label.",
+      "props": [
+        {
+          "name": "count",
+          "type": "number",
+          "default": 0,
+          "note": "badge hides when 0/absent unless dot; values above 99 render as 99+"
+        },
+        {
+          "name": "dot",
+          "type": "boolean",
+          "default": false,
+          "note": "dot-only marker, shown regardless of count"
+        },
+        {
+          "name": "tone",
+          "type": "enum",
+          "values": [
+            "alert",
+            "neutral"
+          ],
+          "default": "alert"
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "default": "",
+          "note": "overrides the auto \"N notifications\" label (dot: \"New notifications\")"
+        }
+      ],
+      "states": [
+        "inline",
+        "anchored",
+        "dot",
+        "hidden",
+        "overflow-99+"
+      ],
+      "import": "./components/badge.js"
+    },
+    "owner-picker": {
+      "tag": "ui-owner-picker",
+      "status": "built",
+      "category": "gapFill",
+      "summary": "Owner avatar multi-select (the oracle's MultiOwnerPicker + UserAutocomplete-add + OwnersDisplay read-only stack). Overlapping ui-avatar circles, no names; dashed '+' (hidden when no candidates) opens an inline typeahead over candidates (name/title/email match, max 8, ArrowUp/Down/Enter/Escape, outside-click close, 'Search people to add…', autofocus); avatar click ARMS removal (neg ring + X overlay, 'Click to remove'), second click removes; system-role users and existing owners excluded from the add list. readonly = display-only stack with '+N' overflow past max. Emits change with detail { value }. Composes ui-avatar + ui-icon.",
+      "props": [
+        {
+          "name": "users",
+          "type": "array",
+          "default": "[]",
+          "note": "set via JS property; array of { id, name, title?, email?, src?, role? } — role 'system' never appears in the add list"
+        },
+        {
+          "name": "value",
+          "type": "array",
+          "default": "[]",
+          "note": "set via JS property; array of owner user ids"
+        },
+        {
+          "name": "readonly",
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "name": "size",
+          "type": "enum",
+          "values": [
+            "sm",
+            "md"
+          ],
+          "default": "md",
+          "note": "maps to --ui-sys-avatar-size-sm/-md"
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "default": 5,
+          "note": "readonly overflow cap before the '+N' circle"
+        }
+      ],
+      "states": [
+        "stack",
+        "arm-remove",
+        "adding-open",
+        "keyboard-active",
+        "no-matches",
+        "add-hidden-no-candidates",
+        "readonly",
+        "overflow-+N",
+        "empty-dash"
+      ],
+      "import": "./components/owner-picker.js"
+    },
+    "coachmark": {
+      "tag": "ui-coachmark",
+      "status": "built",
+      "category": "gapFill",
+      "summary": "Anchored spotlight callout for first-run product tours; scrim with box-shadow cutout leaving the anchor prominent; card with heading, body slot, step counter, Back/Next-Done, dismiss ×; Esc dismisses; focus moves in on open and restores on close; emits next/back/dismiss.",
+      "props": [
+        {
+          "name": "for",
+          "type": "string",
+          "default": "",
+          "note": "id of the target element to spotlight"
+        },
+        {
+          "name": "step",
+          "type": "number",
+          "default": 1,
+          "note": "1-based current step; Back hidden on step 1"
+        },
+        {
+          "name": "steps",
+          "type": "number",
+          "default": 1,
+          "note": "total steps; Next becomes Done on the last step; counter reads \"step of steps\""
+        },
+        {
+          "name": "heading",
+          "type": "string",
+          "default": ""
+        },
+        {
+          "name": "open",
+          "type": "boolean",
+          "default": false
+        }
+      ],
+      "events": [
+        {
+          "name": "next",
+          "detail": "{ step, steps }",
+          "note": "Next/Done clicked; host advances step or closes on last step"
+        },
+        {
+          "name": "back",
+          "detail": "{ step, steps }",
+          "note": "Back clicked; host decrements step"
+        },
+        {
+          "name": "dismiss",
+          "detail": "{ step, steps }",
+          "note": "× button or Escape; component also closes itself"
+        }
+      ],
+      "states": [
+        "open",
+        "closed",
+        "first-step (Back hidden)",
+        "last-step (Next reads Done)",
+        "placed-below",
+        "placed-above",
+        "no-anchor (centered, no spotlight)"
+      ],
+      "import": "./components/coachmark.js"
+    },
+    "card": {
+      "tag": "ui-card",
+      "status": "built",
+      "category": "native",
+      "summary": "Content surface; outlined/filled/elevated variants; media/body/actions slots; `interactive` makes the whole card clickable (state layer, focus ring, role=button, Enter/Space). Reads --ui-sys-surface-card / -surface-container, --ui-sys-shape-card, --ui-sys-outline-subtle, --ui-sys-elevation-1.",
+      "props": [
+        {
+          "name": "variant",
+          "type": "enum",
+          "values": [
+            "outlined",
+            "filled",
+            "elevated"
+          ],
+          "default": "outlined"
+        },
+        {
+          "name": "interactive",
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "default": false
+        }
+      ],
+      "states": [
+        "enabled",
+        "hover",
+        "pressed",
+        "focus-visible",
+        "disabled"
+      ],
+      "import": "./components/card.js"
     }
   }
 }
