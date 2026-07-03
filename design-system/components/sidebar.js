@@ -339,15 +339,39 @@ sidebarTemplate.innerHTML = `
       max-width: 200px;
       opacity: 1;
     }
-    /* Collapsed: the brand MARK stays visible (the app hides its text via
-       ui-sidebar[collapsed] .brand-text) — Claude keeps the logo at the top
-       of the collapsed rail; the header stacks mark over toggle on the axis. */
+    /* CLAUDE PATTERN (RULED): collapsed, there is ONE spot — the brand mark
+       shows by default and SWAPS to the open-panel icon on hover/focus; the
+       mark IS the toggle. (The app hides the wordmark via
+       ui-sidebar[collapsed] .brand-text.) */
+    :host([collapsed]) .header {
+      position: relative;
+      justify-content: center;
+    }
     :host([collapsed]) .brand-wrap {
       flex: 0 0 auto;
       max-width: none;
       display: flex;
       justify-content: center;
+      transition: opacity var(--ui-sys-motion-control);
     }
+    :host([collapsed]) .toggle-btn {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      opacity: 0;
+    }
+    :host([collapsed]) .header:hover .brand-wrap,
+    :host([collapsed]) .header:focus-within .brand-wrap { opacity: 0; }
+    :host([collapsed]) .header:hover .toggle-btn,
+    :host([collapsed]) .toggle-btn:focus-visible { opacity: 1; }
+
+    /* Expanded: the toggle is quiet until the rail is hovered (Claude reveal). */
+    :host(:not([collapsed])) .toggle-btn {
+      opacity: 0;
+      transition: opacity var(--ui-sys-motion-control), color var(--ui-sys-motion-control);
+    }
+    :host(:not([collapsed]):hover) .toggle-btn,
+    :host(:not([collapsed])) .toggle-btn:focus-visible { opacity: 1; }
 
     /* Toggle button */
     .toggle-btn {
@@ -395,11 +419,7 @@ sidebarTemplate.innerHTML = `
     :host([collapsed]) .ti-close { display: none; }
     :host([collapsed]) .ti-open  { display: block; }
     :host([collapsed]) .header {
-      flex-direction: column;
-      justify-content: center;
-      height: auto;
-      padding: var(--ui-sys-space-2) 0;
-      gap: var(--ui-sys-space-1);
+      padding: 0;
     }
 
     /* Nav list */
