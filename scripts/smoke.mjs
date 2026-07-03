@@ -33,6 +33,22 @@ for (const path of pages) {
   if (path === '/index.html') {
     await page.locator('md-list-item, li, [role="listitem"]').first().click({ timeout: 3000 }).catch(() => {});
   }
+  if (path === '/app.html') {
+    // Phase 5: drive the Map view — select a dot, enter history (assert the
+    // trail renders), close + reopen the scorecard rail; any error counts.
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Map' }).click({ timeout: 3000 }).catch(e => errs.push('MAPNAV: ' + e.message));
+    await page.waitForTimeout(500);
+    await page.locator('ui-stakeholder-map .dot[aria-label^="Mayor Maria Chen"]').click({ timeout: 3000 }).catch(e => errs.push('MAPDOT: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('ui-stakeholder-map ui-chip.history-toggle').click({ timeout: 3000 }).catch(e => errs.push('MAPHIST: ' + e.message));
+    await page.waitForTimeout(300);
+    const trail = await page.locator('ui-stakeholder-map .trail-svg path').count();
+    if (trail !== 1) errs.push(`MAPTRAIL: expected 1 history trail path, saw ${trail}`);
+    await page.locator('ui-stakeholder-map ui-inspector .close-btn').click({ timeout: 3000 }).catch(e => errs.push('MAPCLOSE: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('ui-stakeholder-map .map-detail-reopen').click({ timeout: 3000 }).catch(e => errs.push('MAPREOPEN: ' + e.message));
+    await page.waitForTimeout(300);
+  }
   if (path.includes('wireframes')) {
     await page.locator('#theme-modern').click({ timeout: 3000 }).catch(e => errs.push('TOGGLE: ' + e.message));
     await page.waitForTimeout(400);

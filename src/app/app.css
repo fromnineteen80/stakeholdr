@@ -75,6 +75,12 @@ ui-sidebar[collapsed] .me { justify-content: center; padding: var(--ui-sys-space
 .sheet-wrap { height: 100%; }
 .sheet-table { display: flex; height: 100%; }
 
+/* Map page — the sealed map-wrap two-column layout lives INSIDE
+ * ui-stakeholder-map (plot stage + ui-inspector scorecard rail); this is
+ * pure sizing so the component fills the work runway. */
+.map-page { height: 100%; }
+.map-view { display: flex; height: 100%; }
+
 /* NOTES MODAL (sealed NotesModal spec) — layout-only, token-only classes for
  * the ui-dialog + ui-textarea composition hosted by the Lists page. */
 .notes-head {

@@ -1162,19 +1162,71 @@
       "tag": "ui-stakeholder-map",
       "status": "built",
       "category": "domain",
-      "summary": "The Stakeholdr map — heat/scatter combo. 4x6 relationship-zone heatmap (14 zones via zone tokens) with stakeholders scatter-plotted by (x,y) [left=((x+10)/20), top=((10-y)/20)], zone labels + per-cell counts, axis legend, and a strategy detail panel (status pill, coords, strategy title+action, category). statusFor(x,y) lookup. .data overrides sample seed.",
+      "summary": "The Stakeholdr Map at the FULL sealed spec — READ-ONLY (drag-to-rescore removed by ruling). Plot internals are the ONE sanctioned inline-SVG/positioned-div composition; chrome/panels compose real ui-* elements. Stage: paper runway, proportional 92%/920px plot box; 6x4 zone grid as fr ratios (rows 2/1/1/1/1/2) filled by the single-sourced --ui-sys-zone-* tokens, strong-outline outer border + zone-grid-line hairlines + centre cross; optional zone labels + bottom-right per-cell count pills (binning EXACTLY matches statusFor); y ticks [10..-10 by 2.5] left, x ticks every integer -10..10 below, the sealed bordered legend card. Dots at coordToPct(_x,_y) (left=((x+10)/20)%, top=((10-y)/20)%), zone fill/ink/border tokens (accent when selected), abbrev initials at dot-size>=22, name label when show-labels or selected, ui-tooltip '{name} · {zone} · (x, y)'. Styles: halo (DEFAULT; ring inset -(dotSize*0.8)px — solid translucent disc pending the recorded gradient ruling) | classic | density (color-mix(in oklch, zone {20+t*80}%, --ui-sys-zone-density-base)). History mode (rows with history[]): other dots hide; dashed 14px paper quarter dots + the dashed accent trail SVG (viewBox 0 0 100 100, stroke-width .35, dash 1.2,1.2, non-scaling-stroke) through [...history, current]; selecting any dot exits. Scorecard = the real ui-inspector rail (defaults OPEN; closed shows the reopen ui-icon-button chevron_left at top 16/right 0): empty state = de-staled prompt + first-six 'Recently scored' ui-button rows; selected state = title/org, Visit Website (normalizeUrl), ui-chip filter 'Show history' toggle (only when history exists), large zone ui-chip + live coords, zone-tinted STRATEGY card (engine strategy/action verbatim), the sealed 11 metadata rows (86px/1fr; tag/priority chips, ui-avatar owner stack, formatDateLong, ui-status-dot), and the LATEST NOTE card (newest notesHistory by .at, fallback notes). Pure logic (GRID/statusFor/coordToPct/cellFor/countCells/densityPct/haloInset/ticks/legend/TWEAK_DEFAULTS/formatDateLong/latestNote — verbatim mirrors of the sealed engine, parity-tested by scripts/map-test.mjs) is exported for node. Bare tag renders a gallery sample.",
       "props": [
         {
           "name": "data",
           "type": "array",
           "default": "sample",
-          "note": "set via JS property [{name,x,y}]"
+          "note": "set via JS property; rows carry the stakeholder fields plus RAW computed _x/_y/_status (the page computes weightedCoord/statusFor live) and history[]/notesHistory[]"
+        },
+        {
+          "name": "users",
+          "type": "array",
+          "default": "[]",
+          "note": "set via JS property; resolves the scorecard Owner avatar stack (unresolvable ids silently drop — sealed OwnersDisplay rule)"
+        },
+        {
+          "name": "map-style",
+          "type": "enum",
+          "values": [
+            "halo",
+            "classic",
+            "density"
+          ],
+          "default": "halo",
+          "note": "sealed TWEAK_DEFAULTS; presentational only — never changes positions or scores"
+        },
+        {
+          "name": "show-labels",
+          "type": "boolean",
+          "default": false,
+          "note": "always show dot name labels (selected dots always label)"
+        },
+        {
+          "name": "show-zone-labels",
+          "type": "boolean",
+          "default": true,
+          "note": "zone names in cells; pass \"false\" to hide"
+        },
+        {
+          "name": "dot-size",
+          "type": "number",
+          "default": 22,
+          "note": "px; sealed slider range 14–36 step 2; initials appear at >= 22"
+        }
+      ],
+      "events": [
+        {
+          "name": "selection-change",
+          "detail": "{ id }",
+          "note": "single click / recent-row select — wrapSelect: select + force scorecard open + exit history; selection lifts to the page (shared with Lists/Scoring)"
+        },
+        {
+          "name": "open-profile",
+          "detail": "{ id }",
+          "note": "dot double-click — the page opens the sealed read-only stakeholder profile"
         }
       ],
       "states": [
-        "bubble-selected",
-        "bubble-hover",
-        "detail-open"
+        "dot-selected",
+        "dot-hover",
+        "history-mode",
+        "scorecard-open",
+        "scorecard-closed",
+        "halo",
+        "classic",
+        "density"
       ],
       "import": "./components/stakeholder-map.js"
     },

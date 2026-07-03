@@ -148,6 +148,46 @@ await page.screenshot({ path: `${OUT}/p4-edit-after-confirm-close.png` });
 await page.keyboard.press('Escape');
 await page.waitForTimeout(400);
 
+// ── PHASE-5 MAP CAPTURES ───────────────────────────────────────────────────
+// 1 · the Map page, default halo view (scorecard open, empty state)
+await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Map' }).click();
+await page.waitForTimeout(600);
+await page.screenshot({ path: `${OUT}/p5-map-halo-default.png` });
+// 2 · select sh-01 (Mayor Maria Chen) → selected dot + populated scorecard
+await page.locator('ui-stakeholder-map .dot[aria-label^="Mayor Maria Chen"]').click();
+await page.mouse.move(700, 620); // park the pointer so no stray hover tooltip
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p5-map-selected-scorecard.png` });
+// 3 · history mode on sh-01 — the dashed trail + quarter dots (seed carries
+//     the sealed FY26 Q1→Q3 trail; other dots must hide)
+await page.locator('ui-stakeholder-map ui-chip.history-toggle').click();
+await page.mouse.move(700, 620);
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p5-map-history-trail.png` });
+// exit history via wrapSelect (selecting any dot exits — sealed)
+await page.locator('ui-stakeholder-map .dot[aria-label^="Mayor Maria Chen"]').click();
+await page.mouse.move(700, 620);
+await page.waitForTimeout(300);
+// 4 · density mode (per-cell color-mix shading; counts drive the heat)
+await page.evaluate(() => {
+  document.querySelector('ui-stakeholder-map').setAttribute('map-style', 'density');
+});
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p5-map-density.png` });
+await page.evaluate(() => {
+  document.querySelector('ui-stakeholder-map').setAttribute('map-style', 'halo');
+});
+// 5 · collapsed scorecard → the reopen tab at top 16 / right 0
+await page.locator('ui-stakeholder-map ui-inspector .close-btn').click();
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p5-map-scorecard-closed.png` });
+await page.screenshot({ path: `${OUT}/p5-map-reopen-tab.png`, clip: { x: 1040, y: 60, width: 400, height: 300 } });
+await page.locator('ui-stakeholder-map .map-detail-reopen').click();
+await page.waitForTimeout(400);
+// back to Lists so the shell/rail captures below stay phase-stable
+await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'List' }).click();
+await page.waitForTimeout(500);
+
 await page.screenshot({ path: `${OUT}/rail-expanded.png`, clip: { x: 0, y: 0, width: 300, height: 900 } });
 await measureAxis(page, 'expanded');
 
