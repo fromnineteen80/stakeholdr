@@ -46,7 +46,7 @@
     }
 
     /* shared in-shell bits */
-    .brand { display: inline-flex; align-items: center; gap: var(--ui-sys-space-2); font: var(--ui-sys-font-title); font-size: 15px; }
+    .brand { margin-left: calc(var(--ui-sys-sidebar-width-collapsed, 64px) / 2 - var(--ui-sys-space-3) - 13px); display: inline-flex; align-items: center; gap: var(--ui-sys-space-2); font: var(--ui-sys-font-title); font-size: 15px; }
     /* Workspace selector — lives in the top bar next to the brand (RULED 2026-07-02). */
     .ws-select {
       display: inline-flex; align-items: center; gap: var(--ui-sys-space-1);
