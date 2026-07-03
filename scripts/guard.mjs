@@ -39,6 +39,8 @@ function walk(dir) {
         add(p, i, 'gradient — banned (no gradients ever).');
       if (['.jsx', '.html'].includes(extname(p)) && /\sstyle\s*=\s*[{"'`]/.test(ln))
         add(p, i, 'inline style= — banned; use the token-only app.css layer or a component prop.');
+      if (extname(p) === '.jsx' && /<(button|input|select|textarea|option)\b/.test(ln))
+        add(p, i, 'raw interactive HTML in app code — compose the real ui-* component (composition law).');
     });
   }
 }
