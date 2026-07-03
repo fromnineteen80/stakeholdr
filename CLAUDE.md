@@ -203,11 +203,16 @@ the guide source.
 5. **Honor every DO-NOT-REPLICATE / MAKE-REAL flag.** The original design is accurate;
    its broken plumbing is not. Dead writes get wired, fake links get real routes
    (first-class routing — no `window.__*` bridges), unreachable controls become real.
-6. **Per-phase acceptance, before moving on:** `npm run build` green → headless-Chromium
-   smoke (zero real console errors — the script pattern lives in this session's history;
-   re-create as `scripts/smoke.mjs`) → tree-check (every skeleton node for the new screen
-   present) → connectivity check (that screen's census edges wired REAL) → push small →
-   the user confirms on the `.io` before the next phase begins.
+6. **Per-phase acceptance, before moving on:** `npm run build` green (guard runs inside
+   it) → headless-Chromium smoke (`scripts/smoke.mjs`, zero real console errors) →
+   **VISUAL GATE (`scripts/shots.mjs`): screenshot the app and LOOK at the renders —
+   Claude inspects the images against the wireframes + industry norms (alignment,
+   centering, spacing, form factor) before anything merges; function gates cannot see
+   form** → tree-check (every skeleton node present) → connectivity check (census edges
+   wired REAL) → push small → the user confirms on the `.io` before the next phase.
+   FONTS ARE SELF-HOSTED (`design-system/fonts/` + `fonts.css`, icon font subset to the
+   sealed vocabulary, `font-display: block`) — never reintroduce runtime Google Fonts in
+   the app; raw-ligature flash was the root cause of the 2026-07-03 "broken icons".
 7. **Order:** the guide's build phases (foundation/tokens → app shell → pages → record
    scaffold + workHQ → demo features → backend → paid add-ons). State A (demo,
    client-side) completes before State B (Supabase); backend work honors the two

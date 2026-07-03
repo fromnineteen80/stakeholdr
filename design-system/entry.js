@@ -3,6 +3,7 @@
  * one clean Vite entry (tokens + all custom elements bundled together).
  * Pages reference ONLY this file: <script type="module" src="./entry.js"></script>
  */
+import "./fonts.css"; // self-hosted Inter + Newsreader + Material Symbols (subset)
 import "./tokens.css";
 
 import "./components/icon.js";
