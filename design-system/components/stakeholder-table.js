@@ -127,7 +127,12 @@ template.innerHTML = `
     background: var(--ui-sys-surface-card);
   }
 
-  .toolbar-btn {
+  .toolbar-btn[disabled] {
+      opacity: .45;
+      cursor: default;
+      pointer-events: none;
+    }
+    .toolbar-btn {
     appearance: none;
     position: relative;
     isolation: isolate;
@@ -453,22 +458,22 @@ template.innerHTML = `
     <input class="search-input" type="search" placeholder="Search stakeholders, orgs, tags…"
            aria-label="Search stakeholders" autocomplete="off" spellcheck="false"/>
   </div>
-  <button class="toolbar-btn" type="button" aria-label="Filter">
+  <button class="toolbar-btn" type="button" aria-label="Filter" disabled title="Wired in the full Lists build phase">
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
     </svg>
     Filter
   </button>
-  <button class="toolbar-btn" type="button" aria-label="Sort">
+  <button class="toolbar-btn" type="button" aria-label="Sort" disabled title="Wired in the full Lists build phase">
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <path d="M2 5h12M4 8h8M6 11h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
     </svg>
     Sort
   </button>
-  <button class="toolbar-btn" type="button" aria-label="Categories">
+  <button class="toolbar-btn" type="button" aria-label="Categories" disabled title="Wired in the full Lists build phase">
     Categories
   </button>
-  <button class="toolbar-btn" type="button" aria-label="Sites">
+  <button class="toolbar-btn" type="button" aria-label="Sites" disabled title="Wired in the full Lists build phase">
     Sites
     <span class="badge" aria-label="3 active">3</span>
   </button>

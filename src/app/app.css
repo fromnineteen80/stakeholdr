@@ -21,7 +21,7 @@ body {
   color: var(--ui-sys-on-surface);
 }
 .brand .mark {
-  width: 24px; height: 24px; border-radius: var(--ui-ref-radius-sm);
+  width: 26px; height: 26px; border-radius: var(--ui-sys-shape-pill); /* CIRCLE (RULED) */
   display: inline-flex; align-items: center; justify-content: center;
   background: var(--ui-sys-on-surface); color: var(--ui-sys-surface-card);
   font-family: var(--ui-ref-typeface-title); font-weight: 500; font-size: 13px;
@@ -34,7 +34,6 @@ body {
   display: inline-flex; align-items: center; gap: var(--ui-sys-space-1);
   font: var(--ui-sys-font-label);
   padding: var(--ui-sys-space-1) var(--ui-sys-space-2);
-  margin-left: var(--ui-sys-space-3);
   border-radius: var(--ui-sys-shape-control);
   border: 1px solid var(--ui-sys-outline-subtle);
   background: var(--ui-sys-surface-field);
@@ -71,3 +70,7 @@ ui-sidebar[collapsed] .me { justify-content: center; padding: var(--ui-sys-space
 /* Lists page — the table fills the work runway (the component owns all real
  * structure; this is pure token-free sizing). */
 .sheet-table { display: flex; height: 100%; }
+
+/* Honest pending state — a control that is not wired yet must LOOK inert
+ * (make-real law: never a live-looking dead affordance). Removed per phase. */
+.ws-select.is-pending { opacity: .55; cursor: default; }
