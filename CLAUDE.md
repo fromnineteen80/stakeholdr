@@ -143,33 +143,34 @@ the guide source.
 - The `.io` renders ONLY the guide (`src/main.jsx` → `Guide`), plus the two standalone
   design-system pages.
 
-## STATUS (updated 2026-06-13 — the 360 review)
-- **Design law RULED:** Canonical UI (see above). Guide Boxes 1–3 amended accordingly and
-  **unsealed pending the user's re-confirmation**; the shadcn Design-system capture box is
-  superseded (history preserved in place).
-- **Capture:** 8 boxes sealed (Scoring, Cadence, Map, Plan algorithm ×2, Recommendation
-  alignment, Plan page, Plan worked-example). ~20 boxes written longform but **awaiting
-  confirmation**. **5 boxes missing/empty:** INDEX (manifest + traceability — row exists,
-  no detail), workHQ (`intel.jsx` — scope with the user first), command palette
-  (`palette.jsx`), landing page (`landing.jsx`), full stakeholder/user profile field set
-  (`profiles.jsx`/`profile-page.jsx`).
-- **Book:** Parts I–II in prose; Parts III–IX pending.
-- **Design system:** 35 components built + manifest + preview; wireframes cover 3 screens
-  (List, Map, Mobile) — remaining screens wireframed during the build phases.
-- **AGREED SEQUENCE (the user's plan): (1) write the 5 missing boxes → (2) seal the ~20
-  pending boxes one at a time → (3) verification audit vs the oracle → (4) build phases.**
-- **ORIGINAL-DESIGN CENSUS (ruled 2026-07-02, runs after the content-verify loop):** four
-  sweeps over the ORIGINAL app (`archive/src` incl. `styles.css` + `project/` prototype),
-  not the guide page: (a) COLORS — all ~187 literals reconciled with a disposition each
-  (already-tokenized / needs-token / flagged decision — nothing silently dropped);
-  (b) ELEMENTS/STRUCTURE — the ~641 className regions accounted for, AND a per-screen
-  SKELETON TREE (nested region tree extracted from the original JSX: shell → slot →
-  in-main stack, in order) written into each page's box so the build assembles against a
-  tree, never prose — this kills the "inferred divs, missing wrappers, line-by-line hell"
-  failure of the first build; (c) UX — all ~515 event-handler interactions accounted for;
-  (d) CONNECTIVITY — every cross-record link/navigation edge captured, fake wiring
-  flagged make-real. Wrapper structure itself lives INSIDE ui-* components (shadow DOM),
-  so page assembly is slotting components, never authoring divs.
+## STATUS (updated 2026-07-03 — CAPTURE WRITING COMPLETE)
+- **Design law RULED:** Canonical UI (see above). All boxes retargeted to ui-*; the shadcn
+  Design-system capture box is superseded (history preserved in place).
+- **Capture: WRITTEN AND MACHINE-VERIFIED.** Every box (incl. the formerly-missing INDEX,
+  workHQ, command palette, stakeholder/user profiles, stakeholder modal, app shell, shared
+  primitives, demo seed) carries full lossless longform. A 3-round ADVERSARIAL VERIFY-FIX
+  LOOP ran against the oracle (90 agents; 225 findings raised, 126 high/med — all repaired
+  with per-finding file+line evidence). All unflagged-fakes found are recorded in their
+  boxes as DO-NOT-REPLICATE / MAKE-REAL rules. See the INDEX box for the full stamp.
+- **ORIGINAL-DESIGN CENSUS: DONE (2026-07-03).** All four sweeps written into the guide:
+  COLORS — 187/187 literals dispositioned (Color-census box; frozen accent-wash theming
+  bug exposed); STRUCTURE — a SKELETON TREE with className accounting sits in every screen
+  box; UX — every handler binding accounted per box (~530 total); CONNECTIVITY — 94 edges
+  mapped (67 real · 12 fragile · 11 fake→make-real · 4 one-way) in the Connectivity-census
+  box.
+- **Book: COMPLETE.** Parts I–IX (~17k words) in `docs/STAKEHOLDR_BOOK.md`, written from
+  the verified boxes.
+- **Design system:** 36 components (ui-avatar added) + manifest + preview; Cream + Modern
+  theme token sets with a toggle on preview.html/wireframes.html; shell rulings implemented
+  in the wireframes. Known GAPs to build before use (see INDEX gate 2): ui-textarea/
+  multiline, plain field variant, badge/count, owner-picker, coachmark, whiteboard canvas.
+- **WHAT REMAINS (in order):** (1) USER SEALING — the user confirms boxes on the `.io`
+  (merge the branch to publish; a fourth blind verify pass is available on demand);
+  (2) the three OPEN DESIGN DECISIONS (accent hue incl. the #024AD8-vs-terracotta census
+  find; shadows vs flat; Cream vs Modern wrapper); (3) BUILD PHASES executed from the
+  sealed boxes only — assemble against the skeleton trees, honor every do-not-replicate /
+  make-real flag, close the INDEX coverage gates (GAP components registered first, all
+  needs-token hexes tokenized, no literal hex in app code).
 
 ## Engineering discipline
 Work in the code, fix at the source, single-source, replace-don't-duplicate, verify it
