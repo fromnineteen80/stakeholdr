@@ -1317,6 +1317,8 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
         ownersNode = h('span', 'owner-stack');
         for (const u of owners) {
           const av = document.createElement('ui-avatar');
+          av.setAttribute('ring', '');
+          if (u.avatarColor) av.style.setProperty('--ui-avatar-bg', u.avatarColor); // token ref from seed
           av.setAttribute('name', u.name || '');
           av.setAttribute('size', 'sm');
           if (u.avatarUrl) av.setAttribute('src', u.avatarUrl);

@@ -1261,7 +1261,7 @@
       "tag": "ui-avatar",
       "status": "built",
       "category": "native",
-      "summary": "Identity circle: photo (src) or initials derived from name (first+last). size sm/md/lg via --ui-sys-avatar-size-*; fill --ui-sys-primary/on-primary so it re-themes with the wrapper; role=img aria-label=name. The ONE avatar primitive — owner stacks/profile menus compose from it.",
+      "summary": "Identity circle: photo (src) or initials derived from name (first+last). size sm/md/lg via --ui-sys-avatar-size-*; fill --ui-sys-primary/on-primary so it re-themes with the wrapper; role=img aria-label=name. Per-identity color via the --ui-avatar-bg custom property (token references only). The ONE avatar primitive — owner stacks/profile menus compose from it.",
       "props": [
         {
           "name": "name",
@@ -1282,6 +1282,12 @@
             "lg"
           ],
           "default": "md"
+        },
+        {
+          "name": "ring",
+          "type": "boolean",
+          "default": false,
+          "note": "2px surface ring for overlapping stacks (industry standard)"
         }
       ],
       "states": [
