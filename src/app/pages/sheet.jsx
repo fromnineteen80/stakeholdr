@@ -12,10 +12,9 @@
  * pending affordances for open-record / community-open (those surfaces land
  * in their own build phases — no silent dead clicks, per the make-real law).
  *
- * Scoping (sealed Ecosystem box): Lists filters to the active workspace via
- * the stakeholderWorkspaces join; this shell is still pinned to Master (the
- * union of ALL stakeholders). The workspace filter wires up with the
- * shell-state phase — workspaceLabel feeds the sealed CSV filename rule.
+ * Scoping (sealed Ecosystem box, REAL as of Phase 6): Lists filters to the
+ * active workspace via the stakeholderWorkspaces join (Master = the union of
+ * ALL stakeholders); the workspace name feeds the sealed CSV filename rule.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePersistentState, uid, nowStamp, cmdKeyLabel } from '../data/store.js';
@@ -35,6 +34,9 @@ import { displayName } from '../../../design-system/components/stakeholder-table
 // modal's pure-logic module (sealed cross-link formulas).
 import { affiliatedCommunity, scoringNeededBody } from '../modals/stakeholder-logic.js';
 import { StakeholderModal } from '../modals/stakeholder-modal.jsx';
+import {
+  MASTER_WORKSPACE_ID, isMasterWorkspace, visibleStakeholders, createJoinFor,
+} from '../data/workspace.js';
 
 /* Sealed NotesModal date stamp: toLocaleDateString {month:short, day:numeric,
  * year:numeric}, or "-" when the entry has no date.                          */
@@ -45,7 +47,7 @@ function noteDate(at) {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export function SheetPage({ createNonce = 0 }) {
+export function SheetPage({ createNonce = 0, activeWorkspaceId = MASTER_WORKSPACE_ID }) {
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
   const [scores, setScores] = usePersistentState('scores', SEED_SCORES);
   const [team] = usePersistentState('team', SEED_TEAM);
@@ -78,23 +80,27 @@ export function SheetPage({ createNonce = 0 }) {
   // signed-in identity (sealed build order; do not invent auth here).
   const currentUser = users[0] || null;
 
-  /* Sealed row mapping: each visible stakeholder computes, live,
-   * _x/_y = weightedCoord (RAW — toFixed(1) is display-only, applied by the
-   * table) · _status = statusFor over the RAW position · _unscored
+  /* Sealed row mapping over the WORKSPACE-VISIBLE set (Phase 6: Master = the
+   * union; a workspace = join-filtered): each visible stakeholder computes,
+   * live, _x/_y = weightedCoord (RAW — toFixed(1) is display-only, applied by
+   * the table) · _status = statusFor over the RAW position · _unscored
    * (team.length > 0 AND no team member has a score) · community = affiliated
    * engagement names (pills; C5 make-real click routes back here).           */
-  const rows = useMemo(() => stakeholders.map((s) => {
-    const pos = weightedCoord(s.id, scores, team);
-    const perRater = scores[s.id] || {};
-    return {
-      ...s,
-      _x: pos.x,
-      _y: pos.y,
-      _status: statusFor(pos.x, pos.y),
-      _unscored: team.length > 0 && !team.some((m) => perRater[m.id]),
-      community: affiliatedCommunity(s.id, community).map((a) => a.name),
-    };
-  }), [stakeholders, scores, team, community]);
+  const rows = useMemo(() =>
+    visibleStakeholders(stakeholders, stakeholderWorkspaces, activeWorkspaceId)
+      .map((s) => {
+        const pos = weightedCoord(s.id, scores, team);
+        const perRater = scores[s.id] || {};
+        return {
+          ...s,
+          _x: pos.x,
+          _y: pos.y,
+          _status: statusFor(pos.x, pos.y),
+          _unscored: team.length > 0 && !team.some((m) => perRater[m.id]),
+          community: affiliatedCommunity(s.id, community).map((a) => a.name),
+        };
+      }),
+  [stakeholders, stakeholderWorkspaces, activeWorkspaceId, scores, team, community]);
 
   // Manifest: data/catalogs/users are JS properties — feed through the ref.
   useEffect(() => {
@@ -102,9 +108,13 @@ export function SheetPage({ createNonce = 0 }) {
     if (!el) return;
     el.catalogs = { CATEGORIES, MARKETS, GEOGRAPHIES, US_STATES, SITES, siteLabel };
     el.users = users;
-    el.workspaceLabel = ''; // Master → the sealed "stakeholders.csv" fallback
+    // Sealed CSV filename base = the workspace name; Master keeps the sealed
+    // "stakeholders.csv" fallback (empty label → csvFilename fallback).
+    el.workspaceLabel = isMasterWorkspace(activeWorkspaceId)
+      ? ''
+      : (workspaces.find((w) => w.id === activeWorkspaceId)?.name || '');
     el.data = rows;
-  }, [rows, users]);
+  }, [rows, users, workspaces, activeWorkspaceId]);
 
   /* THE ONE PERSISTENCE SEAM — every table edit flows out as row-change
    * {id, patch} and lands here: updateStakeholder + updatedAt stamp.         */
@@ -237,12 +247,10 @@ export function SheetPage({ createNonce = 0 }) {
         : (currentUser ? [currentUser.id] : []),
     };
     setStakeholders((prev) => [rec, ...prev]);
-    // Sealed join rule: ws = forceWorkspaceId || (isMaster ? null :
-    // activeWorkspaceId). This shell is still pinned to MASTER (workspace
-    // state lands with the shell-state phase), so the sealed result is
-    // UNASSIGNED — an empty membership array. When the workspace selector
-    // goes live, creating from a non-Master workspace auto-assigns here.
-    setStakeholderWorkspaces((prev) => ({ ...prev, [id]: [] }));
+    // Sealed join rule (REAL as of Phase 6): ws = forceWorkspaceId ||
+    // (isMaster ? null : activeWorkspaceId) — creating from a workspace
+    // auto-assigns there; from Master → unassigned (empty membership array).
+    setStakeholderWorkspaces((prev) => ({ ...prev, [id]: createJoinFor(activeWorkspaceId) }));
     // Sealed system-message side effect (drives the Scoring badge + Reminders).
     setMessages((prev) => ({
       ...prev,

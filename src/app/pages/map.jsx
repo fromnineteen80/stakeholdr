@@ -17,10 +17,9 @@
  * edits them — the oracle's drag-to-rescore is removed. All rescoring lives
  * on the Scoring page (quarterly cadence).
  *
- * Scoping (sealed Ecosystem box): rows = the workspace-filtered
- * visibleStakeholders; this shell is still pinned to MASTER, where the Map
- * IS available (sealed: it is the org-wide overview Master redirects
- * Scoring to). Team + scores are global.
+ * Scoping (sealed Ecosystem box, REAL as of Phase 6): rows = the
+ * workspace-filtered visibleStakeholders (Master = the org-wide union the
+ * sealed Scoring redirect lands on). Team + scores are global.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePersistentState, nowStamp } from '../data/store.js';
@@ -31,8 +30,9 @@ import {
 } from '../data/seed.js';
 import { ISSUES, TAGS } from '../data/catalogs.js';
 import { StakeholderModal } from '../modals/stakeholder-modal.jsx';
+import { MASTER_WORKSPACE_ID, visibleStakeholders } from '../data/workspace.js';
 
-export function MapPage() {
+export function MapPage({ activeWorkspaceId = MASTER_WORKSPACE_ID }) {
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
   const [scores, setScores] = usePersistentState('scores', SEED_SCORES);
   const [team] = usePersistentState('team', SEED_TEAM);
@@ -63,10 +63,13 @@ export function MapPage() {
    * computes, live, _x/_y = weightedCoord (RAW — toFixed(1) is display-only,
    * applied by the component) and _status = statusFor over the RAW position.
    * history[]/notesHistory ride along on the row for the trail + scorecard. */
-  const rows = useMemo(() => stakeholders.map((s) => {
-    const pos = weightedCoord(s.id, scores, team);
-    return { ...s, _x: pos.x, _y: pos.y, _status: statusFor(pos.x, pos.y) };
-  }), [stakeholders, scores, team]);
+  const rows = useMemo(() =>
+    visibleStakeholders(stakeholders, stakeholderWorkspaces, activeWorkspaceId)
+      .map((s) => {
+        const pos = weightedCoord(s.id, scores, team);
+        return { ...s, _x: pos.x, _y: pos.y, _status: statusFor(pos.x, pos.y) };
+      }),
+  [stakeholders, stakeholderWorkspaces, activeWorkspaceId, scores, team]);
 
   // Manifest: data/users are JS properties — feed through the ref.
   useEffect(() => {

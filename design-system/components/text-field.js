@@ -139,6 +139,17 @@ template.innerHTML = `
     :host([error]) input { caret-color: var(--ui-sys-error); }
     :host([disabled]) input { color: var(--ui-sys-on-surface-faint); }
 
+    /* type=number: native spin buttons suppressed — the component owns number
+       presentation (sealed Scoring-box cell rule: webkit/moz spinners off;
+       stepping is an explicit composed control, never browser chrome). */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+
+    /* align="center" — centered entry text (the sealed Scoring matrix's dense
+       numeric cells; an attribute, never an external override). */
+    :host([align="center"]) input { text-align: center; }
+
     /* Nudge input down when label is present so it doesn't overlap floated label */
     :host([label]) input {
       padding-top: calc(var(--ui-sys-space-2) + 6px);

@@ -126,14 +126,22 @@ export const Store = {
 
   /* save(table, value, silent): write JSON + broadcast { table, value };
    * silent skips the broadcast (used when applying a change that arrived FROM
-   * another tab, to avoid an echo loop).                                     */
+   * another tab, to avoid an echo loop).
+   * SAME-TAB FAN-OUT (Phase 6): a BroadcastChannel never delivers to its own
+   * posting context, so two usePersistentState('x') instances in ONE tab
+   * (the shell's live workspace/badge state + the mounted page) would drift.
+   * save() therefore ALSO fires local subscribers; the initiating hook
+   * ignores its own echo by reference identity (see usePersistentState).    */
   save(table, value, silent) {
     if (hasLS) {
       try {
         localStorage.setItem(PREFIX + table, JSON.stringify(value));
       } catch { /* ignore */ }
     }
-    if (!silent && channel) channel.postMessage({ table, value });
+    if (!silent) {
+      if (channel) channel.postMessage({ table, value });
+      fire(table, value);
+    }
   },
 
   /* subscribe(table, cb): per-table listener; returns an unsubscribe.        */
@@ -164,6 +172,8 @@ export const Store = {
 export function usePersistentState(table, seed) {
   const [value, setValue] = useState(() => Store.load(table, seed));
   const skipPersist = useRef(false);
+  const latest = useRef(value);
+  latest.current = value;
 
   useEffect(() => {
     if (skipPersist.current) {
@@ -174,6 +184,12 @@ export function usePersistentState(table, seed) {
   }, [table, value]);
 
   useEffect(() => Store.subscribe(table, (incoming) => {
+    /* Reference-identity guard: save()'s same-tab fan-out replays the saving
+     * hook's OWN value back at it; applying that echo would leave skipPersist
+     * dangling (React bails on identical state and the persist effect never
+     * clears the flag, silently dropping the NEXT save). Other instances see
+     * a different reference and apply normally.                             */
+    if (incoming === latest.current) return;
     skipPersist.current = true;
     setValue(incoming);
   }), [table]);

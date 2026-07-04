@@ -11,6 +11,10 @@
  *
  * Attrs:
  *   variant  — standard | filled | tonal | outlined  (default: standard)
+ *   size     — (default 40px hit target) | "xs" — the micro stepper button
+ *              (sealed Scoring-box xy-spin stack: dense in-cell ± steppers;
+ *              pair it with <ui-icon size="xs"> and tabindex="-1" — the
+ *              keyboard path is the number field itself)
  *   disabled — boolean
  *   selected — boolean  (for toggle; toggles filled bg on standard/outlined)
  *   aria-label — required for accessibility
@@ -113,6 +117,14 @@ template.innerHTML = `
     /* Optical centering: the slotted icon is a block inside a zero-line-height
        flex center, so glyph baselines can't skew it. */
     ::slotted(*) { display: block; }
+
+    /* size="xs" — the micro stepper (sealed xy-spin: a compact ± column
+       inside a dense matrix cell; token-derived from the icon scale). */
+    :host([size="xs"]) button {
+      width: calc(var(--ui-sys-icon-size-xs, 12px) + 2px);
+      height: calc(var(--ui-sys-icon-size-xs, 12px) + 2px);
+      border-radius: var(--ui-sys-shape-control);
+    }
 
     button:focus-visible {
       outline: 2px solid var(--ui-sys-focus-ring);

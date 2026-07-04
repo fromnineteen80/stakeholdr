@@ -12,6 +12,7 @@ const SUITES = [
   'lists-test.mjs',
   'modal-test.mjs',
   'map-test.mjs',
+  'scoring-test.mjs',
 ];
 
 let failed = 0;

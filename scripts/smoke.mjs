@@ -48,6 +48,22 @@ for (const path of pages) {
     await page.waitForTimeout(400);
     await page.locator('ui-stakeholder-map .map-detail-reopen').click({ timeout: 3000 }).catch(e => errs.push('MAPREOPEN: ' + e.message));
     await page.waitForTimeout(300);
+    // Phase 6: workspace switch + the Scoring matrix — switch to Hawk via the
+    // real selector, open Scoring, step a score, open the add-teammate dialog.
+    await page.locator('#ws-select-anchor').click({ timeout: 3000 }).catch(e => errs.push('WSMENU: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('ui-menu ui-menu-item', { hasText: 'Hawk' }).click({ timeout: 3000 }).catch(e => errs.push('WSPICK: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Scoring' }).first().click({ timeout: 3000 }).catch(e => errs.push('SCORENAV: ' + e.message));
+    await page.waitForTimeout(500);
+    const matrixRows = await page.locator('.scoring-table tbody tr').count();
+    if (matrixRows < 1) errs.push(`SCOREMATRIX: expected workspace rows, saw ${matrixRows}`);
+    await page.locator('.scoring-table ui-icon-button[aria-label="Increase x"]').first().click({ timeout: 3000 }).catch(e => errs.push('SCORESTEP: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('.team-add').click({ timeout: 3000 }).catch(e => errs.push('TEAMADD: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.evaluate(() => document.querySelectorAll('ui-dialog').forEach(d => d.close && d.close()));
+    await page.waitForTimeout(300);
   }
   if (path.includes('wireframes')) {
     await page.locator('#theme-modern').click({ timeout: 3000 }).catch(e => errs.push('TOGGLE: ' + e.message));

@@ -169,6 +169,7 @@
 
   /* Icon sizing scale (modest, ~1em-relative; the ONE place icon px live).
      Every icon — inline SVG or <ui-icon> — sizes from these, never ad-hoc. */
+  --ui-sys-icon-size-xs: 12px;  /* micro glyphs (matrix cell steppers) */
   --ui-sys-icon-size-sm: 18px;
   --ui-sys-icon-size-md: 20px;  /* default */
   --ui-sys-icon-size-lg: 24px;
@@ -259,6 +260,44 @@
   --ui-sys-row-selected:        #FCEFD6;  /* selected-row tint on every cell of a checked Lists row; also ws-menu-item.active */
   --ui-sys-row-selected-strong: #ECE2C6;  /* selected row's index cell, one step deeper; doubles as the editable-cell hover affordance */
   --ui-sys-header-hover:        #EBE4D2;  /* sortable column-header hover */
+
+  /* Scoring-matrix working surfaces (census group G CAPTURED→TOKEN, sealed
+     Scoring box — Phase 6). DECLARED DEPARTURE, cited: the sealed
+     COMPUTED-COLUMN HEADERS line records the oracle gold gradients
+     (linear-gradient(180deg,#F1E7CD,#E8DCB7) computed tier ·
+     linear-gradient(180deg,#F4EFE0,#ECE6D4) teammate tier) AND the design
+     start-state rules "no gradients ever"; the census (group G) rules they
+     "resolve to FLAT tokens WITH THE USER". START-STATE shipped here: each
+     tier flattened to its TOP gradient stop, as flat surfaces — an open
+     Design-page ruling, recorded, never a silent choice. */
+  --ui-sys-scoring-header-member:  #F4EFE0;  /* teammate column headers (lighter parchment tier, flattened) */
+  --ui-sys-scoring-header-derived: #F1E7CD;  /* computed "Weighted (x,y)" / "Relationship" headers (deeper gold tier, flattened) */
+  --ui-sys-derived-cell-surface:   #FBF6E6;  /* computed/derived BODY cells (oracle td.computed + Relationship td fill) */
+  --ui-sys-cell-readonly-wash: rgba(0,0,0,.018); /* read-only teammate cell wash (oracle .scoring-cell-ro) */
+
+  /* Team-bar weight tints (sealed Scoring box % OF TEAM tri-color rule) */
+  --ui-sys-weight-baseline: rgba(0,0,0,.04);      /* weight === 1 — neutral */
+  --ui-sys-weight-over:     rgba(62,122,46,.1);   /* weight > 1 — green */
+  --ui-sys-weight-under:    rgba(176,126,31,.1);  /* weight < 1 — amber */
+
+  /* Dense matrix field height — the scoring cell's compact number entries
+     (sealed EXACT CELL GEOMETRY ~22px inputs; token-step mapping DECLARED:
+     the ui-text-field variant=plain reads --ui-sys-control-height, which the
+     matrix composition re-points at THIS step for its dense cells). */
+  --ui-sys-matrix-field-height: 24px;
+
+  /* Segment pill pairs (census group E CAPTURED→TOKEN — the sealed
+     SegmentBadge catalog in the Workspaces box, verbatim; pill-semantic:
+     never touched by any theme swap. Unknown segments fall back to the
+     Corporate Functions pair — sealed fallback rule.) */
+  --ui-sys-segment-personal-systems-surface:      #D9DEE8;
+  --ui-sys-segment-personal-systems-ink:          #2E3F66;
+  --ui-sys-segment-printing-surface:              #E5D6DC;
+  --ui-sys-segment-printing-ink:                  #682E45;
+  --ui-sys-segment-corporate-investments-surface: #D6E2D2;
+  --ui-sys-segment-corporate-investments-ink:     #2F5A26;
+  --ui-sys-segment-corporate-functions-surface:   #EAE0CB;
+  --ui-sys-segment-corporate-functions-ink:       #6E5419;
 
   /* Zone-grid hairline (census group H — the map's structural hairline over
      colored zone fills: zone borders + axis crosshair, main map AND Help grid.

@@ -1,6 +1,14 @@
 /* ============================================================================
  * <ui-slider> — range input with track, filled portion, and draggable handle.
  * Attrs: min, max, step, value, disabled
+ *        baseline (number) — optional anchor value: renders a tick mark at the
+ *          baseline position and the fill spans BETWEEN the baseline and the
+ *          current value (grows left of the tick below baseline, right above
+ *          it) — the sealed Scoring-box WeightSlider mechanic (baseline 1.0).
+ *        baseline-title — hover tooltip copy on the tick (sealed exact copy
+ *          "Baseline weight 1.0"; the oracle used the wt-baseline title attr —
+ *          the tick lives in shadow DOM, so the native title IS the mapped
+ *          tooltip mechanism here, recorded as the ui-tooltip stand-in).
  * ARIA role=slider with aria-valuenow/min/max. formAssociated.
  * Keyboard: ArrowLeft/Right/Up/Down, Home, End.
  * Styled ONLY via --ui-sys-* tokens. No hardcoded colors or sizes.
@@ -46,6 +54,20 @@ template.innerHTML = `
       transition: width var(--ui-sys-motion-control);
     }
 
+    /* baseline tick (only when the host carries [baseline]) */
+    .baseline {
+      display: none;
+      position: absolute;
+      top: 50%;
+      width: 2px;
+      height: 10px;
+      transform: translate(-50%, -50%);
+      border-radius: var(--ui-sys-shape-pill);
+      background: var(--ui-sys-on-surface-faint);
+      pointer-events: auto; /* hoverable: carries the baseline tooltip */
+    }
+    :host([baseline]) .baseline { display: block; }
+
     /* ---- handle ---- */
     .handle {
       position: absolute;
@@ -90,19 +112,21 @@ template.innerHTML = `
   </style>
 
   <div class="track-wrap" part="track">
-    <div class="fill"   part="fill"></div>
-    <div class="handle" part="handle"></div>
+    <div class="fill"     part="fill"></div>
+    <div class="baseline" part="baseline"></div>
+    <div class="handle"   part="handle"></div>
   </div>
 `;
 
 class UiSlider extends HTMLElement {
   static formAssociated = true;
-  static observedAttributes = ['min', 'max', 'step', 'value', 'disabled'];
+  static observedAttributes = ['min', 'max', 'step', 'value', 'disabled', 'baseline', 'baseline-title'];
 
   #internals;
   #trackWrap;
   #fill;
   #handle;
+  #baseline;
   #dragging = false;
 
   constructor() {
@@ -112,6 +136,7 @@ class UiSlider extends HTMLElement {
     this.#trackWrap = this.shadowRoot.querySelector('.track-wrap');
     this.#fill      = this.shadowRoot.querySelector('.fill');
     this.#handle    = this.shadowRoot.querySelector('.handle');
+    this.#baseline  = this.shadowRoot.querySelector('.baseline');
   }
 
   connectedCallback() {
@@ -162,10 +187,33 @@ class UiSlider extends HTMLElement {
     this.setAttribute('aria-disabled', String(this.hasAttribute('disabled')));
   }
 
+  /* baseline (optional): a number anchor within [min, max]; null when unset */
+  get baseline() {
+    const raw = this.getAttribute('baseline');
+    if (raw == null || raw === '') return null;
+    const n = parseFloat(raw);
+    return Number.isFinite(n) ? this.#clamp(n) : null;
+  }
+
   #updateVisuals() {
     const pct = this.#percent() * 100;
-    this.#fill.style.width        = `${pct}%`;
-    this.#handle.style.left       = `${pct}%`;
+    const base = this.baseline;
+    if (base != null) {
+      /* Sealed WeightSlider fill rule: span between the baseline position and
+         the current value (left of the tick below baseline, right above). */
+      const basePct = ((base - this.min) / (this.max - this.min)) * 100;
+      const lo = Math.min(pct, basePct);
+      this.#fill.style.left  = `${lo}%`;
+      this.#fill.style.width = `${Math.abs(pct - basePct)}%`;
+      this.#baseline.style.left = `${basePct}%`;
+      const tipText = this.getAttribute('baseline-title');
+      if (tipText) this.#baseline.setAttribute('title', tipText);
+      else this.#baseline.removeAttribute('title');
+    } else {
+      this.#fill.style.left  = '0';
+      this.#fill.style.width = `${pct}%`;
+    }
+    this.#handle.style.left = `${pct}%`;
   }
 
   #setFromPointer(e) {
