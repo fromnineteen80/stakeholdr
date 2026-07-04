@@ -257,6 +257,7 @@
 
   /* Lists selection/header tints (census group G — deeper siblings of the
      --ui-sys-row-hover cream working surface) */
+  --ui-sys-row-hover:           #FBF7EB;  /* THE universal row-hover tint (census CAPTURED→TOKEN, 6×: sheet rows, scoring-table rows, ws-menu items, profile-trow, plan-sh-trow; sealed Scoring box HOVER & TINTS: hovering a row tints EVERY cell) */
   --ui-sys-row-selected:        #FCEFD6;  /* selected-row tint on every cell of a checked Lists row; also ws-menu-item.active */
   --ui-sys-row-selected-strong: #ECE2C6;  /* selected row's index cell, one step deeper; doubles as the editable-cell hover affordance */
   --ui-sys-header-hover:        #EBE4D2;  /* sortable column-header hover */
@@ -380,4 +381,11 @@
   --ui-ref-ink-strong: #36454F;  /* primary text + primary action (user anchor: charcoal) */
   --ui-ref-ink-muted:  #708090;  /* secondary text / captions (user anchor: slate) */
   --ui-ref-ink-faint:  #C3CBD1;  /* dividers / disabled (derived) */
+
+  /* Working-surface pairing: the cream default's --ui-sys-row-hover is the
+     literal #FBF7EB (a warm tint one step LIGHTER than cream neutral-4); the
+     Modern wrapper cools the same role by reusing its own neutral-4 hover
+     step (#E3E8EB via the ref var below, which this block redefines). Row
+     hover is wrapper chrome, not zone/pill semantics — legal to theme. */
+  --ui-sys-row-hover: var(--ui-ref-neutral-4);
 }

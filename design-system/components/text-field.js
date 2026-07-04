@@ -218,7 +218,7 @@ class UiTextField extends HTMLElement {
   static formAssociated = true;
   static observedAttributes = [
     'label', 'value', 'placeholder', 'type', 'disabled', 'error', 'supporting-text',
-    'variant',
+    'variant', 'min', 'max', 'step',
   ];
 
   #internals;
@@ -275,6 +275,15 @@ class UiTextField extends HTMLElement {
     this.#input.type               = type;
     this.#input.disabled           = disabled;
     this.#supporting.textContent   = supportingText;
+
+    // Forward min/max/step to the inner input so native number semantics
+    // (arrow-key stepping, clamping) run live (the Scoring matrix cells
+    // pass min="-10" max="10" step="1" — sealed cell contract).
+    for (const attr of ['min', 'max', 'step']) {
+      const v = this.getAttribute(attr);
+      if (v !== null) this.#input.setAttribute(attr, v);
+      else this.#input.removeAttribute(attr);
+    }
 
     // Plain variant hides the label element; keep it accessible instead.
     if (plain && label) {

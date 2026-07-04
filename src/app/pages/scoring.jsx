@@ -565,6 +565,9 @@ export function ScoringPage({ activeWorkspaceId, workspaceOwners = [], createNon
                 ))}
               </ui-select>
             </div>
+            {/* Sealed foot: EXACTLY TWO actions — destructive "Delete
+                workspace" left, "Hand off & remove" right. Cancel is the
+                veil/scrim click or the head close (×), never a foot button. */}
             <div slot="actions" className="last-tm-foot">
               <ui-button
                 variant="filled" tone="danger"
@@ -575,21 +578,18 @@ export function ScoringPage({ activeWorkspaceId, workspaceOwners = [], createNon
                   setLastMemberId(null);
                 }}
               >Delete workspace</ui-button>
-              <div className="last-tm-foot-right">
-                <ui-button variant="text" onClick={() => setLastMemberId(null)}>Cancel</ui-button>
-                <ui-button
-                  variant="filled"
-                  disabled={replacementId ? undefined : ''}
-                  onClick={() => {
-                    // Sealed hand-off: add the replacement, then remove the
-                    // last member.
-                    addMember(replacementId);
-                    removeMember(lastMemberId);
-                    setLastMemberId(null);
-                    setReplacementId('');
-                  }}
-                >Hand off &amp; remove</ui-button>
-              </div>
+              <ui-button
+                variant="filled"
+                disabled={replacementId ? undefined : ''}
+                onClick={() => {
+                  // Sealed hand-off: add the replacement, then remove the
+                  // last member.
+                  addMember(replacementId);
+                  removeMember(lastMemberId);
+                  setLastMemberId(null);
+                  setReplacementId('');
+                }}
+              >Hand off &amp; remove</ui-button>
             </div>
           </>
         )}

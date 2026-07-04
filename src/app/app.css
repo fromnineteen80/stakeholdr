@@ -32,16 +32,9 @@ body {
 }
 .brand .mark i { font-style: italic; font-weight: 500; }
 
-/* Workspace selector — lives in the TOP BAR next to the brand (RULED). */
-.ws-select {
-  display: inline-flex; align-items: center; gap: var(--ui-sys-space-1);
-  font: var(--ui-sys-font-label);
-  padding: var(--ui-sys-space-1) var(--ui-sys-space-2);
-  border-radius: var(--ui-sys-shape-control);
-  border: 1px solid var(--ui-sys-outline-subtle);
-  background: var(--ui-sys-surface-field);
-  cursor: pointer;
-}
+/* Workspace selector — lives in the TOP BAR next to the brand (RULED).
+ * The trigger is a real ui-button (outlined) styled by its own component —
+ * no chrome rules here (one styling surface; keyboard/focus come free). */
 
 /* Sidebar section caption — fills the rail with structure (RULED: never hollow). */
 .nav-sec {
@@ -436,22 +429,32 @@ ui-sidebar[collapsed] .me { justify-content: center; padding: var(--ui-sys-space
   content: ""; position: absolute; inset: 0;
   background: var(--ui-sys-cell-readonly-wash); pointer-events: none;
 }
-/* Computed body cells: the sealed derived fill (kept under row hover — the
- * derived surface is the cell's identity, sealed). */
+/* Computed body cells: the sealed derived fill at rest. Sealed HOVER rule:
+ * hovering a row tints EVERY cell in it — the derived cells too; no cell is
+ * exempt (the tr:hover td rule above outweighs this rest fill by design). */
 .scoring-table td.computed,
 .scoring-table td.rel {
   background: var(--ui-sys-derived-cell-surface);
   padding: 0 var(--ui-sys-space-3);
   font-feature-settings: "tnum";
 }
-.scoring-table tbody tr:hover td.computed,
-.scoring-table tbody tr:hover td.rel { background: var(--ui-sys-derived-cell-surface); }
 .computed .pos { color: var(--ui-sys-pos); }
 .computed .neg { color: var(--ui-sys-neg); }
 
-/* Editable own cell (sealed xy-input inline grid: label · field, two axis
- * rows; dense fields via the matrix field-height token — DECLARED token-step
- * mapping: ui-text-field's --ui-sys-control-height re-pointed here). */
+/* Editable own cell — DECLARED DEPARTURE (cell geometry recomposition).
+ * SEALED (Scoring box, EXACT CELL GEOMETRY): a TWO-column inline-grid
+ * (label · field), the ± stepper stack ABSOLUTELY POSITIONED INSIDE the
+ * field at right 4px (52px input with 16px right padding clearing it).
+ * SHIPPED: a THREE-column grid (label · field · external stepper stack).
+ * RATIONALE: the steppers are real ui-icon-button components and the field
+ * is ui-text-field — a component is never reimplemented in markup, and a
+ * light-DOM button cannot be absolutely positioned inside ui-text-field's
+ * shadow field box; the stack therefore sits as an external third column.
+ * Behavior (±1 clamped, tabIndex −1, field width, dense height via the
+ * matrix field-height token) is sealed-exact; only the pixel placement of
+ * the stack moved. Declared here, never a silent choice. DECLARED
+ * token-step mapping: ui-text-field's --ui-sys-control-height re-pointed
+ * at --ui-sys-matrix-field-height below. */
 .xy-input {
   display: inline-grid; grid-template-columns: auto auto auto;
   gap: 2px var(--ui-sys-space-1);
@@ -495,11 +498,6 @@ ui-sidebar[collapsed] .me { justify-content: center; padding: var(--ui-sys-space
 .last-tm-body { width: min(460px, 82vw); }
 .add-tm-body ui-autocomplete, .last-tm-body ui-select { width: 100%; }
 .last-tm-foot { display: flex; align-items: center; justify-content: space-between; width: 100%; }
-.last-tm-foot-right { display: flex; align-items: center; gap: var(--ui-sys-space-2); }
-
-/* Honest pending state — a control that is not wired yet must LOOK inert
- * (make-real law: never a live-looking dead affordance). Removed per phase. */
-.ws-select.is-pending { opacity: .55; cursor: default; }
 
 /* Collapsed rail: the mark stays; only the wordmark hides; margins reset so
  * the centered header owns the axis. */

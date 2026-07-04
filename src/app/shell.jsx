@@ -22,7 +22,7 @@ import { unscoredCountFor } from './pages/scoring-logic.js';
 // map). Scoring carries hideWhenMaster (sealed rule — REAL as of Phase 6:
 // the item is hidden whenever the active workspace is Master).
 const NAV_TABS = [
-  { id: 'sheet',     label: 'List',      icon: 'table_rows' },
+  { id: 'sheet',     label: 'Lists',     icon: 'table_rows' },
   { id: 'scoring',   label: 'Scoring',   icon: 'thumb_up', hideWhenMaster: true },
   { id: 'map',       label: 'Map',       icon: 'map' },
   { id: 'plan',      label: 'Plans',     icon: 'description' },
@@ -79,11 +79,15 @@ export function AppShell() {
     setView('sheet');
   };
 
-  /* Sealed removeWorkspace cascade (App-shell box): drop the record; strip
-   * the wsId from EVERY stakeholder's join list; close its tab with the
-   * sealed active-fallback (the tab to its left, else Master). The plans leg
-   * of the cascade lands with the Plans phase. Used by Scoring's sole-member
-   * closure ("returns to Master").                                          */
+  /* Sealed removeWorkspace cascade (App-shell + Connectivity boxes): drop the
+   * record; strip the wsId from EVERY stakeholder's join list; close its
+   * open-set entry; if it was active, the active workspace falls back to
+   * MASTER ("closes tab, active -> Master" — the left-tab fallback is sealed
+   * ONLY for closeWorkspaceTab, the tab-close path, which arrives with its
+   * phase). The plans leg of the cascade lands with the Plans phase. Used by
+   * Scoring's sole-member closure ("returns to Master").
+   * NOTE: `remaining` is computed OUTSIDE the updater and the three states
+   * set sequentially — an updater must stay pure (StrictMode double-invokes). */
   const removeWorkspace = (wsId) => {
     setWorkspaces((prev) => prev.filter((w) => w.id !== wsId));
     setStakeholderWorkspaces((prev) => {
@@ -93,15 +97,12 @@ export function AppShell() {
       }
       return next;
     });
-    setOpenWorkspaceIds((prev) => {
-      const idx = prev.indexOf(wsId);
-      const remaining = prev.filter((id) => id !== wsId);
-      if (wsId === activeWorkspaceId) {
-        setActiveWorkspaceId(remaining[Math.max(0, idx - 1)] || MASTER_WORKSPACE_ID);
-        setView('sheet');
-      }
-      return remaining;
-    });
+    const remaining = openWorkspaceIds.filter((id) => id !== wsId);
+    setOpenWorkspaceIds(remaining);
+    if (wsId === activeWorkspaceId) {
+      setActiveWorkspaceId(MASTER_WORKSPACE_ID);
+      setView('sheet');
+    }
   };
 
   /* Sealed REDIRECT: Scoring is disabled on Master → kick to Map.           */
@@ -134,12 +135,15 @@ export function AppShell() {
         {/* WORKSPACE SELECTOR — REAL as of Phase 6 (sealed OpenWorkspaceModal
             semantics recomposed as this top-bar ui-menu): workspaces grouped
             by segment, per-workspace count, "Switch to"/"Open →" CTA. */}
-        <span
+        {/* The trigger is a REAL ui-button (never a role=button span — raw
+            interactive HTML is forbidden and the span was keyboard-dead);
+            ui-menu anchors to its id and opens on click, so Enter/Space on
+            the button's real shadow control opens the menu natively. */}
+        <ui-button
           slot="leading"
-          className="ws-select"
+          variant="outlined"
+          class="ws-select"
           id="ws-select-anchor"
-          role="button"
-          tabIndex={0}
           title="Switch workspace"
         >
           {isMaster ? (
@@ -157,7 +161,7 @@ export function AppShell() {
             </>
           )}
           <ui-icon size="sm">expand_more</ui-icon>
-        </span>
+        </ui-button>
 
         {CREATE_VIEWS.includes(view) && (
           <ui-icon-button
@@ -280,12 +284,17 @@ export function AppShell() {
           positioning holds (ui-menu anchors to #ws-select-anchor and owns
           open/close + outside-dismiss natively). */}
       <ui-menu anchor="ws-select-anchor" class="ws-menu">
-        {/* Master row — the sealed immovable first entry. */}
+        {/* Master row — the sealed immovable first entry. Meta = the sealed
+            "{count} stakeholder(s)" line, nothing invented. CTA copy is the
+            sealed pair "Switch to"/"Open →"; "Active" on the CURRENT row is a
+            DECLARED current-row marker (the sealed OpenWorkspaceModal had no
+            current-row concept — recomposed as a top-bar selector, the menu
+            must mark where you already are; declared, never silent). */}
         <ui-menu-item onClick={() => openWorkspaceTab(MASTER_WORKSPACE_ID)}>
           <span className="ws-row">
             <span className="ws-row-main">
               <span className="ws-row-name">Master</span>
-              <span className="ws-row-meta">{stakeholderCountLabel(stakeholders.length)} · the whole pool</span>
+              <span className="ws-row-meta">{stakeholderCountLabel(stakeholders.length)}</span>
             </span>
             <span className="ws-row-cta">
               {isMaster ? 'Active' : 'Switch to'}
@@ -295,7 +304,8 @@ export function AppShell() {
         {/* Sealed OpenWorkspaceModal grouping: every workspace BY SEGMENT,
             each group headed by its segment pill; row = name ·
             "{businessUnit} · {count} stakeholder(s)" · CTA "Switch to" (open)
-            / "Open →". */}
+            / "Open →". "Active" on the current row = the DECLARED
+            current-row marker (see the Master-row note above). */}
         {segments.map((seg) => {
           const inSeg = workspaces.filter((w) => w.segment === seg);
           if (!inSeg.length) return null;
