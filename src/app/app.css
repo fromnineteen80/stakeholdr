@@ -32,16 +32,9 @@ body {
 }
 .brand .mark i { font-style: italic; font-weight: 500; }
 
-/* Workspace selector — lives in the TOP BAR next to the brand (RULED). */
-.ws-select {
-  display: inline-flex; align-items: center; gap: var(--ui-sys-space-1);
-  font: var(--ui-sys-font-label);
-  padding: var(--ui-sys-space-1) var(--ui-sys-space-2);
-  border-radius: var(--ui-sys-shape-control);
-  border: 1px solid var(--ui-sys-outline-subtle);
-  background: var(--ui-sys-surface-field);
-  cursor: pointer;
-}
+/* Workspace selector — lives in the TOP BAR next to the brand (RULED).
+ * The trigger is a real ui-button (outlined) styled by its own component —
+ * no chrome rules here (one styling surface; keyboard/focus come free). */
 
 /* Sidebar section caption — fills the rail with structure (RULED: never hollow). */
 .nav-sec {
@@ -266,9 +259,245 @@ ui-sidebar[collapsed] .me { justify-content: center; padding: var(--ui-sys-space
 .profile-entry-amt { font: var(--ui-sys-font-caption); font-feature-settings: "tnum"; }
 .sh-viewall { align-self: flex-start; margin-top: var(--ui-sys-space-1); }
 
-/* Honest pending state — a control that is not wired yet must LOOK inert
- * (make-real law: never a live-looking dead affordance). Removed per phase. */
-.ws-select.is-pending { opacity: .55; cursor: default; }
+/* ══ WORKSPACE SELECTOR (Phase 6 — the ws-select chip is REAL now; sealed
+ * OpenWorkspaceModal semantics recomposed as the top-bar selector menu) ══ */
+.ws-select-sub { color: var(--ui-sys-on-surface-muted); font: var(--ui-sys-font-caption); }
+.ws-select .ws-select-name {
+  max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Menu rows (light-DOM content slotted into ui-menu-item): name over the
+ * sealed "{businessUnit} · {n} stakeholder(s)" meta, CTA trailing. */
+.ws-menu { min-width: 320px; }
+.ws-row {
+  display: flex; align-items: center; gap: var(--ui-sys-space-3);
+  width: 100%; white-space: normal;
+  padding: var(--ui-sys-space-1) 0;
+}
+.ws-row-main { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.ws-row-name {
+  font: var(--ui-sys-font-label);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ws-row-meta { font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted); }
+.ws-row-cta { font: var(--ui-sys-font-caption); color: var(--ui-sys-accent); white-space: nowrap; }
+.ws-group-head {
+  display: flex; align-items: center;
+  padding: var(--ui-sys-space-2) var(--ui-sys-space-4) var(--ui-sys-space-1);
+}
+
+/* Rail workspace rows: segment dot (sealed seg-dot, segment-ink tokens) +
+ * muted count. */
+.seg-dot { display: flex; align-items: center; justify-content: center; }
+.seg-dot::before {
+  content: ""; width: 8px; height: 8px; border-radius: var(--ui-sys-shape-pill);
+  background: var(--ui-sys-segment-corporate-functions-ink); /* sealed fallback pair */
+}
+.seg-dot[data-segment="Personal Systems"]::before      { background: var(--ui-sys-segment-personal-systems-ink); }
+.seg-dot[data-segment="Printing"]::before              { background: var(--ui-sys-segment-printing-ink); }
+.seg-dot[data-segment="Corporate Investments"]::before { background: var(--ui-sys-segment-corporate-investments-ink); }
+.ws-count { color: var(--ui-sys-on-surface-muted); font: var(--ui-sys-font-caption); }
+
+/* Nav badge sits inline after the Scoring label. */
+.nav-badge { margin-left: var(--ui-sys-space-1); }
+
+/* ══ SCORING PAGE (Phase 6 — sealed "Scoring & weighting" box; every value
+ * below is a --ui-sys-* token or a sealed sticky/layout value) ══ */
+.scoring-wrap { height: 100%; display: flex; flex-direction: column; gap: var(--ui-sys-space-3); }
+
+/* TEAM BAR — one fixed-width card per teammate (sealed CARD CHROME:
+ * flex 0 0 192px, min-width 0, word-break; surface = ui-card's filled
+ * container step — DECLARED token-step mapping from the oracle bg-2). */
+.team-bar {
+  display: flex; align-items: stretch; gap: var(--ui-sys-space-2);
+  overflow-x: auto; flex: none;
+  padding-bottom: var(--ui-sys-space-1);
+}
+.team-card { flex: 0 0 192px; min-width: 0; word-break: break-word; }
+.team-card-head { display: flex; align-items: center; gap: var(--ui-sys-space-2); min-width: 0; }
+.team-card-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.team-card-name {
+  font: var(--ui-sys-font-label);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.team-card-title {
+  font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.team-weight-row {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-top: var(--ui-sys-space-2);
+}
+.team-weight-lbl {
+  font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+.team-weight-val { font: var(--ui-sys-font-label); font-feature-settings: "tnum"; }
+.team-card ui-slider { width: 100%; height: 20px; }
+.team-slider-ends {
+  display: flex; align-items: baseline; justify-content: space-between;
+  font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted);
+  font-feature-settings: "tnum";
+}
+/* % OF TEAM readout — sealed tri-color tint via the weight tokens. */
+.team-pct {
+  margin-top: var(--ui-sys-space-2);
+  padding: var(--ui-sys-space-1) var(--ui-sys-space-2);
+  border-radius: var(--ui-sys-shape-control);
+  font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted);
+  text-align: center; font-feature-settings: "tnum";
+  background: var(--ui-sys-weight-baseline);
+}
+.team-pct[data-tint="over"]  { background: var(--ui-sys-weight-over); }
+.team-pct[data-tint="under"] { background: var(--ui-sys-weight-under); }
+/* The make-real Add-teammate affordance (sealed: after the last card). */
+.team-add { align-self: center; flex: none; }
+
+/* THE MATRIX — sealed both-axes scroll wrap + sticky table composition. */
+.scoring-table-wrap {
+  flex: 1; min-width: 0; min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--ui-sys-outline-subtle);
+  border-radius: var(--ui-sys-shape-card);
+  background: var(--ui-sys-surface-card);
+}
+.scoring-table {
+  border-collapse: separate; border-spacing: 0;
+  width: max-content; min-width: 100%;
+  font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface);
+}
+/* Whole header row sticky at top 0 (sealed). */
+.scoring-table thead th {
+  position: sticky; top: 0; z-index: 4;
+  background: var(--ui-sys-surface-container-highest);
+  border-bottom: 1px solid var(--ui-sys-outline);
+  border-right: 1px solid var(--ui-sys-divider);
+  padding: var(--ui-sys-space-2) var(--ui-sys-space-2);
+  font-weight: 500; color: var(--ui-sys-on-surface-muted);
+  text-transform: uppercase; letter-spacing: .08em; font-size: 11px;
+  max-width: 200px; word-break: break-word; white-space: normal; line-height: 1.25;
+  text-align: center; vertical-align: middle;
+}
+.scoring-table thead th.sh-col { position: sticky; left: 0; z-index: 5; text-align: left; }
+.scoring-table thead th.member { min-width: 110px; background: var(--ui-sys-scoring-header-member); }
+.scoring-table thead th.member.my-col { left: 220px; z-index: 6; }
+/* Computed headers: the deeper derived tier (flattened per the declared
+ * no-gradients departure — see tokens.css). */
+.scoring-table thead th.computed-col { background: var(--ui-sys-scoring-header-derived); }
+.member-weight {
+  display: block; font-weight: 400; text-transform: none; letter-spacing: 0;
+  color: var(--ui-sys-on-surface-muted); font-feature-settings: "tnum";
+  margin-top: 2px;
+}
+.derived-sub {
+  display: block; font-weight: 400; text-transform: none; letter-spacing: 0;
+  color: var(--ui-sys-on-surface-muted); margin-top: 2px;
+}
+/* Body cells: sealed 40px rows, hairline borders, centered. */
+.scoring-table td {
+  height: 40px; padding: 0;
+  background: var(--ui-sys-surface-card);
+  border-bottom: 1px solid var(--ui-sys-divider);
+  border-right: 1px solid var(--ui-sys-divider);
+  text-align: center; vertical-align: middle;
+}
+/* Sealed HOVER rule: hovering a row tints EVERY cell in it. */
+.scoring-table tbody tr:hover td { background: var(--ui-sys-row-hover); }
+/* TWO sticky-left columns (sealed): the name column at left 0, the current
+ * user's my-col pinned flush after it at the name column's 220px min-width. */
+.scoring-table td.sh-cell {
+  position: sticky; left: 0; z-index: 2;
+  /* FIXED 220px (sealed: the my-col offset equals the name column's 220px,
+     "so the two pin flush" — a fluid width would open a gap or an overlap). */
+  width: 220px; min-width: 220px; max-width: 220px;
+  padding: var(--ui-sys-space-1) var(--ui-sys-space-2);
+  border-right: 1px solid var(--ui-sys-outline);
+  text-align: left; cursor: pointer;
+}
+.scoring-table thead th.sh-col { width: 220px; min-width: 220px; max-width: 220px; }
+.scoring-table td.my-col { position: sticky; left: 220px; z-index: 1; }
+.sh-cell-name { font: var(--ui-sys-font-label); }
+.scoring-table td.sh-cell:hover .sh-cell-name { color: var(--ui-sys-accent); }
+.sh-cell-org, .sh-cell-meta {
+  font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* Read-only teammate cell: the sealed permanent faint wash rides an overlay
+ * so the sticky-safe opaque base (and the row-hover tint) shows through. */
+.scoring-table td.ro { position: relative; }
+.scoring-table td.ro::after {
+  content: ""; position: absolute; inset: 0;
+  background: var(--ui-sys-cell-readonly-wash); pointer-events: none;
+}
+/* Computed body cells: the sealed derived fill at rest. Sealed HOVER rule:
+ * hovering a row tints EVERY cell in it — the derived cells too; no cell is
+ * exempt (the tr:hover td rule above outweighs this rest fill by design). */
+.scoring-table td.computed,
+.scoring-table td.rel {
+  background: var(--ui-sys-derived-cell-surface);
+  padding: 0 var(--ui-sys-space-3);
+  font-feature-settings: "tnum";
+}
+.computed .pos { color: var(--ui-sys-pos); }
+.computed .neg { color: var(--ui-sys-neg); }
+
+/* Editable own cell — DECLARED DEPARTURE (cell geometry recomposition).
+ * SEALED (Scoring box, EXACT CELL GEOMETRY): a TWO-column inline-grid
+ * (label · field), the ± stepper stack ABSOLUTELY POSITIONED INSIDE the
+ * field at right 4px (52px input with 16px right padding clearing it).
+ * SHIPPED: a THREE-column grid (label · field · external stepper stack).
+ * RATIONALE: the steppers are real ui-icon-button components and the field
+ * is ui-text-field — a component is never reimplemented in markup, and a
+ * light-DOM button cannot be absolutely positioned inside ui-text-field's
+ * shadow field box; the stack therefore sits as an external third column.
+ * Behavior (±1 clamped, tabIndex −1, field width, dense height via the
+ * matrix field-height token) is sealed-exact; only the pixel placement of
+ * the stack moved. Declared here, never a silent choice. DECLARED
+ * token-step mapping: ui-text-field's --ui-sys-control-height re-pointed
+ * at --ui-sys-matrix-field-height below. */
+.xy-input {
+  display: inline-grid; grid-template-columns: auto auto auto;
+  gap: 2px var(--ui-sys-space-1);
+  padding: var(--ui-sys-space-1) var(--ui-sys-space-2);
+  align-items: center; justify-items: center;
+}
+.xy-lbl {
+  font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted);
+  text-transform: uppercase; letter-spacing: .08em;
+  justify-self: end;
+}
+.xy-input ui-text-field {
+  --ui-sys-control-height: var(--ui-sys-matrix-field-height);
+  width: 52px;
+}
+.xy-spin { display: inline-flex; flex-direction: column; gap: 1px; }
+/* Read-only pair display (sealed xy-readonly: k/v pairs, tnum values). */
+.xy-readonly {
+  display: inline-grid; grid-template-columns: auto auto;
+  gap: 1px 3px; padding: var(--ui-sys-space-1) var(--ui-sys-space-2);
+  align-items: center;
+}
+.xy-readonly-k {
+  font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted);
+  text-transform: uppercase; letter-spacing: .08em; justify-self: end;
+}
+.xy-readonly-v {
+  min-width: 28px; text-align: center;
+  font: var(--ui-sys-font-caption); font-feature-settings: "tnum";
+}
+.xy-empty { color: var(--ui-sys-on-surface-faint); }
+
+/* Dialog bodies (add-teammate · last-teammate). The add body reserves room
+ * for the typeahead's open popup (the dialog card clips overflow). */
+.add-tm-body, .last-tm-body {
+  display: flex; flex-direction: column; gap: var(--ui-sys-space-2);
+  width: min(380px, 82vw);
+  padding: var(--ui-sys-space-2) 0 var(--ui-sys-space-3);
+}
+.add-tm-body { min-height: 300px; }
+.last-tm-body { width: min(460px, 82vw); }
+.add-tm-body ui-autocomplete, .last-tm-body ui-select { width: 100%; }
+.last-tm-foot { display: flex; align-items: center; justify-content: space-between; width: 100%; }
 
 /* Collapsed rail: the mark stays; only the wordmark hides; margins reset so
  * the centered header owns the axis. */

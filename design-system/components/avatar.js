@@ -13,20 +13,33 @@ const tpl = document.createElement('template');
 tpl.innerHTML = `
   <style>
     :host {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+      /* Industry-standard profile circle: a PERFECT circle (fixed square box +
+         aspect-ratio guard so no flex context can squash it) with initials
+         TRULY centered (grid place-items + line-height 1 — never a line-box
+         guess) and no tracking (letter-spacing shifts a pair off-center). */
+      display: inline-grid;
+      place-items: center;
       flex: 0 0 auto;
       width: var(--_sz, var(--ui-sys-avatar-size-md, 32px));
       height: var(--_sz, var(--ui-sys-avatar-size-md, 32px));
+      min-width: var(--_sz, var(--ui-sys-avatar-size-md, 32px));
+      aspect-ratio: 1 / 1;
       border-radius: var(--ui-sys-shape-pill);
-      background: var(--ui-sys-primary);
+      /* per-identity color: callers pass a TOKEN reference via --ui-avatar-bg */
+      background: var(--ui-avatar-bg, var(--ui-sys-primary));
       color: var(--ui-sys-on-primary);
-      font: var(--ui-sys-font-label);
-      font-size: calc(var(--_sz, var(--ui-sys-avatar-size-md, 32px)) * 0.38);
-      letter-spacing: .02em;
+      font-family: var(--ui-ref-typeface-body);
+      font-weight: 500;
+      font-size: calc(var(--_sz, var(--ui-sys-avatar-size-md, 32px)) * 0.4);
+      line-height: 1;
+      letter-spacing: 0;
       overflow: hidden;
       user-select: none;
+    }
+    /* Stack ring: overlapping avatars separate with a clean surface ring —
+       the industry standard for owner stacks. */
+    :host([ring]) {
+      box-shadow: 0 0 0 2px var(--ui-sys-surface-card);
     }
     :host([size="sm"]) { --_sz: var(--ui-sys-avatar-size-sm, 24px); }
     :host([size="md"]) { --_sz: var(--ui-sys-avatar-size-md, 32px); }

@@ -223,5 +223,71 @@ await page.goto('http://127.0.0.1:4174/design-system/wireframes.html', { waitUnt
 await page.waitForTimeout(1200);
 await page.screenshot({ path: `${OUT}/wireframe-list.png`, clip: { x: 0, y: 200, width: 1440, height: 700 } });
 
+// ── PHASE-6 WORKSPACE SHELL-STATE + SCORING CAPTURES ───────────────────────
+await page.goto('http://127.0.0.1:4174/app.html', { waitUntil: 'networkidle' });
+await page.waitForTimeout(1200);
+// 1 · the workspace switcher menu open (sealed OpenWorkspaceModal semantics:
+//     grouped by segment, per-workspace counts, Switch to / Open → CTAs)
+await page.locator('#ws-select-anchor').click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p6-ws-menu-open.png` });
+// 2 · switch to Hawk (ws-gapp-na) → Lists filtered to its 12 stakeholders
+await page.locator('ui-menu ui-menu-item', { hasText: 'Hawk' }).click();
+await page.waitForTimeout(600);
+await page.screenshot({ path: `${OUT}/p6-lists-hawk.png` });
+// 3 · create a stakeholder FROM the workspace (sealed auto-assign) — it lands
+//     unscored, so the sealed nav count badge appears on Scoring
+await page.locator('ui-app-bar ui-icon-button[aria-label="Create new"]').click();
+await page.waitForTimeout(500);
+await page.keyboard.type('Riverbend Chamber of Commerce');
+await page.locator('.sh-dialog ui-button', { hasText: 'Create stakeholder' }).click();
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p6-nav-unscored-badge.png`, clip: { x: 0, y: 0, width: 300, height: 620 } });
+// 4 · the Scoring matrix (my editable sticky column · read-only teammates ·
+//     Weighted (x, y) · Relationship) for the active workspace
+await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Scoring' }).first().click();
+await page.waitForTimeout(700);
+await page.screenshot({ path: `${OUT}/p6-scoring-matrix.png` });
+// 5 · team bar closeup: weight sliders (baseline ticks) + tri-color % tints
+//     (seed carries over/baseline/under weights: 1.5 · 1.2 · 1.0 · 0.8 · 0.7)
+await page.screenshot({ path: `${OUT}/p6-team-bar.png`, clip: { x: 300, y: 40, width: 1140, height: 260 } });
+// 6 · first-touch on the new stakeholder's own unscored cell: one x step-up
+//     creates the record whole (x=1, y=0 — the sealed correction)
+await page.locator('.scoring-table tbody tr', { hasText: 'Riverbend' })
+  .locator('ui-icon-button[aria-label="Increase x"]').click();
+await page.waitForTimeout(400);
+const firstTouch = await page.evaluate(() => {
+  const scores = JSON.parse(localStorage.getItem('hpsm:scores') || '{}');
+  const row = Object.entries(scores).find(([sid, r]) => sid.startsWith('sh-') && sid.length > 8);
+  return row ? row[1] : null;
+});
+console.log('P6 first-touch record (expect x:1, y:0, createdAt=updatedAt):', JSON.stringify(firstTouch));
+await page.screenshot({ path: `${OUT}/p6-first-touch-cell.png`, clip: { x: 300, y: 280, width: 800, height: 200 } });
+// 6b · horizontal scroll: the Stakeholder column AND my editable column stay
+//      pinned (sealed two-sticky-column rule) while other teammates scroll
+await page.locator('.scoring-table-wrap').evaluate((el) => { el.scrollLeft = 260; });
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p6-matrix-scrolled-x.png` });
+await page.locator('.scoring-table-wrap').evaluate((el) => { el.scrollLeft = 0; });
+await page.waitForTimeout(200);
+// 7 · the add-teammate dialog (make-real affordance) with the typeahead open
+await page.locator('.team-add').click();
+await page.waitForTimeout(500);
+await page.locator('ui-autocomplete input').click();
+await page.keyboard.type('mar');
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p6-add-teammate.png` });
+await page.evaluate(() => document.querySelectorAll('ui-dialog').forEach(d => d.close && d.close()));
+await page.waitForTimeout(300);
+// 8 · switch back to Master via the selector: Scoring nav item must HIDE
+//     (sealed hideWhenMaster) and the view redirects off scoring
+await page.locator('#ws-select-anchor').click();
+await page.waitForTimeout(300);
+await page.locator('ui-menu ui-menu-item', { hasText: 'Master' }).click();
+await page.waitForTimeout(600);
+const scoringVisible = await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Scoring' }).count();
+console.log('P6 Scoring nav on Master (expect 0):', scoringVisible);
+await page.screenshot({ path: `${OUT}/p6-master-back.png` });
+
 await browser.close(); srv.close();
 console.log('shots written to', OUT);

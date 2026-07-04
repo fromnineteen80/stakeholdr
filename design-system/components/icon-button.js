@@ -11,6 +11,10 @@
  *
  * Attrs:
  *   variant  — standard | filled | tonal | outlined  (default: standard)
+ *   size     — (default 40px hit target) | "xs" — the micro stepper button
+ *              (sealed Scoring-box xy-spin stack: dense in-cell ± steppers;
+ *              pair it with <ui-icon size="xs"> and tabindex="-1" — the
+ *              keyboard path is the number field itself)
  *   disabled — boolean
  *   selected — boolean  (for toggle; toggles filled bg on standard/outlined)
  *   aria-label — required for accessibility
@@ -114,6 +118,14 @@ template.innerHTML = `
        flex center, so glyph baselines can't skew it. */
     ::slotted(*) { display: block; }
 
+    /* size="xs" — the micro stepper (sealed xy-spin: a compact ± column
+       inside a dense matrix cell; token-derived from the icon scale). */
+    :host([size="xs"]) button {
+      width: calc(var(--ui-sys-icon-size-xs, 12px) + 2px);
+      height: calc(var(--ui-sys-icon-size-xs, 12px) + 2px);
+      border-radius: var(--ui-sys-shape-control);
+    }
+
     button:focus-visible {
       outline: 2px solid var(--ui-sys-focus-ring);
       outline-offset: 2px;
@@ -146,7 +158,7 @@ template.innerHTML = `
 `;
 
 class UiIconButton extends HTMLElement {
-  static observedAttributes = ['disabled', 'selected', 'aria-label', 'aria-pressed'];
+  static observedAttributes = ['disabled', 'selected', 'aria-label', 'aria-pressed', 'tabindex'];
 
   #btn;
 
@@ -178,6 +190,13 @@ class UiIconButton extends HTMLElement {
 
   #sync() {
     this.#btn.disabled = this.hasAttribute('disabled');
+    // Forward tabindex to the inner shadow button — the real tab stop. The
+    // sealed matrix steppers carry tabIndex −1 (skipped in tab order; the
+    // keyboard path is the number field); without forwarding, the shadow
+    // button would stay tabbable regardless of the host attribute.
+    const ti = this.getAttribute('tabindex');
+    if (ti !== null) this.#btn.setAttribute('tabindex', ti);
+    else this.#btn.removeAttribute('tabindex');
     // Reflect aria-label to inner button
     const label = this.getAttribute('aria-label');
     if (label) this.#btn.setAttribute('aria-label', label);

@@ -139,6 +139,17 @@ template.innerHTML = `
     :host([error]) input { caret-color: var(--ui-sys-error); }
     :host([disabled]) input { color: var(--ui-sys-on-surface-faint); }
 
+    /* type=number: native spin buttons suppressed — the component owns number
+       presentation (sealed Scoring-box cell rule: webkit/moz spinners off;
+       stepping is an explicit composed control, never browser chrome). */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+
+    /* align="center" — centered entry text (the sealed Scoring matrix's dense
+       numeric cells; an attribute, never an external override). */
+    :host([align="center"]) input { text-align: center; }
+
     /* Nudge input down when label is present so it doesn't overlap floated label */
     :host([label]) input {
       padding-top: calc(var(--ui-sys-space-2) + 6px);
@@ -207,7 +218,7 @@ class UiTextField extends HTMLElement {
   static formAssociated = true;
   static observedAttributes = [
     'label', 'value', 'placeholder', 'type', 'disabled', 'error', 'supporting-text',
-    'variant',
+    'variant', 'min', 'max', 'step',
   ];
 
   #internals;
@@ -264,6 +275,15 @@ class UiTextField extends HTMLElement {
     this.#input.type               = type;
     this.#input.disabled           = disabled;
     this.#supporting.textContent   = supportingText;
+
+    // Forward min/max/step to the inner input so native number semantics
+    // (arrow-key stepping, clamping) run live (the Scoring matrix cells
+    // pass min="-10" max="10" step="1" — sealed cell contract).
+    for (const attr of ['min', 'max', 'step']) {
+      const v = this.getAttribute(attr);
+      if (v !== null) this.#input.setAttribute(attr, v);
+      else this.#input.removeAttribute(attr);
+    }
 
     // Plain variant hides the label element; keep it accessible instead.
     if (plain && label) {

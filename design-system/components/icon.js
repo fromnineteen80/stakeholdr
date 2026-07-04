@@ -4,7 +4,7 @@
  *   <ui-icon>search</ui-icon>                 (the ligature is the text content)
  *   <ui-icon size="lg" filled>bookmark</ui-icon>
  *
- * size = sm | md | lg | xl  → --ui-sys-icon-size-*  (the only place icon px live)
+ * size = xs | sm | md | lg | xl  → --ui-sys-icon-size-*  (the only place icon px live)
  * filled (boolean) flips the FILL axis; weight attr tunes the wght axis.
  * The Material Symbols Outlined font must be loaded at document level (the pages
  * link it). A slotted <svg> is still supported as a fallback for custom marks.
@@ -37,6 +37,7 @@ tpl.innerHTML = `
       user-select: none;
       overflow: hidden;
     }
+    :host([size="xs"]) { --_sz: var(--ui-sys-icon-size-xs); }
     :host([size="sm"]) { --_sz: var(--ui-sys-icon-size-sm); }
     :host([size="md"]) { --_sz: var(--ui-sys-icon-size-md); }
     :host([size="lg"]) { --_sz: var(--ui-sys-icon-size-lg); }

@@ -1,7 +1,9 @@
 /* ============================================================================
  * <ui-chip-set> + <ui-chip> — chip variants: assist|filter|input|suggestion
- * plus the sealed PRESENTATIONAL pill variants: priority|zone|tag — and the
- * companion <ui-status-dot> element (sealed Shared-UI-primitives box).
+ * plus the sealed PRESENTATIONAL pill variants: priority|zone|tag|segment —
+ * and the companion <ui-status-dot> element (sealed Shared-UI-primitives box;
+ * segment = the sealed SegmentBadge, Workspaces box, value attr = the segment
+ * name, unknown → the Corporate Functions pair).
  *
  * Usage:
  *   <ui-chip-set>
@@ -198,11 +200,12 @@ chipTpl.innerHTML = `
     }
 
     /* ── PRESENTATIONAL PILL VARIANTS (sealed Shared-UI-primitives) ─────────
-       priority / zone / tag are display-only: compact caption-type pills, no
-       state layer, no pointer affordance. All color via --ui-sys-* tokens. */
+       priority / zone / tag / segment are display-only: compact caption-type
+       pills, no state layer, no pointer affordance. Color via tokens only. */
     :host([variant="priority"]) .chip,
     :host([variant="zone"]) .chip,
-    :host([variant="tag"]) .chip {
+    :host([variant="tag"]) .chip,
+    :host([variant="segment"]) .chip {
       height: auto;
       padding: 1px var(--ui-sys-space-2);
       font: var(--ui-sys-font-caption);
@@ -211,7 +214,38 @@ chipTpl.innerHTML = `
     }
     :host([variant="priority"]) .chip::before,
     :host([variant="zone"]) .chip::before,
-    :host([variant="tag"]) .chip::before { content: none; } /* no state layer */
+    :host([variant="tag"]) .chip::before,
+    :host([variant="segment"]) .chip::before { content: none; } /* no state layer */
+
+    /* segment — the sealed SegmentBadge (Workspaces box): uppercase caption
+       pill reading the --ui-sys-segment-* pairs via the value attr; UNKNOWN
+       or absent values fall back to the Corporate Functions pair (sealed
+       fallback rule). Small radius (oracle r4 → shape-control), 600 weight,
+       0.06em tracking. */
+    :host([variant="segment"]) {
+      --_bg:     var(--ui-sys-segment-corporate-functions-surface);
+      --_border: transparent;
+      --_fg:     var(--ui-sys-segment-corporate-functions-ink);
+    }
+    :host([variant="segment"]) .chip {
+      border-radius: var(--ui-sys-shape-control);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-weight: 600;
+      font-size: calc(var(--ui-sys-badge-font-size, 9.5px) + 0.5px);
+    }
+    :host([variant="segment"][value="Personal Systems"]) {
+      --_bg: var(--ui-sys-segment-personal-systems-surface);
+      --_fg: var(--ui-sys-segment-personal-systems-ink);
+    }
+    :host([variant="segment"][value="Printing"]) {
+      --_bg: var(--ui-sys-segment-printing-surface);
+      --_fg: var(--ui-sys-segment-printing-ink);
+    }
+    :host([variant="segment"][value="Corporate Investments"]) {
+      --_bg: var(--ui-sys-segment-corporate-investments-surface);
+      --_fg: var(--ui-sys-segment-corporate-investments-ink);
+    }
 
     /* tag — the quiet .tag pill (sealed Tags primitive chip shape). */
     :host([variant="tag"]) {
@@ -326,9 +360,9 @@ class UiChip extends HTMLElement {
   get selected() { return this.hasAttribute('selected'); }
   set selected(v) { v ? this.setAttribute('selected', '') : this.removeAttribute('selected'); }
 
-  /* priority/zone/tag are display-only pills — no widget role, no tabstop. */
+  /* priority/zone/tag/segment are display-only pills — no widget role, no tabstop. */
   #isPresentation() {
-    return ['priority', 'zone', 'tag'].includes(this.getAttribute('variant'));
+    return ['priority', 'zone', 'tag', 'segment'].includes(this.getAttribute('variant'));
   }
 
   #syncRole() {

@@ -903,7 +903,8 @@ template.innerHTML = `
   }
 
   /* Owner avatars (OwnersDisplay, size 20 — read-only stack) */
-  .owner-stack { display: inline-flex; align-items: center; }
+  .owner-stack ui-avatar:not(:first-child) { margin-left: calc(-1 * var(--ui-sys-space-1)); }
+    .owner-stack { display: inline-flex; align-items: center; }
   .owner-av {
     width: 20px; height: 20px;
     border-radius: 50%;
@@ -1647,11 +1648,15 @@ class UiStakeholderTable extends HTMLElement {
     wrap.className = 'owner-wrap';
     const stack = document.createElement('span');
     stack.className = 'owner-stack';
+    // Sealed: ui-avatar is the ONE avatar primitive — owner stacks compose it
+    // (hand-rolled .owner-av circles retired 2026-07-03).
     for (const u of list) {
-      const av = document.createElement('span');
-      av.className = 'owner-av';
-      if (u.avatarColor) av.style.background = u.avatarColor;           // token reference from seed, never hex
-      av.textContent = abbrev(u.name);
+      const av = document.createElement('ui-avatar');
+      av.setAttribute('size', 'sm');
+      av.setAttribute('ring', '');
+      av.setAttribute('name', u.name || '');
+      if (u.avatarUrl) av.setAttribute('src', u.avatarUrl);
+      if (u.avatarColor) av.style.setProperty('--ui-avatar-bg', u.avatarColor); // token ref from seed
       stack.appendChild(av);
     }
     wrap.appendChild(stack);

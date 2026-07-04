@@ -238,6 +238,10 @@ class UiAutocomplete extends HTMLElement {
     if (this.isConnected) this.#closePopup();
   }
 
+  /* Delegate programmatic focus to the real input (dialog autofocus — the
+   * sealed pickers open with the typeahead focused). */
+  focus(options) { this.#inputEl.focus(options); }
+
   get value() { return this.#value; }
   set value(v) { this.#setValue(String(v ?? ''), true); }
 

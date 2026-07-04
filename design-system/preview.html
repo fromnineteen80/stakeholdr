@@ -252,6 +252,9 @@
         <ui-slider min="0" max="100" step="1" value="40"></ui-slider>
         <ui-slider min="0" max="10" step="2" value="6"></ui-slider>
         <ui-slider min="0" max="100" value="30" disabled></ui-slider>
+        <!-- baseline anchor (sealed Scoring WeightSlider: fill spans baseline<->value) -->
+        <ui-slider min="0" max="2" step="0.1" value="1.5" baseline="1" baseline-title="Baseline weight 1.0"></ui-slider>
+        <ui-slider min="0" max="2" step="0.1" value="0.7" baseline="1" baseline-title="Baseline weight 1.0"></ui-slider>
       </div>
     </section>
 
@@ -313,6 +316,14 @@
         <ui-chip variant="priority" value="Low">Low</ui-chip>
         <ui-chip variant="tag">public-official</ui-chip>
         <ui-chip variant="tag">ally</ui-chip>
+      </ui-chip-set></div>
+      <!-- segment pills (sealed SegmentBadge; unknown falls back to Corporate Functions) -->
+      <div class="row"><ui-chip-set>
+        <ui-chip variant="segment" value="Personal Systems">Personal Systems</ui-chip>
+        <ui-chip variant="segment" value="Printing">Printing</ui-chip>
+        <ui-chip variant="segment" value="Corporate Investments">Corporate Investments</ui-chip>
+        <ui-chip variant="segment" value="Corporate Functions">Corporate Functions</ui-chip>
+        <ui-chip variant="segment" value="Unknown Segment">fallback pair</ui-chip>
       </ui-chip-set></div>
       <div class="row"><ui-chip-set>
         <ui-chip variant="zone" data-zone="Proactively Defend">Proactively Defend</ui-chip>

@@ -1,1600 +1,1638 @@
 {
-  "$schema": "./manifest.schema.json",
-  "system": "Canonical UI — un-branded, token-driven web components",
-  "version": "0.2.0",
-  "law": [
-    "The ONLY legal visual surface is the --ui-sys-* token layer.",
-    "Assemble screens from the real components below; never reimplement one in markup/CSS.",
-    "A component reads only --ui-sys-* tokens. No component stylesheet, no utility classes, no inline color/size.",
-    "If a need isn't covered by a component or expressible via a token, that is a gap to add to this manifest — not a one-off hack."
+ "$schema": "./manifest.schema.json",
+ "system": "Canonical UI \u2014 un-branded, token-driven web components",
+ "version": "0.2.0",
+ "law": [
+  "The ONLY legal visual surface is the --ui-sys-* token layer.",
+  "Assemble screens from the real components below; never reimplement one in markup/CSS.",
+  "A component reads only --ui-sys-* tokens. No component stylesheet, no utility classes, no inline color/size.",
+  "If a need isn't covered by a component or expressible via a token, that is a gap to add to this manifest \u2014 not a one-off hack."
+ ],
+ "tokenContract": "./tokens.css",
+ "preview": "./preview.html",
+ "coverage": {
+  "note": "Parity with MD3's web surface (native) plus the blanks MD3 left (gapFill). All entries below are status:built.",
+  "native": [
+   "icon",
+   "button",
+   "icon-button",
+   "fab",
+   "text-field",
+   "checkbox",
+   "radio",
+   "switch",
+   "slider",
+   "select",
+   "menu",
+   "chip",
+   "list",
+   "tabs",
+   "divider",
+   "dialog",
+   "tooltip",
+   "snackbar",
+   "linear-progress",
+   "circular-progress",
+   "avatar",
+   "card"
   ],
-  "tokenContract": "./tokens.css",
-  "preview": "./preview.html",
-  "coverage": {
-    "note": "Parity with MD3's web surface (native) plus the blanks MD3 left (gapFill). All entries below are status:built.",
-    "native": [
-      "icon",
-      "button",
-      "icon-button",
-      "fab",
-      "text-field",
-      "checkbox",
-      "radio",
-      "switch",
-      "slider",
-      "select",
-      "menu",
-      "chip",
-      "list",
-      "tabs",
-      "divider",
-      "dialog",
-      "tooltip",
-      "snackbar",
-      "linear-progress",
-      "circular-progress",
-      "avatar",
-      "card"
-    ],
-    "gapFill": [
-      "autocomplete",
-      "data-table",
-      "chart",
-      "app-bar",
-      "nav-rail",
-      "nav-drawer",
-      "sheet",
-      "bottom-bar",
-      "date-picker",
-      "textarea",
-      "badge",
-      "owner-picker",
-      "coachmark",
-      "status-dot"
-    ],
-    "scaffold": [
-      "app-shell",
-      "sidebar",
-      "inspector",
-      "status-bar"
-    ],
-    "domain": [
-      "stakeholder-table",
-      "stakeholder-map"
-    ]
-  },
-  "components": {
-    "icon": {
-      "tag": "ui-icon",
-      "status": "built",
-      "category": "native",
-      "summary": "Icon sizing primitive. Wraps an inline SVG/glyph and forces it to a token size (sm/md/lg/xl via --ui-sys-icon-size-*); inherits currentColor. The ONE place icon px live.",
-      "props": [
-        {
-          "name": "size",
-          "type": "enum",
-          "values": [
-            "sm",
-            "md",
-            "lg",
-            "xl"
-          ],
-          "default": "md"
-        }
-      ],
-      "states": [
-        "sm",
-        "md",
-        "lg",
-        "xl"
-      ],
-      "import": "./components/icon.js"
-    },
-    "app-shell": {
-      "tag": "ui-app-shell",
-      "status": "built",
-      "category": "scaffold",
-      "summary": "CSS-grid app layout host. Slots header/nav/(main)/aside/footer; empty side/header/footer tracks auto-collapse via slotchange (no-* host attrs). main scrolls. Works with 0, 1, or 2 side columns.",
-      "props": [],
-      "states": [
-        "no-header",
-        "no-nav",
-        "no-aside",
-        "no-footer"
-      ],
-      "import": "./components/app-shell.js"
-    },
-    "sidebar": {
-      "tags": [
-        "ui-sidebar",
-        "ui-sidebar-item"
-      ],
-      "status": "built",
-      "category": "scaffold",
-      "summary": "Collapsible left nav. ui-sidebar animates width via --ui-sys-sidebar-width (208px) <-> --ui-sys-sidebar-width-collapsed (64px) with a built-in chevron toggle (emits toggle{collapsed}); pushes 'sidebar-collapsed' to items via MutationObserver. ui-sidebar-item: icon (slot, sized via --ui-sys-icon-size-md) + label expanded; centered icon-only + hover tooltip when collapsed; active = primary-container pill; aria-current.",
-      "props": [
-        {
-          "name": "collapsed",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "active",
-          "type": "boolean",
-          "default": false,
-          "note": "on item"
-        },
-        {
-          "name": "href",
-          "type": "string",
-          "default": "",
-          "note": "on item"
-        },
-        {
-          "name": "disabled",
-          "type": "boolean",
-          "default": false,
-          "note": "on item"
-        }
-      ],
-      "states": [
-        "expanded",
-        "collapsed",
-        "item-active",
-        "item-hover",
-        "item-disabled",
-        "collapsed-tooltip"
-      ],
-      "import": "./components/sidebar.js"
-    },
-    "inspector": {
-      "tag": "ui-inspector",
-      "status": "built",
-      "category": "scaffold",
-      "summary": "Right-hand detail/inspector panel (second sidebar). ~320px when open; animates to width 0 / hidden when closed (removed from tab order). Slots title/(content)/actions; built-in close × emits close (accessible name + hover title via close-label). role=complementary.",
-      "props": [
-        {
-          "name": "open",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "close-label",
-          "type": "string",
-          "default": "Close inspector",
-          "note": "aria-label + title for the built-in close ×; hosts set their sealed intent (the Map scorecard sets \"Hide scorecard panel\")"
-        }
-      ],
-      "states": [
-        "open",
-        "closed"
-      ],
-      "import": "./components/inspector.js"
-    },
-    "status-bar": {
-      "tag": "ui-status-bar",
-      "status": "built",
-      "category": "scaffold",
-      "summary": "Footer/status bar. Default slot left-aligned groups, 'end' slot right-aligned; caption ink on surface-container with top border. role=contentinfo.",
-      "props": [],
-      "states": [],
-      "import": "./components/status-bar.js"
-    },
-    "button": {
-      "tag": "ui-button",
-      "status": "built",
-      "category": "native",
-      "summary": "Primary action control; filled/tonal/outlined/text variants, neutral/danger tones, state layer, focus ring, form-associated.",
-      "props": [
-        {
-          "name": "variant",
-          "type": "enum",
-          "values": [
-            "filled",
-            "tonal",
-            "outlined",
-            "text"
-          ],
-          "default": "filled"
-        },
-        {
-          "name": "disabled",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "type",
-          "type": "enum",
-          "values": [
-            "button",
-            "submit",
-            "reset"
-          ],
-          "default": "button"
-        },
-        {
-          "name": "tone",
-          "type": "enum",
-          "values": [
-            "neutral",
-            "danger"
-          ],
-          "default": "neutral",
-          "note": "danger = destructive action; reads --ui-sys-neg/-neg-border-soft (sealed btn-danger surfaces: delete stakeholder, confirm Delete)"
-        }
-      ],
-      "states": [
-        "enabled",
-        "hover",
-        "pressed",
-        "focus-visible",
-        "disabled"
-      ],
-      "import": "./components/button.js"
-    },
-    "icon-button": {
-      "tag": "ui-icon-button",
-      "status": "built",
-      "category": "native",
-      "summary": "Circular icon button; standard/filled/tonal/outlined variants, optional selected toggle (aria-pressed).",
-      "props": [
-        {
-          "name": "variant",
-          "type": "enum",
-          "values": [
-            "standard",
-            "filled",
-            "tonal",
-            "outlined"
-          ],
-          "default": "standard"
-        },
-        {
-          "name": "selected",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "disabled",
-          "type": "boolean",
-          "default": false
-        }
-      ],
-      "states": [
-        "selected",
-        "hover",
-        "pressed",
-        "focus-visible",
-        "disabled"
-      ],
-      "import": "./components/icon-button.js"
-    },
-    "fab": {
-      "tag": "ui-fab",
-      "status": "built",
-      "category": "native",
-      "summary": "Floating action button; small/medium/large sizes, primary/surface variants, extended via label, elevation-3.",
-      "props": [
-        {
-          "name": "size",
-          "type": "enum",
-          "values": [
-            "small",
-            "medium",
-            "large"
-          ],
-          "default": "medium"
-        },
-        {
-          "name": "variant",
-          "type": "enum",
-          "values": [
-            "primary",
-            "surface"
-          ],
-          "default": "primary"
-        },
-        {
-          "name": "label",
-          "type": "string",
-          "default": ""
-        },
-        {
-          "name": "disabled",
-          "type": "boolean",
-          "default": false
-        }
-      ],
-      "states": [
-        "hover",
-        "pressed",
-        "focus-visible",
-        "disabled"
-      ],
-      "import": "./components/fab.js"
-    },
-    "text-field": {
-      "tag": "ui-text-field",
-      "status": "built",
-      "category": "native",
-      "summary": "Text input; outlined variant with floating label, plain variant for label-less chrome-light inline fields (hairline outline strengthening on focus), leading/trailing slots, error state, supporting text, form-associated.",
-      "props": [
-        {
-          "name": "variant",
-          "type": "enum",
-          "values": [
-            "outlined",
-            "plain"
-          ],
-          "default": "outlined"
-        },
-        {
-          "name": "label",
-          "type": "string",
-          "default": ""
-        },
-        {
-          "name": "value",
-          "type": "string",
-          "default": ""
-        },
-        {
-          "name": "placeholder",
-          "type": "string",
-          "default": ""
-        },
-        {
-          "name": "type",
-          "type": "string",
-          "default": "text"
-        },
-        {
-          "name": "error",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "supporting-text",
-          "type": "string",
-          "default": ""
-        },
-        {
-          "name": "disabled",
-          "type": "boolean",
-          "default": false
-        }
-      ],
-      "states": [
-        "default",
-        "focused",
-        "has-value",
-        "error",
-        "disabled"
-      ],
-      "import": "./components/text-field.js"
-    },
-    "checkbox": {
-      "tag": "ui-checkbox",
-      "status": "built",
-      "category": "native",
-      "summary": "Three-state checkbox (unchecked/checked/indeterminate), inline-SVG mark, form-associated.",
-      "props": [
-        {
-          "name": "checked",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "indeterminate",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "disabled",
-          "type": "boolean",
-          "default": false
-        }
-      ],
-      "states": [
-        "unchecked",
-        "checked",
-        "indeterminate",
-        "hover",
-        "pressed",
-        "focus-visible",
-        "disabled"
-      ],
-      "import": "./components/checkbox.js"
-    },
-    "radio": {
-      "tag": "ui-radio",
-      "status": "built",
-      "category": "native",
-      "summary": "Radio grouped by name; selecting unchecks siblings; arrow-key group navigation; form-associated.",
-      "props": [
-        {
-          "name": "checked",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "name",
-          "type": "string",
-          "default": ""
-        },
-        {
-          "name": "value",
-          "type": "string",
-          "default": "on"
-        },
-        {
-          "name": "disabled",
-          "type": "boolean",
-          "default": false
-        }
-      ],
-      "states": [
-        "unchecked",
-        "checked",
-        "hover",
-        "pressed",
-        "focus-visible",
-        "disabled"
-      ],
-      "import": "./components/radio.js"
-    },
-    "switch": {
-      "tag": "ui-switch",
-      "status": "built",
-      "category": "native",
-      "summary": "Toggle switch; animated pill track + handle via track/handle tokens; form-associated.",
-      "props": [
-        {
-          "name": "selected",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "disabled",
-          "type": "boolean",
-          "default": false
-        }
-      ],
-      "states": [
-        "off",
-        "on",
-        "hover",
-        "pressed",
-        "focus-visible",
-        "disabled"
-      ],
-      "import": "./components/switch.js"
-    },
-    "slider": {
-      "tag": "ui-slider",
-      "status": "built",
-      "category": "native",
-      "summary": "Horizontal range slider; filled track + draggable handle; pointer + keyboard (arrows/Home/End); form-associated.",
-      "props": [
-        {
-          "name": "min",
-          "type": "number",
-          "default": 0
-        },
-        {
-          "name": "max",
-          "type": "number",
-          "default": 100
-        },
-        {
-          "name": "step",
-          "type": "number",
-          "default": 1
-        },
-        {
-          "name": "value",
-          "type": "number",
-          "default": 0
-        },
-        {
-          "name": "disabled",
-          "type": "boolean",
-          "default": false
-        }
-      ],
-      "states": [
-        "default",
-        "dragging",
-        "hover",
-        "focus-visible",
-        "disabled"
-      ],
-      "import": "./components/slider.js"
-    },
-    "select": {
-      "tag": "ui-select",
-      "status": "built",
-      "category": "native",
-      "summary": "Outlined dropdown for short fixed sets; paired with ui-option; token-styled popup; combobox/listbox ARIA.",
-      "props": [
-        {
-          "name": "label",
-          "type": "string",
-          "default": ""
-        },
-        {
-          "name": "value",
-          "type": "string",
-          "default": ""
-        },
-        {
-          "name": "disabled",
-          "type": "boolean",
-          "default": false
-        }
-      ],
-      "states": [
-        "open",
-        "has-value",
-        "focus-visible",
-        "disabled"
-      ],
-      "import": "./components/select.js"
-    },
-    "menu": {
-      "tag": "ui-menu",
-      "status": "built",
-      "category": "native",
-      "summary": "Action menu anchored to a trigger by id; paired with ui-menu-item (leading icon, disabled); full keyboard nav.",
-      "props": [
-        {
-          "name": "anchor",
-          "type": "string",
-          "default": ""
-        },
-        {
-          "name": "open",
-          "type": "boolean",
-          "default": false
-        }
-      ],
-      "states": [
-        "open",
-        "item-disabled",
-        "item-focus-visible"
-      ],
-      "import": "./components/menu.js"
-    },
-    "chip": {
-      "tag": "ui-chip",
-      "status": "built",
-      "category": "native",
-      "summary": "Chip variants assist/filter/input/suggestion (interactive: pill shape; filter toggles primary-container; input removable; paired with ui-chip-set) PLUS the sealed presentational pill variants priority/zone/tag (Shared-UI-primitives): non-interactive caption-type pills with no state layer/tabstop/role. priority reads --ui-sys-priority-{high|medium|low}-surface/-ink via the value attr (case-insensitive; unknown falls back to the Low pair). zone reads the 14 single-sourced --ui-sys-zone-* fills + band inks via data-zone = the exact zone name, with the SEALED NULL-GUARD: an uncatalogued zone renders NOTHING. tag is the quiet surface-container tag pill. These variants are the ONE source of pill visuals — screens compose them, never hand-rolled spans.",
-      "props": [
-        {
-          "name": "variant",
-          "type": "enum",
-          "values": [
-            "assist",
-            "filter",
-            "input",
-            "suggestion",
-            "priority",
-            "zone",
-            "tag"
-          ],
-          "default": "assist"
-        },
-        {
-          "name": "selected",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "disabled",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "value",
-          "type": "enum",
-          "values": [
-            "High",
-            "Medium",
-            "Low"
-          ],
-          "default": "",
-          "note": "priority variant only; matched case-insensitively; unknown/absent falls back to the Low pair (sealed PriorityPill rule)"
-        },
-        {
-          "name": "data-zone",
-          "type": "string",
-          "default": "",
-          "note": "zone variant only; the exact relationship-zone name (one of the 14 catalogued zones); unknown renders nothing (sealed StatusPill null-guard)"
-        },
-        {
-          "name": "size",
-          "type": "enum",
-          "values": [
-            "lg"
-          ],
-          "default": "",
-          "note": "zone variant only; \"lg\" = the sealed LARGE StatusPill (size \"lg\" = 12px font, 3px 10px padding — the Map scorecard's status-pill-row pill), sizing token-derived from the space scale; absent/other = the small default"
-        }
-      ],
-      "states": [
-        "selected",
-        "hover",
-        "pressed",
-        "focus-visible",
-        "disabled",
-        "presentational (priority/zone/tag)",
-        "zone-null-guard-hidden"
-      ],
-      "import": "./components/chips.js"
-    },
-    "status-dot": {
-      "tag": "ui-status-dot",
-      "status": "built",
-      "category": "gapFill",
-      "summary": "The sealed StatusDot primitive (Shared-UI-primitives box): a 7px round dot + the value text as its label, non-interactive. Colors: Active reads --ui-sys-pos, Watch reads --ui-sys-accent, Dormant AND any unknown value read --ui-sys-status-dormant. NULL-GUARD: an absent/empty value renders nothing.",
-      "props": [
-        {
-          "name": "value",
-          "type": "enum",
-          "values": [
-            "Active",
-            "Watch",
-            "Dormant"
-          ],
-          "default": "",
-          "note": "the label text; unknown non-empty values render with the Dormant grey dot; empty/absent renders nothing"
-        }
-      ],
-      "states": [
-        "active",
-        "watch",
-        "dormant",
-        "unknown-fallback",
-        "hidden (null-guard)"
-      ],
-      "import": "./components/chips.js"
-    },
-    "list": {
-      "tag": "ui-list",
-      "status": "built",
-      "category": "native",
-      "summary": "Vertical list; ui-list-item with leading/supporting/trailing slots and interactive (button-like) mode.",
-      "props": [
-        {
-          "name": "interactive",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "disabled",
-          "type": "boolean",
-          "default": false
-        }
-      ],
-      "states": [
-        "default",
-        "interactive-hover",
-        "interactive-pressed",
-        "focus-visible",
-        "disabled"
-      ],
-      "import": "./components/list.js"
-    },
-    "tabs": {
-      "tag": "ui-tabs",
-      "status": "built",
-      "category": "native",
-      "summary": "Tab bar with animated active indicator; paired with ui-tab; arrow-key nav; emits change with index.",
-      "props": [
-        {
-          "name": "active",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "disabled",
-          "type": "boolean",
-          "default": false
-        }
-      ],
-      "states": [
-        "active",
-        "inactive",
-        "hover",
-        "focus-visible",
-        "disabled"
-      ],
-      "import": "./components/tabs.js"
-    },
-    "divider": {
-      "tag": "ui-divider",
-      "status": "built",
-      "category": "native",
-      "summary": "Thin separator; horizontal/vertical, optional inset; role=separator.",
-      "props": [
-        {
-          "name": "inset",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "vertical",
-          "type": "boolean",
-          "default": false
-        }
-      ],
-      "states": [
-        "horizontal",
-        "vertical",
-        "inset"
-      ],
-      "import": "./components/divider.js"
-    },
-    "dialog": {
-      "tag": "ui-dialog",
-      "status": "built",
-      "category": "native",
-      "summary": "Modal dialog; scrim, animated card, focus trap (native + ui-* hosts, card fallback focus), Esc dismiss; headline/body/actions slots; show()/close(). Stackable: set the --ui-dialog-layer CSS property on a host to raise a stacked dialog (e.g. a delete-confirm) so its scrim covers the dialog beneath — clicks/Esc around the stacked card can never reach the lower dialog.",
-      "props": [
-        {
-          "name": "open",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "--ui-dialog-layer",
-          "type": "css-custom-property",
-          "default": 0,
-          "note": "z-lift for stacked dialogs; scrim = 900+layer, card = 901+layer"
-        }
-      ],
-      "states": [
-        "open",
-        "closed"
-      ],
-      "import": "./components/dialog.js"
-    },
-    "tooltip": {
-      "tag": "ui-tooltip",
-      "status": "built",
-      "category": "native",
-      "summary": "Floating label on hover/focus; wraps a child or targets an anchor by id; aria-describedby wiring.",
-      "props": [
-        {
-          "name": "for",
-          "type": "string",
-          "default": ""
-        }
-      ],
-      "states": [
-        "hidden",
-        "visible"
-      ],
-      "import": "./components/tooltip.js"
-    },
-    "snackbar": {
-      "tag": "ui-snackbar",
-      "status": "built",
-      "category": "native",
-      "summary": "Transient bottom-center message; optional action slot; auto-dismiss timeout; role=status live region; show().",
-      "props": [
-        {
-          "name": "open",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "message",
-          "type": "string",
-          "default": ""
-        },
-        {
-          "name": "timeout",
-          "type": "number",
-          "default": 5000
-        }
-      ],
-      "states": [
-        "hidden",
-        "open"
-      ],
-      "import": "./components/snackbar.js"
-    },
-    "progress": {
-      "tags": [
-        "ui-linear-progress",
-        "ui-circular-progress"
-      ],
-      "status": "built",
-      "category": "native",
-      "summary": "Determinate + indeterminate progress; linear bar and circular SVG; role=progressbar.",
-      "props": [
-        {
-          "name": "value",
-          "type": "number",
-          "default": 0
-        },
-        {
-          "name": "indeterminate",
-          "type": "boolean",
-          "default": false
-        }
-      ],
-      "states": [
-        "determinate",
-        "indeterminate"
-      ],
-      "import": "./components/progress.js"
-    },
-    "autocomplete": {
-      "tag": "ui-autocomplete",
-      "status": "built",
-      "category": "gapFill",
-      "summary": "Typeahead combobox; outlined field + filtered popup listbox; substring highlight; full keyboard nav. options set via property.",
-      "props": [
-        {
-          "name": "options",
-          "type": "array",
-          "default": "sample",
-          "note": "set via JS property"
-        },
-        {
-          "name": "label",
-          "type": "string",
-          "default": ""
-        },
-        {
-          "name": "placeholder",
-          "type": "string",
-          "default": ""
-        },
-        {
-          "name": "value",
-          "type": "string",
-          "default": ""
-        }
-      ],
-      "states": [
-        "open",
-        "option-hover",
-        "keyboard-active",
-        "match-highlight",
-        "no-results"
-      ],
-      "import": "./components/autocomplete.js"
-    },
-    "data-table": {
-      "tag": "ui-data-table",
-      "status": "built",
-      "category": "gapFill",
-      "summary": "Tokened semantic data grid (MD3 has none); sticky header, sortable columns, optional checkbox selection, comfortable/compact density. columns+data set via properties.",
-      "props": [
-        {
-          "name": "columns",
-          "type": "array",
-          "default": "sample",
-          "note": "set via JS property"
-        },
-        {
-          "name": "data",
-          "type": "array",
-          "default": "sample",
-          "note": "set via JS property"
-        },
-        {
-          "name": "selectable",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "density",
-          "type": "enum",
-          "values": [
-            "comfortable",
-            "compact"
-          ],
-          "default": "comfortable"
-        }
-      ],
-      "states": [
-        "sortable-header",
-        "row-hover",
-        "selected-row",
-        "empty"
-      ],
-      "import": "./components/data-table.js"
-    },
-    "chart": {
-      "tag": "ui-chart",
-      "status": "built",
-      "category": "gapFill",
-      "summary": "Inline-SVG chart (MD3 has none); bar/line/area; grid + axis labels; re-skins via computed tokens. data set via property or values attr.",
-      "props": [
-        {
-          "name": "type",
-          "type": "enum",
-          "values": [
-            "bar",
-            "line",
-            "area"
-          ],
-          "default": "bar"
-        },
-        {
-          "name": "data",
-          "type": "array",
-          "default": "sample",
-          "note": "set via JS property"
-        },
-        {
-          "name": "values",
-          "type": "string",
-          "default": "",
-          "note": "comma-list fallback"
-        },
-        {
-          "name": "label",
-          "type": "string",
-          "default": ""
-        }
-      ],
-      "states": [
-        "bar",
-        "line",
-        "area",
-        "empty"
-      ],
-      "import": "./components/chart.js"
-    },
-    "app-bar": {
-      "tag": "ui-app-bar",
-      "status": "built",
-      "category": "gapFill",
-      "summary": "Top app bar (dropped from MD3 web); leading/title/trailing slots; flat/elevated variant; role=banner.",
-      "props": [
-        {
-          "name": "variant",
-          "type": "enum",
-          "values": [
-            "flat",
-            "elevated"
-          ],
-          "default": "flat"
-        }
-      ],
-      "states": [
-        "flat",
-        "elevated"
-      ],
-      "import": "./components/app-bar.js"
-    },
-    "nav-rail": {
-      "tag": "ui-nav-rail",
-      "status": "built",
-      "category": "gapFill",
-      "summary": "Vertical desktop side rail (dropped from MD3 web); ui-nav-item with pill active indicator; emits navigate.",
-      "props": [
-        {
-          "name": "active",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "href",
-          "type": "string",
-          "default": ""
-        }
-      ],
-      "states": [
-        "active",
-        "hover",
-        "focus-visible"
-      ],
-      "import": "./components/nav-rail.js"
-    },
-    "nav-drawer": {
-      "tag": "ui-nav-drawer",
-      "status": "built",
-      "category": "gapFill",
-      "summary": "Slide-in nav drawer (dropped from MD3 web); modal adds scrim+elevation-3+Esc; toggle()/close().",
-      "props": [
-        {
-          "name": "open",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "modal",
-          "type": "boolean",
-          "default": false
-        }
-      ],
-      "states": [
-        "open",
-        "modal",
-        "closed"
-      ],
-      "import": "./components/nav-drawer.js"
-    },
-    "sheet": {
-      "tag": "ui-sheet",
-      "status": "built",
-      "category": "gapFill",
-      "summary": "Mobile bottom sheet (MD3 web has none); drag-handle, scrim, swipe-down/Esc/scrim-tap close; show()/close().",
-      "props": [
-        {
-          "name": "open",
-          "type": "boolean",
-          "default": false
-        }
-      ],
-      "states": [
-        "open",
-        "closed",
-        "dragging"
-      ],
-      "import": "./components/sheet.js"
-    },
-    "bottom-bar": {
-      "tag": "ui-bottom-bar",
-      "status": "built",
-      "category": "gapFill",
-      "summary": "Mobile bottom navigation (MD3 web has none); ui-bottom-item with pill active indicator; emits navigate.",
-      "props": [
-        {
-          "name": "active",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "href",
-          "type": "string",
-          "default": ""
-        }
-      ],
-      "states": [
-        "active",
-        "hover",
-        "focus-visible"
-      ],
-      "import": "./components/bottom-bar.js"
-    },
-    "date-picker": {
-      "tag": "ui-date-picker",
-      "status": "built",
-      "category": "gapFill",
-      "summary": "Calendar date picker (dropped from MD3 web); outlined trigger + month popup; grid keyboard nav; emits change.",
-      "props": [
-        {
-          "name": "value",
-          "type": "string",
-          "default": "",
-          "note": "ISO YYYY-MM-DD"
-        },
-        {
-          "name": "label",
-          "type": "string",
-          "default": "Date"
-        }
-      ],
-      "states": [
-        "open",
-        "closed",
-        "day-focused",
-        "day-selected",
-        "today"
-      ],
-      "import": "./components/date-picker.js"
-    },
-    "stakeholder-table": {
-      "tag": "ui-stakeholder-table",
-      "status": "built",
-      "category": "domain",
-      "summary": "The Stakeholdr master sheet at the FULL sealed Lists spec. CSS max-content grid (no fixed widths — frozen sticky lefts MEASURED after layout): frozen idx/edit/Stakeholder/Organization + the 22 sealed reorderable columns (drag-to-reorder, persisted per-device to localStorage hp_map_col_order_v3; unknown keys dropped, new appended). Inline edit cells: ui-select-style dropdowns for Category/Type/Market/Region/Geography/State/Site/Status with the sealed cascades (Category resets Type; Market resets Region; Site fills State), inline text Organization (mirrors into name for non-persons), popover-calendar Last contact (YYYY-MM-DD). Display cells per the sealed emphasis map: Issues/Tags first-3+N chips, priority pills (--ui-sys-priority-*), owner avatar stack, zone pill (--ui-sys-zone-*), toned x/y, mailto/tel/x.com/Visit-Website anchors (sealed cleaning rules), notes preview. Toolbar: search (displayName/name/org/type/notes/tags), Filter popover (6 sections, OR-within/AND-across, Priority+Status HARDCODED, Zone in STATUS_ORDER; Clear all cross-clears Categories, never Sites/bands), Sort popover (the sealed 11 fields; custom priority/status/site orderings), Categories + Sites multiselects, 3 live impact-band chips (winnable-middle swatch = --ui-sys-neu). Header-click sort on every field-bearing column (asc ↑ / desc ↓); default sort = unscored first, then lastContact desc. Footer: filtered-of-total, Avg x/y (1 dp) over the filtered set, Export CSV (sealed column set + escaping + filename rule). Pure logic (filters, comparators, CSV, column-order merge, name/phone/url helpers) is exported for unit tests. Bare tag renders a gallery sample. COMPOSITION RULING (2026-07-03): display cells are lightweight shadow-DOM renders for grid performance (industry grid practice); every INTERACTIVE surface composes the REAL design-system elements — toolbar search = ui-text-field variant=plain (leading search ui-icon + kbd chip), Filter/Sort/Categories/Sites = ui-button outlined with a count ui-badge (text + badge only, no leading icons), impact bands = ui-chip variant=filter, Export CSV / Clear all = ui-button variant=text, edit cell = ui-icon-button standard, and clicking a dropdown/date display cell mounts a REAL pre-opened ui-select / ui-date-picker editor in the cell (commit on change, unmount on close). Owner cell opens the sealed OwnersDisplay popover (ui-avatar rows, singularizing head count, outside-mousedown close).",
-      "props": [
-        {
-          "name": "data",
-          "type": "array",
-          "default": "sample",
-          "note": "set via JS property; rows carry the stakeholder fields plus computed _x/_y/_status/_unscored and community (affiliated engagement names)"
-        },
-        {
-          "name": "catalogs",
-          "type": "object",
-          "default": "sample",
-          "note": "set via JS property: { CATEGORIES, MARKETS, GEOGRAPHIES, US_STATES, SITES, siteLabel }"
-        },
-        {
-          "name": "users",
-          "type": "array",
-          "default": "sample",
-          "note": "set via JS property; resolves owner avatars/names (an unresolvable owner id exports as the raw id)"
-        },
-        {
-          "name": "workspaceLabel",
-          "type": "string",
-          "default": "",
-          "note": "set via JS property; feeds the sealed CSV filename rule (empty → stakeholders.csv)"
-        },
-        {
-          "name": "kbd-label",
-          "type": "string",
-          "default": "",
-          "note": "attribute/property (kbdLabel); the search kbd hint text. NOT derived inside the component — the page passes the store's exported single source (src/app/data/store.js → cmdKeyLabel). Empty/absent hides the chip."
-        }
-      ],
-      "events": [
-        {
-          "name": "row-change",
-          "detail": "{ id, patch }",
-          "note": "EVERY inline edit flows out here — the page owns persistence through the one Store seam"
-        },
-        {
-          "name": "notes-open",
-          "detail": "{ id }",
-          "note": "notes cell click — the page hosts the Notes modal"
-        },
-        {
-          "name": "selection-change",
-          "detail": "{ id }",
-          "note": "row click; selection lifts to the page (shared with Map/Scoring)"
-        },
-        {
-          "name": "open-record",
-          "detail": "{ id }",
-          "note": "edit icon / name double-click — the full record surface"
-        },
-        {
-          "name": "community-open",
-          "detail": "{ id, name }",
-          "note": "community-investment pill click (census C5 make-real: never a dead span)"
-        },
-        {
-          "name": "export-csv",
-          "detail": "{ csv, filename }",
-          "note": "fired alongside the browser download of the current filtered/sorted set"
-        }
-      ],
-      "states": [
-        "sorted",
-        "searching",
-        "filtered",
-        "row-selected",
-        "popover-open",
-        "cell-editing",
-        "column-dragging",
-        "scrolled-x"
-      ],
-      "import": "./components/stakeholder-table.js"
-    },
-    "stakeholder-map": {
-      "tag": "ui-stakeholder-map",
-      "status": "built",
-      "category": "domain",
-      "summary": "The Stakeholdr Map at the FULL sealed spec — READ-ONLY (drag-to-rescore removed by ruling). Plot internals are the ONE sanctioned inline-SVG/positioned-div composition; chrome/panels compose real ui-* elements. Stage: paper runway, proportional 92%/920px plot box; 6x4 zone grid as fr ratios (rows 2/1/1/1/1/2) filled by the single-sourced --ui-sys-zone-* tokens, strong-outline outer border + zone-grid-line hairlines + centre cross; optional zone labels + bottom-right per-cell count pills (binning EXACTLY matches statusFor); y ticks [10..-10 by 2.5] left, x ticks every integer -10..10 below, the sealed bordered legend card. Dots at coordToPct(_x,_y) (left=((x+10)/20)%, top=((10-y)/20)%), zone fill/ink/border tokens (accent when selected), abbrev initials at dot-size>=22, name label when show-labels or selected, ui-tooltip '{name} · {zone} · (x, y)'. Styles: halo (DEFAULT; ring inset -(dotSize*0.8)px — solid translucent disc pending the recorded gradient ruling) | classic | density (color-mix(in oklch, zone {20+t*80}%, --ui-sys-zone-density-base)). History mode (rows with history[]): other dots hide; dashed 14px paper quarter dots + the dashed accent trail SVG (viewBox 0 0 100 100, stroke-width .35, dash 1.2,1.2, non-scaling-stroke) through [...history, current]; selecting any dot exits. Scorecard = the real ui-inspector rail (defaults OPEN; closed shows the reopen ui-icon-button chevron_left at top 16/right 0): empty state = de-staled prompt + first-six 'Recently scored' ui-button rows; selected state = title/org, Visit Website (normalizeUrl), ui-chip filter 'Show history' toggle (only when history exists), large zone ui-chip (size=\"lg\") + live coords, zone-tinted STRATEGY card (engine strategy/action verbatim), the sealed 11 metadata rows (86px/1fr; tag/priority chips, ui-avatar owner stack, formatDateLong, ui-status-dot), and the LATEST NOTE card (newest notesHistory by .at, fallback notes). Pure logic (GRID/statusFor/coordToPct/cellFor/countCells/densityPct/haloInset/ticks/legend/TWEAK_DEFAULTS/formatDateLong/latestNote — verbatim mirrors of the sealed engine, parity-tested by scripts/map-test.mjs) is exported for node. A bare tag renders EMPTY until .data arrives (make-real rule: no live-looking fake); the gallery attribute (preview/wireframes only) opts into the built-in sample.",
-      "props": [
-        {
-          "name": "data",
-          "type": "array",
-          "default": "[]",
-          "note": "set via JS property; rows carry the stakeholder fields plus RAW computed _x/_y/_status (the page computes weightedCoord/statusFor live) and history[]/notesHistory[]. Unset = renders EMPTY unless the gallery attribute is present"
-        },
-        {
-          "name": "users",
-          "type": "array",
-          "default": "[]",
-          "note": "set via JS property; resolves the scorecard Owner avatar stack (unresolvable ids silently drop — sealed OwnersDisplay rule)"
-        },
-        {
-          "name": "selectedId",
-          "type": "string",
-          "default": null,
-          "note": "set via JS property; CONTROLLED selection — the page owns selection (sealed: selection lifts to the page) and passes the id from selection-change back down; same-id sets no-op, new ids exit history mode"
-        },
-        {
-          "name": "gallery",
-          "type": "boolean",
-          "default": false,
-          "note": "preview.html/wireframes.html ONLY: renders the built-in sample when no .data is set; without it the component renders EMPTY until .data arrives (make-real rule — the app never shows a live-looking fake dataset)"
-        },
-        {
-          "name": "map-style",
-          "type": "enum",
-          "values": [
-            "halo",
-            "classic",
-            "density"
-          ],
-          "default": "halo",
-          "note": "sealed TWEAK_DEFAULTS; presentational only — never changes positions or scores"
-        },
-        {
-          "name": "show-labels",
-          "type": "boolean",
-          "default": false,
-          "note": "always show dot name labels (selected dots always label)"
-        },
-        {
-          "name": "show-zone-labels",
-          "type": "boolean",
-          "default": true,
-          "note": "zone names in cells; pass \"false\" to hide"
-        },
-        {
-          "name": "dot-size",
-          "type": "number",
-          "default": 22,
-          "note": "px; sealed slider range 14–36 step 2; initials appear at >= 22"
-        }
-      ],
-      "events": [
-        {
-          "name": "selection-change",
-          "detail": "{ id }",
-          "note": "single click / recent-row select — wrapSelect: select + force scorecard open + exit history; selection lifts to the page (shared with Lists/Scoring)"
-        },
-        {
-          "name": "open-profile",
-          "detail": "{ id }",
-          "note": "dot double-click — the page opens the sealed read-only stakeholder profile"
-        }
-      ],
-      "states": [
-        "dot-selected",
-        "dot-hover",
-        "history-mode",
-        "scorecard-open",
-        "scorecard-closed",
-        "halo",
-        "classic",
-        "density"
-      ],
-      "import": "./components/stakeholder-map.js"
-    },
-    "avatar": {
-      "tag": "ui-avatar",
-      "status": "built",
-      "category": "native",
-      "summary": "Identity circle: photo (src) or initials derived from name (first+last). size sm/md/lg via --ui-sys-avatar-size-*; fill --ui-sys-primary/on-primary so it re-themes with the wrapper; role=img aria-label=name. The ONE avatar primitive — owner stacks/profile menus compose from it.",
-      "props": [
-        {
-          "name": "name",
-          "type": "string",
-          "default": ""
-        },
-        {
-          "name": "src",
-          "type": "string",
-          "default": ""
-        },
-        {
-          "name": "size",
-          "type": "enum",
-          "values": [
-            "sm",
-            "md",
-            "lg"
-          ],
-          "default": "md"
-        }
-      ],
-      "states": [
-        "initials",
-        "photo",
-        "sm",
-        "md",
-        "lg"
-      ],
-      "import": "./components/avatar.js"
-    },
-    "textarea": {
-      "tag": "ui-textarea",
-      "status": "built",
-      "category": "gapFill",
-      "summary": "Outlined multiline text field, visually consistent with ui-text-field; floating label, error state, supporting text, rows, maxlength with live right-aligned 'N / MAX' counter (error ink at limit), optional auto-grow, form-associated.",
-      "props": [
-        {
-          "name": "label",
-          "type": "string",
-          "default": ""
-        },
-        {
-          "name": "value",
-          "type": "string",
-          "default": ""
-        },
-        {
-          "name": "placeholder",
-          "type": "string",
-          "default": ""
-        },
-        {
-          "name": "rows",
-          "type": "number",
-          "default": 3
-        },
-        {
-          "name": "maxlength",
-          "type": "number",
-          "default": null
-        },
-        {
-          "name": "supporting-text",
-          "type": "string",
-          "default": ""
-        },
-        {
-          "name": "error",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "disabled",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "auto-grow",
-          "type": "boolean",
-          "default": false
-        }
-      ],
-      "states": [
-        "default",
-        "focused",
-        "has-value",
-        "error",
-        "at-limit",
-        "disabled"
-      ],
-      "import": "./components/textarea.js"
-    },
-    "badge": {
-      "tag": "ui-badge",
-      "status": "built",
-      "category": "gapFill",
-      "summary": "Count/dot notification indicator (oracle msg-badge/count-alert): accent pill ~16px with 9.5px weight-600 tabular numerals, caps at 99+, hidden when count is 0/absent unless dot; inline on its own or anchored -4px/-4px over a wrapped child's top-right corner (nav items, icon buttons, avatars, list rows); non-interactive (pointer-events none); tones alert/neutral via --ui-sys-badge-* tokens; auto aria-label \"N notifications\" on an inner role=status, overridable via host aria-label.",
-      "props": [
-        {
-          "name": "count",
-          "type": "number",
-          "default": 0,
-          "note": "badge hides when 0/absent unless dot; values above 99 render as 99+"
-        },
-        {
-          "name": "dot",
-          "type": "boolean",
-          "default": false,
-          "note": "dot-only marker, shown regardless of count"
-        },
-        {
-          "name": "tone",
-          "type": "enum",
-          "values": [
-            "alert",
-            "neutral"
-          ],
-          "default": "alert"
-        },
-        {
-          "name": "aria-label",
-          "type": "string",
-          "default": "",
-          "note": "overrides the auto \"N notifications\" label (dot: \"New notifications\")"
-        }
-      ],
-      "states": [
-        "inline",
-        "anchored",
-        "dot",
-        "hidden",
-        "overflow-99+"
-      ],
-      "import": "./components/badge.js"
-    },
-    "owner-picker": {
-      "tag": "ui-owner-picker",
-      "status": "built",
-      "category": "gapFill",
-      "summary": "Owner avatar multi-select (the oracle's MultiOwnerPicker + UserAutocomplete-add + OwnersDisplay read-only stack). Overlapping ui-avatar circles, no names; dashed '+' (hidden when no candidates) opens an inline typeahead over candidates (name/title/email match, max 8, ArrowUp/Down/Enter/Escape, outside-click close, 'Search people to add…', autofocus); avatar click ARMS removal (neg ring + X overlay, 'Click to remove'), second click removes; system-role users and existing owners excluded from the add list. readonly = display-only stack with '+N' overflow past max. Emits change with detail { value }. Composes ui-avatar + ui-icon.",
-      "props": [
-        {
-          "name": "users",
-          "type": "array",
-          "default": "[]",
-          "note": "set via JS property; array of { id, name, title?, email?, src?, role? } — role 'system' never appears in the add list"
-        },
-        {
-          "name": "value",
-          "type": "array",
-          "default": "[]",
-          "note": "set via JS property; array of owner user ids"
-        },
-        {
-          "name": "readonly",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "size",
-          "type": "enum",
-          "values": [
-            "sm",
-            "md"
-          ],
-          "default": "md",
-          "note": "maps to --ui-sys-avatar-size-sm/-md"
-        },
-        {
-          "name": "max",
-          "type": "number",
-          "default": 5,
-          "note": "readonly overflow cap before the '+N' circle"
-        }
-      ],
-      "states": [
-        "stack",
-        "arm-remove",
-        "adding-open",
-        "keyboard-active",
-        "no-matches",
-        "add-hidden-no-candidates",
-        "readonly",
-        "overflow-+N",
-        "empty-dash"
-      ],
-      "import": "./components/owner-picker.js"
-    },
-    "coachmark": {
-      "tag": "ui-coachmark",
-      "status": "built",
-      "category": "gapFill",
-      "summary": "Anchored spotlight callout for first-run product tours; scrim with box-shadow cutout leaving the anchor prominent; card with heading, body slot, step counter, Back/Next-Done, dismiss ×; Esc dismisses; focus moves in on open and restores on close; emits next/back/dismiss.",
-      "props": [
-        {
-          "name": "for",
-          "type": "string",
-          "default": "",
-          "note": "id of the target element to spotlight"
-        },
-        {
-          "name": "step",
-          "type": "number",
-          "default": 1,
-          "note": "1-based current step; Back hidden on step 1"
-        },
-        {
-          "name": "steps",
-          "type": "number",
-          "default": 1,
-          "note": "total steps; Next becomes Done on the last step; counter reads \"step of steps\""
-        },
-        {
-          "name": "heading",
-          "type": "string",
-          "default": ""
-        },
-        {
-          "name": "open",
-          "type": "boolean",
-          "default": false
-        }
-      ],
-      "events": [
-        {
-          "name": "next",
-          "detail": "{ step, steps }",
-          "note": "Next/Done clicked; host advances step or closes on last step"
-        },
-        {
-          "name": "back",
-          "detail": "{ step, steps }",
-          "note": "Back clicked; host decrements step"
-        },
-        {
-          "name": "dismiss",
-          "detail": "{ step, steps }",
-          "note": "× button or Escape; component also closes itself"
-        }
-      ],
-      "states": [
-        "open",
-        "closed",
-        "first-step (Back hidden)",
-        "last-step (Next reads Done)",
-        "placed-below",
-        "placed-above",
-        "no-anchor (centered, no spotlight)"
-      ],
-      "import": "./components/coachmark.js"
-    },
-    "card": {
-      "tag": "ui-card",
-      "status": "built",
-      "category": "native",
-      "summary": "Content surface; outlined/filled/elevated variants; media/body/actions slots; `interactive` makes the whole card clickable (state layer, focus ring, role=button, Enter/Space). Reads --ui-sys-surface-card / -surface-container, --ui-sys-shape-card, --ui-sys-outline-subtle, --ui-sys-elevation-1.",
-      "props": [
-        {
-          "name": "variant",
-          "type": "enum",
-          "values": [
-            "outlined",
-            "filled",
-            "elevated"
-          ],
-          "default": "outlined"
-        },
-        {
-          "name": "interactive",
-          "type": "boolean",
-          "default": false
-        },
-        {
-          "name": "disabled",
-          "type": "boolean",
-          "default": false
-        }
-      ],
-      "states": [
-        "enabled",
-        "hover",
-        "pressed",
-        "focus-visible",
-        "disabled"
-      ],
-      "import": "./components/card.js"
-    },
-    "upload": {
-      "tag": "ui-upload",
-      "status": "built",
-      "category": "gapFill",
-      "summary": "File-pick control (the oracle's label-wrapped hidden file input, stakeholder-modal photo row). Composes a real ui-button (default slot = label text, e.g. 'Upload photo'/'Replace photo') over a HIDDEN native file input inside the shadow root (the one legal home for the raw primitive under the app-code composition guard). Reads the first picked file via FileReader.readAsDataURL and emits change {dataUrl, name}; input clears after each read so re-picking the same file fires again.",
-      "props": [
-        {
-          "name": "accept",
-          "type": "string",
-          "default": "",
-          "note": "passed to the file input (e.g. 'image/*')"
-        },
-        {
-          "name": "variant",
-          "type": "enum",
-          "values": [
-            "filled",
-            "tonal",
-            "outlined",
-            "text"
-          ],
-          "default": "outlined",
-          "note": "forwarded to the composed ui-button"
-        },
-        {
-          "name": "disabled",
-          "type": "boolean",
-          "default": false
-        }
-      ],
-      "events": [
-        {
-          "name": "change",
-          "detail": "{ dataUrl, name }",
-          "note": "composed: true; first selected file as a data URL"
-        }
-      ],
-      "states": [
-        "enabled",
-        "hover",
-        "pressed",
-        "focus-visible",
-        "disabled"
-      ],
-      "import": "./components/upload.js"
+  "gapFill": [
+   "autocomplete",
+   "data-table",
+   "chart",
+   "app-bar",
+   "nav-rail",
+   "nav-drawer",
+   "sheet",
+   "bottom-bar",
+   "date-picker",
+   "textarea",
+   "badge",
+   "owner-picker",
+   "coachmark",
+   "status-dot"
+  ],
+  "scaffold": [
+   "app-shell",
+   "sidebar",
+   "inspector",
+   "status-bar"
+  ],
+  "domain": [
+   "stakeholder-table",
+   "stakeholder-map"
+  ]
+ },
+ "components": {
+  "icon": {
+   "tag": "ui-icon",
+   "status": "built",
+   "category": "native",
+   "summary": "Icon sizing primitive. Wraps an inline SVG/glyph and forces it to a token size (sm/md/lg/xl via --ui-sys-icon-size-*); inherits currentColor. The ONE place icon px live. size=xs (--ui-sys-icon-size-xs) = the micro stepper glyph step.",
+   "props": [
+    {
+     "name": "size",
+     "type": "enum",
+     "values": [
+      "xs",
+      "sm",
+      "md",
+      "lg",
+      "xl"
+     ],
+     "default": "md"
     }
+   ],
+   "states": [
+    "sm",
+    "md",
+    "lg",
+    "xl"
+   ],
+   "import": "./components/icon.js"
+  },
+  "app-shell": {
+   "tag": "ui-app-shell",
+   "status": "built",
+   "category": "scaffold",
+   "summary": "CSS-grid app layout host. Slots header/nav/(main)/aside/footer; empty side/header/footer tracks auto-collapse via slotchange (no-* host attrs). main scrolls. Works with 0, 1, or 2 side columns.",
+   "props": [],
+   "states": [
+    "no-header",
+    "no-nav",
+    "no-aside",
+    "no-footer"
+   ],
+   "import": "./components/app-shell.js"
+  },
+  "sidebar": {
+   "tags": [
+    "ui-sidebar",
+    "ui-sidebar-item"
+   ],
+   "status": "built",
+   "category": "scaffold",
+   "summary": "Collapsible left nav. ui-sidebar animates width via --ui-sys-sidebar-width (208px) <-> --ui-sys-sidebar-width-collapsed (64px) with a built-in chevron toggle (emits toggle{collapsed}); pushes 'sidebar-collapsed' to items via MutationObserver. ui-sidebar-item: icon (slot, sized via --ui-sys-icon-size-md) + label expanded; centered icon-only + hover tooltip when collapsed; active = primary-container pill; aria-current.",
+   "props": [
+    {
+     "name": "collapsed",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "active",
+     "type": "boolean",
+     "default": false,
+     "note": "on item"
+    },
+    {
+     "name": "href",
+     "type": "string",
+     "default": "",
+     "note": "on item"
+    },
+    {
+     "name": "disabled",
+     "type": "boolean",
+     "default": false,
+     "note": "on item"
+    }
+   ],
+   "states": [
+    "expanded",
+    "collapsed",
+    "item-active",
+    "item-hover",
+    "item-disabled",
+    "collapsed-tooltip"
+   ],
+   "import": "./components/sidebar.js"
+  },
+  "inspector": {
+   "tag": "ui-inspector",
+   "status": "built",
+   "category": "scaffold",
+   "summary": "Right-hand detail/inspector panel (second sidebar). ~320px when open; animates to width 0 / hidden when closed (removed from tab order). Slots title/(content)/actions; built-in close \u00d7 emits close (accessible name + hover title via close-label). role=complementary.",
+   "props": [
+    {
+     "name": "open",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "close-label",
+     "type": "string",
+     "default": "Close inspector",
+     "note": "aria-label + title for the built-in close \u00d7; hosts set their sealed intent (the Map scorecard sets \"Hide scorecard panel\")"
+    }
+   ],
+   "states": [
+    "open",
+    "closed"
+   ],
+   "import": "./components/inspector.js"
+  },
+  "status-bar": {
+   "tag": "ui-status-bar",
+   "status": "built",
+   "category": "scaffold",
+   "summary": "Footer/status bar. Default slot left-aligned groups, 'end' slot right-aligned; caption ink on surface-container with top border. role=contentinfo.",
+   "props": [],
+   "states": [],
+   "import": "./components/status-bar.js"
+  },
+  "button": {
+   "tag": "ui-button",
+   "status": "built",
+   "category": "native",
+   "summary": "Primary action control; filled/tonal/outlined/text variants, neutral/danger tones, state layer, focus ring, form-associated.",
+   "props": [
+    {
+     "name": "variant",
+     "type": "enum",
+     "values": [
+      "filled",
+      "tonal",
+      "outlined",
+      "text"
+     ],
+     "default": "filled"
+    },
+    {
+     "name": "disabled",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "type",
+     "type": "enum",
+     "values": [
+      "button",
+      "submit",
+      "reset"
+     ],
+     "default": "button"
+    },
+    {
+     "name": "tone",
+     "type": "enum",
+     "values": [
+      "neutral",
+      "danger"
+     ],
+     "default": "neutral",
+     "note": "danger = destructive action; reads --ui-sys-neg/-neg-border-soft (sealed btn-danger surfaces: delete stakeholder, confirm Delete)"
+    }
+   ],
+   "states": [
+    "enabled",
+    "hover",
+    "pressed",
+    "focus-visible",
+    "disabled"
+   ],
+   "import": "./components/button.js"
+  },
+  "icon-button": {
+   "tag": "ui-icon-button",
+   "status": "built",
+   "category": "native",
+   "summary": "Circular icon button; standard/filled/tonal/outlined variants, optional selected toggle (aria-pressed). size=xs = the dense matrix-cell stepper (sealed Scoring-box xy-spin \u00b1 stack).",
+   "props": [
+    {
+     "name": "variant",
+     "type": "enum",
+     "values": [
+      "standard",
+      "filled",
+      "tonal",
+      "outlined"
+     ],
+     "default": "standard"
+    },
+    {
+     "name": "selected",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "disabled",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "size",
+     "type": "enum",
+     "values": [
+      "xs"
+     ],
+     "default": "",
+     "note": "xs = the micro in-cell stepper button (sealed Scoring xy-spin; pair with ui-icon size=xs and tabindex=-1)"
+    }
+   ],
+   "states": [
+    "selected",
+    "hover",
+    "pressed",
+    "focus-visible",
+    "disabled"
+   ],
+   "import": "./components/icon-button.js"
+  },
+  "fab": {
+   "tag": "ui-fab",
+   "status": "built",
+   "category": "native",
+   "summary": "Floating action button; small/medium/large sizes, primary/surface variants, extended via label, elevation-3.",
+   "props": [
+    {
+     "name": "size",
+     "type": "enum",
+     "values": [
+      "small",
+      "medium",
+      "large"
+     ],
+     "default": "medium"
+    },
+    {
+     "name": "variant",
+     "type": "enum",
+     "values": [
+      "primary",
+      "surface"
+     ],
+     "default": "primary"
+    },
+    {
+     "name": "label",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "disabled",
+     "type": "boolean",
+     "default": false
+    }
+   ],
+   "states": [
+    "hover",
+    "pressed",
+    "focus-visible",
+    "disabled"
+   ],
+   "import": "./components/fab.js"
+  },
+  "text-field": {
+   "tag": "ui-text-field",
+   "status": "built",
+   "category": "native",
+   "summary": "Text input; outlined variant with floating label, plain variant for label-less chrome-light inline fields (hairline outline strengthening on focus), leading/trailing slots, error state, supporting text, form-associated. type=number renders with native spinners suppressed (sealed Scoring cell rule); align=center centers the entry text.",
+   "props": [
+    {
+     "name": "variant",
+     "type": "enum",
+     "values": [
+      "outlined",
+      "plain"
+     ],
+     "default": "outlined"
+    },
+    {
+     "name": "label",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "value",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "placeholder",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "type",
+     "type": "string",
+     "default": "text"
+    },
+    {
+     "name": "error",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "supporting-text",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "disabled",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "align",
+     "type": "enum",
+     "values": [
+      "center"
+     ],
+     "default": "",
+     "note": "centered entry text (sealed Scoring-matrix dense numeric cells)"
+    }
+   ],
+   "states": [
+    "default",
+    "focused",
+    "has-value",
+    "error",
+    "disabled"
+   ],
+   "import": "./components/text-field.js"
+  },
+  "checkbox": {
+   "tag": "ui-checkbox",
+   "status": "built",
+   "category": "native",
+   "summary": "Three-state checkbox (unchecked/checked/indeterminate), inline-SVG mark, form-associated.",
+   "props": [
+    {
+     "name": "checked",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "indeterminate",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "disabled",
+     "type": "boolean",
+     "default": false
+    }
+   ],
+   "states": [
+    "unchecked",
+    "checked",
+    "indeterminate",
+    "hover",
+    "pressed",
+    "focus-visible",
+    "disabled"
+   ],
+   "import": "./components/checkbox.js"
+  },
+  "radio": {
+   "tag": "ui-radio",
+   "status": "built",
+   "category": "native",
+   "summary": "Radio grouped by name; selecting unchecks siblings; arrow-key group navigation; form-associated.",
+   "props": [
+    {
+     "name": "checked",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "name",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "value",
+     "type": "string",
+     "default": "on"
+    },
+    {
+     "name": "disabled",
+     "type": "boolean",
+     "default": false
+    }
+   ],
+   "states": [
+    "unchecked",
+    "checked",
+    "hover",
+    "pressed",
+    "focus-visible",
+    "disabled"
+   ],
+   "import": "./components/radio.js"
+  },
+  "switch": {
+   "tag": "ui-switch",
+   "status": "built",
+   "category": "native",
+   "summary": "Toggle switch; animated pill track + handle via track/handle tokens; form-associated.",
+   "props": [
+    {
+     "name": "selected",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "disabled",
+     "type": "boolean",
+     "default": false
+    }
+   ],
+   "states": [
+    "off",
+    "on",
+    "hover",
+    "pressed",
+    "focus-visible",
+    "disabled"
+   ],
+   "import": "./components/switch.js"
+  },
+  "slider": {
+   "tag": "ui-slider",
+   "status": "built",
+   "category": "native",
+   "summary": "Horizontal range slider; filled track + draggable handle; pointer + keyboard (arrows/Home/End); form-associated. Optional baseline anchor: [baseline] renders a tick at the anchor value and the fill spans between the baseline and the current value (sealed Scoring WeightSlider mechanic); [baseline-title] puts the sealed hover copy on the tick.",
+   "props": [
+    {
+     "name": "min",
+     "type": "number",
+     "default": 0
+    },
+    {
+     "name": "max",
+     "type": "number",
+     "default": 100
+    },
+    {
+     "name": "step",
+     "type": "number",
+     "default": 1
+    },
+    {
+     "name": "value",
+     "type": "number",
+     "default": 0
+    },
+    {
+     "name": "disabled",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "baseline",
+     "type": "number",
+     "default": null,
+     "note": "optional fill/tick anchor (sealed WeightSlider: baseline 1.0; fill grows left of the tick below baseline, right above)"
+    },
+    {
+     "name": "baseline-title",
+     "type": "string",
+     "default": "",
+     "note": "hover tooltip copy on the baseline tick (sealed exact copy \"Baseline weight 1.0\")"
+    }
+   ],
+   "states": [
+    "default",
+    "dragging",
+    "hover",
+    "focus-visible",
+    "disabled"
+   ],
+   "import": "./components/slider.js"
+  },
+  "select": {
+   "tag": "ui-select",
+   "status": "built",
+   "category": "native",
+   "summary": "Outlined dropdown for short fixed sets; paired with ui-option; token-styled popup; combobox/listbox ARIA.",
+   "props": [
+    {
+     "name": "label",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "value",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "disabled",
+     "type": "boolean",
+     "default": false
+    }
+   ],
+   "states": [
+    "open",
+    "has-value",
+    "focus-visible",
+    "disabled"
+   ],
+   "import": "./components/select.js"
+  },
+  "menu": {
+   "tag": "ui-menu",
+   "status": "built",
+   "category": "native",
+   "summary": "Action menu anchored to a trigger by id; paired with ui-menu-item (leading icon, disabled); full keyboard nav.",
+   "props": [
+    {
+     "name": "anchor",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "open",
+     "type": "boolean",
+     "default": false
+    }
+   ],
+   "states": [
+    "open",
+    "item-disabled",
+    "item-focus-visible"
+   ],
+   "import": "./components/menu.js"
+  },
+  "chip": {
+   "tag": "ui-chip",
+   "status": "built",
+   "category": "native",
+   "summary": "Chip variants assist/filter/input/suggestion (interactive: pill shape; filter toggles primary-container; input removable; paired with ui-chip-set) PLUS the sealed presentational pill variants priority/zone/tag (Shared-UI-primitives): non-interactive caption-type pills with no state layer/tabstop/role. priority reads --ui-sys-priority-{high|medium|low}-surface/-ink via the value attr (case-insensitive; unknown falls back to the Low pair). zone reads the 14 single-sourced --ui-sys-zone-* fills + band inks via data-zone = the exact zone name, with the SEALED NULL-GUARD: an uncatalogued zone renders NOTHING. tag is the quiet surface-container tag pill. These variants are the ONE source of pill visuals \u2014 screens compose them, never hand-rolled spans. segment = the sealed SegmentBadge pill (Workspaces box): uppercase caption pill reading --ui-sys-segment-* pairs via the value attr, Corporate Functions fallback.",
+   "props": [
+    {
+     "name": "variant",
+     "type": "enum",
+     "values": [
+      "assist",
+      "filter",
+      "input",
+      "suggestion",
+      "priority",
+      "zone",
+      "tag",
+      "segment"
+     ],
+     "default": "assist"
+    },
+    {
+     "name": "selected",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "disabled",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "value",
+     "type": "enum",
+     "values": [
+      "High",
+      "Medium",
+      "Low"
+     ],
+     "default": "",
+     "note": "priority variant only; matched case-insensitively; unknown/absent falls back to the Low pair (sealed PriorityPill rule); segment variant: the exact segment name (Personal Systems | Printing | Corporate Investments | Corporate Functions) \u2014 unknown/absent falls back to the Corporate Functions pair (sealed SegmentBadge fallback), colors from --ui-sys-segment-*-surface/-ink"
+    },
+    {
+     "name": "data-zone",
+     "type": "string",
+     "default": "",
+     "note": "zone variant only; the exact relationship-zone name (one of the 14 catalogued zones); unknown renders nothing (sealed StatusPill null-guard)"
+    },
+    {
+     "name": "size",
+     "type": "enum",
+     "values": [
+      "lg"
+     ],
+     "default": "",
+     "note": "zone variant only; \"lg\" = the sealed LARGE StatusPill (size \"lg\" = 12px font, 3px 10px padding \u2014 the Map scorecard's status-pill-row pill), sizing token-derived from the space scale; absent/other = the small default"
+    }
+   ],
+   "states": [
+    "selected",
+    "hover",
+    "pressed",
+    "focus-visible",
+    "disabled",
+    "presentational (priority/zone/tag)",
+    "zone-null-guard-hidden"
+   ],
+   "import": "./components/chips.js"
+  },
+  "status-dot": {
+   "tag": "ui-status-dot",
+   "status": "built",
+   "category": "gapFill",
+   "summary": "The sealed StatusDot primitive (Shared-UI-primitives box): a 7px round dot + the value text as its label, non-interactive. Colors: Active reads --ui-sys-pos, Watch reads --ui-sys-accent, Dormant AND any unknown value read --ui-sys-status-dormant. NULL-GUARD: an absent/empty value renders nothing.",
+   "props": [
+    {
+     "name": "value",
+     "type": "enum",
+     "values": [
+      "Active",
+      "Watch",
+      "Dormant"
+     ],
+     "default": "",
+     "note": "the label text; unknown non-empty values render with the Dormant grey dot; empty/absent renders nothing"
+    }
+   ],
+   "states": [
+    "active",
+    "watch",
+    "dormant",
+    "unknown-fallback",
+    "hidden (null-guard)"
+   ],
+   "import": "./components/chips.js"
+  },
+  "list": {
+   "tag": "ui-list",
+   "status": "built",
+   "category": "native",
+   "summary": "Vertical list; ui-list-item with leading/supporting/trailing slots and interactive (button-like) mode.",
+   "props": [
+    {
+     "name": "interactive",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "disabled",
+     "type": "boolean",
+     "default": false
+    }
+   ],
+   "states": [
+    "default",
+    "interactive-hover",
+    "interactive-pressed",
+    "focus-visible",
+    "disabled"
+   ],
+   "import": "./components/list.js"
+  },
+  "tabs": {
+   "tag": "ui-tabs",
+   "status": "built",
+   "category": "native",
+   "summary": "Tab bar with animated active indicator; paired with ui-tab; arrow-key nav; emits change with index.",
+   "props": [
+    {
+     "name": "active",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "disabled",
+     "type": "boolean",
+     "default": false
+    }
+   ],
+   "states": [
+    "active",
+    "inactive",
+    "hover",
+    "focus-visible",
+    "disabled"
+   ],
+   "import": "./components/tabs.js"
+  },
+  "divider": {
+   "tag": "ui-divider",
+   "status": "built",
+   "category": "native",
+   "summary": "Thin separator; horizontal/vertical, optional inset; role=separator.",
+   "props": [
+    {
+     "name": "inset",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "vertical",
+     "type": "boolean",
+     "default": false
+    }
+   ],
+   "states": [
+    "horizontal",
+    "vertical",
+    "inset"
+   ],
+   "import": "./components/divider.js"
+  },
+  "dialog": {
+   "tag": "ui-dialog",
+   "status": "built",
+   "category": "native",
+   "summary": "Modal dialog; scrim, animated card, focus trap (native + ui-* hosts, card fallback focus), Esc dismiss; headline/body/actions slots; show()/close(). Stackable: set the --ui-dialog-layer CSS property on a host to raise a stacked dialog (e.g. a delete-confirm) so its scrim covers the dialog beneath \u2014 clicks/Esc around the stacked card can never reach the lower dialog.",
+   "props": [
+    {
+     "name": "open",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "--ui-dialog-layer",
+     "type": "css-custom-property",
+     "default": 0,
+     "note": "z-lift for stacked dialogs; scrim = 900+layer, card = 901+layer"
+    }
+   ],
+   "states": [
+    "open",
+    "closed"
+   ],
+   "import": "./components/dialog.js"
+  },
+  "tooltip": {
+   "tag": "ui-tooltip",
+   "status": "built",
+   "category": "native",
+   "summary": "Floating label on hover/focus; wraps a child or targets an anchor by id; aria-describedby wiring.",
+   "props": [
+    {
+     "name": "for",
+     "type": "string",
+     "default": ""
+    }
+   ],
+   "states": [
+    "hidden",
+    "visible"
+   ],
+   "import": "./components/tooltip.js"
+  },
+  "snackbar": {
+   "tag": "ui-snackbar",
+   "status": "built",
+   "category": "native",
+   "summary": "Transient bottom-center message; optional action slot; auto-dismiss timeout; role=status live region; show().",
+   "props": [
+    {
+     "name": "open",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "message",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "timeout",
+     "type": "number",
+     "default": 5000
+    }
+   ],
+   "states": [
+    "hidden",
+    "open"
+   ],
+   "import": "./components/snackbar.js"
+  },
+  "progress": {
+   "tags": [
+    "ui-linear-progress",
+    "ui-circular-progress"
+   ],
+   "status": "built",
+   "category": "native",
+   "summary": "Determinate + indeterminate progress; linear bar and circular SVG; role=progressbar.",
+   "props": [
+    {
+     "name": "value",
+     "type": "number",
+     "default": 0
+    },
+    {
+     "name": "indeterminate",
+     "type": "boolean",
+     "default": false
+    }
+   ],
+   "states": [
+    "determinate",
+    "indeterminate"
+   ],
+   "import": "./components/progress.js"
+  },
+  "autocomplete": {
+   "tag": "ui-autocomplete",
+   "status": "built",
+   "category": "gapFill",
+   "summary": "Typeahead combobox; outlined field + filtered popup listbox; substring highlight; full keyboard nav. options set via property.",
+   "props": [
+    {
+     "name": "options",
+     "type": "array",
+     "default": "sample",
+     "note": "set via JS property"
+    },
+    {
+     "name": "label",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "placeholder",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "value",
+     "type": "string",
+     "default": ""
+    }
+   ],
+   "states": [
+    "open",
+    "option-hover",
+    "keyboard-active",
+    "match-highlight",
+    "no-results"
+   ],
+   "import": "./components/autocomplete.js"
+  },
+  "data-table": {
+   "tag": "ui-data-table",
+   "status": "built",
+   "category": "gapFill",
+   "summary": "Tokened semantic data grid (MD3 has none); sticky header, sortable columns, optional checkbox selection, comfortable/compact density. columns+data set via properties.",
+   "props": [
+    {
+     "name": "columns",
+     "type": "array",
+     "default": "sample",
+     "note": "set via JS property"
+    },
+    {
+     "name": "data",
+     "type": "array",
+     "default": "sample",
+     "note": "set via JS property"
+    },
+    {
+     "name": "selectable",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "density",
+     "type": "enum",
+     "values": [
+      "comfortable",
+      "compact"
+     ],
+     "default": "comfortable"
+    }
+   ],
+   "states": [
+    "sortable-header",
+    "row-hover",
+    "selected-row",
+    "empty"
+   ],
+   "import": "./components/data-table.js"
+  },
+  "chart": {
+   "tag": "ui-chart",
+   "status": "built",
+   "category": "gapFill",
+   "summary": "Inline-SVG chart (MD3 has none); bar/line/area; grid + axis labels; re-skins via computed tokens. data set via property or values attr.",
+   "props": [
+    {
+     "name": "type",
+     "type": "enum",
+     "values": [
+      "bar",
+      "line",
+      "area"
+     ],
+     "default": "bar"
+    },
+    {
+     "name": "data",
+     "type": "array",
+     "default": "sample",
+     "note": "set via JS property"
+    },
+    {
+     "name": "values",
+     "type": "string",
+     "default": "",
+     "note": "comma-list fallback"
+    },
+    {
+     "name": "label",
+     "type": "string",
+     "default": ""
+    }
+   ],
+   "states": [
+    "bar",
+    "line",
+    "area",
+    "empty"
+   ],
+   "import": "./components/chart.js"
+  },
+  "app-bar": {
+   "tag": "ui-app-bar",
+   "status": "built",
+   "category": "gapFill",
+   "summary": "Top app bar (dropped from MD3 web); leading/title/trailing slots; flat/elevated variant; role=banner.",
+   "props": [
+    {
+     "name": "variant",
+     "type": "enum",
+     "values": [
+      "flat",
+      "elevated"
+     ],
+     "default": "flat"
+    }
+   ],
+   "states": [
+    "flat",
+    "elevated"
+   ],
+   "import": "./components/app-bar.js"
+  },
+  "nav-rail": {
+   "tag": "ui-nav-rail",
+   "status": "built",
+   "category": "gapFill",
+   "summary": "Vertical desktop side rail (dropped from MD3 web); ui-nav-item with pill active indicator; emits navigate.",
+   "props": [
+    {
+     "name": "active",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "href",
+     "type": "string",
+     "default": ""
+    }
+   ],
+   "states": [
+    "active",
+    "hover",
+    "focus-visible"
+   ],
+   "import": "./components/nav-rail.js"
+  },
+  "nav-drawer": {
+   "tag": "ui-nav-drawer",
+   "status": "built",
+   "category": "gapFill",
+   "summary": "Slide-in nav drawer (dropped from MD3 web); modal adds scrim+elevation-3+Esc; toggle()/close().",
+   "props": [
+    {
+     "name": "open",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "modal",
+     "type": "boolean",
+     "default": false
+    }
+   ],
+   "states": [
+    "open",
+    "modal",
+    "closed"
+   ],
+   "import": "./components/nav-drawer.js"
+  },
+  "sheet": {
+   "tag": "ui-sheet",
+   "status": "built",
+   "category": "gapFill",
+   "summary": "Mobile bottom sheet (MD3 web has none); drag-handle, scrim, swipe-down/Esc/scrim-tap close; show()/close().",
+   "props": [
+    {
+     "name": "open",
+     "type": "boolean",
+     "default": false
+    }
+   ],
+   "states": [
+    "open",
+    "closed",
+    "dragging"
+   ],
+   "import": "./components/sheet.js"
+  },
+  "bottom-bar": {
+   "tag": "ui-bottom-bar",
+   "status": "built",
+   "category": "gapFill",
+   "summary": "Mobile bottom navigation (MD3 web has none); ui-bottom-item with pill active indicator; emits navigate.",
+   "props": [
+    {
+     "name": "active",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "href",
+     "type": "string",
+     "default": ""
+    }
+   ],
+   "states": [
+    "active",
+    "hover",
+    "focus-visible"
+   ],
+   "import": "./components/bottom-bar.js"
+  },
+  "date-picker": {
+   "tag": "ui-date-picker",
+   "status": "built",
+   "category": "gapFill",
+   "summary": "Calendar date picker (dropped from MD3 web); outlined trigger + month popup; grid keyboard nav; emits change.",
+   "props": [
+    {
+     "name": "value",
+     "type": "string",
+     "default": "",
+     "note": "ISO YYYY-MM-DD"
+    },
+    {
+     "name": "label",
+     "type": "string",
+     "default": "Date"
+    }
+   ],
+   "states": [
+    "open",
+    "closed",
+    "day-focused",
+    "day-selected",
+    "today"
+   ],
+   "import": "./components/date-picker.js"
+  },
+  "stakeholder-table": {
+   "tag": "ui-stakeholder-table",
+   "status": "built",
+   "category": "domain",
+   "summary": "The Stakeholdr master sheet at the FULL sealed Lists spec. CSS max-content grid (no fixed widths \u2014 frozen sticky lefts MEASURED after layout): frozen idx/edit/Stakeholder/Organization + the 22 sealed reorderable columns (drag-to-reorder, persisted per-device to localStorage hp_map_col_order_v3; unknown keys dropped, new appended). Inline edit cells: ui-select-style dropdowns for Category/Type/Market/Region/Geography/State/Site/Status with the sealed cascades (Category resets Type; Market resets Region; Site fills State), inline text Organization (mirrors into name for non-persons), popover-calendar Last contact (YYYY-MM-DD). Display cells per the sealed emphasis map: Issues/Tags first-3+N chips, priority pills (--ui-sys-priority-*), owner avatar stack, zone pill (--ui-sys-zone-*), toned x/y, mailto/tel/x.com/Visit-Website anchors (sealed cleaning rules), notes preview. Toolbar: search (displayName/name/org/type/notes/tags), Filter popover (6 sections, OR-within/AND-across, Priority+Status HARDCODED, Zone in STATUS_ORDER; Clear all cross-clears Categories, never Sites/bands), Sort popover (the sealed 11 fields; custom priority/status/site orderings), Categories + Sites multiselects, 3 live impact-band chips (winnable-middle swatch = --ui-sys-neu). Header-click sort on every field-bearing column (asc \u2191 / desc \u2193); default sort = unscored first, then lastContact desc. Footer: filtered-of-total, Avg x/y (1 dp) over the filtered set, Export CSV (sealed column set + escaping + filename rule). Pure logic (filters, comparators, CSV, column-order merge, name/phone/url helpers) is exported for unit tests. Bare tag renders a gallery sample. COMPOSITION RULING (2026-07-03): display cells are lightweight shadow-DOM renders for grid performance (industry grid practice); every INTERACTIVE surface composes the REAL design-system elements \u2014 toolbar search = ui-text-field variant=plain (leading search ui-icon + kbd chip), Filter/Sort/Categories/Sites = ui-button outlined with a count ui-badge (text + badge only, no leading icons), impact bands = ui-chip variant=filter, Export CSV / Clear all = ui-button variant=text, edit cell = ui-icon-button standard, and clicking a dropdown/date display cell mounts a REAL pre-opened ui-select / ui-date-picker editor in the cell (commit on change, unmount on close). Owner cell opens the sealed OwnersDisplay popover (ui-avatar rows, singularizing head count, outside-mousedown close).",
+   "props": [
+    {
+     "name": "data",
+     "type": "array",
+     "default": "sample",
+     "note": "set via JS property; rows carry the stakeholder fields plus computed _x/_y/_status/_unscored and community (affiliated engagement names)"
+    },
+    {
+     "name": "catalogs",
+     "type": "object",
+     "default": "sample",
+     "note": "set via JS property: { CATEGORIES, MARKETS, GEOGRAPHIES, US_STATES, SITES, siteLabel }"
+    },
+    {
+     "name": "users",
+     "type": "array",
+     "default": "sample",
+     "note": "set via JS property; resolves owner avatars/names (an unresolvable owner id exports as the raw id)"
+    },
+    {
+     "name": "workspaceLabel",
+     "type": "string",
+     "default": "",
+     "note": "set via JS property; feeds the sealed CSV filename rule (empty \u2192 stakeholders.csv)"
+    },
+    {
+     "name": "kbd-label",
+     "type": "string",
+     "default": "",
+     "note": "attribute/property (kbdLabel); the search kbd hint text. NOT derived inside the component \u2014 the page passes the store's exported single source (src/app/data/store.js \u2192 cmdKeyLabel). Empty/absent hides the chip."
+    }
+   ],
+   "events": [
+    {
+     "name": "row-change",
+     "detail": "{ id, patch }",
+     "note": "EVERY inline edit flows out here \u2014 the page owns persistence through the one Store seam"
+    },
+    {
+     "name": "notes-open",
+     "detail": "{ id }",
+     "note": "notes cell click \u2014 the page hosts the Notes modal"
+    },
+    {
+     "name": "selection-change",
+     "detail": "{ id }",
+     "note": "row click; selection lifts to the page (shared with Map/Scoring)"
+    },
+    {
+     "name": "open-record",
+     "detail": "{ id }",
+     "note": "edit icon / name double-click \u2014 the full record surface"
+    },
+    {
+     "name": "community-open",
+     "detail": "{ id, name }",
+     "note": "community-investment pill click (census C5 make-real: never a dead span)"
+    },
+    {
+     "name": "export-csv",
+     "detail": "{ csv, filename }",
+     "note": "fired alongside the browser download of the current filtered/sorted set"
+    }
+   ],
+   "states": [
+    "sorted",
+    "searching",
+    "filtered",
+    "row-selected",
+    "popover-open",
+    "cell-editing",
+    "column-dragging",
+    "scrolled-x"
+   ],
+   "import": "./components/stakeholder-table.js"
+  },
+  "stakeholder-map": {
+   "tag": "ui-stakeholder-map",
+   "status": "built",
+   "category": "domain",
+   "summary": "The Stakeholdr Map at the FULL sealed spec \u2014 READ-ONLY (drag-to-rescore removed by ruling). Plot internals are the ONE sanctioned inline-SVG/positioned-div composition; chrome/panels compose real ui-* elements. Stage: paper runway, proportional 92%/920px plot box; 6x4 zone grid as fr ratios (rows 2/1/1/1/1/2) filled by the single-sourced --ui-sys-zone-* tokens, strong-outline outer border + zone-grid-line hairlines + centre cross; optional zone labels + bottom-right per-cell count pills (binning EXACTLY matches statusFor); y ticks [10..-10 by 2.5] left, x ticks every integer -10..10 below, the sealed bordered legend card. Dots at coordToPct(_x,_y) (left=((x+10)/20)%, top=((10-y)/20)%), zone fill/ink/border tokens (accent when selected), abbrev initials at dot-size>=22, name label when show-labels or selected, ui-tooltip '{name} \u00b7 {zone} \u00b7 (x, y)'. Styles: halo (DEFAULT; ring inset -(dotSize*0.8)px \u2014 solid translucent disc pending the recorded gradient ruling) | classic | density (color-mix(in oklch, zone {20+t*80}%, --ui-sys-zone-density-base)). History mode (rows with history[]): other dots hide; dashed 14px paper quarter dots + the dashed accent trail SVG (viewBox 0 0 100 100, stroke-width .35, dash 1.2,1.2, non-scaling-stroke) through [...history, current]; selecting any dot exits. Scorecard = the real ui-inspector rail (defaults OPEN; closed shows the reopen ui-icon-button chevron_left at top 16/right 0): empty state = de-staled prompt + first-six 'Recently scored' ui-button rows; selected state = title/org, Visit Website (normalizeUrl), ui-chip filter 'Show history' toggle (only when history exists), large zone ui-chip (size=\"lg\") + live coords, zone-tinted STRATEGY card (engine strategy/action verbatim), the sealed 11 metadata rows (86px/1fr; tag/priority chips, ui-avatar owner stack, formatDateLong, ui-status-dot), and the LATEST NOTE card (newest notesHistory by .at, fallback notes). Pure logic (GRID/statusFor/coordToPct/cellFor/countCells/densityPct/haloInset/ticks/legend/TWEAK_DEFAULTS/formatDateLong/latestNote \u2014 verbatim mirrors of the sealed engine, parity-tested by scripts/map-test.mjs) is exported for node. A bare tag renders EMPTY until .data arrives (make-real rule: no live-looking fake); the gallery attribute (preview/wireframes only) opts into the built-in sample.",
+   "props": [
+    {
+     "name": "data",
+     "type": "array",
+     "default": "[]",
+     "note": "set via JS property; rows carry the stakeholder fields plus RAW computed _x/_y/_status (the page computes weightedCoord/statusFor live) and history[]/notesHistory[]. Unset = renders EMPTY unless the gallery attribute is present"
+    },
+    {
+     "name": "users",
+     "type": "array",
+     "default": "[]",
+     "note": "set via JS property; resolves the scorecard Owner avatar stack (unresolvable ids silently drop \u2014 sealed OwnersDisplay rule)"
+    },
+    {
+     "name": "selectedId",
+     "type": "string",
+     "default": null,
+     "note": "set via JS property; CONTROLLED selection \u2014 the page owns selection (sealed: selection lifts to the page) and passes the id from selection-change back down; same-id sets no-op, new ids exit history mode"
+    },
+    {
+     "name": "gallery",
+     "type": "boolean",
+     "default": false,
+     "note": "preview.html/wireframes.html ONLY: renders the built-in sample when no .data is set; without it the component renders EMPTY until .data arrives (make-real rule \u2014 the app never shows a live-looking fake dataset)"
+    },
+    {
+     "name": "map-style",
+     "type": "enum",
+     "values": [
+      "halo",
+      "classic",
+      "density"
+     ],
+     "default": "halo",
+     "note": "sealed TWEAK_DEFAULTS; presentational only \u2014 never changes positions or scores"
+    },
+    {
+     "name": "show-labels",
+     "type": "boolean",
+     "default": false,
+     "note": "always show dot name labels (selected dots always label)"
+    },
+    {
+     "name": "show-zone-labels",
+     "type": "boolean",
+     "default": true,
+     "note": "zone names in cells; pass \"false\" to hide"
+    },
+    {
+     "name": "dot-size",
+     "type": "number",
+     "default": 22,
+     "note": "px; sealed slider range 14\u201336 step 2; initials appear at >= 22"
+    }
+   ],
+   "events": [
+    {
+     "name": "selection-change",
+     "detail": "{ id }",
+     "note": "single click / recent-row select \u2014 wrapSelect: select + force scorecard open + exit history; selection lifts to the page (shared with Lists/Scoring)"
+    },
+    {
+     "name": "open-profile",
+     "detail": "{ id }",
+     "note": "dot double-click \u2014 the page opens the sealed read-only stakeholder profile"
+    }
+   ],
+   "states": [
+    "dot-selected",
+    "dot-hover",
+    "history-mode",
+    "scorecard-open",
+    "scorecard-closed",
+    "halo",
+    "classic",
+    "density"
+   ],
+   "import": "./components/stakeholder-map.js"
+  },
+  "avatar": {
+   "tag": "ui-avatar",
+   "status": "built",
+   "category": "native",
+   "summary": "Identity circle: photo (src) or initials derived from name (first+last). size sm/md/lg via --ui-sys-avatar-size-*; fill --ui-sys-primary/on-primary so it re-themes with the wrapper; role=img aria-label=name. Per-identity color via the --ui-avatar-bg custom property (token references only). The ONE avatar primitive \u2014 owner stacks/profile menus compose from it.",
+   "props": [
+    {
+     "name": "name",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "src",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "size",
+     "type": "enum",
+     "values": [
+      "sm",
+      "md",
+      "lg"
+     ],
+     "default": "md"
+    },
+    {
+     "name": "ring",
+     "type": "boolean",
+     "default": false,
+     "note": "2px surface ring for overlapping stacks (industry standard)"
+    }
+   ],
+   "states": [
+    "initials",
+    "photo",
+    "sm",
+    "md",
+    "lg"
+   ],
+   "import": "./components/avatar.js"
+  },
+  "textarea": {
+   "tag": "ui-textarea",
+   "status": "built",
+   "category": "gapFill",
+   "summary": "Outlined multiline text field, visually consistent with ui-text-field; floating label, error state, supporting text, rows, maxlength with live right-aligned 'N / MAX' counter (error ink at limit), optional auto-grow, form-associated.",
+   "props": [
+    {
+     "name": "label",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "value",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "placeholder",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "rows",
+     "type": "number",
+     "default": 3
+    },
+    {
+     "name": "maxlength",
+     "type": "number",
+     "default": null
+    },
+    {
+     "name": "supporting-text",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "error",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "disabled",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "auto-grow",
+     "type": "boolean",
+     "default": false
+    }
+   ],
+   "states": [
+    "default",
+    "focused",
+    "has-value",
+    "error",
+    "at-limit",
+    "disabled"
+   ],
+   "import": "./components/textarea.js"
+  },
+  "badge": {
+   "tag": "ui-badge",
+   "status": "built",
+   "category": "gapFill",
+   "summary": "Count/dot notification indicator (oracle msg-badge/count-alert): accent pill ~16px with 9.5px weight-600 tabular numerals, caps at 99+, hidden when count is 0/absent unless dot; inline on its own or anchored -4px/-4px over a wrapped child's top-right corner (nav items, icon buttons, avatars, list rows); non-interactive (pointer-events none); tones alert/neutral via --ui-sys-badge-* tokens; auto aria-label \"N notifications\" on an inner role=status, overridable via host aria-label.",
+   "props": [
+    {
+     "name": "count",
+     "type": "number",
+     "default": 0,
+     "note": "badge hides when 0/absent unless dot; values above 99 render as 99+"
+    },
+    {
+     "name": "dot",
+     "type": "boolean",
+     "default": false,
+     "note": "dot-only marker, shown regardless of count"
+    },
+    {
+     "name": "tone",
+     "type": "enum",
+     "values": [
+      "alert",
+      "neutral"
+     ],
+     "default": "alert"
+    },
+    {
+     "name": "aria-label",
+     "type": "string",
+     "default": "",
+     "note": "overrides the auto \"N notifications\" label (dot: \"New notifications\")"
+    }
+   ],
+   "states": [
+    "inline",
+    "anchored",
+    "dot",
+    "hidden",
+    "overflow-99+"
+   ],
+   "import": "./components/badge.js"
+  },
+  "owner-picker": {
+   "tag": "ui-owner-picker",
+   "status": "built",
+   "category": "gapFill",
+   "summary": "Owner avatar multi-select (the oracle's MultiOwnerPicker + UserAutocomplete-add + OwnersDisplay read-only stack). Overlapping ui-avatar circles, no names; dashed '+' (hidden when no candidates) opens an inline typeahead over candidates (name/title/email match, max 8, ArrowUp/Down/Enter/Escape, outside-click close, 'Search people to add\u2026', autofocus); avatar click ARMS removal (neg ring + X overlay, 'Click to remove'), second click removes; system-role users and existing owners excluded from the add list. readonly = display-only stack with '+N' overflow past max. Emits change with detail { value }. Composes ui-avatar + ui-icon.",
+   "props": [
+    {
+     "name": "users",
+     "type": "array",
+     "default": "[]",
+     "note": "set via JS property; array of { id, name, title?, email?, src?, role? } \u2014 role 'system' never appears in the add list"
+    },
+    {
+     "name": "value",
+     "type": "array",
+     "default": "[]",
+     "note": "set via JS property; array of owner user ids"
+    },
+    {
+     "name": "readonly",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "size",
+     "type": "enum",
+     "values": [
+      "sm",
+      "md"
+     ],
+     "default": "md",
+     "note": "maps to --ui-sys-avatar-size-sm/-md"
+    },
+    {
+     "name": "max",
+     "type": "number",
+     "default": 5,
+     "note": "readonly overflow cap before the '+N' circle"
+    }
+   ],
+   "states": [
+    "stack",
+    "arm-remove",
+    "adding-open",
+    "keyboard-active",
+    "no-matches",
+    "add-hidden-no-candidates",
+    "readonly",
+    "overflow-+N",
+    "empty-dash"
+   ],
+   "import": "./components/owner-picker.js"
+  },
+  "coachmark": {
+   "tag": "ui-coachmark",
+   "status": "built",
+   "category": "gapFill",
+   "summary": "Anchored spotlight callout for first-run product tours; scrim with box-shadow cutout leaving the anchor prominent; card with heading, body slot, step counter, Back/Next-Done, dismiss \u00d7; Esc dismisses; focus moves in on open and restores on close; emits next/back/dismiss.",
+   "props": [
+    {
+     "name": "for",
+     "type": "string",
+     "default": "",
+     "note": "id of the target element to spotlight"
+    },
+    {
+     "name": "step",
+     "type": "number",
+     "default": 1,
+     "note": "1-based current step; Back hidden on step 1"
+    },
+    {
+     "name": "steps",
+     "type": "number",
+     "default": 1,
+     "note": "total steps; Next becomes Done on the last step; counter reads \"step of steps\""
+    },
+    {
+     "name": "heading",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "open",
+     "type": "boolean",
+     "default": false
+    }
+   ],
+   "events": [
+    {
+     "name": "next",
+     "detail": "{ step, steps }",
+     "note": "Next/Done clicked; host advances step or closes on last step"
+    },
+    {
+     "name": "back",
+     "detail": "{ step, steps }",
+     "note": "Back clicked; host decrements step"
+    },
+    {
+     "name": "dismiss",
+     "detail": "{ step, steps }",
+     "note": "\u00d7 button or Escape; component also closes itself"
+    }
+   ],
+   "states": [
+    "open",
+    "closed",
+    "first-step (Back hidden)",
+    "last-step (Next reads Done)",
+    "placed-below",
+    "placed-above",
+    "no-anchor (centered, no spotlight)"
+   ],
+   "import": "./components/coachmark.js"
+  },
+  "card": {
+   "tag": "ui-card",
+   "status": "built",
+   "category": "native",
+   "summary": "Content surface; outlined/filled/elevated variants; media/body/actions slots; `interactive` makes the whole card clickable (state layer, focus ring, role=button, Enter/Space). Reads --ui-sys-surface-card / -surface-container, --ui-sys-shape-card, --ui-sys-outline-subtle, --ui-sys-elevation-1.",
+   "props": [
+    {
+     "name": "variant",
+     "type": "enum",
+     "values": [
+      "outlined",
+      "filled",
+      "elevated"
+     ],
+     "default": "outlined"
+    },
+    {
+     "name": "interactive",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "disabled",
+     "type": "boolean",
+     "default": false
+    }
+   ],
+   "states": [
+    "enabled",
+    "hover",
+    "pressed",
+    "focus-visible",
+    "disabled"
+   ],
+   "import": "./components/card.js"
+  },
+  "upload": {
+   "tag": "ui-upload",
+   "status": "built",
+   "category": "gapFill",
+   "summary": "File-pick control (the oracle's label-wrapped hidden file input, stakeholder-modal photo row). Composes a real ui-button (default slot = label text, e.g. 'Upload photo'/'Replace photo') over a HIDDEN native file input inside the shadow root (the one legal home for the raw primitive under the app-code composition guard). Reads the first picked file via FileReader.readAsDataURL and emits change {dataUrl, name}; input clears after each read so re-picking the same file fires again.",
+   "props": [
+    {
+     "name": "accept",
+     "type": "string",
+     "default": "",
+     "note": "passed to the file input (e.g. 'image/*')"
+    },
+    {
+     "name": "variant",
+     "type": "enum",
+     "values": [
+      "filled",
+      "tonal",
+      "outlined",
+      "text"
+     ],
+     "default": "outlined",
+     "note": "forwarded to the composed ui-button"
+    },
+    {
+     "name": "disabled",
+     "type": "boolean",
+     "default": false
+    }
+   ],
+   "events": [
+    {
+     "name": "change",
+     "detail": "{ dataUrl, name }",
+     "note": "composed: true; first selected file as a data URL"
+    }
+   ],
+   "states": [
+    "enabled",
+    "hover",
+    "pressed",
+    "focus-visible",
+    "disabled"
+   ],
+   "import": "./components/upload.js"
   }
+ }
 }
