@@ -924,6 +924,13 @@ ui-sidebar[collapsed] .brand { margin-left: 0; }
 }
 .seg-group-count { font: var(--ui-sys-font-caption); }
 
+/* Selector foot CTA "New workspace…" (sealed A3: accent ink) — re-point the
+ * item's own ink tokens on the host; the menu-item shadow reads them. */
+.ws-menu-new {
+  --ui-sys-on-surface: var(--ui-sys-accent);
+  --ui-sys-on-surface-muted: var(--ui-sys-accent);
+}
+
 /* Workspace card (sealed TREE 2 rides the plan-card anatomy). Active card =
  * the sealed .ws-card.active ring (census: the accent-tint-soft wash). */
 .ws-card-active { box-shadow: 0 0 0 2px var(--ui-sys-accent-tint-soft); }

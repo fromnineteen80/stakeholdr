@@ -115,6 +115,9 @@ export function marketsByWs(stakeholders, stakeholderWorkspaces) {
   const m = {};
   for (const [sid, wsIds] of Object.entries(stakeholderWorkspaces || {})) {
     const st = (stakeholders || []).find((s) => s.id === sid);
+    // DECLARED addition: a ghost join entry (stakeholder gone, join row left
+    // behind) is skipped, not thrown on — the sealed derivation assumes every
+    // join resolves; deletion paths can leave strays.
     if (!st) continue;
     for (const wsId of wsIds || []) {
       const cur = (m[wsId] ||= { markets: new Set(), regions: new Set() });

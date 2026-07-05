@@ -55,6 +55,11 @@
  *  · workHQ (intel.jsx) is its own sealed box and a LATER phase (record
  *    scaffold + workHQ); the sealed Setup tree has no workHQ entry point, so
  *    nothing here references it.
+ *  · LANDING FOOTER = a styled div (.sheet-footer), not the sealed
+ *    ui-status-bar mapping — a STANDING departure shared by the Lists, Plans,
+ *    and Community landings (ui-status-bar is the shell's app-status strip;
+ *    a second one per page would double the chrome). One systemic ruling,
+ *    declared here for all three; migrate together or not at all.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePersistentState, nowStamp } from '../data/store.js';

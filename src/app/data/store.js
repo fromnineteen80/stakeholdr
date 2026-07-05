@@ -194,6 +194,14 @@ export function usePersistentState(table, seed) {
     Store.save(table, value);
   }, [table, value]);
 
+  /* StrictMode re-arm (unmount-ONLY cleanup — a [table,value] cleanup would
+   * fire on every re-run and swallow real saves): dev's simulated
+   * unmount/remount re-runs the persist effect with mounted already true,
+   * re-saving the stale load — the exact save the guard suppresses. Resetting
+   * on unmount makes every (re)mount pass equally guarded; prod unmounts
+   * discard the hook anyway.                                                */
+  useEffect(() => () => { mounted.current = false; }, []);
+
   useEffect(() => Store.subscribe(table, (incoming) => {
     /* Reference-identity guard: save()'s same-tab fan-out replays the saving
      * hook's OWN value back at it; applying that echo would leave skipPersist

@@ -102,11 +102,29 @@ export function AppShell() {
    * calls openWorkspaceTab(id)"). Lives in the SHELL, as sealed — the write
    * must commit in the same owner that switches the view (a page-local write
    * would be discarded when the H4 view switch unmounts the page before its
-   * persist effect runs). data carries the sealed blank/create fields incl.
-   * createdBy/createdAt. */
+   * persist effect runs). The sealed contract stamps HERE, not only in the
+   * caller's draft: createdBy/createdAt are enforced whatever `data` carries,
+   * and the sealed NO-DATA fallback mints the full default record — a bare
+   * addWorkspace() must never produce a creatorless/ownerless workspace
+   * (canDeleteWorkspace and member visibility key off these fields). */
   const addWorkspace = (data) => {
     const id = uid('ws');
-    setWorkspaces((prev) => [...prev, { id, ...data, updatedAt: nowStamp() }]);
+    const fallback = data ? {} : {
+      name: 'New workspace',
+      segment: 'Corporate Functions',
+      businessUnit: 'Legal / GA&PP',
+      scope: '',
+      scopeState: '',
+      owners: currentUser ? [currentUser.id] : [],
+    };
+    setWorkspaces((prev) => [...prev, {
+      id,
+      ...fallback,
+      ...(data || {}),
+      createdBy: data?.createdBy || currentUser?.id,
+      createdAt: data?.createdAt || nowStamp(),
+      updatedAt: nowStamp(),
+    }]);
     openWorkspaceTab(id);
     return id;
   };
@@ -419,8 +437,10 @@ export function AppShell() {
           ];
         })}
         {/* Sealed foot CTA (census A3/A18, REAL as of Phase 9): Setup page
-            WITH the create modal open, via the first-class create seam. */}
-        <ui-menu-item onClick={openSetupCreate}>
+            WITH the create modal open, via the first-class create seam.
+            Sealed A3 renders it in ACCENT ink — token re-point on the host
+            (the established vote-button pattern), never a literal. */}
+        <ui-menu-item class="ws-menu-new" onClick={openSetupCreate}>
           <ui-icon slot="icon" size="sm">add</ui-icon>
           New workspace…
         </ui-menu-item>
