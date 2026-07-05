@@ -71,6 +71,15 @@ tpl.innerHTML = `
     :host([size="sm"]) { --_sz: var(--ui-sys-avatar-size-sm, 24px); }
     :host([size="md"]) { --_sz: var(--ui-sys-avatar-size-md, 32px); }
     :host([size="lg"]) { --_sz: var(--ui-sys-avatar-size-lg, 40px); }
+    /* Opt-in interactive mode (census I6 make-real: an avatar can OPEN its
+       person's profile). Real button semantics on the host: pointer, focus
+       ring, lift-on-hover — INK/motion only, never a background (ruling). */
+    :host([interactive]) { cursor: pointer; transition: transform var(--ui-sys-motion-control); }
+    :host([interactive]:hover) { transform: translateY(-1px); }
+    :host([interactive]:focus-visible) {
+      outline: 2px solid var(--ui-sys-focus-ring);
+      outline-offset: 1px;
+    }
     img { width: 100%; height: 100%; object-fit: cover; display: block; }
   </style>
   <span part="initials"></span>
@@ -79,17 +88,37 @@ tpl.innerHTML = `
 
 if (!customElements.get('ui-avatar')) {
   class UiAvatar extends HTMLElement {
-    static get observedAttributes() { return ['name', 'src', 'size']; }
+    static get observedAttributes() { return ['name', 'src', 'size', 'interactive']; }
     constructor() {
       super();
       this.attachShadow({ mode: 'open' }).appendChild(tpl.content.cloneNode(true));
+      // Interactive mode: click / Enter / Space emit a composed `open` event
+      // (the host wires it to the user-profile route). No-ops when inert.
+      this.addEventListener('click', () => this._emitOpen());
+      this.addEventListener('keydown', (e) => {
+        if (!this.hasAttribute('interactive')) return;
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this._emitOpen(); }
+      });
     }
     connectedCallback() {
       if (!this.hasAttribute('size')) this.setAttribute('size', 'md');
-      this.setAttribute('role', 'img');
+      this._syncRole();
       this._render();
     }
-    attributeChangedCallback() { if (this.shadowRoot) this._render(); }
+    attributeChangedCallback() { if (this.shadowRoot) { this._syncRole(); this._render(); } }
+    _syncRole() {
+      if (this.hasAttribute('interactive')) {
+        this.setAttribute('role', 'button');
+        if (!this.hasAttribute('tabindex')) this.setAttribute('tabindex', '0');
+      } else {
+        this.setAttribute('role', 'img');
+        if (this.getAttribute('tabindex') === '0') this.removeAttribute('tabindex');
+      }
+    }
+    _emitOpen() {
+      if (!this.hasAttribute('interactive')) return;
+      this.dispatchEvent(new CustomEvent('open', { bubbles: true, composed: true }));
+    }
     _render() {
       const name = this.getAttribute('name') || '';
       const src = this.getAttribute('src') || '';

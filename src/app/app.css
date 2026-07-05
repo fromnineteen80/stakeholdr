@@ -1529,3 +1529,103 @@ ui-sidebar[collapsed] .brand { margin-left: 0; }
 .msgs-head-title { display: inline-flex; align-items: center; gap: var(--ui-sys-space-2); font: var(--ui-sys-font-body); }
 .msgs-head-actions { display: inline-flex; align-items: center; gap: var(--ui-sys-space-1); }
 .messaging-back { align-self: flex-start; margin: var(--ui-sys-space-1) var(--ui-sys-space-2) 0; }
+
+/* ══ PHASE 13 — PROFILES (sealed User-profile page + Users & People) ══ */
+
+/* App-bar people stack (sealed UserStack: overlapping avatars + "+N"). */
+.user-stack { display: inline-flex; align-items: center; }
+
+/* People panel (sealed UserListPopup — ui-sheet side=right). */
+.people-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--ui-sys-space-2) var(--ui-sys-space-3);
+  border-bottom: 1px solid var(--ui-sys-outline-subtle);
+  font: var(--ui-sys-font-body);
+}
+.people-list { display: block; overflow-y: auto; min-height: 0; }
+.people-row .people-msg { color: var(--ui-sys-on-surface-muted); }
+
+/* Manager badge (sealed amber pill: filled star + "Manager"). Token
+ * re-points on the host (the vote-button precedent) — the assist chip reads
+ * surface-card/on-surface/outline, re-pointed to the census manager pair. */
+.manager-badge {
+  --ui-sys-surface-card: var(--ui-sys-manager-badge-surface);
+  --ui-sys-on-surface: var(--ui-sys-manager-badge-ink);
+  --ui-sys-outline: transparent;
+}
+.manager-badge .manager-star { color: var(--ui-sys-manager-amber); }
+
+/* The page column (rides the .work runway; Plans-landing composition). */
+.profile-page {
+  height: 100%; display: flex; flex-direction: column; min-height: 0;
+  gap: var(--ui-sys-space-3);
+}
+.profile-page > * { flex: none; }
+.profile-page .profile-body { flex: 1 1 auto; min-height: 0; overflow: auto; }
+
+/* HERO (sealed: avatar 64 · name · sub · email + badge · edit). The sealed
+ * raw 64px = a local re-point of the lg avatar token (.picked-chip
+ * precedent — a re-point, never a literal px on markup). */
+.profile-hero {
+  display: flex; align-items: center; gap: var(--ui-sys-space-4);
+  --ui-sys-avatar-size-lg: 64px;
+}
+.profile-hero-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.profile-name { font: var(--ui-sys-font-headline); }
+.profile-sub { font: var(--ui-sys-font-body); }
+.profile-meta {
+  display: flex; align-items: center; gap: var(--ui-sys-space-2);
+  font: var(--ui-sys-font-caption);
+}
+
+/* INFO GRID (sealed 3 labeled cells: Function · Markets · Regions). */
+.profile-info-grid {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ui-sys-space-4);
+  padding: var(--ui-sys-space-3);
+  background: var(--ui-sys-surface-container);
+  border-radius: var(--ui-sys-shape-card);
+}
+.profile-info { display: flex; flex-direction: column; gap: var(--ui-sys-space-1); min-width: 0; }
+.profile-info-v { font: var(--ui-sys-font-body); }
+.profile-tags { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--ui-sys-space-1); }
+
+/* TABS (sealed long/short labels + count). The long↔short swap breakpoint is
+ * a DECLARED industry default — the sealed box names no value. */
+.profile-tabs { border-bottom: 1px solid var(--ui-sys-outline-subtle); }
+.profile-tabs .tab-short { display: none; }
+@media (max-width: 960px) {
+  .profile-tabs .tab-long { display: none; }
+  .profile-tabs .tab-short { display: inline; }
+}
+.profile-tab-count {
+  font: var(--ui-sys-font-caption); font-feature-settings: "tnum";
+  color: var(--ui-sys-on-surface-muted);
+  background: var(--ui-sys-surface-container);
+  border-radius: var(--ui-sys-shape-pill);
+  padding: 0 var(--ui-sys-space-2);
+  margin-left: var(--ui-sys-space-2);
+}
+/* Census disposition: the ACTIVE tab count wears the accent-tint wash
+ * (rgba-accent 12% → --ui-sys-accent-tint-soft). */
+ui-tab[active] .profile-tab-count {
+  background: var(--ui-sys-accent-tint-soft);
+  color: var(--ui-sys-on-surface);
+}
+
+/* Tables reuse .plan-table; profile-specific bits only. */
+.profile-empty { padding: var(--ui-sys-space-6); text-align: center; font: var(--ui-sys-font-body); }
+.profile-owner-cell { display: inline-flex; }
+.profile-controls { padding-bottom: 0; }
+
+/* EditProfileModal (sealed Users box; the 8-swatch identity palette). */
+.edit-profile-modal .profile-photo-row {
+  display: flex; align-items: flex-start; gap: var(--ui-sys-space-3);
+  margin-bottom: var(--ui-sys-space-2);
+}
+.edit-profile-modal .profile-photo-actions {
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: var(--ui-sys-space-2);
+}
+.avatar-swatch-row { display: inline-flex; flex-wrap: wrap; gap: var(--ui-sys-space-1); }
+.profile-chip-pick { display: flex; flex-wrap: wrap; gap: var(--ui-sys-space-1); }

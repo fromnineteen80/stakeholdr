@@ -39,6 +39,9 @@
  *    issue/invalidate flow is the sealed backend make-real).
  *  · ROLE TOGGLE = two real ui-buttons (tonal = on / text = off) — the
  *    sealed 2-button segmented group recomposed from real components.
+ *  · Census I6 MAKE-REAL (Phase 13): the roles-row avatar opens that user's
+ *    profile via the onOpenUserProfile prop from the shell's one user seam
+ *    (the sealed census flagged the Settings user table as click-dead).
  *  · SITE ids mint through uid('site') (the repo-wide id rule) instead of
  *    the sealed Math.random 6-char suffix — same "site-…" shape.
  *  · DESIGN PAGE (sealed p3): controls write live to :root and persist to
@@ -399,7 +402,7 @@ function InviteCode({ code }) {
 }
 
 /* ── ROLES (sealed Roles section; TREE 6) ────────────────────────────────── */
-function RolesTable({ users, currentUser, filter, onFilter, onRole }) {
+function RolesTable({ users, currentUser, filter, onFilter, onRole, onOpenUser }) {
   const searchRef = useRef(null);
   useUiEvent(searchRef, 'input', () => onFilter(searchRef.current.value));
   const filtered = rolesFiltered(users, filter);
@@ -425,7 +428,11 @@ function RolesTable({ users, currentUser, filter, onFilter, onRole }) {
             return (
               <tr key={u.id} className={'roles-row' + (self ? ' self' : '')}>
                 <td className="roles-person">
-                  <UAv user={u} size="sm" />
+                  {/* Census I6: the row avatar opens that user's profile
+                      (the shell's one user seam). */}
+                  <UAv user={u} size="sm"
+                       title={`Open ${u.name}'s profile`}
+                       onOpen={onOpenUser ? () => onOpenUser(u.id) : undefined} />
                   <span className="roles-name">{u.name}</span>
                 </td>
                 <td className="roles-email muted">{u.email}</td>
@@ -720,7 +727,7 @@ function IntegrationsPane() {
 }
 
 /* ── THE HUB ─────────────────────────────────────────────────────────────── */
-export function SettingsPage() {
+export function SettingsPage({ onOpenUserProfile }) {
   const [cfg, update] = useCompanyConfig();
   const cats = useCompanyCatalogs();
   const [users, setUsers] = usePersistentState('users', SEED_USERS);
@@ -849,7 +856,8 @@ export function SettingsPage() {
             <Section sub title="Roles" count={rolesHeadCount(filtered)}
               intro={ROLES_INTRO}>
               <RolesTable users={users} currentUser={currentUser}
-                filter={filter} onFilter={setFilter} onRole={updateUserRole} />
+                filter={filter} onFilter={setFilter} onRole={updateUserRole}
+                onOpenUser={onOpenUserProfile} />
             </Section>
           </>
         )}

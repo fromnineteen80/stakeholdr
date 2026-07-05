@@ -446,6 +446,140 @@ for (const path of pages) {
     if (sysSub !== 'Automated reminders') errs.push(`P12SYSSUB: expected "Automated reminders", saw "${sysSub}"`);
     const sysAv = await page.locator('.messaging-page-head .av-system').count();
     if (sysAv !== 1) errs.push('P12SYSAV: the opened system head must show the sparkle system avatar (ruling)');
+    // Phase 13: Profiles — the app-bar people stack opens the UserListPopup
+    // (6 others: self + system bot excluded); a row opens that USER'S PROFILE
+    // (census I6 make-real) with 4 tabs and NO Edit button on someone else's
+    // page; ProfileMenu "View profile" (census A7) lands on the CURRENT
+    // user's page WITH Edit; a Workspaces-tab row opens that workspace's
+    // Lists (census I1); a plan-card team avatar routes to the user profile
+    // (I6); the panel's "Send message" starts/dedupes a DM and opens the
+    // messaging sidebar (census J5); Edit profile saves the sealed name
+    // recomposition.
+    // Sealed UserStack anatomy: the WHOLE cluster (circles + "+N") is ONE
+    // role=button control with the sealed accessible name — never
+    // per-avatar buttons (ui-owner-picker stack-button mode).
+    const stackBtn = page.locator('ui-app-bar .user-stack ui-owner-picker button');
+    const stackBtnCount = await stackBtn.count();
+    if (stackBtnCount !== 1) errs.push(`P13STACKBTN: the people stack must be ONE button, saw ${stackBtnCount}`);
+    const stackAria = await stackBtn.first().getAttribute('aria-label').catch(() => null);
+    if (stackAria !== 'People in this workspace') errs.push(`P13STACKARIA: expected the sealed "People in this workspace" aria-label, saw "${stackAria}"`);
+    await page.locator('ui-app-bar .user-stack').click({ position: { x: 10, y: 12 }, timeout: 3000 }).catch(e => errs.push('P13STACK: ' + e.message));
+    await page.waitForTimeout(400);
+    if (await page.locator('ui-sheet.people-popup[open]').count() !== 1) errs.push('P13POPUP: the people panel did not open');
+    const peopleRows = await page.locator('.people-popup .people-row').count();
+    if (peopleRows !== 6) errs.push(`P13ROWS: expected 6 others (self + system excluded), saw ${peopleRows}`);
+    const peopleHeadTxt = (await page.locator('.people-popup .people-head strong').textContent().catch(() => '') || '').trim();
+    if (peopleHeadTxt !== 'People · 6') errs.push(`P13HEAD: expected "People · 6", saw "${peopleHeadTxt}"`);
+    await page.locator('.people-popup .people-row', { hasText: 'Jordan Kim' }).click({ timeout: 3000 }).catch(e => errs.push('P13ROWOPEN: ' + e.message));
+    await page.waitForTimeout(500);
+    if (await page.locator('.profile-page').count() !== 1) errs.push('P13PAGE: the user profile page did not mount (census I6)');
+    if (await page.locator('ui-sheet.people-popup[open]').count() !== 0) errs.push('P13POPCLOSE: opening a profile must close the people panel');
+    const profName = (await page.locator('.profile-name').textContent().catch(() => '') || '').trim();
+    if (profName !== 'Jordan Kim') errs.push(`P13SUBJECT: expected Jordan Kim's profile, saw "${profName}"`);
+    if (await page.locator('.profile-hero ui-button').count() !== 0) errs.push('P13EDITGATE: Edit profile must show ONLY on your own profile (sealed isSelf)');
+    if (await page.locator('.profile-tabs ui-tab').count() !== 4) errs.push('P13TABS: expected the sealed 4 tabs');
+    // ProfileMenu "View profile" (census A7) → own page with Edit
+    await page.locator('#me-anchor').click({ timeout: 3000 }).catch(e => errs.push('P13MENU: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('ui-menu.profile-menu ui-menu-item', { hasText: 'View profile' }).click({ timeout: 3000 }).catch(e => errs.push('P13VIEWSELF: ' + e.message));
+    await page.waitForTimeout(400);
+    const selfName = (await page.locator('.profile-name').textContent().catch(() => '') || '').trim();
+    if (selfName !== 'Alex Rivera') errs.push(`P13SELF: expected the current user's profile, saw "${selfName}"`);
+    const editBtn = page.locator('.profile-hero ui-button', { hasText: 'Edit profile' });
+    if (await editBtn.count() !== 1) errs.push('P13EDITBTN: Edit profile must show on your own profile (census I5)');
+    // Census I1: a Workspaces-tab row opens that workspace's Lists tab
+    await page.locator('.profile-table tbody tr', { hasText: 'Google Beam Tour' }).click({ timeout: 3000 }).catch(e => errs.push('P13WSROW: ' + e.message));
+    await page.waitForTimeout(500);
+    const wsAfterRow = (await page.locator('.ws-select-name').textContent().catch(() => '') || '').trim();
+    if (wsAfterRow !== 'Google Beam Tour') errs.push(`P13I1: expected the row's workspace active on Lists, saw "${wsAfterRow}"`);
+    // Census I6: a community-card owner avatar opens that user's profile
+    // (the sole seed plan died with Hawk's P9 cascade — community cards keep
+    // their seeded owners, so they are the deterministic I6 target here)
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Community' }).click({ timeout: 3000 }).catch(e => errs.push('P13COMMNAV: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('.comm-card', { hasText: 'Cedarville STEM Classroom Grant' })
+      .locator('.plan-card-avatars ui-owner-picker').click({ timeout: 3000 }).catch(e => errs.push('P13OWNERAV: ' + e.message));
+    await page.waitForTimeout(500);
+    if (await page.locator('.profile-page').count() !== 1) errs.push('P13I6: the owner avatar did not open a user profile');
+    const ownerName = (await page.locator('.profile-name').textContent().catch(() => '') || '').trim();
+    if (ownerName !== 'Sam Okafor') errs.push(`P13I6WHO: expected the owner's (Sam Okafor) profile, saw "${ownerName}"`);
+    // Census J5: people panel "Send message" → NEW DM + the sidebar opens
+    await page.locator('ui-app-bar .user-stack').click({ position: { x: 10, y: 12 }, timeout: 3000 }).catch(e => errs.push('P13STACK2: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('.people-popup .people-row', { hasText: 'Sam Okafor' })
+      .locator('ui-icon-button[aria-label="Send message"]').click({ timeout: 3000 }).catch(e => errs.push('P13MSG: ' + e.message));
+    await page.waitForTimeout(500);
+    if (await page.locator('ui-sheet.messaging-sidebar[open]').count() !== 1) errs.push('P13J5: "Send message" must open the messaging sidebar');
+    const dmHead = (await page.locator('.messaging-sidebar .conv-head-title').textContent().catch(() => '') || '').trim();
+    if (dmHead !== 'Sam Okafor') errs.push(`P13J5DM: expected the Sam Okafor DM open, saw "${dmHead}"`);
+    const convsAfterNew = await page.evaluate(() => JSON.parse(localStorage.getItem('hpsm:conversations') || '[]').length);
+    if (convsAfterNew !== 6) errs.push(`P13J5NEW: a fresh DM partner must mint one conversation — saw ${convsAfterNew}`);
+    // J5 dedupe: messaging an EXISTING DM partner reuses the thread (close
+    // the sidebar first — its scrim covers the app-bar stack)
+    await page.locator('.messaging-sidebar ui-icon-button[aria-label="Close"]').click({ timeout: 3000 }).catch(e => errs.push('P13MSGCLOSE0: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('ui-app-bar .user-stack').click({ position: { x: 10, y: 12 }, timeout: 3000 }).catch(e => errs.push('P13STACK3: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('.people-popup .people-row', { hasText: 'Jordan Kim' })
+      .locator('ui-icon-button[aria-label="Send message"]').click({ timeout: 3000 }).catch(e => errs.push('P13MSG2: ' + e.message));
+    await page.waitForTimeout(500);
+    const convsAfterDupe = await page.evaluate(() => JSON.parse(localStorage.getItem('hpsm:conversations') || '[]').length);
+    if (convsAfterDupe !== 6) errs.push(`P13J5DEDUPE: an existing DM must be REUSED — saw ${convsAfterDupe} conversations`);
+    const dupeHead = (await page.locator('.messaging-sidebar .conv-head-title').textContent().catch(() => '') || '').trim();
+    if (dupeHead !== 'Jordan Kim') errs.push(`P13J5DEDUPE: expected the existing Jordan DM open, saw "${dupeHead}"`);
+    await page.locator('.messaging-sidebar ui-icon-button[aria-label="Close"]').click({ timeout: 3000 }).catch(e => errs.push('P13MSGCLOSE: ' + e.message));
+    await page.waitForTimeout(300);
+    // Edit profile: the sealed SAVE merge recomposes the name from first+last
+    await page.locator('#me-anchor').click({ timeout: 3000 }).catch(e => errs.push('P13MENU2: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('ui-menu.profile-menu ui-menu-item', { hasText: 'View profile' }).click({ timeout: 3000 }).catch(e => errs.push('P13VIEWSELF2: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('.profile-hero ui-button', { hasText: 'Edit profile' }).click({ timeout: 3000 }).catch(e => errs.push('P13EDITOPEN: ' + e.message));
+    await page.waitForTimeout(400);
+    if (await page.locator('ui-dialog.edit-profile-modal[open]').count() !== 1) errs.push('P13MODAL: the EditProfileModal did not open');
+    const swatches = await page.locator('.edit-profile-modal ui-swatch-card').count();
+    if (swatches !== 8) errs.push(`P13SWATCH: expected the sealed 8 avatar-color swatches (no photo set), saw ${swatches}`);
+    await page.locator('.edit-profile-modal ui-text-field input').first().click({ timeout: 3000 }).catch(e => errs.push('P13FN: ' + e.message));
+    await page.keyboard.press('ControlOrMeta+a');
+    await page.keyboard.type('Alexandra');
+    await page.waitForTimeout(200);
+    await page.locator('.edit-profile-modal ui-button', { hasText: 'Save profile' }).click({ timeout: 3000 }).catch(e => errs.push('P13SAVE: ' + e.message));
+    await page.waitForTimeout(400);
+    const savedUser = await page.evaluate(() => {
+      const us = JSON.parse(localStorage.getItem('hpsm:users') || '[]');
+      const u = us.find(x => x.id === 'u-alex') || {};
+      return { name: u.name, first: u.firstName, last: u.lastName };
+    });
+    if (savedUser.name !== 'Alexandra Rivera') errs.push(`P13MERGE: expected the recomposed name "Alexandra Rivera", saw "${savedUser.name}"`);
+    if (savedUser.first !== 'Alexandra' || savedUser.last !== 'Rivera') errs.push('P13MERGE: firstName/lastName fallbacks not stamped');
+    const heroAfter = (await page.locator('.profile-name').textContent().catch(() => '') || '').trim();
+    if (heroAfter !== 'Alexandra Rivera') errs.push(`P13LIVE: the hero did not re-render the saved name, saw "${heroAfter}"`);
+    // Census I6 (full sweep, fixer pass): a thread AUTHOR AVATAR routes to
+    // that user's profile AND closes the sidebar first (the mention-chip
+    // precedent). The Jordan DM is still the active conversation.
+    await page.locator('ui-app-bar ui-icon-button[aria-label="Messages"]').click({ timeout: 3000 }).catch(e => errs.push('P13MSGTOGGLE: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('.messaging-sidebar .msg:not(.mine) ui-avatar[interactive]').first().click({ timeout: 3000 }).catch(e => errs.push('P13AUTHORAV: ' + e.message));
+    await page.waitForTimeout(500);
+    if (await page.locator('ui-sheet.messaging-sidebar[open]').count() !== 0) errs.push('P13AUTHORCLOSE: opening a profile from the sidebar must close the sidebar');
+    if (await page.locator('.profile-page').count() !== 1) errs.push('P13AUTHOR: the thread author avatar did not open a user profile (census I6)');
+    const authorWho = (await page.locator('.profile-name').textContent().catch(() => '') || '').trim();
+    if (authorWho !== 'Jordan Kim') errs.push(`P13AUTHORWHO: expected the author's (Jordan Kim) profile, saw "${authorWho}"`);
+    // Census I6 (full sweep): a Lists OWNER-COLUMN popover row routes to that
+    // user's profile (hover opens the sealed owners popover; the row is a
+    // real button emitting user-open).
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Master' }).click({ timeout: 3000 }).catch(e => errs.push('P13MASTERNAV: ' + e.message));
+    await page.waitForTimeout(600);
+    await page.locator('ui-stakeholder-table .owner-wrap').first().hover({ timeout: 3000 }).catch(e => errs.push('P13OWNERHOVER: ' + e.message));
+    await page.waitForTimeout(300);
+    const popRows = page.locator('ui-stakeholder-table .owners-pop-row');
+    if (await popRows.count() < 1) errs.push('P13OWNERPOP: the owners popover did not open with rows');
+    const popWho = (await popRows.first().locator('.owners-pop-name').textContent().catch(() => '') || '').trim();
+    await popRows.first().click({ timeout: 3000 }).catch(e => errs.push('P13OWNERROW: ' + e.message));
+    await page.waitForTimeout(500);
+    if (await page.locator('.profile-page').count() !== 1) errs.push('P13LISTSOWNER: the owners-popover row did not open a user profile (census I6)');
+    const listsWho = (await page.locator('.profile-name').textContent().catch(() => '') || '').trim();
+    if (!popWho || listsWho !== popWho) errs.push(`P13LISTSWHO: expected "${popWho}"'s profile from the popover row, saw "${listsWho}"`);
   }
   if (path.includes('wireframes')) {
     await page.locator('#theme-modern').click({ timeout: 3000 }).catch(e => errs.push('TOGGLE: ' + e.message));

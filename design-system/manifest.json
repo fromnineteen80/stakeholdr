@@ -1328,7 +1328,7 @@
    "tag": "ui-avatar",
    "status": "built",
    "category": "native",
-   "summary": "Identity circle: photo (src) or initials derived from name (first+last). size sm/md/lg via --ui-sys-avatar-size-*; fill --ui-sys-primary/on-primary so it re-themes with the wrapper; role=img aria-label=name. Per-identity color via the --ui-avatar-bg custom property (token references only). The ONE avatar primitive \u2014 owner stacks/profile menus compose from it.",
+   "summary": "Identity circle: photo (src) or initials derived from name (first+last). size sm/md/lg via --ui-sys-avatar-size-*; fill --ui-sys-primary/on-primary so it re-themes with the wrapper; role=img aria-label=name. Per-identity color via the --ui-avatar-bg custom property (token references only). The ONE avatar primitive \u2014 owner stacks/profile menus compose from it. interactive = a real button (role=button, focus ring, Enter/Space) emitting open \u2014 the census-I6 user-profile route.",
    "props": [
     {
      "name": "name",
@@ -1364,6 +1364,12 @@
      ],
      "default": "",
      "note": "\"online\" renders the sealed lower-right live-presence dot (--ui-sys-presence-online, ~28% of the avatar, surface ring); any other/absent value renders no dot"
+    },
+    {
+     "name": "interactive",
+     "type": "boolean",
+     "default": false,
+     "note": "role=button + tabindex 0; click/Enter/Space emit a composed open event (census I6 make-real: a single avatar opens its person's profile). Absent = the inert role=img circle."
     }
    ],
    "states": [
@@ -1372,9 +1378,17 @@
     "sm",
     "md",
     "lg",
-    "presence-online"
+    "presence-online",
+    "interactive"
    ],
-   "import": "./components/avatar.js"
+   "import": "./components/avatar.js",
+   "events": [
+    {
+     "name": "open",
+     "detail": "{}",
+     "note": "composed: true; interactive only \u2014 the avatar was pressed via click/Enter/Space (census I6: route to its person's profile)"
+    }
+   ]
   },
   "textarea": {
    "tag": "ui-textarea",
@@ -1485,7 +1499,7 @@
    "tag": "ui-owner-picker",
    "status": "built",
    "category": "gapFill",
-   "summary": "Owner avatar multi-select (the oracle's MultiOwnerPicker + UserAutocomplete-add + OwnersDisplay read-only stack). Overlapping ui-avatar circles, no names; dashed '+' (hidden when no candidates) opens an inline typeahead over candidates (name/title/email match, max 8, ArrowUp/Down/Enter/Escape, outside-click close, 'Search people to add\u2026', autofocus); avatar click ARMS removal (neg ring + X overlay, 'Click to remove'), second click removes; system-role users and existing owners excluded from the add list. readonly = display-only stack with '+N' overflow past max. Emits change with detail { value }. Composes ui-avatar + ui-icon.",
+   "summary": "Owner avatar multi-select (the oracle's MultiOwnerPicker + UserAutocomplete-add + OwnersDisplay read-only stack). Overlapping ui-avatar circles, no names; dashed '+' (hidden when no candidates) opens an inline typeahead over candidates (name/title/email match, max 8, ArrowUp/Down/Enter/Escape, outside-click close, 'Search people to add\u2026', autofocus); avatar click ARMS removal (neg ring + X overlay, 'Click to remove'), second click removes; system-role users and existing owners excluded from the add list. readonly = display-only stack with '+N' overflow past max. Emits change with detail { value }. Composes ui-avatar + ui-icon. readonly+interactive = each circle a real button emitting open { userId } (the census-I6 user-profile route). readonly+stack-button = the WHOLE cluster (circles + '+N') is ONE role=button control emitting stack-open, accessible name from the host aria-label (the sealed UserStack single click surface).",
    "props": [
     {
      "name": "users",
@@ -1519,6 +1533,18 @@
      "type": "number",
      "default": 5,
      "note": "readonly overflow cap before the '+N' circle"
+    },
+    {
+     "name": "interactive",
+     "type": "boolean",
+     "default": false,
+     "note": "readonly only \u2014 each visible circle becomes a real button emitting open {userId} (census I6 make-real: owner avatars open that user's profile)"
+    },
+    {
+     "name": "stack-button",
+     "type": "boolean",
+     "default": false,
+     "note": "readonly only; wins over interactive \u2014 the WHOLE cluster (every circle AND the '+N' overflow) is ONE role=button control emitting stack-open; accessible name = the host's aria-label attribute (the sealed UserStack: one click surface, no per-avatar buttons)"
     }
    ],
    "states": [
@@ -1530,9 +1556,28 @@
     "add-hidden-no-candidates",
     "readonly",
     "overflow-+N",
-    "empty-dash"
+    "empty-dash",
+    "readonly-interactive",
+    "readonly-stack-button"
    ],
-   "import": "./components/owner-picker.js"
+   "import": "./components/owner-picker.js",
+   "events": [
+    {
+     "name": "change",
+     "detail": "{ value }",
+     "note": "composed: true; the new owner-id array on every add / remove"
+    },
+    {
+     "name": "open",
+     "detail": "{ userId }",
+     "note": "composed: true; readonly + interactive only \u2014 an owner circle was pressed (census I6: route to that user's profile)"
+    },
+    {
+     "name": "stack-open",
+     "detail": "none",
+     "note": "composed: true; readonly + stack-button only \u2014 the aggregate cluster control was pressed (the sealed UserStack opens the people panel)"
+    }
+   ]
   },
   "coachmark": {
    "tag": "ui-coachmark",

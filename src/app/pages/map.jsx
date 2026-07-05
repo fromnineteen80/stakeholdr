@@ -36,6 +36,7 @@ import { MASTER_WORKSPACE_ID, visibleStakeholders } from '../data/workspace.js';
 
 export function MapPage({
   activeWorkspaceId = MASTER_WORKSPACE_ID, onOpenCommunityEntry, onOpenWorkspace,
+  onOpenUserProfile,
 }) {
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
   const { companyIssues, companyTags } = useCompanyCatalogs();
@@ -177,6 +178,7 @@ export function MapPage({
         }}
         onOpenCommunity={openCommunityFromModal}
         onOpenWorkspace={onOpenWorkspace}
+        onOpenUser={onOpenUserProfile}
       />
     </div>
   );

@@ -78,7 +78,7 @@ import {
 } from '../modals/stakeholder-logic.js';
 import {
   StakeholderModal, useUiEvent, Field, TF, Sel, TA, Owners, IssueSelector,
-  PriorityPill, Picker, PopMenu,
+  PriorityPill, Picker, PopMenu, UAv,
 } from '../modals/stakeholder-modal.jsx';
 
 /* Zone pill (the shared StatusPill composition — sealed single source). */
@@ -499,7 +499,7 @@ function PlanSection({ n, title, children }) {
 /* ══ THE PAGE ══════════════════════════════════════════════════════════════ */
 export function PlanPage({
   createNonce = 0, activeWorkspaceId = MASTER_WORKSPACE_ID, onOpenCommunityEntry,
-  onOpenWorkspace, openPlanId = null, onConsumeOpen,
+  onOpenWorkspace, onOpenUserProfile, openPlanId = null, onConsumeOpen,
 }) {
   const [plansRaw, setPlans] = usePersistentState('plans', SEED_PLANS);
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
@@ -649,6 +649,7 @@ export function PlanPage({
             workspaces.filter((w) => (stakeholderWorkspaces[id] || []).includes(w.id))}
           onOpenCommunityEntry={onOpenCommunityEntry}
           onOpenWorkspace={onOpenWorkspace}
+          onOpenUserProfile={onOpenUserProfile}
         />
       ) : open && mode === 'review' ? (
         <PlanReview
@@ -661,6 +662,7 @@ export function PlanPage({
           roster={wsRoster(open.workspaceId)}
           onBack={back}
           onEdit={() => setMode('edit')}
+          onOpenUserProfile={onOpenUserProfile}
         />
       ) : (
         <PlanLanding
@@ -670,6 +672,7 @@ export function PlanPage({
           wsCount={(wsId) => wsRoster(wsId).length}
           onReview={(id) => { setOpenId(id); setMode('review'); }}
           onOpen={(id) => { setOpenId(id); setMode('edit'); }}
+          onOpenUserProfile={onOpenUserProfile}
         />
       )}
     </div>
@@ -677,7 +680,7 @@ export function PlanPage({
 }
 
 /* ══ LANDING (sealed PlanHome through the shared LandingView shell) ═══════ */
-function PlanLanding({ plans, users, workspaces, wsCount, onReview, onOpen }) {
+function PlanLanding({ plans, users, workspaces, wsCount, onReview, onOpen, onOpenUserProfile }) {
   const { companySites } = useCompanyCatalogs();
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState({});
@@ -853,6 +856,7 @@ function PlanLanding({ plans, users, workspaces, wsCount, onReview, onOpen }) {
                 engaged={wsCount(p.workspaceId)}
                 onReview={() => onReview(p.id)}
                 onOpen={() => onOpen(p.id)}
+                onOpenUser={onOpenUserProfile}
               />
             ))}
           </div>
@@ -872,7 +876,7 @@ function PlanLanding({ plans, users, workspaces, wsCount, onReview, onOpen }) {
 }
 
 /* ══ PLAN CARD (sealed TREE 2 anatomy) ═══════════════════════════════════ */
-function PlanCard({ p, users, ws, site, engaged, onReview, onOpen }) {
+function PlanCard({ p, users, ws, site, engaged, onReview, onOpen, onOpenUser }) {
   const linkedRow = (k, v) => (
     <div className="plan-linked-row">
       <span className="plan-meta-k">{k}</span>
@@ -894,7 +898,9 @@ function PlanCard({ p, users, ws, site, engaged, onReview, onOpen }) {
           <div className="plan-card-recipient muted">{ws ? ws.name : '-'}</div>
         </div>
         <div className="plan-card-avatars" aria-label="team">
-          <Owners users={users} value={(p.team || []).map((m) => m.userId)} readonly />
+          {/* Census I6 make-real: team avatars open that user's profile. */}
+          <Owners users={users} value={(p.team || []).map((m) => m.userId)} readonly
+                  onOpen={onOpenUser} />
         </div>
       </div>
       <div className="plan-card-badges">
@@ -973,7 +979,7 @@ function usePlanRows(plan, { stakeholders, roster, scores, team, community }) {
 }
 
 /* ══ EDITOR (sealed TREE 3) ═══════════════════════════════════════════════ */
-function PlanEditor({
+function PlanEditor({ onOpenUserProfile,
   plan, users, workspaces, community, scores, team, stakeholders, roster,
   currentUser, onChange, onBack, onReview, onDelete,
   addStakeholderToPlan, createStakeholder, updateStakeholder,
@@ -1239,9 +1245,10 @@ function PlanEditor({
                 canOverride={canOverride}
                 fitOpenFor={fitOpenFor}
                 onFitOpen={(id) => setFitOpenFor(id)}
-                /* INTERIM — the sealed REBUILD DECISION keeps row-click →
-                   the stakeholder PROFILE overlay; the shared modal in view
-                   mode stands in; retarget when the Profiles phase lands. */
+                /* Census E6 (RESOLVED, Phase 13): row-click opens the sealed
+                   stakeholder PROFILE — the shared modal's view mode IS that
+                   profile, under the E7 one-profile-contract (Edit +
+                   workspace chips + C9 rows + owner avatars all live). */
                 onRowOpen={(id) => setShModal({ mode: 'view', id })}
               />
             )}
@@ -1379,9 +1386,11 @@ function PlanEditor({
       </ui-dialog>
 
       {/* Create-new / row-click view (the shared sealed StakeholderModal).
-          INTERIM for row-click: the sealed target is the stakeholder PROFILE
-          overlay — retarget when the Profiles phase lands. Its C9 engagement
-          rows are LIVE here (openCommunityFromModal above). */}
+          RESOLVED (Phase 13): the shared modal's VIEW MODE **is** the sealed
+          StakeholderProfile — the E7 one-profile-contract holds here: Edit
+          live (the view↔form flip), workspace chips navigate
+          (onOpenWorkspace), C9 engagement rows route (openCommunityFromModal)
+          and owner avatars open the user profile (onOpenUser). */}
       <StakeholderModal
         open={!!shModal}
         existing={shView}
@@ -1408,6 +1417,7 @@ function PlanEditor({
         }}
         onOpenCommunity={openCommunityFromModal}
         onOpenWorkspace={onOpenWorkspace}
+        onOpenUser={onOpenUserProfile}
       />
 
       {/* Delete confirm (sibling dialog; closes only itself). */}
@@ -1458,7 +1468,7 @@ function AddShMenu({ onPickWorkspace, onPickMaster, onCreate }) {
 }
 
 /* ══ REVIEW (sealed TREE 4: the read-only document) ═══════════════════════ */
-function PlanReview({
+function PlanReview({ onOpenUserProfile,
   plan, users, workspaces, community, scores, team, roster, onBack, onEdit,
 }) {
   const { companySites, companyGoals } = useCompanyCatalogs();
@@ -1518,7 +1528,9 @@ function PlanReview({
               <GoalPill goalModel={p.goalModel} />
               <StageText status={p.status || 'Idea'} />
               <span className="plan-spacer"></span>
-              <Owners users={users} value={p.owners || []} readonly />
+              {/* Census I6 make-real: owner avatars open the user profile. */}
+              <Owners users={users} value={p.owners || []} readonly
+                      onOpen={onOpenUserProfile} />
             </div>
             {/* The formula readout — KEPT, with the visible "SEP model" tag
                 RENAMED per the sealed naming rule (tnum text, no mono). */}
@@ -1577,7 +1589,12 @@ function PlanReview({
                   const u = users.find((x) => x.id === m.userId);
                   return (
                     <div className="plan-review-teamrow" key={m.userId}>
-                      <ui-avatar size="sm" name={u ? u.name : ''}></ui-avatar>
+                      {/* Census I6 make-real: the teammate avatar opens that
+                          user's profile. */}
+                      <UAv user={u || { name: '' }} size="sm"
+                           onOpen={onOpenUserProfile && u
+                             ? () => onOpenUserProfile(u.id)
+                             : undefined} />
                       <span className="plan-team-name">{u ? u.name : m.userId}</span>
                       <span className="muted">{m.role || (u ? u.title : '')}</span>
                     </div>

@@ -556,5 +556,43 @@ await page.locator('ui-menu.profile-menu ui-menu-item', { hasText: 'Messages' })
 await page.waitForTimeout(500);
 await page.screenshot({ path: `${OUT}/p12-page-empty.png` });
 
+// ── PHASE-13 PROFILES CAPTURES ─────────────────────────────────────────────
+// 1 · the people panel (UserListPopup) over the app
+await page.locator('ui-app-bar .user-stack').click({ position: { x: 10, y: 12 } });
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p13-people-popup.png` });
+// 2 · another user's profile page (no Edit; ws tab)
+await page.locator('.people-popup .people-row', { hasText: 'Jordan Kim' }).click();
+await page.waitForTimeout(600);
+await page.screenshot({ path: `${OUT}/p13-profile-other.png` });
+// 3 · own profile (hero Edit + manager badge)
+await page.locator('#me-anchor').click();
+await page.waitForTimeout(300);
+await page.locator('ui-menu.profile-menu ui-menu-item', { hasText: 'View profile' }).click();
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p13-profile-self.png` });
+// 4 · the Relationships tab (pill cells) — last tab
+await page.locator('.profile-tabs ui-tab').nth(3).click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p13-profile-sh-tab.png` });
+// 5 · filter popover open on the SEP tab
+await page.locator('.profile-tabs ui-tab').nth(1).click();
+await page.waitForTimeout(300);
+await page.locator('#profile-filter-btn').click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p13-profile-filter.png` });
+await page.keyboard.press('Escape');
+await page.waitForTimeout(200);
+// 6 · the EditProfileModal (photo row + 8 swatches + cascade chips)
+await page.locator('.profile-hero ui-button', { hasText: 'Edit profile' }).click();
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p13-edit-profile.png` });
+// markets picked → the Regions cascade appears
+await page.locator('.edit-profile-modal .profile-chip-pick ui-chip').first().click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p13-edit-profile-cascade.png` });
+await page.keyboard.press('Escape');
+await page.waitForTimeout(300);
+
 await browser.close(); srv.close();
 console.log('shots written to', OUT);
