@@ -32,7 +32,7 @@ import { ISSUES, TAGS } from '../data/catalogs.js';
 import { StakeholderModal } from '../modals/stakeholder-modal.jsx';
 import { MASTER_WORKSPACE_ID, visibleStakeholders } from '../data/workspace.js';
 
-export function MapPage({ activeWorkspaceId = MASTER_WORKSPACE_ID }) {
+export function MapPage({ activeWorkspaceId = MASTER_WORKSPACE_ID, onOpenCommunityEntry }) {
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
   const [scores, setScores] = usePersistentState('scores', SEED_SCORES);
   const [team] = usePersistentState('team', SEED_TEAM);
@@ -132,6 +132,14 @@ export function MapPage({ activeWorkspaceId = MASTER_WORKSPACE_ID }) {
     ? stakeholders.find((s) => s.id === shModal.id) || null
     : null;
 
+  /* Census C9 (sealed REAL): the profile's engagement rows open that
+   * community entry's read view — the modal closes and the shell routes
+   * through its community deep-link seam (onOpenCommunityEntry). Rows stay
+   * honestly inert (no handler) on a host without the route. */
+  const openCommunityFromModal = onOpenCommunityEntry
+    ? (id) => { setShModal(null); onOpenCommunityEntry(id); }
+    : undefined;
+
   return (
     <div className="map-page">
       {/* Display options ride the sealed TWEAK_DEFAULTS (halo / labels off /
@@ -162,6 +170,7 @@ export function MapPage({ activeWorkspaceId = MASTER_WORKSPACE_ID }) {
           deleteStakeholder(id);
           setShModal(null);
         }}
+        onOpenCommunity={openCommunityFromModal}
       />
     </div>
   );

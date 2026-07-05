@@ -365,15 +365,36 @@
   --ui-sys-goal-union-surface:        #C9E3CC;
   --ui-sys-goal-union-ink:            #2f5a26;
 
-  /* Plan stage text colors (sealed PLAN_STAGE_FG, Plan-page box CAPTURED→
-     TOKEN — status renders as colored TEXT only, no badge bg; unknown stages
-     fall back to --ui-sys-on-surface-muted, the sealed var(--ink-2) rule.
-     Status-semantic: never touched by any theme swap.) */
+  /* Plan + Community stage text colors (sealed PLAN_STAGE_FG + the community
+     STAGE_COLORS fg set, CAPTURED→TOKEN — status renders as colored TEXT
+     only, no badge bg (the community StageBadge pill is sealed DEAD CODE);
+     unknown stages fall back to --ui-sys-on-surface-muted, the sealed
+     var(--ink-2) rule. Status-semantic: never touched by any theme swap.) */
   --ui-sys-stage-idea:         #54524A;
   --ui-sys-stage-proposed:     #6E5419;
   --ui-sys-stage-under-review: #6e5419;
   --ui-sys-stage-active:       #2f5a26;
   --ui-sys-stage-complete:     #2E3F66;
+  --ui-sys-stage-approved:     #2f5a26;  /* community STAGE_COLORS Approved fg */
+  --ui-sys-stage-declined:     #7a2424;  /* community STAGE_COLORS Declined fg */
+
+  /* Community kind pill pairs (sealed KIND_COLORS, Community box CAPTURED→
+     TOKEN — the KindBadge catalog verbatim; pill-semantic: never touched by
+     any theme swap. Unknown kinds fall back to the container/muted pair —
+     the sealed var(--bg-2)/var(--ink-2) fallback, implemented in the ui-chip
+     kind variant.) */
+  --ui-sys-kind-philanthropy-surface:         #DDE7C2;
+  --ui-sys-kind-philanthropy-ink:             #2f5a26;
+  --ui-sys-kind-volunteering-surface:         #C2D9E8;
+  --ui-sys-kind-volunteering-ink:             #23496e;
+  --ui-sys-kind-corporate-giving-surface:     #E8DEC2;
+  --ui-sys-kind-corporate-giving-ink:         #6e5419;
+  --ui-sys-kind-political-action-pac-surface: #E5D0D0;
+  --ui-sys-kind-political-action-pac-ink:     #7a2424;
+  --ui-sys-kind-sustainability-surface:       #C9E3CC;
+  --ui-sys-kind-sustainability-ink:           #2f5a26;
+  --ui-sys-kind-social-impact-surface:        #DCD3E0;
+  --ui-sys-kind-social-impact-ink:            #4F3F69;
 
   /* Avatar identity palette (census group F CAPTURED→TOKEN — the seed users'
      stable per-user avatar colors + the Shared-primitives Avatar palette;

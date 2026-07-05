@@ -78,7 +78,7 @@ import {
 } from '../modals/stakeholder-logic.js';
 import {
   StakeholderModal, useUiEvent, Field, TF, Sel, TA, Owners, IssueSelector,
-  PriorityPill,
+  PriorityPill, Picker, PopMenu,
 } from '../modals/stakeholder-modal.jsx';
 
 /* Zone pill (the shared StatusPill composition — sealed single source). */
@@ -100,50 +100,8 @@ function StageText({ status }) {
   );
 }
 
-/* ui-autocomplete bridge in PICKER mode (sealed PLANAUTOCOMPLETE config:
- * 8-result cap, open-on-focus full list on empty query, label-OR-sub match,
- * two-line rows, pick clears + closes). */
-function Picker({ options, placeholder, onPick, autoFocus }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.options = options || [];
-  }, [options]);
-  useEffect(() => {
-    if (autoFocus && ref.current) {
-      const t = setTimeout(() => ref.current && ref.current.focus(), 60);
-      return () => clearTimeout(t);
-    }
-  }, [autoFocus]);
-  useUiEvent(ref, 'change', (e) => onPick(e.detail.value));
-  return (
-    <ui-autocomplete
-      ref={ref}
-      class="plan-picker"
-      placeholder={placeholder}
-      max-results="8"
-      clear-on-select=""
-    ></ui-autocomplete>
-  );
-}
-
-/* Portal-mounted ui-menu that opens on mount and reports its close (the
- * component owns positioning/outside-dismiss/keyboard). */
-function PopMenu({ anchorId, onClose, className, children }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.setAttribute('anchor', anchorId);
-    el.show();
-  }, [anchorId]);
-  useUiEvent(ref, 'ui-menu-close', onClose);
-  return createPortal(
-    <ui-menu ref={ref} class={className}>{children}</ui-menu>,
-    document.body,
-  );
-}
+/* Picker + PopMenu moved to their shared home (stakeholder-modal.jsx) at the
+ * Community phase — both pages compose the ONE definition. */
 
 /* ══ PLAN FIT CELL (binding element-6 schema: the override targets the FIT
  * band — band-only, ✦ suggested / ·set overridden marks, manager-only). ══ */
@@ -539,7 +497,9 @@ function PlanSection({ n, title, children }) {
 }
 
 /* ══ THE PAGE ══════════════════════════════════════════════════════════════ */
-export function PlanPage({ createNonce = 0, activeWorkspaceId = MASTER_WORKSPACE_ID }) {
+export function PlanPage({
+  createNonce = 0, activeWorkspaceId = MASTER_WORKSPACE_ID, onOpenCommunityEntry,
+}) {
   const [plansRaw, setPlans] = usePersistentState('plans', SEED_PLANS);
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
   const [scores] = usePersistentState('scores', SEED_SCORES);
@@ -673,6 +633,7 @@ export function PlanPage({ createNonce = 0, activeWorkspaceId = MASTER_WORKSPACE
           }}
           getWorkspacesForStakeholder={(id) =>
             workspaces.filter((w) => (stakeholderWorkspaces[id] || []).includes(w.id))}
+          onOpenCommunityEntry={onOpenCommunityEntry}
         />
       ) : open && mode === 'review' ? (
         <PlanReview
@@ -1000,7 +961,7 @@ function PlanEditor({
   plan, users, workspaces, community, scores, team, stakeholders, roster,
   currentUser, onChange, onBack, onReview, onDelete,
   addStakeholderToPlan, createStakeholder, updateStakeholder,
-  getWorkspacesForStakeholder,
+  getWorkspacesForStakeholder, onOpenCommunityEntry,
 }) {
   const p = plan;
   const set = (patch) => onChange({ ...p, ...patch });
@@ -1041,6 +1002,14 @@ function PlanEditor({
   const shView = shModal && shModal.id
     ? stakeholders.find((s) => s.id === shModal.id) || null
     : null;
+
+  /* Census C9 (sealed REAL): the profile's engagement rows open that
+   * community entry's read view — the modal closes and the shell routes
+   * through its community deep-link seam (onOpenCommunityEntry). Rows stay
+   * honestly inert (no handler) on a host without the route. */
+  const openCommunityFromModal = onOpenCommunityEntry
+    ? (id) => { setShModal(null); onOpenCommunityEntry(id); }
+    : undefined;
 
   return (
     <div className="plan-editor">
@@ -1393,7 +1362,8 @@ function PlanEditor({
 
       {/* Create-new / row-click view (the shared sealed StakeholderModal).
           INTERIM for row-click: the sealed target is the stakeholder PROFILE
-          overlay — retarget when the Profiles phase lands. */}
+          overlay — retarget when the Profiles phase lands. Its C9 engagement
+          rows are LIVE here (openCommunityFromModal above). */}
       <StakeholderModal
         open={!!shModal}
         existing={shView}
@@ -1418,6 +1388,7 @@ function PlanEditor({
           }
           setShModal(null);
         }}
+        onOpenCommunity={openCommunityFromModal}
       />
 
       {/* Delete confirm (sibling dialog; closes only itself). */}

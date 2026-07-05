@@ -22,6 +22,7 @@
  * through to the main dialog).
  */
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   CATEGORIES, MARKETS, GEOGRAPHIES, US_STATES, STATE_ABBR, SITES, siteLabel,
 } from '../data/catalogs.js';
@@ -61,8 +62,13 @@ export function Field({ label, help, children, className }) {
 }
 
 /* ui-text-field variant=plain: visible caption comes from Field; the label
- * attr stays for the component's aria-label; placeholder = the sealed copy. */
-export function TF({ label, placeholder, value, onValue, onBlurValue, supporting, fieldRef }) {
+ * attr stays for the component's aria-label; placeholder = the sealed copy.
+ * min/max/step forward to the component (it relays them to its inner input —
+ * the sealed number-field constraints, e.g. years min="1"). */
+export function TF({
+  label, placeholder, value, onValue, onBlurValue, supporting, fieldRef, type,
+  min, max, step,
+}) {
   const localRef = useRef(null);
   const ref = fieldRef || localRef;
   useEffect(() => {
@@ -76,6 +82,10 @@ export function TF({ label, placeholder, value, onValue, onBlurValue, supporting
       ref={ref}
       variant="plain"
       label={label}
+      type={type || undefined}
+      min={min ?? undefined}
+      max={max ?? undefined}
+      step={step ?? undefined}
       placeholder={placeholder}
       supporting-text={supporting}
     ></ui-text-field>
@@ -106,7 +116,7 @@ function Toggle({ selected, onChange, children }) {
   );
 }
 
-function DateField({ label, value, onChange }) {
+export function DateField({ label, value, onChange }) {
   const ref = useRef(null);
   useUiEvent(ref, 'change', (e) => onChange(e.detail.value));
   return <ui-date-picker ref={ref} label={label} value={value || ''}></ui-date-picker>;
@@ -136,6 +146,54 @@ export function TA({ value, onValue, placeholder, rows }) {
   // No label attr: the caption above (Field .sh-lbl) is the visible label —
   // a floating component label would double it.
   return <ui-textarea ref={ref} rows={rows || 3} placeholder={placeholder}></ui-textarea>;
+}
+
+/* ui-autocomplete bridge in PICKER mode (sealed PLANAUTOCOMPLETE config:
+ * 8-result cap, open-on-focus full list on empty query, label-OR-sub match,
+ * two-line rows, pick clears + closes). Shared home: Plans + Community both
+ * compose it (single source — moved here from plan.jsx at the Community
+ * phase, replace-don't-duplicate). */
+export function Picker({ options, placeholder, onPick, autoFocus }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.options = options || [];
+  }, [options]);
+  useEffect(() => {
+    if (autoFocus && ref.current) {
+      const t = setTimeout(() => ref.current && ref.current.focus(), 60);
+      return () => clearTimeout(t);
+    }
+  }, [autoFocus]);
+  useUiEvent(ref, 'change', (e) => onPick(e.detail.value));
+  return (
+    <ui-autocomplete
+      ref={ref}
+      class="plan-picker"
+      placeholder={placeholder}
+      max-results="8"
+      clear-on-select=""
+    ></ui-autocomplete>
+  );
+}
+
+/* Portal-mounted ui-menu that opens on mount and reports its close (the
+ * component owns positioning/outside-dismiss/keyboard; portal to body per the
+ * shell's page-coordinate precedent). Shared home (see Picker note). */
+export function PopMenu({ anchorId, onClose, className, children }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.setAttribute('anchor', anchorId);
+    el.show();
+  }, [anchorId]);
+  useUiEvent(ref, 'ui-menu-close', onClose);
+  return createPortal(
+    <ui-menu ref={ref} class={className}>{children}</ui-menu>,
+    document.body,
+  );
 }
 
 function PhotoUpload({ hasPhoto, onData }) {
@@ -225,7 +283,7 @@ export function IssueSelector({ selected, company, restrict, onChange }) {
  * never hand-rolled spans (the old .tag/.pill/.status-dot/.zone-pill app.css
  * rules are deleted). */
 
-function TagPills({ values }) {
+export function TagPills({ values }) {
   if (!values || !values.length) return <span className="muted">-</span>;
   const extra = values.length - 3;
   return (
@@ -250,7 +308,7 @@ export function PriorityPill({ value }) {
   return <ui-chip variant="priority" value={value || ''}>{value || ''}</ui-chip>;
 }
 
-function PRow({ k, children, full }) {
+export function PRow({ k, children, full }) {
   return (
     <div className={full ? 'prof-row prof-fullrow' : 'prof-row'}>
       <div className="prof-k">{k}</div>
@@ -259,15 +317,30 @@ function PRow({ k, children, full }) {
   );
 }
 
-/* One community-engagement row. PHASE-PENDING (Community phase): the sealed
- * intent is that clicking opens the nested CommunityModal (initialView, with
- * the re-target-in-place onOpenStakeholder wiring) — that surface belongs to
- * the COMMUNITY BUILD PHASE, which will wire these rows. Until then the row
- * is deliberately INERT (non-interactive, phase-note tooltip) per the
- * make-real law: never a live-looking dead affordance. */
-function EngagementRow({ a }) {
+/* One community-engagement row (sealed census C9: clicking opens that
+ * community entry read-only). REAL wherever the host supplies onOpen — the
+ * Community page wires it to its own read view; every other shell host
+ * (Lists / Map / Scoring / Plans) routes through the shell's community
+ * deep-link seam. A host without the route renders the inert variant —
+ * never a live-looking dead affordance. The sealed C11 in-place subject
+ * swap belongs to the Profiles phase. */
+function EngagementRow({ a, onOpen }) {
   return (
-    <div className="profile-entry" title="Opens with the Community build phase">
+    <div
+      className={'profile-entry' + (onOpen ? ' profile-entry-link' : '')}
+      title={onOpen
+        ? 'Open application'
+        : 'Opens when this surface wires the community route'}
+      role={onOpen ? 'button' : undefined}
+      tabIndex={onOpen ? 0 : undefined}
+      onClick={onOpen || undefined}
+      onKeyDown={onOpen ? (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === ' ') e.preventDefault();
+          onOpen();
+        }
+      } : undefined}
+    >
       <span className="profile-entry-main">
         <span className="profile-entry-name">{a.name}</span>
         <span className="profile-entry-meta">{a.kind} · {a.stage}</span>
@@ -289,6 +362,7 @@ export function StakeholderModal({
   community, scores, team,
   getWorkspacesForStakeholder,
   onCancel, onSubmit, onDelete,
+  onOpenCommunity, // optional: opens a community entry read-only (census C9)
 }) {
   const isEdit = !!existing;
   const dlgRef = useRef(null);
@@ -469,7 +543,13 @@ export function StakeholderModal({
                 <div className="muted sh-empty-line">No community engagements linked yet.</div>
               ) : (
                 <div className="profile-entry-list">
-                  {affil.slice(0, 5).map((a) => <EngagementRow a={a} key={a.id} />)}
+                  {affil.slice(0, 5).map((a) => (
+                    <EngagementRow
+                      a={a}
+                      key={a.id}
+                      onOpen={onOpenCommunity ? () => onOpenCommunity(a.id) : null}
+                    />
+                  ))}
                   {affil.length > 5 && (
                     <ui-button variant="text" class="sh-viewall" onClick={() => setViewAll(true)}>
                       View all {affil.length} engagements
@@ -806,7 +886,15 @@ export function StakeholderModal({
               </ui-icon-button>
             </div>
             <div className="profile-entry-list">
-              {affil.map((a) => <EngagementRow a={a} key={a.id} />)}
+              {affil.map((a) => (
+                <EngagementRow
+                  a={a}
+                  key={a.id}
+                  onOpen={onOpenCommunity
+                    ? () => { setViewAll(false); onOpenCommunity(a.id); }
+                    : null}
+                />
+              ))}
             </div>
           </>
         )}

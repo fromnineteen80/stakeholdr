@@ -7,6 +7,7 @@ import { SheetPage } from './pages/sheet.jsx';
 import { MapPage } from './pages/map.jsx';
 import { ScoringPage } from './pages/scoring.jsx';
 import { PlanPage } from './pages/plan.jsx';
+import { CommunityPage } from './pages/community.jsx';
 import { usePersistentState } from './data/store.js';
 import {
   SEED_WORKSPACES, SEED_STAKEHOLDERS, SEED_STAKEHOLDER_WORKSPACES,
@@ -35,7 +36,7 @@ const NAV_TABS = [
 // exactly these views. Live views open their create flow via createNonce;
 // the rest stay honestly inert until their phases land.
 const CREATE_VIEWS = ['sheet', 'scoring', 'plan', 'community', 'setup'];
-const CREATE_LIVE = ['sheet', 'scoring', 'plan'];
+const CREATE_LIVE = ['sheet', 'scoring', 'plan', 'community'];
 
 export function AppShell() {
   const [view, setView] = useState('sheet');
@@ -67,6 +68,19 @@ export function AppShell() {
   const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId) || null;
 
   const [createNonce, setCreateNonce] = useState(0);
+
+  /* COMMUNITY DEEP-LINK SEAM (sealed census C9 REAL: a stakeholder record's
+   * engagement rows open that community entry read-only). Any page routes
+   * here; the shell switches to Community and hands the id down the SAME
+   * first-class openCommunityId/onConsumeOpen channel the Community page
+   * already exposes — never a window.__pendingCommunityId bridge (sealed
+   * FRAGILE, do-not-replicate). The Community page consumes the request and
+   * applies the census-A23 existence guard itself.                          */
+  const [pendingCommunityId, setPendingCommunityId] = useState(null);
+  const openCommunityEntry = (id) => {
+    setPendingCommunityId(id);
+    setView('community');
+  };
 
   /* Sealed openWorkspaceTab: add to the open set if absent → activate →
    * view "sheet". activateWorkspaceTab: same without the add.               */
@@ -249,10 +263,17 @@ export function AppShell() {
 
       <div className="work">
         {view === 'sheet' ? (
-          <SheetPage createNonce={createNonce} activeWorkspaceId={activeWorkspaceId} />
+          <SheetPage
+            createNonce={createNonce}
+            activeWorkspaceId={activeWorkspaceId}
+            onOpenCommunityEntry={openCommunityEntry}
+          />
         ) : view === 'map' ? (
           /* Sealed: the Map IS available on Master (the org-wide overview). */
-          <MapPage activeWorkspaceId={activeWorkspaceId} />
+          <MapPage
+            activeWorkspaceId={activeWorkspaceId}
+            onOpenCommunityEntry={openCommunityEntry}
+          />
         ) : view === 'scoring' && !isMaster ? (
           /* Sealed: ScoringView gets workspaceOwners + onDeleteWorkspace only
              when not master. */
@@ -261,11 +282,26 @@ export function AppShell() {
             workspaceOwners={activeWorkspace?.owners || []}
             createNonce={createNonce}
             onDeleteWorkspace={() => removeWorkspace(activeWorkspaceId)}
+            onOpenCommunityEntry={openCommunityEntry}
           />
         ) : view === 'plan' ? (
           /* Sealed: Plans render on Master (all plans) and per workspace
              (that workspace's plans); creation flows through createNonce. */
-          <PlanPage createNonce={createNonce} activeWorkspaceId={activeWorkspaceId} />
+          <PlanPage
+            createNonce={createNonce}
+            activeWorkspaceId={activeWorkspaceId}
+            onOpenCommunityEntry={openCommunityEntry}
+          />
+        ) : view === 'community' ? (
+          /* Sealed: Community aggregates org-wide (never workspace-scoped);
+             creation flows through createNonce (the shell (+) is the sealed
+             New-application affordance); deep links arrive through the
+             community seam above (openCommunityId consumed on open). */
+          <CommunityPage
+            createNonce={createNonce}
+            openCommunityId={pendingCommunityId}
+            onConsumeOpen={() => setPendingCommunityId(null)}
+          />
         ) : (
           <ui-card variant="outlined">
             <div className="ph-title">
@@ -281,7 +317,7 @@ export function AppShell() {
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Build: Phase 7 — Plans (landing · editor · review · Plan Fit)</span>
+        <span>Build: Phase 8 — Community (applications · votes · approval · FY rollups)</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
 

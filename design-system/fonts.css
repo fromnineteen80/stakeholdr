@@ -1,10 +1,10 @@
 /* Self-hosted fonts (industry practice: no runtime Google dependency,
    no icon-ligature text flash). Downloaded 2026-07-03 from Google Fonts.
-   Icon font re-subset 2026-07-05 (Phase 7) via the same icon_names pipeline:
-   the prior 98-name vocabulary + visibility / delete / group / list_alt /
-   arrow_upward / arrow_downward (the sealed Plan-page glyphs). Extend the
-   subset again BEFORE using any new ligature - an out-of-subset name renders
-   as raw text. */
+   Icon font re-subset 2026-07-05 (Phase 8) via the same icon_names pipeline:
+   the prior vocabulary (verified a strict superset by ligature diff) +
+   keyboard_arrow_up / keyboard_arrow_down (the sealed Community vote
+   glyphs). Extend the subset again BEFORE using any new ligature - an
+   out-of-subset name renders as raw text. */
 @font-face {
   font-family: 'Inter';
   font-style: normal;
