@@ -514,5 +514,47 @@ await page.locator('.settings-nav ui-list-item', { hasText: 'Integrations' }).cl
 await page.waitForTimeout(300);
 await page.screenshot({ path: `${OUT}/p11-settings-integrations.png` });
 
+// ── PHASE-12 MESSAGING CAPTURES ────────────────────────────────────────────
+// 1 · the right-edge sidebar over the current view (conversation list)
+await page.keyboard.press('Escape');
+await page.waitForTimeout(300);
+await page.locator('ui-app-bar ui-icon-button[aria-label="Messages"]').click();
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p12-sidebar-list.png` });
+// 2 · a thread open in the sidebar (head + bubbles + composer)
+await page.locator('.messaging-sidebar .conv-row', { hasText: 'Jordan Kim, Sam Okafor' }).click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p12-sidebar-thread.png` });
+// 3 · the full Messages page via the expand control (J2 carry-over)
+await page.locator('.messaging-sidebar ui-icon-button[aria-label="Open full Messages page"]').click();
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p12-page-thread.png` });
+// 4 · the mention popover open in the composer
+await page.locator('.messaging-page .composer ui-textarea textarea').click();
+await page.keyboard.type('@Mar');
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p12-mention-pop.png` });
+await page.keyboard.press('Escape');
+await page.keyboard.press('ControlOrMeta+a');
+await page.keyboard.press('Backspace');
+// 5 · the read-only Reminders system thread (ruling surface)
+await page.locator('.messaging-page .conv-row', { hasText: 'Reminders' }).click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p12-system-thread.png` });
+// 6 · the new-conversation modal
+await page.locator('.messaging-list-head ui-button').click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p12-new-conversation.png` });
+await page.keyboard.press('Escape');
+await page.waitForTimeout(300);
+// 7 · the empty thread pane (no conversation selected on a fresh view)
+await page.reload({ waitUntil: 'networkidle' });
+await page.waitForTimeout(1200);
+await page.locator('#me-anchor').click();
+await page.waitForTimeout(300);
+await page.locator('ui-menu.profile-menu ui-menu-item', { hasText: 'Messages' }).click();
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p12-page-empty.png` });
+
 await browser.close(); srv.close();
 console.log('shots written to', OUT);

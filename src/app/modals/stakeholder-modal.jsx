@@ -142,6 +142,31 @@ export function Owners({ users, value, onChange, readonly, size }) {
   );
 }
 
+/* Shared ui-avatar bridge (single source — Settings + Messaging compose it):
+ * the per-identity color is DATA (a token reference string from the seed /
+ * user record) flowing in as the --ui-avatar-bg custom property via ref
+ * (inline style= is banned; this is the established imperative bridge). */
+export function UAv({ user, size, ring, presence, slot }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (user?.avatarColor) el.style.setProperty('--ui-avatar-bg', user.avatarColor);
+    else el.style.removeProperty('--ui-avatar-bg');
+  }, [user]);
+  return (
+    <ui-avatar
+      ref={ref}
+      slot={slot || undefined}
+      name={user?.name || ''}
+      src={user?.avatarUrl || undefined}
+      size={size || 'sm'}
+      ring={ring ? '' : undefined}
+      presence={presence || undefined}
+    ></ui-avatar>
+  );
+}
+
 export function TA({ value, onValue, placeholder, rows }) {
   const ref = useRef(null);
   useEffect(() => {

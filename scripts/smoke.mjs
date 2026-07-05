@@ -355,6 +355,97 @@ for (const path of pages) {
     const themeReset = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
     if (accentReset !== '#B5552C') errs.push(`P11RESETACCENT: expected the tokens.css start-state #B5552C, saw "${accentReset}"`);
     if (themeReset !== null) errs.push(`P11RESETTHEME: expected no data-theme after reset, saw "${themeReset}"`);
+    // Phase 12: Messaging — the app-bar toggle opens the right-edge sidebar
+    // (5 seed conversations, Reminders pinned first); a thread opens in the
+    // sidebar and CARRIES OVER to the full page via the expand control
+    // (census J2, sidebar closes); sending persists; opening stamps the REAL
+    // read marker; the @-mention composer pops, picks, renders a live chip,
+    // and the chip routes to the stakeholder's READ view (A20 ruling); the
+    // new-conversation modal DEDUPES an existing DM; the Reminders thread is
+    // read-only (no composer) with the RULED "Automated reminders" subline.
+    await page.locator('ui-app-bar ui-icon-button[aria-label="Messages"]').click({ timeout: 3000 }).catch(e => errs.push('P12TOGGLE: ' + e.message));
+    await page.waitForTimeout(500);
+    const sideOpen = await page.locator('ui-sheet.messaging-sidebar[open]').count();
+    if (sideOpen !== 1) errs.push(`P12SIDEBAR: expected the messaging sidebar open, saw ${sideOpen}`);
+    const convRows = await page.locator('.messaging-sidebar .conv-row').count();
+    if (convRows !== 5) errs.push(`P12CONVS: expected the 5 seed conversations, saw ${convRows}`);
+    const firstRow = (await page.locator('.messaging-sidebar .conv-row').first().textContent().catch(() => '') || '');
+    if (!firstRow.includes('Reminders')) errs.push('P12PIN: the Reminders system row must be pinned first');
+    await page.locator('.messaging-sidebar .conv-row', { hasText: 'Jordan Kim, Sam Okafor' }).click({ timeout: 3000 }).catch(e => errs.push('P12OPEN: ' + e.message));
+    await page.waitForTimeout(400);
+    const sideMsgs = await page.locator('.messaging-sidebar .message-thread .msg').count();
+    if (sideMsgs !== 3) errs.push(`P12THREAD: expected the 3 seeded c-001 messages, saw ${sideMsgs}`);
+    // expand → full page, same conversation, sidebar closed (J2)
+    await page.locator('.messaging-sidebar ui-icon-button[aria-label="Open full Messages page"]').click({ timeout: 3000 }).catch(e => errs.push('P12EXPAND: ' + e.message));
+    await page.waitForTimeout(500);
+    if (await page.locator('.messaging-page').count() !== 1) errs.push('P12PAGE: the full Messages page did not mount');
+    if (await page.locator('ui-sheet.messaging-sidebar[open]').count() !== 0) errs.push('P12EXPANDCLOSE: expanding must close the sidebar (sealed)');
+    const pageTitle = (await page.locator('.messaging-page-head .conv-head-title').textContent().catch(() => '') || '').trim();
+    if (pageTitle !== 'Jordan Kim, Sam Okafor') errs.push(`P12CARRY: the open conversation must carry over, saw "${pageTitle}"`);
+    // the open stamped a REAL read marker (make-real unread)
+    const readStamp = await page.evaluate(() => {
+      const reads = JSON.parse(localStorage.getItem('hpsm:reads') || '{}');
+      return (reads['u-alex'] || {})['c-001'];
+    });
+    if (!readStamp) errs.push('P12READ: opening the conversation did not stamp reads[u-alex][c-001]');
+    // send a plain message (Enter submits; Shift+Enter would newline)
+    await page.locator('.messaging-page .composer ui-textarea textarea').click({ timeout: 3000 }).catch(e => errs.push('P12COMPOSE: ' + e.message));
+    await page.keyboard.type('Smoke check message');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(400);
+    const sent = await page.evaluate(() => {
+      const msgs = JSON.parse(localStorage.getItem('hpsm:messages') || '{}');
+      const list = msgs['c-001'] || [];
+      const last = list[list.length - 1] || {};
+      return { len: list.length, body: last.body, from: last.from, kindAbsent: !('kind' in last) };
+    });
+    if (sent.len !== 4 || sent.body !== 'Smoke check message' || sent.from !== 'u-alex') errs.push(`P12SEND: the message did not persist (${JSON.stringify(sent)})`);
+    if (!sent.kindAbsent) errs.push('P12SEND: ordinary messages must carry NO kind field (sealed)');
+    // @-mention: popover → Enter picks → send → live chip → READ-view route
+    await page.locator('.messaging-page .composer ui-textarea textarea').click({ timeout: 3000 }).catch(e => errs.push('P12MENTION: ' + e.message));
+    await page.keyboard.type('@Maria');
+    await page.waitForTimeout(300);
+    const popCount = await page.locator('.mention-pop ui-list-item').count();
+    if (popCount < 1) errs.push(`P12POP: expected the mention popover, saw ${popCount} options`);
+    await page.keyboard.press('Enter'); // picks the highlighted match
+    await page.waitForTimeout(200);
+    await page.keyboard.press('Enter'); // sends the tokenized body
+    await page.waitForTimeout(400);
+    const chipCount = await page.locator('.messaging-page .message-thread .msg-bubble ui-chip.mention-chip.t-stk').count();
+    if (chipCount < 1) errs.push('P12CHIP: the sent mention did not render as a live stakeholder chip');
+    await page.locator('.messaging-page .message-thread ui-chip.mention-chip.t-stk', { hasText: 'Mayor Maria Chen' }).last().click({ timeout: 3000 }).catch(e => errs.push('P12ROUTE: ' + e.message));
+    await page.waitForTimeout(600);
+    const routedDialog = await page.locator('ui-dialog.sh-dialog[open]').count();
+    if (routedDialog !== 1) errs.push(`P12ROUTE: expected the stakeholder record open, saw ${routedDialog} dialogs`);
+    const dialogText = await page.locator('ui-dialog.sh-dialog').textContent().catch(() => '');
+    if (!/Edit stakeholder/i.test(dialogText || '')) errs.push('P12READVIEW: the mention deep link must land on the READ view (A20 ruling — Edit one click away)');
+    await page.evaluate(() => document.querySelectorAll('ui-dialog').forEach(d => d.close && d.close()));
+    await page.waitForTimeout(300);
+    // ProfileMenu "Messages" (census A8, now live) returns to the page
+    await page.locator('#me-anchor').click({ timeout: 3000 }).catch(e => errs.push('P12MENU: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('ui-menu.profile-menu ui-menu-item', { hasText: 'Messages' }).click({ timeout: 3000 }).catch(e => errs.push('P12MENUITEM: ' + e.message));
+    await page.waitForTimeout(400);
+    if (await page.locator('.messaging-page').count() !== 1) errs.push('P12A8: the ProfileMenu Messages item did not mount the page');
+    // new-conversation modal: picking an existing DM partner DEDUPES (sealed)
+    await page.locator('.messaging-list-head ui-button').click({ timeout: 3000 }).catch(e => errs.push('P12NEW: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('.msg-new-modal .user-picker ui-list-item', { hasText: 'Jordan Kim' }).click({ timeout: 3000 }).catch(e => errs.push('P12PICK: ' + e.message));
+    await page.waitForTimeout(200);
+    await page.locator('.msg-new-modal ui-button', { hasText: 'Start conversation' }).click({ timeout: 3000 }).catch(e => errs.push('P12START: ' + e.message));
+    await page.waitForTimeout(400);
+    const dmTitle = (await page.locator('.messaging-page-head .conv-head-title').textContent().catch(() => '') || '').trim();
+    if (dmTitle !== 'Jordan Kim') errs.push(`P12DEDUPE: expected the existing DM thread open, saw "${dmTitle}"`);
+    const convCount = await page.evaluate(() => JSON.parse(localStorage.getItem('hpsm:conversations') || '[]').length);
+    if (convCount !== 5) errs.push(`P12DEDUPE: an existing DM must be REUSED, never duplicated — saw ${convCount} conversations`);
+    // the Reminders thread: read-only (no composer) + the RULED subline
+    await page.locator('.messaging-page .conv-row', { hasText: 'Reminders' }).click({ timeout: 3000 }).catch(e => errs.push('P12SYS: ' + e.message));
+    await page.waitForTimeout(400);
+    if (await page.locator('.messaging-thread-pane .composer').count() !== 0) errs.push('P12SYSRO: the system thread must mount NO composer (read-only ruling)');
+    const sysSub = (await page.locator('.messaging-page-head .conv-subline').textContent().catch(() => '') || '').trim();
+    if (sysSub !== 'Automated reminders') errs.push(`P12SYSSUB: expected "Automated reminders", saw "${sysSub}"`);
+    const sysAv = await page.locator('.messaging-page-head .av-system').count();
+    if (sysAv !== 1) errs.push('P12SYSAV: the opened system head must show the sparkle system avatar (ruling)');
   }
   if (path.includes('wireframes')) {
     await page.locator('#theme-modern').click({ timeout: 3000 }).catch(e => errs.push('TOGGLE: ' + e.message));

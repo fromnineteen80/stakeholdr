@@ -52,7 +52,7 @@ function noteDate(at) {
 
 export function SheetPage({
   createNonce = 0, activeWorkspaceId = MASTER_WORKSPACE_ID, onOpenCommunityEntry,
-  onOpenWorkspace,
+  onOpenWorkspace, openStakeholderId = null, onConsumeOpen,
 }) {
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
   const [scores, setScores] = usePersistentState('scores', SEED_SCORES);
@@ -257,6 +257,20 @@ export function SheetPage({
     }
   }, [createNonce]);
 
+  /* DEEP-LINK OPEN (Phase 12; census C6 mechanics, A20/I4 READ-VIEW ruling):
+   * a shell-routed stakeholder request (mention chip, later palette/profile
+   * rows) opens THAT record in the read-only profile view — Edit stays one
+   * click away — then consumes the seam. The shell's resolver already
+   * guarded existence (census A23); the some() here keeps the page honest
+   * against a mid-flight delete. */
+  useEffect(() => {
+    if (!openStakeholderId) return;
+    if (stakeholders.some((s) => s.id === openStakeholderId)) {
+      setShModal({ mode: 'edit', id: openStakeholderId, view: true });
+    }
+    if (onConsumeOpen) onConsumeOpen();
+  }, [openStakeholderId]);
+
   /* addStakeholder (sealed): mint uid("sh"); stamp createdBy + createdAt/
    * updatedAt; owners default to [currentUser.id] when empty; PREPEND to the
    * collection; write the workspace join; post the SYSTEM MESSAGE to c-system
@@ -286,7 +300,7 @@ export function SheetPage({
         {
           id: uid('m'),
           from: 'u-system',
-          body: scoringNeededBody(rec.name, rec.type),
+          body: scoringNeededBody(rec.name, rec.type, rec.id),
           at: nowStamp(),
           kind: 'scoring-needed',
         },

@@ -1082,18 +1082,29 @@
    "tag": "ui-sheet",
    "status": "built",
    "category": "gapFill",
-   "summary": "Mobile bottom sheet (MD3 web has none); drag-handle, scrim, swipe-down/Esc/scrim-tap close; show()/close().",
+   "summary": "Overlay panel: bottom sheet (mobile; drag-handle, swipe-down) or side=\"right\" full-height right-edge panel (the sealed messaging-sidebar / side-popup pattern; width --ui-sys-sheet-side-width, slides in from the right, no drag handle). Scrim, Esc/scrim-tap close; show()/close().",
    "props": [
     {
      "name": "open",
      "type": "boolean",
      "default": false
+    },
+    {
+     "name": "side",
+     "type": "enum",
+     "values": [
+      "bottom",
+      "right"
+     ],
+     "default": "bottom",
+     "note": "right = full-height right-edge overlay column; content slot becomes a flex column so hosts lay out head/body/foot rows"
     }
    ],
    "states": [
     "open",
     "closed",
-    "dragging"
+    "dragging",
+    "side-right"
    ],
    "import": "./components/sheet.js"
   },
@@ -1344,6 +1355,15 @@
      "type": "boolean",
      "default": false,
      "note": "2px surface ring for overlapping stacks (industry standard)"
+    },
+    {
+     "name": "presence",
+     "type": "enum",
+     "values": [
+      "online"
+     ],
+     "default": "",
+     "note": "\"online\" renders the sealed lower-right live-presence dot (--ui-sys-presence-online, ~28% of the avatar, surface ring); any other/absent value renders no dot"
     }
    ],
    "states": [
@@ -1351,7 +1371,8 @@
     "photo",
     "sm",
     "md",
-    "lg"
+    "lg",
+    "presence-online"
    ],
    "import": "./components/avatar.js"
   },
@@ -1359,7 +1380,7 @@
    "tag": "ui-textarea",
    "status": "built",
    "category": "gapFill",
-   "summary": "Outlined multiline text field, visually consistent with ui-text-field; floating label, error state, supporting text, rows, maxlength with live right-aligned 'N / MAX' counter (error ink at limit), optional auto-grow, form-associated.",
+   "summary": "Outlined multiline text field, visually consistent with ui-text-field; floating label, error state, supporting text, rows, maxlength with live right-aligned 'N / MAX' counter (error ink at limit), optional auto-grow, form-associated. Exposes selectionStart / setSelectionRange() delegating to the inner control (caret-anchored features, e.g. the sealed mention composer).",
    "props": [
     {
      "name": "label",
@@ -1662,7 +1683,7 @@
    "tag": "ui-swatch-card",
    "status": "built",
    "category": "gapFill",
-   "summary": "Selectable preview-swatch card (the sealed Settings GAP): a real shadow <button> holding a preview circle (swatch-bg) with an inner dot (swatch-dot), a label, and a sublabel. variant=card (theme presets) | dot (circle-only color tile, the 7 brand/accent config swatches). selected (reflected) draws the ring from swatch-border. role=radio + aria-checked; a [role=radiogroup] container gets arrow-key movement + roving tabindex across sibling cards. Preview colors arrive as props (token references or data values) — never inline hex in screen markup.",
+   "summary": "Selectable preview-swatch card (the sealed Settings GAP): a real shadow <button> holding a preview circle (swatch-bg) with an inner dot (swatch-dot), a label, and a sublabel. variant=card (theme presets) | dot (circle-only color tile, the 7 brand/accent config swatches). selected (reflected) draws the ring from swatch-border. role=radio + aria-checked; a [role=radiogroup] container gets arrow-key movement + roving tabindex across sibling cards. Preview colors arrive as props (token references or data values) \u2014 never inline hex in screen markup.",
    "props": [
     {
      "name": "value",
@@ -1698,7 +1719,7 @@
      "name": "swatch-bg",
      "type": "string",
      "default": "",
-     "note": "preview circle fill — a var(--ui-sys-*) reference or a data value"
+     "note": "preview circle fill \u2014 a var(--ui-sys-*) reference or a data value"
     },
     {
      "name": "swatch-dot",
@@ -1737,7 +1758,7 @@
    "tag": "ui-color-field",
    "status": "built",
    "category": "gapFill",
-   "summary": "Custom-color escape hatch (the sealed BeakerColorField): a ui-icon 'science' flask tinted to the current value with a HIDDEN native <input type=color> overlaid — the flask is the affordance, the OS picker is the mechanism. The raw input lives inside the shadow root (the ui-upload precedent). title defaults to the sealed 'Pick a custom color'.",
+   "summary": "Custom-color escape hatch (the sealed BeakerColorField): a ui-icon 'science' flask tinted to the current value with a HIDDEN native <input type=color> overlaid \u2014 the flask is the affordance, the OS picker is the mechanism. The raw input lives inside the shadow root (the ui-upload precedent). title defaults to the sealed 'Pick a custom color'.",
    "props": [
     {
      "name": "value",
@@ -1774,7 +1795,7 @@
  },
  "data": {
   "settings-data": {
-   "summary": "Token-adjacent DATA module for the Settings hub + Design dashboard: the sealed 7-swatch brand/accent catalog (CONFIG_SWATCHES, hex values + their --ui-sys-config-swatch-* render tokens), BRAND_DEFAULT, the sealed THEME_PRESETS (ids/labels/subs + theme-preview token refs), the ACCENT_CANDIDATES for the open accent-hue decision, and WRAPPER_THEMES (Cream default vs Modern). Sealed hex catalogs are DATA (option values stored in appConfig), not styling — they live here because the app-code guard bans literal hex in src/app.",
+   "summary": "Token-adjacent DATA module for the Settings hub + Design dashboard: the sealed 7-swatch brand/accent catalog (CONFIG_SWATCHES, hex values + their --ui-sys-config-swatch-* render tokens), BRAND_DEFAULT, the sealed THEME_PRESETS (ids/labels/subs + theme-preview token refs), the ACCENT_CANDIDATES for the open accent-hue decision, and WRAPPER_THEMES (Cream default vs Modern). Sealed hex catalogs are DATA (option values stored in appConfig), not styling \u2014 they live here because the app-code guard bans literal hex in src/app.",
    "import": "./settings-data.js"
   }
  }

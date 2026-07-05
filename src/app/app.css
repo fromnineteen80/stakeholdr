@@ -1340,3 +1340,192 @@ ui-sidebar[collapsed] .brand { margin-left: 0; }
 .integration-trailing { display: inline-flex; align-items: center; gap: var(--ui-sys-space-2); }
 
 .settings-denied { padding: var(--ui-sys-space-6); }
+
+/* ═══ PHASE 12 — MESSAGING (sealed TREES 1–7; token-only) ═══════════════════ */
+
+/* ── TREE 2: the full page — two panes (list rail on container grey, thread
+ * on white content — sidebars never white, main content white). */
+.messaging-page {
+  height: 100%;
+  display: grid;
+  grid-template-columns: clamp(240px, 24vw, 320px) 1fr;
+  background: var(--ui-sys-surface-card);
+  border: 1px solid var(--ui-sys-outline-subtle);
+  border-radius: var(--ui-sys-shape-card);
+  overflow: hidden;
+}
+.messaging-list-pane {
+  background: var(--ui-sys-surface-container);
+  border-right: 1px solid var(--ui-sys-outline-subtle);
+  display: flex; flex-direction: column;
+  min-height: 0;
+}
+.messaging-list-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--ui-sys-space-4);
+  gap: var(--ui-sys-space-3);
+}
+.messaging-list-head h2 { font: var(--ui-sys-font-title); margin: 0; }
+.messaging-thread-pane {
+  display: flex; flex-direction: column;
+  min-width: 0; min-height: 0;
+}
+
+/* Empty thread pane (sealed empty-state composition). */
+.messaging-empty {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--ui-sys-space-2);
+  text-align: center;
+  padding: var(--ui-sys-space-6);
+}
+.messaging-empty-ico { color: var(--ui-sys-on-surface-faint); font-size: 40px; }
+.messaging-empty h3 { font: var(--ui-sys-font-title); margin: 0; }
+.messaging-empty p {
+  font: var(--ui-sys-font-body); color: var(--ui-sys-on-surface-muted);
+  margin: 0 0 var(--ui-sys-space-3); max-width: 340px;
+}
+
+/* ── TREE 3: conversation list (ui-list rows; compact in the sidebar). */
+.conv-list { flex: 1; min-height: 0; overflow-y: auto; display: block; }
+.conv-list ui-list-item { --ui-sys-list-item-pad-block: var(--ui-sys-space-2); }
+.conv-list.compact ui-list-item { --ui-sys-list-item-min-height: 44px; }
+/* Census group I: conv-row.active shares the ONE accent tint scale with
+ * user-picker-row.picked (the sealed rgba(181,85,44,.06) siblings). */
+.conv-row.conv-active { background: var(--ui-sys-accent-tint-faint); }
+/* Sealed system-row wash pair (rest / hover). */
+.conv-row.conv-system { background: var(--ui-sys-system-row-wash); }
+.conv-row.conv-system:hover { background: var(--ui-sys-system-row-wash-hover); }
+.conv-lead { display: inline-flex; align-items: center; }
+.conv-time {
+  font: var(--ui-sys-font-caption);
+  color: var(--ui-sys-on-surface-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.conv-preview { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* System avatar (sealed .av-system → the avatar variant's own tokened style:
+ * accent surface, on-accent glyph ink — never the oracle's !important). */
+.av-system {
+  width: var(--ui-sys-avatar-size-md); height: var(--ui-sys-avatar-size-md);
+  flex: 0 0 auto;
+  border-radius: var(--ui-sys-shape-pill);
+  background: var(--ui-sys-accent); color: var(--ui-sys-on-accent);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.av-system.lg { width: var(--ui-sys-avatar-size-lg); height: var(--ui-sys-avatar-size-lg); }
+
+/* Avatar stack (sealed conv-multi-avatar: the first 2 others at 0.7x,
+ * overlapped — a composition of the shared ui-avatar primitive). */
+.conv-multi-avatar {
+  position: relative; display: inline-block; flex: 0 0 auto;
+  width: var(--ui-sys-avatar-size-md); height: var(--ui-sys-avatar-size-md);
+}
+.conv-multi-avatar.lg { width: var(--ui-sys-avatar-size-lg); height: var(--ui-sys-avatar-size-lg); }
+.conv-multi-avatar ui-avatar { position: absolute; top: 0; left: 0; }
+.conv-multi-avatar ui-avatar:last-child { top: auto; left: auto; right: 0; bottom: 0; }
+
+/* ── Open-conversation heads (TREE 1/2). */
+.messaging-conv-head, .messaging-page-head {
+  display: flex; align-items: center; gap: var(--ui-sys-space-3);
+  padding: var(--ui-sys-space-3) var(--ui-sys-space-4);
+  border-bottom: 1px solid var(--ui-sys-outline-subtle);
+}
+.conv-head-text { min-width: 0; flex: 1; }
+.conv-head-title { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.messaging-page-head h3.conv-head-title { font: var(--ui-sys-font-title); margin: 0; }
+.conv-subline { font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted); }
+
+/* ── TREE 5: the thread. */
+.message-thread {
+  flex: 1; min-height: 0; overflow-y: auto;
+  padding: var(--ui-sys-space-4);
+  display: flex; flex-direction: column; gap: var(--ui-sys-space-3);
+}
+.thread-empty {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  font: var(--ui-sys-font-body); color: var(--ui-sys-on-surface-muted);
+  padding: var(--ui-sys-space-6);
+}
+.msg { display: flex; gap: var(--ui-sys-space-2); align-items: flex-start; }
+.msg.grouped { margin-top: calc(-1 * var(--ui-sys-space-2)); }
+.msg-spacer { flex: 0 0 var(--ui-sys-avatar-size-sm); }
+.msg-body { min-width: 0; max-width: 72%; display: flex; flex-direction: column; gap: var(--ui-sys-space-1); }
+.msg.mine { justify-content: flex-end; }
+.msg.mine .msg-body { align-items: flex-end; }
+.msg-meta { display: flex; align-items: baseline; gap: var(--ui-sys-space-2); }
+.msg-author { font: var(--ui-sys-font-caption); font-weight: 500; color: var(--ui-sys-on-surface); }
+.msg-time { font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted); font-variant-numeric: tabular-nums; }
+/* Sealed bubble roles: mine vs other = different --ui-sys surface roles. */
+.msg-bubble {
+  background: var(--ui-sys-surface-field);
+  border-radius: var(--ui-sys-shape-card);
+  padding: var(--ui-sys-space-2) var(--ui-sys-space-3);
+  font: var(--ui-sys-font-body);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+/* Census group F: the captured mine-bubble = ACCENT fill with the sealed
+ * near-paper on-accent ink (#FAF8F2 → --ui-sys-on-accent). */
+.msg.mine .msg-bubble {
+  background: var(--ui-sys-accent);
+  color: var(--ui-sys-on-accent);
+}
+.msg-action { align-self: flex-start; }
+.msg.mine .msg-action { align-self: flex-end; }
+
+/* Mention chips (sealed t-* type keys → the --ui-sys-mention-* tokens). */
+.mention-chip { vertical-align: middle; margin: 0 2px; }
+.mention-dot {
+  width: 8px; height: 8px; flex: 0 0 auto;
+  border-radius: var(--ui-sys-shape-pill);
+  background: var(--ui-sys-on-surface-faint);
+}
+.t-stk .mention-dot, .mention-dot.t-stk { background: var(--ui-sys-mention-stakeholder); }
+.t-wsp .mention-dot, .mention-dot.t-wsp { background: var(--ui-sys-mention-workspace); }
+.t-pln .mention-dot, .mention-dot.t-pln { background: var(--ui-sys-mention-plan); }
+.t-cmy .mention-dot, .mention-dot.t-cmy { background: var(--ui-sys-mention-community); }
+
+/* ── TREE 6: the composer + the mention popover. */
+.composer {
+  display: flex; align-items: flex-end; gap: var(--ui-sys-space-2);
+  padding: var(--ui-sys-space-3) var(--ui-sys-space-4);
+  border-top: 1px solid var(--ui-sys-outline-subtle);
+}
+.composer-field { position: relative; flex: 1; min-width: 0; }
+.composer-field ui-textarea { display: block; width: 100%; }
+.mention-pop {
+  position: absolute; bottom: calc(100% + var(--ui-sys-space-1)); left: 0;
+  min-width: 240px; max-width: 100%;
+  background: var(--ui-sys-surface-card);
+  border: 1px solid var(--ui-sys-outline-subtle);
+  border-radius: var(--ui-sys-shape-control);
+  box-shadow: var(--ui-sys-elevation-2);
+  overflow: hidden;
+  z-index: 30;
+}
+.mention-pop ui-list-item { --ui-sys-list-item-min-height: 36px; }
+.mention-opt.on { background: var(--ui-sys-surface-hover); }
+
+/* ── TREE 7: the new-conversation dialog. */
+/* Sealed head row: h2 text + the ghost close on one line. */
+.msg-new-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--ui-sys-space-2);
+}
+.picked-wrap { display: flex; flex-wrap: wrap; gap: var(--ui-sys-space-2); margin-top: var(--ui-sys-space-2); }
+.picked-chip { --ui-sys-avatar-size-sm: 20px; }
+.user-picker { display: block; max-height: 240px; overflow-y: auto; }
+.picker-lead { display: inline-flex; align-items: center; gap: var(--ui-sys-space-2); }
+.user-picker-row.picked { background: var(--ui-sys-accent-tint-faint); }
+
+/* ── TREE 1: the right-edge sidebar (ui-sheet side="right"). */
+.messaging-sidebar-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--ui-sys-space-2) var(--ui-sys-space-3);
+  border-bottom: 1px solid var(--ui-sys-outline-subtle);
+}
+.msgs-head-title { display: inline-flex; align-items: center; gap: var(--ui-sys-space-2); font: var(--ui-sys-font-body); }
+.msgs-head-actions { display: inline-flex; align-items: center; gap: var(--ui-sys-space-1); }
+.messaging-back { align-self: flex-start; margin: var(--ui-sys-space-1) var(--ui-sys-space-2) 0; }

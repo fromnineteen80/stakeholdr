@@ -160,9 +160,15 @@ export const CREATE_NOTICE =
   "Score isn't set yet. Your team will be notified — they'll see this " +
   'stakeholder at the top of their Sheet and the count on Scoring.';
 
-/* addStakeholder SYSTEM MESSAGE body (sealed, exact). */
-export function scoringNeededBody(name, type) {
-  return `New stakeholder added: ${name} (${type}). Please score them on the Scoring tab.`;
+/* addStakeholder SYSTEM MESSAGE body (sealed, exact). Census J8 MAKE-REAL:
+ * when the new record's id is passed, the subject embeds as a {{stk:id|name}}
+ * mention token — the rendered text stays the sealed sentence verbatim (the
+ * token's label IS the name) but the name becomes a live chip deep-linking to
+ * the record, per the census worklist ("system notifications deep-link to
+ * their subject"). Without an id the sealed plain sentence is unchanged. */
+export function scoringNeededBody(name, type, id) {
+  const subject = id ? `{{stk:${id}|${name}}}` : name;
+  return `New stakeholder added: ${subject} (${type}). Please score them on the Scoring tab.`;
 }
 
 /* Delete-confirm body (sealed): "{displayName(existing) || existing.name} and

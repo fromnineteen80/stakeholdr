@@ -96,7 +96,7 @@ import {
   CONFIG_SWATCHES, BRAND_DEFAULT, THEME_PRESETS, ACCENT_CANDIDATES,
   WRAPPER_THEMES,
 } from '../../../design-system/settings-data.js';
-import { useUiEvent, Field, TF, Sel } from '../modals/stakeholder-modal.jsx';
+import { useUiEvent, Field, TF, Sel, UAv } from '../modals/stakeholder-modal.jsx';
 
 /* ── small bridges ────────────────────────────────────────────────────────── */
 
@@ -115,14 +115,8 @@ function Tinted({ className, color, title, children }) {
   return <span ref={ref} className={className} title={title}>{children}</span>;
 }
 
-function UiAvatar({ user, size }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (el && user?.avatarColor) el.style.setProperty('--ui-avatar-bg', user.avatarColor);
-  }, [user]);
-  return <ui-avatar ref={ref} name={user?.name || ''} size={size || 'sm'}></ui-avatar>;
-}
+/* Avatar bridge: the shared UAv (stakeholder-modal.jsx — Phase-12 single
+ * source; replace-don't-duplicate). */
 
 function ColorField({ value, onChange }) {
   const ref = useRef(null);
@@ -431,7 +425,7 @@ function RolesTable({ users, currentUser, filter, onFilter, onRole }) {
             return (
               <tr key={u.id} className={'roles-row' + (self ? ' self' : '')}>
                 <td className="roles-person">
-                  <UiAvatar user={u} size="sm" />
+                  <UAv user={u} size="sm" />
                   <span className="roles-name">{u.name}</span>
                 </td>
                 <td className="roles-email muted">{u.email}</td>

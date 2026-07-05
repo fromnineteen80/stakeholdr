@@ -1,9 +1,14 @@
 /* ============================================================================
- * <ui-sheet> — bottom sheet (mobile).
+ * <ui-sheet> — bottom sheet (mobile) + right side panel (desktop overlay).
  * category: gapFill / MOBILE
  *
  * Attributes:
  *   open  (bool)
+ *   side  ("bottom" default | "right") — right = a full-height right-edge
+ *          overlay panel (the sealed messaging-sidebar / side-popup pattern):
+ *          slides in from the right, width --ui-sys-sheet-side-width, no
+ *          drag handle (Esc / scrim-tap / close() dismiss), content column
+ *          fills the height so hosts lay out head/body/composer rows.
  *
  * Slot default — content
  *
@@ -11,9 +16,9 @@
  * Events:  close (bubbles, composed)
  *
  * Behaviour:
- *   - Slides up from bottom on open, slides back down on close
- *   - Drag-handle affordance at top center
- *   - Scrim backdrop; tap scrim or swipe-down or Esc closes
+ *   - Slides up from bottom (or in from the right) on open
+ *   - Drag-handle affordance at top center (bottom variant only)
+ *   - Scrim backdrop; tap scrim or swipe-down (bottom) or Esc closes
  *   - --ui-sys-surface-card bg, --ui-sys-shape-card top radius
  *   - elevation-3 shadow
  *   role=dialog, aria-modal=true
@@ -86,6 +91,38 @@ template.innerHTML = `
     [part="content"] {
       padding: 0 var(--ui-sys-space-4) var(--ui-sys-space-4);
     }
+
+    /* side="right" — full-height right-edge overlay panel */
+    :host([side="right"]) [part="sheet"] {
+      top: 0;
+      bottom: 0;
+      left: auto;
+      right: 0;
+      height: 100dvh;
+      max-height: none;
+      width: var(--ui-sys-sheet-side-width, 360px);
+      max-width: 92vw;
+      border-radius: 0;
+      transform: translateX(100%);
+      padding-bottom: 0;
+      display: flex;
+      flex-direction: column;
+      overflow-y: hidden;
+    }
+    :host([side="right"][open]) [part="sheet"] {
+      transform: translateX(0);
+    }
+    :host([side="right"]) [part="handle-bar"] { display: none; }
+    :host([side="right"]) [part="content"] {
+      padding: 0;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    /* slotted children participate directly in the side panel's column so
+       hosts can flex the body row (head / list-or-thread / composer) */
+    :host([side="right"]) [part="content"] slot { display: contents; }
   </style>
   <div part="scrim" aria-hidden="true"></div>
   <div part="sheet" role="dialog" aria-modal="true" tabindex="-1">
@@ -160,6 +197,9 @@ class UiSheet extends HTMLElement {
   #onScrimClick = () => this.close();
 
   #onKeydown = (e) => {
+    // An inner surface (e.g. a slotted composer's mention popover) that has
+    // already consumed this Escape must not also dismiss the sheet.
+    if (e.defaultPrevented) return;
     if (e.key === 'Escape' && this.hasAttribute('open')) {
       e.preventDefault();
       this.close();
