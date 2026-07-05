@@ -2092,3 +2092,11 @@ ui-sidebar.record-nav[collapsed] .record-nav-title { display: none; }
   justify-content: flex-end;
 }
 .intel-card-foot-spacer { flex: 1 1 0; }
+/* Make-real: the disabled View-all's phase note renders VISIBLY (a disabled
+ * ui-button is pointer-events:none, so a title tooltip can never surface). */
+.intel-viewall-note {
+  font: var(--ui-sys-font-caption);
+  color: var(--ui-sys-on-surface-muted);
+  text-align: right;
+  margin-top: var(--ui-sys-space-1);
+}

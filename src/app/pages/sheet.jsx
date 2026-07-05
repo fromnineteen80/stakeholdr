@@ -428,11 +428,13 @@ export function SheetPage({
     setWorkhqMode('table');
   };
 
-  /* Ruled ignores (per-user, through the ONE Store seam). */
-  const workhqIgnore = (cardKey, entryKey) =>
-    setIntelIgnores((prev) => withIgnores(prev, currentUser?.id, cardKey, [entryKey]));
-  const workhqIgnoreAll = (cardKey, entryKeys) =>
-    setIntelIgnores((prev) => withIgnores(prev, currentUser?.id, cardKey, entryKeys));
+  /* Ruled ignores (per-user, through the ONE Store seam). liveKeys = the
+   * card's current entry keys, passed by the band so each WRITE also GCs
+   * ignore keys whose entry no longer exists (bounded — never on render). */
+  const workhqIgnore = (cardKey, entryKey, liveKeys) =>
+    setIntelIgnores((prev) => withIgnores(prev, currentUser?.id, cardKey, [entryKey], liveKeys));
+  const workhqIgnoreAll = (cardKey, entryKeys, liveKeys) =>
+    setIntelIgnores((prev) => withIgnores(prev, currentUser?.id, cardKey, entryKeys, liveKeys));
   const workhqUnignore = (cardKey, entryKey) =>
     setIntelIgnores((prev) => withoutIgnore(prev, currentUser?.id, cardKey, entryKey));
 

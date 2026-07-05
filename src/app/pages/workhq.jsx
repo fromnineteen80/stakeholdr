@@ -41,6 +41,15 @@
  *     stakeholder record); every card's "+N more" overflow chip expands the
  *     band to intel mode (the bigger sealed capped preview) when clickable.
  *  E. All signal math is memoized over the host-supplied visible set.
+ *
+ * DEPARTURES LEDGER:
+ *  · The sealed IntelCard carried a fuller prop surface — stack/value/sub
+ *    display variants (guide ~2200, ~2217–2221: "the rebuild should preserve
+ *    it"). NOT COMPOSED here (orchestrator ruling, 2026-07-05 audit): the
+ *    four ruled cards are rows-only, and the sealed mix bar survives as the
+ *    summary's mix chip (ruling A). No dead variant code ships; a future
+ *    card needing stack/value/sub composes it from the same primitives
+ *    (ui-card + ui-list / ui-badge) rather than reviving a bespoke card API.
  */
 import { useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
@@ -71,6 +80,7 @@ function IgnoredMenu({ anchorId, entries, keyOf, labelOf, onRestore }) {
     const el = ref.current;
     if (el) el.setAttribute('anchor', anchorId);
   }, [anchorId]);
+  const over = entries.length - 30;
   return createPortal(
     <ui-menu ref={ref} class="intel-ignored-menu">
       {entries.slice(0, 30).map((e) => (
@@ -80,6 +90,13 @@ function IgnoredMenu({ anchorId, entries, keyOf, labelOf, onRestore }) {
           {labelOf(e)}
         </ui-menu-item>
       ))}
+      {/* Honest cap: the row cap (30) must never truncate SILENTLY — a
+          disabled (non-interactive) terminal row declares the remainder. */}
+      {over > 0 && (
+        <ui-menu-item disabled class="intel-ignored-more">
+          +{over} more
+        </ui-menu-item>
+      )}
     </ui-menu>,
     document.body,
   );
@@ -94,6 +111,10 @@ function WorkHQCard({
   const cap = capFor(cardKey, mode);
   const shown = entries.slice(0, cap);
   const more = entries.length - shown.length;
+  // The card's LIVE key set rides every ignore write so the host can GC
+  // stale ignore keys at the write (workhq-logic withIgnores; visible +
+  // ignored = every entry that still exists for this card).
+  const liveKeys = [...entries, ...ignored].map(keyOf);
   return (
     <ui-card
       variant="outlined"
@@ -133,7 +154,7 @@ function WorkHQCard({
               {supportingOf ? <span slot="supporting">{supportingOf(e)}</span> : null}
               <ui-icon-button slot="trailing" size="xs" class="intel-ignore-x"
                               aria-label={`Ignore: ${labelOf(e)}`} title="Ignore"
-                              onClick={(ev) => { ev.stopPropagation(); onIgnore(cardKey, keyOf(e)); }}>
+                              onClick={(ev) => { ev.stopPropagation(); onIgnore(cardKey, keyOf(e), liveKeys); }}>
                 <ui-icon size="xs">close</ui-icon>
               </ui-icon-button>
             </ui-list-item>
@@ -155,7 +176,7 @@ function WorkHQCard({
         {entries.length > 0 && (
           <ui-button variant="text" class="intel-ignore-all"
                      title={`Ignore all ${entries.length}`}
-                     onClick={() => onIgnoreAll(cardKey, entries.map(keyOf))}>
+                     onClick={() => onIgnoreAll(cardKey, entries.map(keyOf), liveKeys)}>
             Ignore all
           </ui-button>
         )}
@@ -168,6 +189,11 @@ function WorkHQCard({
           </ui-button>
         )}
       </div>
+      {/* Make-real law: a disabled ui-button swallows pointer events, so its
+          title can never surface — the phase note must be VISIBLE. */}
+      {viewAll && viewAll.disabled && (
+        <div className="intel-viewall-note">{viewAll.title}</div>
+      )}
     </ui-card>
   );
 }

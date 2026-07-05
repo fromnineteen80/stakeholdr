@@ -173,12 +173,20 @@ export function capFor(cardKey, mode) {
 export function userIgnores(all, userId) {
   return (all || {})[userId] || {};
 }
-export function withIgnores(all, userId, cardKey, entryKeys) {
+export function withIgnores(all, userId, cardKey, entryKeys, liveKeys) {
   if (!userId) return all || {};
   const mine = { ...((all || {})[userId] || {}) };
   const set = new Set(mine[cardKey] || []);
   for (const k of entryKeys || []) set.add(k);
-  mine[cardKey] = [...set];
+  let next = [...set];
+  // GC — ON WRITE ONLY (cheap, bounded; splitIgnored stays pure): when the
+  // caller passes the card's LIVE key set, ignore keys whose entry no longer
+  // exists are dropped instead of accumulating forever in the store.
+  if (liveKeys) {
+    const live = new Set([...liveKeys, ...(entryKeys || [])]);
+    next = next.filter((k) => live.has(k));
+  }
+  mine[cardKey] = next;
   return { ...(all || {}), [userId]: mine };
 }
 export function withoutIgnore(all, userId, cardKey, entryKey) {

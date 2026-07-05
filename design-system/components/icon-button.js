@@ -16,7 +16,10 @@
  *              pair it with <ui-icon size="xs"> and tabindex="-1" — the
  *              keyboard path is the number field itself)
  *   disabled — boolean
- *   selected — boolean  (for toggle; toggles filled bg on standard/outlined)
+ *   selected — boolean  (the on-state; toggles filled bg on standard/outlined)
+ *   toggle   — boolean; OPT-IN self-toggling: click flips `selected` and
+ *              emits change {selected}. Controlled consumers omit it and
+ *              re-render `selected` from their own state.
  *   aria-label — required for accessibility
  *
  * Emits: change (composed:true, detail:{selected}) when selected toggles
@@ -158,7 +161,7 @@ template.innerHTML = `
 `;
 
 class UiIconButton extends HTMLElement {
-  static observedAttributes = ['disabled', 'selected', 'aria-label', 'aria-pressed', 'tabindex'];
+  static observedAttributes = ['disabled', 'selected', 'toggle', 'aria-label', 'aria-pressed', 'tabindex'];
 
   #btn;
 
@@ -200,16 +203,26 @@ class UiIconButton extends HTMLElement {
     // Reflect aria-label to inner button
     const label = this.getAttribute('aria-label');
     if (label) this.#btn.setAttribute('aria-label', label);
-    // Toggle button semantics: aria-pressed
-    if (this.hasAttribute('selected') || this.getAttribute('aria-pressed') !== null) {
+    // Toggle button semantics: aria-pressed reflects the CURRENT selected
+    // state whenever the host is toggle-shaped (toggle/selected/aria-pressed)
+    // or the inner button already carries aria-pressed — once pressy, it must
+    // keep tracking selected (a deselected host must read pressed=false,
+    // never a stale true).
+    if (this.hasAttribute('toggle') || this.hasAttribute('selected')
+        || this.getAttribute('aria-pressed') !== null
+        || this.#btn.hasAttribute('aria-pressed')) {
       this.#btn.setAttribute('aria-pressed', String(this.hasAttribute('selected')));
     }
   }
 
   #onClick = () => {
     if (this.hasAttribute('disabled')) return;
-    // If it behaves as a toggle (has aria-pressed or selected attr was set once)
-    if (this.#btn.hasAttribute('aria-pressed')) {
+    // Self-toggling is OPT-IN via the `toggle` attribute (manifest).
+    // CONTROLLED consumers (the host re-renders `selected` from its own
+    // state, e.g. the workHQ mode group) omit it: self-toggling there let a
+    // re-click of the active button strip the on-state with no state change
+    // to restore it (2026-07-05 Phase 15 audit, finding 2).
+    if (this.hasAttribute('toggle')) {
       this.selected = !this.selected;
       this.dispatchEvent(new CustomEvent('change', {
         bubbles: true, composed: true,

@@ -725,6 +725,21 @@ for (const path of pages) {
     await page.locator('ui-menu.intel-ignored-menu[open] ui-menu-item', { hasText: p15fx.hi }).click({ timeout: 3000 }).catch(e => errs.push('P15RESTORE: ' + e.message));
     await page.waitForTimeout(400);
     if (await page.locator('.intel-card[data-card="cold"] ui-list-item', { hasText: p15fx.hi }).count() !== 1) errs.push('P15UNIGNORE: un-ignoring did not restore the entry');
+    // KEYBOARD ignore (audit fix 1): Enter on the focused slotted ignore
+    // button must activate THE BUTTON (entry ignored), never the row (the
+    // record must NOT open) — ui-list-item leaves slotted keys alone
+    await page.evaluate(() => {
+      document.querySelector('.intel-card[data-card="cold"] ui-list-item ui-icon-button[aria-label^="Ignore:"]')?.focus();
+    });
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(400);
+    if (await page.locator('ui-dialog.sh-dialog[open]').count() !== 0) errs.push('P15KBDIGNORE: Enter on the ignore button row-activated into the record');
+    if (await page.locator('.intel-card[data-card="cold"] ui-list-item').count() !== 0) errs.push('P15KBDIGNORE2: Enter on the ignore button did not ignore the entry');
+    await page.locator('.intel-card[data-card="cold"] .intel-ignored-btn').click({ timeout: 3000 }).catch(e => errs.push('P15KBDRESTOREBTN: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('ui-menu.intel-ignored-menu[open] ui-menu-item', { hasText: p15fx.hi }).click({ timeout: 3000 }).catch(e => errs.push('P15KBDRESTORE: ' + e.message));
+    await page.waitForTimeout(300);
+    if (await page.locator('.intel-card[data-card="cold"] ui-list-item', { hasText: p15fx.hi }).count() !== 1) errs.push('P15KBDRESTORE2: restoring the keyboard-ignored entry failed');
     // "Ignore all" folds the whole card at once (votes card, 1 entry)
     await page.locator('.intel-card[data-card="votes"] ui-button.intel-ignore-all').click({ timeout: 3000 }).catch(e => errs.push('P15IGNALL: ' + e.message));
     await page.waitForTimeout(300);
@@ -739,6 +754,12 @@ for (const path of pages) {
     await page.waitForTimeout(300);
     if (await page.locator('.intel-split[data-mode="table"]').count() !== 1) errs.push('P15TABLEMODE: data-mode did not flip to table');
     if (await page.locator('.intel-card').count() !== 0) errs.push('P15TABLECARDS: cards must not render in table mode (sealed)');
+    // audit fix 2: re-clicking the ACTIVE mode button must keep the on-state
+    // (sealed head: the active mode always carries selected; self-toggling
+    // is opt-in via the icon-button `toggle` attr, absent here)
+    await page.locator('.intel-modes ui-icon-button[aria-label="Expand table"]').click({ timeout: 3000 }).catch(e => errs.push('P15MODERECLICK: ' + e.message));
+    await page.waitForTimeout(300);
+    if (await page.locator('.intel-modes ui-icon-button[aria-label="Expand table"][selected]').count() !== 1) errs.push('P15MODESTICK: re-clicking the active mode button dropped its selected indicator');
     const sumText = (await page.locator('.intel-summary-text').textContent().catch(() => '') || '').trim();
     if (!/going cold|need your score|awaiting your vote/.test(sumText)) errs.push(`P15SUMMARY: expected the sealed summary join, saw "${sumText}"`);
     await page.reload({ waitUntil: 'networkidle', timeout: 30000 }).catch(e => errs.push('P15RELOAD3: ' + e.message));
@@ -763,8 +784,12 @@ for (const path of pages) {
     await page.locator('.intel-card[data-card="alerts"] ui-list-item', { hasText: 'comment letter' }).click({ timeout: 3000 }).catch(e => errs.push('P15DRILL: ' + e.message));
     await page.waitForTimeout(500);
     if (await page.locator('ui-dialog.sh-dialog[open]').count() !== 1) errs.push('P15DRILLOPEN: the alert entry did not open the stakeholder record');
-    const p15DlgText = await page.locator('ui-dialog.sh-dialog').textContent().catch(() => '');
-    if (!/Edit stakeholder/i.test(p15DlgText || '')) errs.push('P15READVIEW: the drill must land on the READ view (A20 ruling)');
+    // read-view-SPECIFIC markers (audit fix 7): .prof-header exists only on
+    // the read profile; .sh-title only on the edit/create form ("Edit
+    // stakeholder" text matches BOTH surfaces — the read view's flip button
+    // and the form title — so it proves nothing)
+    if (await page.locator('ui-dialog.sh-dialog[open] .prof-header').count() !== 1) errs.push('P15READVIEW: the drill must land on the READ view (.prof-header, A20 ruling)');
+    if (await page.locator('ui-dialog.sh-dialog[open] .sh-title').count() !== 0) errs.push('P15READVIEW2: the drill landed on the EDIT form, not the read view');
     await page.evaluate(() => document.querySelectorAll('ui-dialog').forEach(d => d.close && d.close()));
     await page.waitForTimeout(300);
     // a Vote entry drills to that community entry's read page
@@ -775,7 +800,17 @@ for (const path of pages) {
     await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Lists' }).click({ timeout: 3000 }).catch(e => errs.push('P15BACK3: ' + e.message));
     await page.waitForTimeout(500);
     // ruled cold "View all": Lists PRE-FILTERED (High only, stalest first)
-    // via the declared table preset; the band collapses to table mode
+    // via the declared table preset; the band collapses to table mode.
+    // Arm an orthogonal filter FIRST (audit fix 5): the preset is a clean
+    // slate — a leftover search must not intersect the landing.
+    await page.evaluate(() => {
+      const t = document.querySelector('ui-stakeholder-table');
+      const sf = t.shadowRoot.querySelector('.search-field');
+      sf.value = 'zzz-no-row-matches-this';
+      sf.dispatchEvent(new Event('input'));
+    });
+    await page.waitForTimeout(300);
+    if (await page.evaluate(() => document.querySelector('ui-stakeholder-table').shadowRoot.querySelectorAll('.sheet-row').length) !== 0) errs.push('P15PRESETARM: the arming search did not filter the table');
     await page.locator('.intel-card[data-card="cold"] ui-button.intel-view-all').click({ timeout: 3000 }).catch(e => errs.push('P15COLDVA: ' + e.message));
     await page.waitForTimeout(500);
     if (await page.locator('.intel-split[data-mode="table"]').count() !== 1) errs.push('P15COLDMODE: cold View-all must collapse the band to table mode');
@@ -784,8 +819,10 @@ for (const path of pages) {
       const rows = [...t.shadowRoot.querySelectorAll('.sheet-row')];
       const firstName = rows.length ? (rows[0].querySelector('[data-key="name"]')?.textContent || '').trim() : '';
       const shs = JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]');
-      return { shown: rows.length, high: shs.filter(s => s.priority === 'High').length, firstName };
+      const searchVal = t.shadowRoot.querySelector('.search-field').value;
+      return { shown: rows.length, high: shs.filter(s => s.priority === 'High').length, firstName, searchVal };
     });
+    if (preset.searchVal !== '') errs.push(`P15PRESETSLATE: the preset must clear the orthogonal search, saw "${preset.searchVal}"`);
     if (preset.shown !== preset.high) errs.push(`P15PRESET: expected the ${preset.high} High-priority rows, saw ${preset.shown}`);
     if (!preset.firstName.includes(p15fx.hi)) errs.push(`P15PRESETSORT: expected the stalest High row first ("${p15fx.hi}"), saw "${preset.firstName}"`);
   }

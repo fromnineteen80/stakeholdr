@@ -1,7 +1,9 @@
 /* ============================================================================
  * <ui-list> + <ui-list-item> — vertical list with optional interactivity.
  * ui-list-item slots: leading, default (headline), supporting, trailing.
- * Attr `interactive` → role=button, hover state layer, keyboard activation.
+ * Attr `interactive` → role=button, hover state layer, keyboard activation
+ * (row-owned keys only: Enter/Space from a focused SLOTTED interactive child
+ * activates that child natively, never the row).
  * Attr `wrap` (item) → the headline flows to multiple lines (reading lists)
  * instead of the default single-line ellipsis truncation.
  * Row geometry reads --ui-sys-list-item-min-height / -pad-block / -pad-inline
@@ -169,6 +171,13 @@ class UiListItem extends HTMLElement {
 
   #onKeyDown = (e) => {
     if (!this.hasAttribute('interactive')) return;
+    // Slotted interactive children (a trailing ui-icon-button, a leading
+    // ui-checkbox…) own their own Enter/Space: activating the ROW from a
+    // focused child would both kill the child's native activation
+    // (preventDefault) and misfire the row action. composedPath()[0] is the
+    // innermost real target — only a key press on the item itself (the
+    // shadow row is the only focusable node in this scope) activates the row.
+    if (e.composedPath()[0] !== this.#item) return;
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       this.#item.click();

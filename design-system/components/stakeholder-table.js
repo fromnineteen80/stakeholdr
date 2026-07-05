@@ -1084,19 +1084,27 @@ class UiStakeholderTable extends HTMLElement {
 
   /* preset (DECLARED 2026-07-05, Phase 15 — registered in manifest.json):
    * the ruled "smallest honest mechanism" for pre-filtered drill-through
-   * landings (workHQ cold "View all"). Sets the SAME filter/sort state the
+   * landings (workHQ cold "View all"). PRESET = A CLEAN SLATE + the given
+   * filters/sort: search, Categories, Sites and the impact-band filter reset
+   * FIRST, so the landing shows exactly the preset state — an orthogonal
+   * filter left armed would silently intersect it (2026-07-05 audit,
+   * finding 5). What it then sets is the SAME filter/sort state the
    * Filter/Sort popovers set — badges, Clear all and the pipeline behave
    * exactly as if the user had armed them by hand; nothing bypasses the one
    * filtering pipeline. Shape: { filters?: { type/priority/status/owners/
    * issues/zone: [] }, sortKey?: string|null, sortDir?: 'asc'|'desc' }.     */
   set preset(p) {
     if (!p || typeof p !== 'object') return;
-    if (p.filters) {
-      this.#filters = {
-        type: [], priority: [], status: [], owners: [], issues: [], zone: [],
-        ...p.filters,
-      };
-    }
+    this.#search = '';
+    const sf = this.shadowRoot.querySelector('.search-field');
+    if (sf) sf.value = '';
+    this.#catFilter = [];
+    this.#siteFilter = [];
+    this.#bandFilter = [];
+    this.#filters = {
+      type: [], priority: [], status: [], owners: [], issues: [], zone: [],
+      ...(p.filters || {}),
+    };
     if ('sortKey' in p) {
       this.#sortKey = p.sortKey || null;
       this.#sortDir = p.sortDir === 'desc' ? 'desc' : 'asc';

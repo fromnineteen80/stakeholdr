@@ -236,6 +236,21 @@ ok('persistence shape: { userId → { cardKey → [entryKey] } }', () => {
   assert.deepEqual(userIgnores(all, 'u-2'), { votes: ['ca-1'] });
   assert.deepEqual(userIgnores(all, 'u-ghost'), {});
 });
+ok('withIgnores GCs stale keys ON WRITE when given the live key set (audit fix 6)', () => {
+  // 'gone-id' was ignored while its entry existed; the entry is gone by the
+  // next write — passing liveKeys prunes it, keeping the store bounded.
+  let all = withIgnores({}, 'u-1', 'cold', ['gone-id']);
+  all = withIgnores(all, 'u-1', 'cold', ['sh-2'], ['sh-1', 'sh-2']);
+  assert.deepEqual(all['u-1'].cold.sort(), ['sh-2']);
+  // no liveKeys → no GC (backward-compatible accumulate-only write)
+  let keep = withIgnores({}, 'u-1', 'cold', ['gone-id']);
+  keep = withIgnores(keep, 'u-1', 'cold', ['sh-2']);
+  assert.deepEqual(keep['u-1'].cold.sort(), ['gone-id', 'sh-2']);
+  // other cards are untouched by a GC'ing write
+  let multi = withIgnores({}, 'u-1', 'votes', ['ca-dead']);
+  multi = withIgnores(multi, 'u-1', 'cold', ['sh-1'], ['sh-1']);
+  assert.deepEqual(multi['u-1'].votes, ['ca-dead']);
+});
 ok('withoutIgnore un-ignores exactly one key', () => {
   let all = withIgnores({}, 'u-1', 'cold', ['sh-1', 'sh-2']);
   all = withoutIgnore(all, 'u-1', 'cold', 'sh-1');
