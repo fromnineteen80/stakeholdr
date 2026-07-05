@@ -22,6 +22,38 @@
  * user-open {userId} (I6 make-real: an owners-popover row opens that user's
  * profile), export-csv {csv,filename}.
  *
+ * ══ PHASE 17 — SCALE HARDENING (DECLARED 2026-07-05; unsealed scale
+ * engineering + forward-design, per the standing thousands-of-stakeholders
+ * ruling — nothing sealed changes below the declared surface) ══
+ * · VIRTUALIZED BODY: above VIRTUAL_THRESHOLD filtered rows the grid renders
+ *   ONLY the scroll window (+ VIRTUAL_OVERSCAN rows each side) between two
+ *   full-width spacer rows (the standard fixed-row-height windowing pattern;
+ *   no library — deps are guard-forbidden). Below the threshold behavior is
+ *   IDENTICAL to the sealed render (every row mounted), so demo-scale
+ *   workspaces, the record embeds and the gallery are pixel-unchanged. Row
+ *   height is MEASURED from the first rendered body row (fallback
+ *   DEFAULT_ROW_H) — the sealed 36px min-height cell + 1px rule. Everything
+ *   sealed rides on top unchanged: the filter/sort pipeline runs over the
+ *   FULL set, the footer counts and Avg x/y read #filtered (never the
+ *   window), the CSV export serializes the FULL filtered/sorted set, sticky
+ *   header/frozen columns/editors/popovers work inside the window. ACCEPTED
+ *   TRADEOFF (declared): tracks stay max-content (the sealed no-fixed-widths
+ *   truth), so column widths can shift as the window scrolls past longer
+ *   values; frozen offsets re-measure per window.
+ * · SELECTION (forward-design; the sealed box names bulk actions with no
+ *   oracle spec): an OPT-IN leading frozen checkbox column (the `selectable`
+ *   attribute — hosts without a bulk-action surface never show a dead
+ *   affordance, make-real law). Row checkboxes are REAL ui-checkbox
+ *   elements; the header checkbox selects the FILTERED set (indeterminate on
+ *   a partial selection); shift-click extends from the last-clicked anchor
+ *   (industry standard). Selection is exposed as the `selection` property
+ *   (id array), pruned when rows leave .data, and every change emits
+ *   bulk-selection-change {ids,count}; clearSelection() and exportSelected()
+ *   (the sealed CSV logic over the selected rows, filtered order) serve the
+ *   host-owned action bar. Checking a row never row-highlights it (the
+ *   sealed single-row selection-change stays a separate channel).
+ * ══════════════════════════════════════════════════════════════════════════
+ *
  * NORMALIZATION RULINGS honored (recorded in the sealed box, ruled for this
  * build by the phase directive): all four toolbar popovers are mutually
  * exclusive and ALL close on outside-mousedown + Escape (the oracle's
@@ -79,6 +111,7 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
   import('./select.js');
   import('./date-picker.js');
   import('./avatar.js');
+  import('./checkbox.js'); // Phase 17: the REAL selection checkboxes
 }
 
 /* ── ZONE + BAND CATALOGS (sealed Relationship-engine box) ─────────────── */
@@ -154,6 +187,12 @@ export const REORDER_COLS = [
 ];
 
 export const REORDER_KEYS = REORDER_COLS.map((c) => c.key);
+
+/* Phase 17 (declared forward-design): the OPT-IN leading selection column —
+ * rendered only when the host sets the `selectable` attribute. Deliberately
+ * NOT added to FROZEN_COLS: the sealed frozen four stay the sealed contract;
+ * this column is a declared addition ahead of them.                         */
+export const SELECT_COL = { key: 'sel', label: '', field: null };
 
 /* Sealed LIVE localStorage key (per-device, not synced).                     */
 export const COL_ORDER_STORAGE_KEY = 'hp_map_col_order_v3';
@@ -466,6 +505,96 @@ export function cellClass(key) {
   return cls.join(' ');
 }
 
+/* ── PHASE 17 PURE LOGIC — virtualization window math + selection sets ──
+ * (declared scale hardening; unit-tested by scripts/scale-test.mjs)        */
+
+/* The body virtualizes only past this filtered-row count — below it every
+ * row mounts exactly as the sealed render did (transparent at demo scale). */
+export const VIRTUAL_THRESHOLD = 150;
+/* Overscan rows rendered beyond each viewport edge — generous so text-target
+ * drives (and fast wheel scrolling) always find near-window rows mounted.   */
+export const VIRTUAL_OVERSCAN = 15;
+/* Fallback row height until the first body row is measured: the sealed
+ * 36px cell min-height + the 1px row rule.                                  */
+export const DEFAULT_ROW_H = 37;
+
+/* computeWindow — the one windowing formula: which slice of the filtered
+ * array renders, and the spacer heights that keep the scrollbar honest.
+ * Row i's content top = headerHeight + i*rowHeight (the sticky header also
+ * occupies the first grid row in normal flow). Clamped at both edges; a
+ * total at-or-under the window renders whole (start 0 / end total).         */
+export function computeWindow({
+  scrollTop = 0, viewportHeight = 0, rowHeight = DEFAULT_ROW_H,
+  total = 0, overscan = VIRTUAL_OVERSCAN, headerHeight = 0,
+} = {}) {
+  const t = Math.max(0, Math.floor(total));
+  const rh = Math.max(1, rowHeight);
+  if (!t) return { start: 0, end: 0, topPad: 0, bottomPad: 0 };
+  const first = Math.floor(Math.max(0, scrollTop - headerHeight) / rh);
+  const visible = Math.ceil(Math.max(0, viewportHeight) / rh) + 1;
+  const start = Math.min(Math.max(0, first - overscan), t);
+  const end = Math.min(t, Math.max(start, first + visible + overscan));
+  return {
+    start,
+    end,
+    topPad: Math.round(start * rh),
+    bottomPad: Math.round((t - end) * rh),
+  };
+}
+
+/* selectAllState(selectedIds, filteredIds) → 'none' | 'some' | 'all' — the
+ * header checkbox tri-state, computed against the FILTERED set (the ruled
+ * select-all semantics: select-all means everything the filters admit,
+ * never just the rendered window).                                          */
+export function selectAllState(selectedIds, filteredIds) {
+  const sel = new Set(asArr(selectedIds));
+  const ids = asArr(filteredIds);
+  if (!ids.length || !sel.size) return 'none';
+  const hit = ids.filter((id) => sel.has(id)).length;
+  if (!hit) return 'none';
+  return hit === ids.length ? 'all' : 'some';
+}
+
+/* toggleSelectAll — header-checkbox action: 'all' → drop the filtered ids
+ * from the selection (ids selected outside the current filter survive);
+ * otherwise → union the filtered set in.                                    */
+export function toggleSelectAll(selectedIds, filteredIds) {
+  const sel = new Set(asArr(selectedIds));
+  const ids = asArr(filteredIds);
+  if (selectAllState(selectedIds, filteredIds) === 'all') {
+    for (const id of ids) sel.delete(id);
+  } else {
+    for (const id of ids) sel.add(id);
+  }
+  return [...sel];
+}
+
+/* rangeIds(orderedIds, anchorId, targetId) — the shift-click span, inclusive,
+ * in the CURRENT filtered/sorted order; a missing anchor (filtered away or
+ * never set) degrades to the single target.                                 */
+export function rangeIds(orderedIds, anchorId, targetId) {
+  const ids = asArr(orderedIds);
+  const a = ids.indexOf(anchorId);
+  const b = ids.indexOf(targetId);
+  if (a < 0 || b < 0) return b < 0 ? [] : [targetId];
+  return ids.slice(Math.min(a, b), Math.max(a, b) + 1);
+}
+
+/* applyRangeSelection — shift-click semantics: the whole span takes the
+ * CLICKED checkbox's new state (check extends, uncheck clears the span).    */
+export function applyRangeSelection(selectedIds, span, checked) {
+  const sel = new Set(asArr(selectedIds));
+  for (const id of asArr(span)) checked ? sel.add(id) : sel.delete(id);
+  return [...sel];
+}
+
+/* pruneSelection — selection survives filter changes but never dangles past
+ * a delete/data swap: keep only ids present in the current data.            */
+export function pruneSelection(selectedIds, rows) {
+  const live = new Set(asArr(rows).map((r) => r.id));
+  return asArr(selectedIds).filter((id) => live.has(id));
+}
+
 /* ════════════════════════════════════════════════════════════════════════
  * DOM COMPONENT — defined only in a browser context (node imports the pure
  * logic above without touching the DOM).
@@ -741,6 +870,7 @@ template.innerHTML = `
      land in the --_fl-* custom properties on the grid. */
   .sheet-cell.frozen { position: sticky; z-index: 10; }
   .sheet-head .sheet-cell.frozen { z-index: 30; }
+  .frozen-sel  { left: var(--_fl-sel, 0px); }  /* Phase 17 opt-in selection column */
   .frozen-idx  { left: var(--_fl-idx, 0px); }
   .frozen-edit { left: var(--_fl-edit, 0px); }
   .frozen-name { left: var(--_fl-name, 0px); }
@@ -750,9 +880,19 @@ template.innerHTML = `
 
   /* Body rows: hover + selection (hover matches through display:contents) */
   .sheet-row:hover .sheet-cell { background: var(--ui-sys-surface-hover); }
+  /* Phase 17: bulk-checked rows wear the SAME selected-row wash token (one
+     visual language for "this row is picked"); the single-click .selected
+     highlight below still wins when both apply. */
+  .sheet-row.checked .sheet-cell { background: var(--ui-sys-row-selected); }
   .sheet-row.selected .sheet-cell { background: var(--ui-sys-row-selected); }
   .sheet-row.selected .sheet-cell.idx { background: var(--ui-sys-row-selected-strong); }
   .sheet-row { cursor: default; }
+
+  /* Phase 17: the opt-in selection cell (a REAL ui-checkbox, centered) and
+     the virtualization spacer rows (full-width grid items whose heights keep
+     the scrollbar honest while off-window rows stay unmounted). */
+  .sheet-cell.sel { justify-content: center; padding: 0 var(--ui-sys-space-2); }
+  .v-spacer { grid-column: 1 / -1; background: var(--ui-sys-surface-card); }
 
   .sheet-cell.idx {
     justify-content: center;
@@ -803,8 +943,14 @@ template.innerHTML = `
   /* Dropdown/date DISPLAY cells (lightweight renders per the COMPOSITION
      RULING). Clicking one mounts the REAL editor — <ui-select> / <ui-date-
      picker> — absolutely positioned in the cell; the display hides while the
-     editor is mounted so the max-content track keeps its size. */
-  .sheet-cell:not(.frozen) { position: relative; }
+     editor is mounted so the max-content track keeps its size.
+     FIX (Phase-17 visual gate, 2026-07-05): scoped to BODY cells. Unscoped,
+     this rule also matched non-frozen HEADER cells and its position:relative
+     silently out-cascaded their sealed position:sticky (equal specificity,
+     later rule) — the header lost its right half on deep vertical scroll, a
+     defect invisible at demo scroll depths and exposed by the 2,000-row
+     virtualization probe. Editors only ever mount in body cells. */
+  .sheet-row .sheet-cell:not(.frozen) { position: relative; }
   .cell-dd { display: inline-flex; }
   .cell-dd-trigger {
     appearance: none;
@@ -1043,10 +1189,24 @@ class UiStakeholderTable extends HTMLElement {
   #docMousedown = null;
   #docKeydown = null;
 
+  /* Phase 17 — bulk selection (opt-in via the `selectable` attribute) */
+  #selection = new Set();   // selected row ids (persists across filters; pruned on data swap)
+  #selAnchor = null;        // last-clicked row id — the shift-click range anchor
+  #shiftPending = false;    // shiftKey captured on the checkbox click, read by its change
+
+  /* Phase 17 — virtualization internals */
+  #virtual = false;         // true when #filtered.length > VIRTUAL_THRESHOLD
+  #rowH = DEFAULT_ROW_H;    // measured from the first rendered body row
+  #winStart = -1;           // rendered window [start, end) over #filtered
+  #winEnd = -1;
+  #topSpacer = null;
+  #bottomSpacer = null;
+  #scrollRaf = 0;
+
   /* kbd-label (finding: single source) — the cmd-key hint text is NOT derived
    * here; the page passes it from the store's exported single source
    * (src/app/data/store.js → cmdKeyLabel). Empty/absent hides the chip. */
-  static observedAttributes = ['kbd-label'];
+  static observedAttributes = ['kbd-label', 'selectable'];
 
   constructor() {
     super();
@@ -1055,6 +1215,7 @@ class UiStakeholderTable extends HTMLElement {
 
   attributeChangedCallback(name) {
     if (name === 'kbd-label') this.#syncKbd();
+    if (name === 'selectable') this.#render(); // column set changed
   }
 
   /* ── public API ────────────────────────────────────────────────── */
@@ -1064,10 +1225,45 @@ class UiStakeholderTable extends HTMLElement {
     else this.removeAttribute('kbd-label');
   }
 
+  /* Phase 17: opt-in selection column (attribute) — hosts without a bulk
+   * action surface never render a dead affordance (make-real law). */
+  get selectable() { return this.hasAttribute('selectable'); }
+  set selectable(v) {
+    if (v) this.setAttribute('selectable', '');
+    else this.removeAttribute('selectable');
+  }
+
+  /* Phase 17: the live selection (id array). Writable so a host can restore
+   * or clear programmatically; every change (user or property) emits
+   * bulk-selection-change so the host bar stays in sync. */
+  get selection() { return [...this.#selection]; }
+  set selection(ids) {
+    this.#selection = new Set(Array.isArray(ids) ? ids : []);
+    this.#selAnchor = null;
+    this.#render();
+    this.#emitSelection();
+  }
+  clearSelection() { this.selection = []; }
+
+  /* Selected rows in the CURRENT filtered/sorted order (feeds the host's
+   * "Export selected" through the one sealed CSV path). */
+  get selectedRows() { return this.#filtered.filter((r) => this.#selection.has(r.id)); }
+
+  /* Export ONLY the selection — the sealed exportCsv logic (column set,
+   * escaping, filename rule) over the selected rows, filtered order. */
+  exportSelected() {
+    if (this.#selection.size) this.#exportCsv(this.selectedRows);
+  }
+
   get data() { return this.#data; }
   set data(rows) {
     this.#data = Array.isArray(rows) ? rows : [];
+    // Phase 17: selection never dangles past a delete/data swap
+    const pruned = pruneSelection([...this.#selection], this.#data);
+    const shrank = pruned.length !== this.#selection.size;
+    if (shrank) this.#selection = new Set(pruned);
     this.#render();
+    if (shrank) this.#emitSelection();
   }
   get catalogs() { return this.#catalogs; }
   set catalogs(c) {
@@ -1157,12 +1353,20 @@ class UiStakeholderTable extends HTMLElement {
     sr.querySelector('.export-btn').addEventListener('click', () => this.#exportCsv());
 
     // one scroll container; .scrolled-x drives the frozen-edge shadow (sealed;
-    // guarded so re-renders never double-bind)
+    // guarded so re-renders never double-bind). Phase 17: the SAME listener
+    // drives the virtualization window (rAF-coalesced — one body rebuild per
+    // frame at most while scrolling).
     const scroll = sr.querySelector('.sheet-scroll');
     if (!scroll._scrollBound) {
       scroll._scrollBound = true;
       scroll.addEventListener('scroll', () => {
         scroll.classList.toggle('scrolled-x', scroll.scrollLeft > 0);
+        if (this.#virtual && !this.#scrollRaf) {
+          this.#scrollRaf = requestAnimationFrame(() => {
+            this.#scrollRaf = 0;
+            this.#renderWindow();
+          });
+        }
       });
     }
 
@@ -1173,6 +1377,7 @@ class UiStakeholderTable extends HTMLElement {
 
   disconnectedCallback() {
     this.#unbindDoc();
+    if (this.#scrollRaf) { cancelAnimationFrame(this.#scrollRaf); this.#scrollRaf = 0; }
   }
 
   #syncKbd() {
@@ -1243,7 +1448,14 @@ class UiStakeholderTable extends HTMLElement {
 
   #cols() {
     const byKey = Object.fromEntries(REORDER_COLS.map((c) => [c.key, c]));
-    return [...FROZEN_COLS, ...this.#colOrder.map((k) => byKey[k]).filter(Boolean)];
+    const frozen = this.selectable ? [SELECT_COL, ...FROZEN_COLS] : [...FROZEN_COLS];
+    return [...frozen, ...this.#colOrder.map((k) => byKey[k]).filter(Boolean)];
+  }
+
+  /* A column is frozen when it is one of the sealed four OR the declared
+   * Phase-17 selection column. */
+  #isFrozen(key) {
+    return key === 'sel' || FROZEN_COLS.some((f) => f.key === key);
   }
 
   #renderGrid() {
@@ -1260,13 +1472,82 @@ class UiStakeholderTable extends HTMLElement {
     for (const col of cols) head.appendChild(this.#buildHeaderCell(col));
     grid.appendChild(head);
 
-    // VIRTUALIZATION (declared): the sealed build map names a virtualized body
-    // for large workspaces; DEFERRED at demo scale (~20 rows) — to be
-    // implemented when workspaces exceed ~200 rows. Declared, not forgotten.
-    const frag = document.createDocumentFragment();
-    this.#filtered.forEach((row, i) => frag.appendChild(this.#buildRow(row, i, cols)));
-    grid.appendChild(frag);
+    // VIRTUALIZATION (Phase 17, declared — the build map named it; the
+    // thousands-of-stakeholders ruling landed it): past the threshold only
+    // the scroll window mounts, between two spacer rows. At-or-under the
+    // threshold the sealed every-row render is byte-identical.
+    this.#virtual = this.#filtered.length > VIRTUAL_THRESHOLD;
+    if (!this.#virtual) {
+      this.#topSpacer = this.#bottomSpacer = null;
+      this.#winStart = this.#winEnd = -1;
+      const frag = document.createDocumentFragment();
+      this.#filtered.forEach((row, i) => frag.appendChild(this.#buildRow(row, i, cols)));
+      grid.appendChild(frag);
+      this.#measureFrozen();
+      return;
+    }
 
+    this.#topSpacer = document.createElement('div');
+    this.#topSpacer.className = 'v-spacer';
+    this.#topSpacer.setAttribute('aria-hidden', 'true');
+    this.#bottomSpacer = this.#topSpacer.cloneNode();
+    grid.appendChild(this.#topSpacer);
+    grid.appendChild(this.#bottomSpacer);
+    this.#winStart = this.#winEnd = -1; // force a full window build
+    this.#renderWindow();
+  }
+
+  /* The current scroll window over #filtered (pure math in computeWindow). */
+  #windowMetrics() {
+    const scroll = this.shadowRoot.querySelector('.sheet-scroll');
+    const headCell = this.shadowRoot.querySelector('.sheet-head .sheet-cell');
+    return computeWindow({
+      scrollTop: scroll ? scroll.scrollTop : 0,
+      viewportHeight: scroll ? (scroll.clientHeight || 600) : 600,
+      rowHeight: this.#rowH,
+      total: this.#filtered.length,
+      overscan: VIRTUAL_OVERSCAN,
+      headerHeight: headCell ? headCell.getBoundingClientRect().height : 34,
+    });
+  }
+
+  /* Rebuild ONLY the windowed body rows between the spacers (virtual mode).
+   * In-grid popovers/editors live inside rows, so an open one closes before
+   * its host node is torn down (same rule the full re-render applies).      */
+  #renderWindow() {
+    if (!this.#virtual || !this.#topSpacer) return;
+    const w = this.#windowMetrics();
+    if (w.start === this.#winStart && w.end === this.#winEnd) return;
+    if (this.#openDD) this.#openDD.close();
+    if (this.#openEditor) this.#openEditor();
+
+    const grid = this.shadowRoot.querySelector('.sheet-grid');
+    const cols = this.#cols();
+    grid.querySelectorAll('.sheet-row').forEach((el) => el.remove());
+    const frag = document.createDocumentFragment();
+    for (let i = w.start; i < w.end; i++) {
+      frag.appendChild(this.#buildRow(this.#filtered[i], i, cols));
+    }
+    grid.insertBefore(frag, this.#bottomSpacer);
+    this.#topSpacer.style.height = w.topPad + 'px';
+    this.#bottomSpacer.style.height = w.bottomPad + 'px';
+    this.#winStart = w.start;
+    this.#winEnd = w.end;
+
+    // calibrate the measured row height off the first real body row once —
+    // if it differs from the assumption, the pads/window recompute one time
+    const cell = grid.querySelector('.sheet-row .sheet-cell');
+    if (cell) {
+      const h = cell.getBoundingClientRect().height;
+      if (h && Math.abs(h - this.#rowH) > 0.5) {
+        this.#rowH = h;
+        this.#winStart = this.#winEnd = -1;
+        this.#renderWindow();
+        return;
+      }
+    }
+    // max-content tracks can resize as the window changes — re-measure the
+    // frozen sticky lefts per window (declared tradeoff, header comment)
     this.#measureFrozen();
   }
 
@@ -1284,7 +1565,7 @@ class UiStakeholderTable extends HTMLElement {
   }
 
   #buildHeaderCell(col) {
-    const isFrozen = FROZEN_COLS.some((f) => f.key === col.key);
+    const isFrozen = this.#isFrozen(col.key);
     const cell = document.createElement('div');
     cell.setAttribute('role', 'columnheader');
     cell.dataset.key = col.key;
@@ -1292,6 +1573,27 @@ class UiStakeholderTable extends HTMLElement {
       (isFrozen ? ` frozen frozen-${col.key}` : ' col-draggable') +
       (col.key === 'idx' ? ' idx' : '') + (col.key === 'edit' ? ' edit' : '') +
       (col.key === '_x' || col.key === '_y' ? ' coord' : '');
+
+    // Phase 17: the select-all checkbox — the FILTERED set, tri-state
+    // (indeterminate on a partial selection); a REAL ui-checkbox.
+    if (col.key === 'sel') {
+      cell.classList.add('sel');
+      const filteredIds = this.#filtered.map((r) => r.id);
+      const state = selectAllState([...this.#selection], filteredIds);
+      const cb = document.createElement('ui-checkbox');
+      cb.setAttribute('aria-label', 'Select all filtered stakeholders');
+      if (state === 'all') cb.setAttribute('checked', '');
+      if (state === 'some') cb.setAttribute('indeterminate', '');
+      cb.addEventListener('change', (e) => {
+        e.stopPropagation();
+        this.#selection = new Set(toggleSelectAll([...this.#selection], filteredIds));
+        this.#selAnchor = null;
+        this.#render();
+        this.#emitSelection();
+      });
+      cell.appendChild(cb);
+      return cell;
+    }
 
     if (!isFrozen) {
       // drag-to-reorder (sealed mechanics incl. the guarded no-op drop and
@@ -1381,7 +1683,9 @@ class UiStakeholderTable extends HTMLElement {
   /* ── rows + cells ──────────────────────────────────────────────── */
   #buildRow(row, index, cols) {
     const tr = document.createElement('div');
-    tr.className = 'sheet-row' + (row.id === this.#selectedId ? ' selected' : '');
+    tr.className = 'sheet-row' +
+      (row.id === this.#selectedId ? ' selected' : '') +
+      (this.selectable && this.#selection.has(row.id) ? ' checked' : '');
     tr.setAttribute('role', 'row');
     tr.addEventListener('click', () => {
       this.#selectedId = row.id;
@@ -1397,6 +1701,11 @@ class UiStakeholderTable extends HTMLElement {
     this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
   }
   #patch(row, patch) { this.#emit('row-change', { id: row.id, patch }); }
+  /* Phase 17: every selection change flows out here — the host owns the
+   * action bar and all bulk writes (the events-out/props-in contract). */
+  #emitSelection() {
+    this.#emit('bulk-selection-change', { ids: [...this.#selection], count: this.#selection.size });
+  }
 
   #muted(cell) {
     const s = document.createElement('span');
@@ -1415,7 +1724,7 @@ class UiStakeholderTable extends HTMLElement {
    * community pills (the engagement name). Owner avatars carry the REAL
    * owners popover (sealed OwnersDisplay) instead of stacked title text.     */
   #buildCell(col, row, index) {
-    const isFrozen = FROZEN_COLS.some((f) => f.key === col.key);
+    const isFrozen = this.#isFrozen(col.key);
     const cell = document.createElement('div');
     cell.setAttribute('role', 'gridcell');
     cell.dataset.key = col.key;
@@ -1424,6 +1733,38 @@ class UiStakeholderTable extends HTMLElement {
     if (emphasis) cell.className += ' ' + emphasis;
 
     switch (col.key) {
+      // Phase 17: the row selection checkbox (REAL ui-checkbox). Checking a
+      // row is a BULK act — it never row-highlights (stopPropagation keeps
+      // the sealed single-row selection-change channel separate). Shift-click
+      // extends from the last-clicked anchor across the filtered order.
+      case 'sel': {
+        cell.classList.add('sel');
+        const cb = document.createElement('ui-checkbox');
+        cb.setAttribute('aria-label', `Select ${displayName(row) || row.name || 'row'}`);
+        if (this.#selection.has(row.id)) cb.setAttribute('checked', '');
+        // capture shiftKey BEFORE the component's own click toggles + fires
+        // change (this listener registers first — creation order)
+        cb.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.#shiftPending = e.shiftKey;
+        });
+        cb.addEventListener('change', (e) => {
+          e.stopPropagation();
+          const checked = cb.hasAttribute('checked'); // state AFTER the toggle
+          if (this.#shiftPending && this.#selAnchor && this.#selAnchor !== row.id) {
+            const span = rangeIds(this.#filtered.map((r) => r.id), this.#selAnchor, row.id);
+            this.#selection = new Set(applyRangeSelection([...this.#selection], span, checked));
+          } else {
+            checked ? this.#selection.add(row.id) : this.#selection.delete(row.id);
+          }
+          this.#shiftPending = false;
+          this.#selAnchor = row.id;
+          this.#render(); // syncs the header tri-state + row washes
+          this.#emitSelection();
+        });
+        cell.appendChild(cb);
+        break;
+      }
       case 'idx': {
         cell.classList.add('idx');
         cell.textContent = String(index + 1);
@@ -2078,8 +2419,12 @@ class UiStakeholderTable extends HTMLElement {
     sr.querySelector('.footer-avgy').textContent = avg('_y');
   }
 
-  #exportCsv() {
-    const csv = buildCsv(this.#filtered, this.#users);                   // the CURRENT filtered/sorted set (sealed)
+  /* Sealed export path — default rows = the CURRENT filtered/sorted set
+   * (sealed; virtualization never narrows this — the window is a render
+   * detail). Phase 17's exportSelected() feeds the selected rows through
+   * the SAME serializer/filename/download (replace-don't-duplicate). */
+  #exportCsv(rows = this.#filtered) {
+    const csv = buildCsv(rows, this.#users);
     const filename = csvFilename(this.#workspaceLabel);
     try {
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });

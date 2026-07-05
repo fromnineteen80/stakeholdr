@@ -908,6 +908,85 @@ for (const path of pages) {
     if (await page.locator('.cmdk-row').count() !== 0) errs.push('P16SYSTEM: the system user leaked into People results');
     await page.keyboard.press('Escape');
     await page.waitForTimeout(300);
+    // Phase 17: BULK ACTIONS on Lists — the opt-in selection column (REAL
+    // ui-checkbox per row), the host action bar (appears at ≥1 selected),
+    // Set-priority as ONE stamped write, select-all-FILTERED via the header
+    // tri-state, Export-selected over exactly the selection, shift-click
+    // range extension, Clear. (Virtualization is proven separately at 2k
+    // rows by scripts/scale-probe.mjs — the demo seed sits under the
+    // threshold, where rendering is sealed-identical.)
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Master' }).click({ timeout: 3000 }).catch(e => errs.push('P17NAV: ' + e.message));
+    await page.waitForTimeout(600);
+    if (await page.locator('.bulk-bar').count() !== 0) errs.push('P17BAR0: the action bar must not render with nothing selected');
+    const p17cbs = page.locator('ui-stakeholder-table .sheet-row ui-checkbox');
+    if (await p17cbs.count() < 4) errs.push(`P17COL: expected the selectable checkbox column on Lists, saw ${await p17cbs.count()} boxes`);
+    for (let i = 0; i < 3; i++) {
+      await p17cbs.nth(i).click({ timeout: 3000 }).catch(e => errs.push(`P17PICK${i}: ` + e.message));
+      await page.waitForTimeout(200);
+    }
+    if (await page.locator('.bulk-bar').count() !== 1) errs.push('P17BAR: the action bar did not appear on selection');
+    const p17count = (await page.locator('.bulk-bar .bulk-count').textContent().catch(() => '') || '').trim();
+    if (p17count !== '3 selected') errs.push(`P17COUNT: expected "3 selected", saw "${p17count}"`);
+    // capture the selected ids + their pre-action stamps (the table's public
+    // selection property is the declared host contract)
+    const p17before = await page.evaluate(() => {
+      const t = document.querySelector('ui-stakeholder-table');
+      const shs = JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]');
+      return t.selection.map(id => {
+        const s = shs.find(x => x.id === id) || {};
+        return { id, priority: s.priority, updatedAt: s.updatedAt };
+      });
+    });
+    if (p17before.length !== 3) errs.push(`P17SEL: expected 3 ids on the selection property, saw ${p17before.length}`);
+    // Set priority → Low (ONE setState through the pure builder; stamps updatedAt)
+    await page.locator('#bulk-priority-btn').click({ timeout: 3000 }).catch(e => errs.push('P17PRIOBTN: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('ui-menu.bulk-menu-priority[open] ui-menu-item', { hasText: 'Low' }).click({ timeout: 3000 }).catch(e => errs.push('P17PRIOPICK: ' + e.message));
+    await page.waitForTimeout(500);
+    const p17after = await page.evaluate((ids) => {
+      const shs = JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]');
+      return ids.map(id => {
+        const s = shs.find(x => x.id === id) || {};
+        return { id, priority: s.priority, updatedAt: s.updatedAt };
+      });
+    }, p17before.map(b => b.id));
+    for (const b of p17before) {
+      const a = p17after.find(x => x.id === b.id) || {};
+      if (a.priority !== 'Low') errs.push(`P17WRITE: ${b.id} priority expected Low, saw "${a.priority}"`);
+      if (!a.updatedAt || a.updatedAt === b.updatedAt) errs.push(`P17STAMP: ${b.id} updatedAt was not freshly stamped`);
+    }
+    const p17countAfter = (await page.locator('.bulk-bar .bulk-count').textContent().catch(() => '') || '').trim();
+    if (p17countAfter !== '3 selected') errs.push(`P17KEEP: the selection must survive the bulk write, saw "${p17countAfter}"`);
+    // select-all-FILTERED via the header checkbox (from 'some' → all)
+    await page.locator('ui-stakeholder-table .sheet-head ui-checkbox').click({ timeout: 3000 }).catch(e => errs.push('P17ALL: ' + e.message));
+    await page.waitForTimeout(400);
+    const p17total = await page.evaluate(() => JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]').length);
+    const p17allCount = (await page.locator('.bulk-bar .bulk-count').textContent().catch(() => '') || '').trim();
+    if (p17allCount !== `${p17total} selected`) errs.push(`P17ALLCOUNT: expected "${p17total} selected" (the FILTERED set = all on Master), saw "${p17allCount}"`);
+    // Export selected: the sealed CSV path over exactly the selection
+    await page.evaluate(() => {
+      const t = document.querySelector('ui-stakeholder-table');
+      t.addEventListener('export-csv', (e) => {
+        document.body.dataset.p17csvLines = String(e.detail.csv.trim().split('\n').length);
+      }, { once: true });
+    });
+    await page.locator('.bulk-bar ui-button', { hasText: 'Export selected' }).click({ timeout: 3000 }).catch(e => errs.push('P17EXPBTN: ' + e.message));
+    await page.waitForTimeout(400);
+    const p17csvLines = await page.evaluate(() => document.body.dataset.p17csvLines);
+    if (p17csvLines !== String(p17total + 1)) errs.push(`P17EXPORT: expected header + ${p17total} selected rows, saw ${p17csvLines} CSV lines`);
+    // Clear selection → bar retires
+    await page.locator('.bulk-bar ui-button', { hasText: 'Clear selection' }).click({ timeout: 3000 }).catch(e => errs.push('P17CLEARBTN: ' + e.message));
+    await page.waitForTimeout(300);
+    if (await page.locator('.bulk-bar').count() !== 0) errs.push('P17CLEAR: clearing must retire the action bar');
+    // shift-click range: row 0, then shift row 3 → 4 selected
+    await p17cbs.nth(0).click({ timeout: 3000 }).catch(e => errs.push('P17RANGE0: ' + e.message));
+    await page.waitForTimeout(200);
+    await p17cbs.nth(3).click({ modifiers: ['Shift'], timeout: 3000 }).catch(e => errs.push('P17RANGE3: ' + e.message));
+    await page.waitForTimeout(300);
+    const p17range = (await page.locator('.bulk-bar .bulk-count').textContent().catch(() => '') || '').trim();
+    if (p17range !== '4 selected') errs.push(`P17RANGE: shift-click expected "4 selected", saw "${p17range}"`);
+    await page.locator('.bulk-bar ui-button', { hasText: 'Clear selection' }).click({ timeout: 3000 }).catch(e => errs.push('P17CLEAR2: ' + e.message));
+    await page.waitForTimeout(300);
   }
   if (path === '/record.html') {
     // Phase 14: SampleRecord — the sealed neutral tuning preview (standalone

@@ -1185,7 +1185,7 @@
    "tag": "ui-stakeholder-table",
    "status": "built",
    "category": "domain",
-   "summary": "The Stakeholdr master sheet at the FULL sealed Lists spec. CSS max-content grid (no fixed widths — frozen sticky lefts MEASURED after layout): frozen idx/edit/Stakeholder/Organization + the 22 sealed reorderable columns (drag-to-reorder, persisted per-device to localStorage hp_map_col_order_v3; unknown keys dropped, new appended). Inline edit cells: ui-select-style dropdowns for Category/Type/Market/Region/Geography/State/Site/Status with the sealed cascades (Category resets Type; Market resets Region; Site fills State), inline text Organization (mirrors into name for non-persons), popover-calendar Last contact (YYYY-MM-DD). Display cells per the sealed emphasis map: Issues/Tags first-3+N chips, priority pills (--ui-sys-priority-*), owner avatar stack, zone pill (--ui-sys-zone-*), toned x/y, mailto/tel/x.com/Visit-Website anchors (sealed cleaning rules), notes preview. Toolbar: search (displayName/name/org/type/notes/tags), Filter popover (6 sections, OR-within/AND-across, Priority+Status HARDCODED, Zone in STATUS_ORDER; Clear all cross-clears Categories, never Sites/bands), Sort popover (the sealed 11 fields; custom priority/status/site orderings), Categories + Sites multiselects, 3 live impact-band chips (winnable-middle swatch = --ui-sys-neu). Header-click sort on every field-bearing column (asc ↑ / desc ↓); default sort = unscored first, then lastContact desc. Footer: filtered-of-total, Avg x/y (1 dp) over the filtered set, Export CSV (sealed column set + escaping + filename rule). Pure logic (filters, comparators, CSV, column-order merge, name/phone/url helpers) is exported for unit tests. Bare tag renders a gallery sample. COMPOSITION RULING (2026-07-03): display cells are lightweight shadow-DOM renders for grid performance (industry grid practice); every INTERACTIVE surface composes the REAL design-system elements — toolbar search = ui-text-field variant=plain (leading search ui-icon + kbd chip), Filter/Sort/Categories/Sites = ui-button outlined with a count ui-badge (text + badge only, no leading icons), impact bands = ui-chip variant=filter, Export CSV / Clear all = ui-button variant=text, edit cell = ui-icon-button standard, and clicking a dropdown/date display cell mounts a REAL pre-opened ui-select / ui-date-picker editor in the cell (commit on change, unmount on close). Owner cell opens the sealed OwnersDisplay popover (ui-avatar rows, singularizing head count, outside-mousedown close).",
+   "summary": "The Stakeholdr master sheet at the FULL sealed Lists spec. CSS max-content grid (no fixed widths — frozen sticky lefts MEASURED after layout): frozen idx/edit/Stakeholder/Organization + the 22 sealed reorderable columns (drag-to-reorder, persisted per-device to localStorage hp_map_col_order_v3; unknown keys dropped, new appended). Inline edit cells: ui-select-style dropdowns for Category/Type/Market/Region/Geography/State/Site/Status with the sealed cascades (Category resets Type; Market resets Region; Site fills State), inline text Organization (mirrors into name for non-persons), popover-calendar Last contact (YYYY-MM-DD). Display cells per the sealed emphasis map: Issues/Tags first-3+N chips, priority pills (--ui-sys-priority-*), owner avatar stack, zone pill (--ui-sys-zone-*), toned x/y, mailto/tel/x.com/Visit-Website anchors (sealed cleaning rules), notes preview. Toolbar: search (displayName/name/org/type/notes/tags), Filter popover (6 sections, OR-within/AND-across, Priority+Status HARDCODED, Zone in STATUS_ORDER; Clear all cross-clears Categories, never Sites/bands), Sort popover (the sealed 11 fields; custom priority/status/site orderings), Categories + Sites multiselects, 3 live impact-band chips (winnable-middle swatch = --ui-sys-neu). Header-click sort on every field-bearing column (asc ↑ / desc ↓); default sort = unscored first, then lastContact desc. Footer: filtered-of-total, Avg x/y (1 dp) over the filtered set, Export CSV (sealed column set + escaping + filename rule). Pure logic (filters, comparators, CSV, column-order merge, name/phone/url helpers) is exported for unit tests. Bare tag renders a gallery sample. COMPOSITION RULING (2026-07-03): display cells are lightweight shadow-DOM renders for grid performance (industry grid practice); every INTERACTIVE surface composes the REAL design-system elements — toolbar search = ui-text-field variant=plain (leading search ui-icon + kbd chip), Filter/Sort/Categories/Sites = ui-button outlined with a count ui-badge (text + badge only, no leading icons), impact bands = ui-chip variant=filter, Export CSV / Clear all = ui-button variant=text, edit cell = ui-icon-button standard, and clicking a dropdown/date display cell mounts a REAL pre-opened ui-select / ui-date-picker editor in the cell (commit on change, unmount on close). Owner cell opens the sealed OwnersDisplay popover (ui-avatar rows, singularizing head count, outside-mousedown close). PHASE 17 SCALE HARDENING (declared 2026-07-05): the body VIRTUALIZES past 150 filtered rows — only the scroll window (+15 overscan rows each side) mounts between two spacer rows (fixed measured row height; no library); at-or-under the threshold every row mounts exactly as before. Filters/sorts/footer/CSV always run over the FULL filtered set (the window is a render detail; export is never narrowed to rendered rows). Declared tradeoff: tracks stay max-content, so widths may shift as the window scrolls; frozen offsets re-measure per window. BULK SELECTION (forward-design): the opt-in `selectable` attribute adds a leading frozen ui-checkbox column — header select-all = the FILTERED set with an indeterminate partial state; shift-click extends from the last-clicked anchor; checking never row-highlights (bulk selection and the sealed single-row selection stay separate channels); selection is pruned when rows leave .data. clearSelection() clears; exportSelected() runs the sealed CSV path over the selected rows in filtered order.",
    "props": [
     {
      "name": "data",
@@ -1222,6 +1222,18 @@
      "type": "object",
      "default": null,
      "note": "write-only JS property (DECLARED Phase 15): preset = a clean slate + the given filters/sort — search, Categories, Sites and the impact-band filter reset first, then it arms the SAME filter/sort state the toolbar popovers set — { filters?: {type/priority/status/owners/issues/zone arrays}, sortKey?, sortDir? }; badges and Clear all reflect it exactly as a hand-armed state (the workHQ cold-card pre-filtered \"View all\" landing)"
+    },
+    {
+     "name": "selectable",
+     "type": "boolean",
+     "default": false,
+     "note": "attribute (DECLARED Phase 17): opts into the leading frozen selection column — per-row ui-checkbox + a header select-all over the FILTERED set (indeterminate on a partial selection) with shift-click range extension. Opt-in so hosts without a bulk-action surface never render a dead affordance (make-real law); only the Lists page sets it"
+    },
+    {
+     "name": "selection",
+     "type": "array",
+     "default": "[]",
+     "note": "JS property (DECLARED Phase 17): the selected row ids. Readable and writable (writing re-renders and emits bulk-selection-change); pruned automatically when rows leave .data; survives filter changes (select-all acts on the filtered set, existing picks outside the filter persist). Companion methods: clearSelection(); selectedRows (getter, filtered/sorted order); exportSelected() — the sealed CSV path over the selection"
     }
    ],
    "events": [
@@ -1253,7 +1265,12 @@
     {
      "name": "export-csv",
      "detail": "{ csv, filename }",
-     "note": "fired alongside the browser download of the current filtered/sorted set"
+     "note": "fired alongside the browser download — the current filtered/sorted set (sealed), or the selection when exportSelected() drove it (Phase 17)"
+    },
+    {
+     "name": "bulk-selection-change",
+     "detail": "{ ids, count }",
+     "note": "DECLARED Phase 17: every bulk-selection change (row check, shift range, select-all-filtered, programmatic write, data-swap prune) — the host owns the action bar and every bulk write"
     }
    ],
    "states": [
@@ -1261,10 +1278,12 @@
     "searching",
     "filtered",
     "row-selected",
+    "bulk-selected",
     "popover-open",
     "cell-editing",
     "column-dragging",
-    "scrolled-x"
+    "scrolled-x",
+    "virtualized"
    ],
    "import": "./components/stakeholder-table.js"
   },

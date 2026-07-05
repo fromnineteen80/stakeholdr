@@ -35,8 +35,30 @@
  *    to table mode; summary mix/plans segments and the needs-score/votes
  *    "View all" ride NEW onOpenMap/onOpenPlans/onOpenScoring/onOpenCommunity
  *    shell props (mirroring the established onOpen* seam pattern — ruled).
+ *
+ * PHASE 17 — BULK ACTIONS (FORWARD-DESIGN, declared 2026-07-05; the sealed
+ * demo-features box names bulk actions with no oracle spec; designed under
+ * the thousands-of-stakeholders scale ruling):
+ *  · this page arms the table's DECLARED `selectable` attribute (the opt-in
+ *    leading checkbox column; embeds elsewhere stay checkbox-free) and
+ *    listens on bulk-selection-change.
+ *  · DECLARED PATTERN CHOICE: the selection action bar surfaces ABOVE the
+ *    table (between the workHQ divider and the grid) when ≥1 row is selected
+ *    — the table's own toolbar stays intact underneath (the Gmail-family
+ *    "bar appears on selection" pattern, host-owned so the writes stay
+ *    page-owned). Actions: Assign to workspace… (ui-menu over the live
+ *    workspaces; the sealed createJoinFor/stakeholderWorkspaces seam) ·
+ *    Add tag… (ui-menu over the LIVE companyTags seam) · Set priority…
+ *    (the sealed High/Medium/Low catalog) · Export selected (the table's
+ *    sealed CSV path over the selection) · Clear selection.
+ *  · SCALE LAW: every bulk write is ONE setState via the pure builders in
+ *    sheet-logic.js (updatedAt-stamped patches; honest per-row no-ops) —
+ *    never N sequential writes.
+ *  · NO BULK DELETE here (deferred, declared): destructive-at-scale waits on
+ *    the Enterprise box's soft-delete/archive semantics.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { usePersistentState, uid, nowStamp, cmdKeyLabel } from '../data/store.js';
 import { weightedCoord, statusFor } from '../data/engine.js';
 import {
@@ -50,8 +72,14 @@ import { GEOGRAPHIES, US_STATES, siteLabel } from '../data/catalogs.js';
  * here with no reload. GEOGRAPHIES/US_STATES stay fixed enums (sealed). */
 import { useCompanyCatalogs } from '../data/company.js';
 // displayName is single-sourced with the design-system's pure Lists logic
-// (the sealed Shared-primitives formula lives beside the table that renders it).
-import { displayName } from '../../../design-system/components/stakeholder-table.js';
+// (the sealed Shared-primitives formula lives beside the table that renders
+// it); PRIORITY_OPTIONS is the sealed hardcoded High/Medium/Low catalog the
+// Phase-17 bulk Set-priority menu reuses (one source, never re-typed).
+import { displayName, PRIORITY_OPTIONS } from '../../../design-system/components/stakeholder-table.js';
+// Phase 17: the pure single-setState bulk patch builders (see their header).
+import {
+  bulkPatchStakeholders, bulkAddTag, bulkAssignWorkspace, bulkActionSummary,
+} from './sheet-logic.js';
 // affiliatedCommunity + the create-side-effect copy are single-sourced in the
 // modal's pure-logic module (sealed cross-link formulas).
 import { affiliatedCommunity, scoringNeededBody } from '../modals/stakeholder-logic.js';
@@ -72,6 +100,30 @@ function loadWorkhqMode() {
     const v = localStorage.getItem(WORKHQ_MODE_KEY);
     return WORKHQ_MODES.includes(v) ? v : 'split';
   } catch { return 'split'; }
+}
+
+/* Phase 17: one bulk-action ui-menu, PORTALED to document.body (the
+ * established in-page ui-menu pattern — workHQ's IgnoredMenu, the Plan
+ * editor's AddShMenu: the component positions in PAGE coordinates, so it
+ * must not sit inside a positioned ancestor). The anchor button toggles it
+ * natively (ui-menu's anchor contract); rows fire onPick. ui-menu caps its
+ * own height and scrolls, so long tag/workspace catalogs stay usable.       */
+function BulkMenu({ anchorId, items, onPick, menuClass = '' }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (el) el.setAttribute('anchor', anchorId);
+  }, [anchorId]);
+  return createPortal(
+    <ui-menu ref={ref} class={`bulk-menu ${menuClass}`.trim()}>
+      {items.map((it) => (
+        <ui-menu-item key={it.value} onClick={() => onPick(it.value)}>
+          {it.label}
+        </ui-menu-item>
+      ))}
+    </ui-menu>,
+    document.body,
+  );
 }
 
 /* Sealed NotesModal date stamp: toLocaleDateString {month:short, day:numeric,
@@ -132,6 +184,9 @@ export function SheetPage({
   // Selection lifts to the page (sealed: shared with Map/Scoring when those
   // phases land). Held; no consumer yet.
   const [, setSelectedId] = useState(null);
+  // Phase 17: the bulk selection (mirrors the table's bulk-selection-change
+  // stream); drives the host-owned action bar.
+  const [bulkIds, setBulkIds] = useState([]);
   const [notesFor, setNotesFor] = useState(null);
   const [noteDraft, setNoteDraft] = useState('');
 
@@ -227,12 +282,16 @@ export function SheetPage({
     // CENSUS I6 ROUTE (make-real): an owners-popover row opens that user's
     // profile through the shell's ONE user seam (existence-guarded there).
     const onUserOpen = (e) => openUserRef.current?.(e.detail.userId);
+    // PHASE 17: the bulk selection stream — the table owns the checkboxes
+    // (incl. select-all-filtered + shift ranges), the page owns the actions.
+    const onBulkSelection = (e) => setBulkIds(e.detail.ids);
     el.addEventListener('row-change', onRowChange);
     el.addEventListener('notes-open', onNotesOpen);
     el.addEventListener('selection-change', onSelect);
     el.addEventListener('open-record', onOpenRecord);
     el.addEventListener('community-open', onCommunityOpen);
     el.addEventListener('user-open', onUserOpen);
+    el.addEventListener('bulk-selection-change', onBulkSelection);
     return () => {
       el.removeEventListener('row-change', onRowChange);
       el.removeEventListener('notes-open', onNotesOpen);
@@ -240,6 +299,7 @@ export function SheetPage({
       el.removeEventListener('open-record', onOpenRecord);
       el.removeEventListener('community-open', onCommunityOpen);
       el.removeEventListener('user-open', onUserOpen);
+      el.removeEventListener('bulk-selection-change', onBulkSelection);
     };
   }, [setStakeholders]);
 
@@ -438,6 +498,30 @@ export function SheetPage({
   const workhqUnignore = (cardKey, entryKey) =>
     setIntelIgnores((prev) => withoutIgnore(prev, currentUser?.id, cardKey, entryKey));
 
+  /* ── PHASE 17: bulk-action handlers (each write = ONE setState through a
+   * pure builder; the snackbar reports what landed — honest feedback at a
+   * scale where the changed rows may sit off-screen). ─────────────────── */
+  const bulkSetPriority = (level) => {
+    const n = bulkIds.length;
+    setStakeholders((prev) => bulkPatchStakeholders(prev, bulkIds, { priority: level }, nowStamp()));
+    snackRef.current?.show(bulkActionSummary(n, `Priority set to ${level}`));
+  };
+  const bulkTag = (tag) => {
+    const n = bulkIds.length;
+    setStakeholders((prev) => bulkAddTag(prev, bulkIds, tag, nowStamp()));
+    snackRef.current?.show(bulkActionSummary(n, `Tag "${tag}" added`));
+  };
+  const bulkAssign = (wsId) => {
+    const n = bulkIds.length;
+    const wsName = workspaces.find((w) => w.id === wsId)?.name || wsId;
+    setStakeholderWorkspaces((prev) => bulkAssignWorkspace(prev, bulkIds, wsId));
+    snackRef.current?.show(bulkActionSummary(n, `Added to "${wsName}"`));
+  };
+  // Export selected rides the table's sealed CSV path over the selection
+  // (filtered order) — replace-don't-duplicate.
+  const bulkExport = () => tableRef.current?.exportSelected();
+  const bulkClear = () => tableRef.current?.clearSelection();
+
   const shExisting = shModal && shModal.id
     ? stakeholders.find((s) => s.id === shModal.id) || null
     : null;
@@ -482,9 +566,53 @@ export function SheetPage({
           onViewAllCold={workhqViewAllCold}
         />
         <ui-divider></ui-divider>
+
+        {/* PHASE 17 — BULK SELECTION ACTION BAR (declared pattern: surfaces
+            ABOVE the table when ≥1 row is selected; the table toolbar stays
+            intact). Host-owned so every write stays page-owned; the menus
+            are portaled ui-menu compositions (established pattern). No bulk
+            delete — deferred to the Enterprise soft-delete semantics. */}
+        {bulkIds.length > 0 && (
+          <div className="bulk-bar" role="toolbar" aria-label="Bulk actions">
+            <span className="bulk-count">
+              <strong>{bulkIds.length}</strong> selected
+            </span>
+            <ui-button variant="outlined" id="bulk-ws-btn"
+                       disabled={workspaces.length ? undefined : ''}>
+              Assign to workspace…
+            </ui-button>
+            <ui-button variant="outlined" id="bulk-tag-btn"
+                       disabled={companyTags.length ? undefined : ''}>
+              Add tag…
+            </ui-button>
+            <ui-button variant="outlined" id="bulk-priority-btn">Set priority…</ui-button>
+            <span className="bulk-spacer"></span>
+            <ui-button variant="text" onClick={bulkExport} aria-label="Export selected to CSV">
+              <ui-icon slot="leading" size="sm">download</ui-icon>Export selected
+            </ui-button>
+            <ui-button variant="text" onClick={bulkClear}>Clear selection</ui-button>
+            {/* Assign menu: the LIVE workspaces list (Master is not a
+                workspace — it is the union view, never a join target). */}
+            <BulkMenu anchorId="bulk-ws-btn" menuClass="bulk-menu-ws"
+                      items={workspaces.map((w) => ({ value: w.id, label: w.name }))}
+                      onPick={bulkAssign} />
+            {/* Tag menu: the LIVE companyTags seam (Settings-fed). */}
+            <BulkMenu anchorId="bulk-tag-btn" menuClass="bulk-menu-tag"
+                      items={companyTags.map((t) => ({ value: t, label: t }))}
+                      onPick={bulkTag} />
+            {/* Priority menu: the sealed hardcoded catalog, single-sourced. */}
+            <BulkMenu anchorId="bulk-priority-btn" menuClass="bulk-menu-priority"
+                      items={PRIORITY_OPTIONS.map((p) => ({ value: p, label: p }))}
+                      onPick={bulkSetPriority} />
+          </div>
+        )}
+
         {/* kbd-label: the cmd-key hint is single-sourced in the store
-            (cmdKeyLabel) and PASSED to the table — never re-derived inside. */}
-        <ui-stakeholder-table ref={tableRef} class="sheet-table" kbd-label={cmdKeyLabel}></ui-stakeholder-table>
+            (cmdKeyLabel) and PASSED to the table — never re-derived inside.
+            selectable (Phase 17): THIS host carries the bulk-action bar, so
+            it opts into the table's selection column. */}
+        <ui-stakeholder-table ref={tableRef} class="sheet-table" selectable=""
+                              kbd-label={cmdKeyLabel}></ui-stakeholder-table>
       </div>
 
       {/* NotesModal → ui-dialog (sealed CANONICAL-UI map: scrim closes; head

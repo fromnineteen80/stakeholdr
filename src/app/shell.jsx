@@ -684,7 +684,7 @@ export function AppShell() {
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Phase 16 — Command palette (⌘K global search · 5 entity types · sealed 24-row cap · guarded deep-link routes)</span>
+        <span>Phase 17 — Scale (virtualized Lists · bulk actions)</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
 
