@@ -1013,6 +1013,127 @@ for (const path of pages) {
     await page.locator('ui-stakeholder-table .search-field input').fill('', { timeout: 3000 }).catch(e => errs.push('P17PRUNEC: ' + e.message));
     await page.waitForTimeout(400);
     if (await page.locator('.bulk-bar').count() !== 0) errs.push('P17PRUNE2: clearing the search must not resurrect the pruned selection');
+    // Phase 18: IMPORT WIZARD — the footer Import affordance opens the sealed
+    // 4-step ui-dialog flow; a synthetic CSV (2 valid rows + 1 deliberate
+    // Unknown-Category row) drives upload → auto-map → validation preview →
+    // skip-invalid commit → snackbar → the rows land in the table.
+    const p18CountBefore = await page.evaluate(() => JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]').length);
+    await page.locator('ui-stakeholder-table .import-btn').click({ timeout: 3000 }).catch(e => errs.push('P18BTN: ' + e.message));
+    await page.waitForTimeout(400);
+    if (await page.locator('ui-dialog.import-dialog[open]').count() !== 1) errs.push('P18OPEN: the import wizard did not open');
+    const p18csv = [
+      'Stakeholder,Organization,Category,Type,Market,Region,Geography,Priority,Status,x,Relationship',
+      '"Import Probe One","Acme Imports",Government,Mayor,Americas,United States,Local,High,Active,3.4,Collaborate',
+      '"Import Probe Two","Beta Imports",Communities,Church,Americas,Canada,Local,Medium,Watch,,',
+      '"Import Probe Bad","Gamma Imports",Aliens,Mayor,Americas,United States,Local,High,Active,,',
+    ].join('\n');
+    await page.locator('ui-dropzone input[type="file"]').setInputFiles({
+      name: 'probe.csv', mimeType: 'text/csv', buffer: Buffer.from(p18csv),
+    }, { timeout: 3000 }).catch(e => errs.push('P18FILE: ' + e.message));
+    await page.waitForTimeout(600);
+    // step 2: auto-map — 9 input columns auto-matched, x/Relationship computed
+    const p18MapRows = await page.locator('.import-map-table tbody tr').count();
+    if (p18MapRows !== 11) errs.push(`P18MAP: expected 11 header rows in the column map, saw ${p18MapRows}`);
+    const p18Auto = await page.locator('.import-map-table ui-chip', { hasText: 'auto-matched' }).count();
+    if (p18Auto !== 9) errs.push(`P18AUTO: expected 9 auto-matched chips, saw ${p18Auto}`);
+    const p18Comp = await page.locator('.import-map-table ui-chip', { hasText: 'Computed — skipped' }).count();
+    if (p18Comp !== 2) errs.push(`P18COMP: expected 2 "Computed — skipped" chips (x, Relationship), saw ${p18Comp}`);
+    // FIX F2: computed-named headers render a LIVE ui-select too (11 of 11
+    // rows) — a file whose own data uses a header literally named
+    // "Relationship" can be remapped to any input target; drive the remap
+    // (Relationship → Notes) and verify the pipeline honors it end-to-end.
+    const p18Selects = await page.locator('.import-map-table ui-select').count();
+    if (p18Selects !== 11) errs.push(`P18SEL: expected a mapping ui-select on all 11 header rows (computed included), saw ${p18Selects}`);
+    const p18RelRow = page.locator('.import-map-table tbody tr', { hasText: 'Relationship' });
+    await p18RelRow.locator('ui-select').click({ timeout: 3000 }).catch(e => errs.push('P18REMAPOPEN: ' + e.message));
+    await page.waitForTimeout(300);
+    await p18RelRow.locator('ui-option', { hasText: 'Notes' }).click({ timeout: 3000 }).catch(e => errs.push('P18REMAPPICK: ' + e.message));
+    await page.waitForTimeout(400);
+    if (await page.locator('.import-map-table tbody tr', { hasText: 'Relationship' }).locator('ui-chip', { hasText: 'mapped by hand' }).count() !== 1) {
+      errs.push('P18REMAPCHIP: the remapped computed header must show the "mapped by hand" chip');
+    }
+    await page.locator('.import-actions ui-button', { hasText: 'Next' }).click({ timeout: 3000 }).catch(e => errs.push('P18NEXT2: ' + e.message));
+    await page.waitForTimeout(500);
+    // step 3: the sealed summary + error chip + skip-invalid default ON
+    const p18Summary = (await page.locator('.import-summary').textContent().catch(() => '') || '').trim();
+    if (p18Summary !== '2 rows ready · 1 row with errors') errs.push(`P18SUMMARY: expected "2 rows ready · 1 row with errors", saw "${p18Summary}"`);
+    if (await page.locator('.import-preview-table ui-chip[variant="error"]', { hasText: 'Unknown Category value' }).count() !== 1) {
+      errs.push('P18ERRCHIP: the Unknown-Category error chip did not render');
+    }
+    // FIX F1 (sealed ~3909): the offending CELL itself carries the table's
+    // error state — exactly one lit cell (the bad row's Category), lit via
+    // the ui-data-table cell-state hook (class cell-error / part cell-error).
+    // NOTE: the lit cell renders EMPTY — a rejected value never lands in
+    // values (sealed: never coerced), so the highlight + chip carry the story.
+    const p18ErrCells = page.locator('.import-preview-table td.cell-error');
+    if (await p18ErrCells.count() !== 1) {
+      errs.push(`P18ERRCELL: expected exactly 1 error-highlighted cell, saw ${await p18ErrCells.count()}`);
+    }
+    if (await page.locator('.import-preview-table tbody tr', { hasText: 'Gamma Imports' }).locator('td.cell-error').count() !== 1) {
+      errs.push('P18ERRCELLROW: the lit cell must sit in the invalid (Gamma Imports) row');
+    }
+    if (await page.locator('.import-preview-table tbody tr', { hasText: 'Acme Imports' }).locator('td.cell-error').count() !== 0) {
+      errs.push('P18ERRCELLVALID: valid rows must carry no lit cells');
+    }
+    const p18Switch = await page.locator('.import-validate-head ui-switch').getAttribute('selected').catch(() => null);
+    if (p18Switch === null) errs.push('P18SKIP: "Skip invalid rows" must default ON');
+    await page.locator('.import-actions ui-button', { hasText: 'Next' }).click({ timeout: 3000 }).catch(e => errs.push('P18NEXT3: ' + e.message));
+    await page.waitForTimeout(400);
+    // step 4: skip-invalid commit — "Import 2 stakeholders"
+    const p18CommitLabel = (await page.locator('.import-commit-btn').textContent().catch(() => '') || '').trim();
+    if (p18CommitLabel !== 'Import 2 stakeholders') errs.push(`P18COMMITLBL: expected "Import 2 stakeholders", saw "${p18CommitLabel}"`);
+    await page.locator('.import-commit-btn').click({ timeout: 3000 }).catch(e => errs.push('P18COMMIT: ' + e.message));
+    await page.waitForTimeout(600);
+    if (await page.locator('ui-dialog.import-dialog[open]').count() !== 0) errs.push('P18CLOSE: the wizard must close on commit');
+    const p18Snack = (await page.locator('.sheet-wrap ui-snackbar').getAttribute('message').catch(() => '') || '').trim();
+    if (p18Snack !== 'Imported 2 stakeholders') errs.push(`P18SNACK: expected "Imported 2 stakeholders", saw "${p18Snack}"`);
+    const p18After = await page.evaluate(() => {
+      const shs = JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]');
+      const a = shs.find(s => s.org === 'Acme Imports');
+      return { count: shs.length, acme: a ? { owners: a.owners, createdAt: !!a.createdAt, category: a.category, notes: a.notes } : null };
+    });
+    if (p18After.count !== p18CountBefore + 2) errs.push(`P18LAND: expected ${p18CountBefore + 2} stakeholders after import, saw ${p18After.count}`);
+    if (!p18After.acme) errs.push('P18ROW: the imported Acme Imports row did not land');
+    else {
+      if (!p18After.acme.owners || !p18After.acme.owners.length) errs.push('P18OWNER: imported rows must default owners to the importer');
+      if (!p18After.acme.createdAt) errs.push('P18STAMP: imported rows must carry audit stamps');
+      if (p18After.acme.category !== 'Government') errs.push(`P18CAT: expected Government, saw "${p18After.acme.category}"`);
+      // FIX F2 landing proof: the remapped computed-named column ("Relationship"
+      // → Notes) committed as INPUT — Acme's Relationship cell was "Collaborate"
+      if (p18After.acme.notes !== 'Collaborate') errs.push(`P18REMAPLAND: expected the remapped column to land in notes ("Collaborate"), saw "${p18After.acme.notes}"`);
+    }
+    if (await page.locator('ui-stakeholder-table .sheet-row', { hasText: 'Import Probe One' }).count() !== 1) {
+      errs.push('P18TABLE: the imported stakeholder is not visible in the Lists table');
+    }
+    // ROUND-TRIP PROBE (gate 3, in the real browser): export the CURRENT set
+    // via the sealed export path, re-import the file — zero errors, computed
+    // columns skipped, every row lands.
+    const p18Export = await page.evaluate(() => new Promise((resolve) => {
+      const t = document.querySelector('ui-stakeholder-table');
+      t.addEventListener('export-csv', (e) => resolve(e.detail.csv), { once: true });
+      t.shadowRoot.querySelector('.export-btn').click();
+    }));
+    const p18RtRows = p18Export.trim().split('\n').length - 1; // minus header (no embedded newlines in seed data)
+    await page.locator('ui-stakeholder-table .import-btn').click({ timeout: 3000 }).catch(e => errs.push('P18RTBTN: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('ui-dropzone input[type="file"]').setInputFiles({
+      name: 'export.csv', mimeType: 'text/csv', buffer: Buffer.from(p18Export),
+    }, { timeout: 3000 }).catch(e => errs.push('P18RTFILE: ' + e.message));
+    await page.waitForTimeout(600);
+    await page.locator('.import-actions ui-button', { hasText: 'Next' }).click({ timeout: 3000 }).catch(e => errs.push('P18RTNEXT: ' + e.message));
+    await page.waitForTimeout(600);
+    const p18RtSummary = (await page.locator('.import-summary').textContent().catch(() => '') || '').trim();
+    if (p18RtSummary !== `${p18RtRows} rows ready · 0 rows with errors`) {
+      errs.push(`P18RT: round-trip expected "${p18RtRows} rows ready · 0 rows with errors", saw "${p18RtSummary}"`);
+    }
+    await page.locator('.import-actions ui-button', { hasText: 'Next' }).click({ timeout: 3000 }).catch(e => errs.push('P18RTNEXT2: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('.import-commit-btn').click({ timeout: 3000 }).catch(e => errs.push('P18RTCOMMIT: ' + e.message));
+    await page.waitForTimeout(700);
+    const p18RtCount = await page.evaluate(() => JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]').length);
+    if (p18RtCount !== p18CountBefore + 2 + p18RtRows) errs.push(`P18RTLAND: expected ${p18CountBefore + 2 + p18RtRows} after the round-trip import, saw ${p18RtCount}`);
+    const p18RtSnack = (await page.locator('.sheet-wrap ui-snackbar').getAttribute('message').catch(() => '') || '').trim();
+    if (p18RtSnack !== `Imported ${p18RtRows} stakeholders`) errs.push(`P18RTSNACK: expected "Imported ${p18RtRows} stakeholders", saw "${p18RtSnack}"`);
   }
   if (path === '/record.html') {
     // Phase 14: SampleRecord — the sealed neutral tuning preview (standalone

@@ -3,7 +3,21 @@
  *
  * Properties (set via JS, not attr, for array/object data):
  *   .data     array of row objects — each key matches a column key
- *   .columns  array of {key, label, type, sortable, align}
+ *   .columns  array of {key, label, type, sortable, align, render?, state?}
+ *             render (added Phase 18, registered in manifest.json): an
+ *             optional per-column cell template — render(row) returns a DOM
+ *             Node (e.g. a real ui-select / ui-chip) appended to the cell in
+ *             place of the text value. This is how composed controls live
+ *             INSIDE the real component (composition law) instead of a
+ *             hand-rolled lookalike grid in app code.
+ *             state (added Phase 18 fix, registered in manifest.json): an
+ *             optional per-column CELL-STATE hook — state(row) returning
+ *             'error' marks THAT cell with the table's error state (sealed
+ *             guide ~3909: "cell-level errors highlighted via the table's
+ *             error state tokens"): background --ui-sys-error-container, ink
+ *             --ui-sys-error, exposed as part="cell-error" for hosts. The
+ *             styling lives HERE (the component owns its states; one styling
+ *             surface) — hosts only supply the predicate.
  *
  * Attributes:
  *   density   "comfortable" (default) | "compact"
@@ -102,22 +116,17 @@ template.innerHTML = `
     th[aria-sort="ascending"]  .sort-icon,
     th[aria-sort="descending"] .sort-icon { opacity: 1; }
 
-    tbody tr {
-      position: relative;
-      isolation: isolate;
-    }
+    /* Row hover = a translucent ink wash on the CELLS (Phase-18 alignment
+       fix): the previous absolutely-positioned ::before on the TR was wrapped
+       in an ANONYMOUS TABLE CELL by the browser (rows may only contain
+       cells), silently shifting every body row one column right of the
+       header. A tr may never carry non-cell boxes. */
     tbody tr:nth-child(even) { background: var(--_row-bg-alt); }
-    tbody tr::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: var(--ui-sys-on-surface);
-      opacity: 0;
-      transition: opacity var(--ui-sys-motion-control);
-      pointer-events: none;
-      z-index: -1;
+    tbody td { transition: background-color var(--ui-sys-motion-control); }
+    tbody tr:hover td {
+      background-color: color-mix(in srgb, var(--ui-sys-on-surface)
+        calc(var(--ui-sys-state-hover-opacity) * 100%), transparent);
     }
-    tbody tr:hover::before { opacity: var(--ui-sys-state-hover-opacity); }
 
     td {
       padding: 0 var(--ui-sys-space-4);
@@ -131,6 +140,15 @@ template.innerHTML = `
     td[data-align="center"] { text-align: center; }
 
     tbody tr:last-child td { border-bottom: none; }
+
+    /* cell-level ERROR state (Phase-18 fix; sealed guide ~3909) — set by a
+       column's state(row) hook; token-only, and specific enough to hold
+       under the row-hover wash above. */
+    tbody td.cell-error {
+      background-color: var(--ui-sys-error-container);
+      color: var(--ui-sys-error);
+    }
+    tbody tr:hover td.cell-error { background-color: var(--ui-sys-error-container); }
 
     /* checkbox col */
     th.col-check,
@@ -340,8 +358,19 @@ class UiDataTable extends HTMLElement {
         const td = document.createElement('td');
         td.setAttribute('role', 'cell');
         td.dataset.align = col.align || 'left';
-        const val = row[col.key];
-        td.textContent = val === null || val === undefined ? '' : String(val);
+        if (typeof col.render === 'function') {
+          const node = col.render(row);
+          if (node) td.appendChild(node);
+        } else {
+          const val = row[col.key];
+          td.textContent = val === null || val === undefined ? '' : String(val);
+        }
+        // sanctioned cell-state hook (Phase-18 fix): 'error' lights the cell
+        // via the component's own error-state tokens + part for host CSS.
+        if (typeof col.state === 'function' && col.state(row) === 'error') {
+          td.classList.add('cell-error');
+          td.setAttribute('part', 'cell-error');
+        }
         tr.appendChild(td);
       }
 

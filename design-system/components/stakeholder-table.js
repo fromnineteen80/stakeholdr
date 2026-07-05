@@ -1135,8 +1135,9 @@ template.innerHTML = `
   .footer .group { display: inline-flex; align-items: center; gap: var(--ui-sys-space-1); }
   .footer strong { color: var(--ui-sys-on-surface); font-weight: 600; }
   .stat-sep { color: var(--ui-sys-on-surface-faint); }
-  /* Export CSV is a REAL ui-button variant=text (composition ruling). */
-  .export-btn { flex-shrink: 0; }
+  /* Export CSV / Import are REAL ui-button variant=text (composition ruling). */
+  .export-btn, .import-btn { flex-shrink: 0; }
+  .import-btn[hidden] { display: none; }
 </style>
 
 <!-- TOOLBAR PLACEMENT (declared): the sealed skeleton PORTALS this toolbar into
@@ -1187,6 +1188,8 @@ template.innerHTML = `
   <span class="group">Avg <span class="kbd">x</span> <strong class="footer-avgx">—</strong></span>
   <span class="group">Avg <span class="kbd">y</span> <strong class="footer-avgy">—</strong></span>
   <div class="spacer"></div>
+  <ui-button variant="text" class="import-btn" aria-label="Import stakeholders" hidden><ui-icon
+    slot="leading" size="sm">upload_file</ui-icon>Import</ui-button>
   <ui-button variant="text" class="export-btn" aria-label="Export to CSV"><ui-icon
     slot="leading" size="sm">download</ui-icon>Export CSV</ui-button>
 </div>
@@ -1234,7 +1237,7 @@ class UiStakeholderTable extends HTMLElement {
   /* kbd-label (finding: single source) — the cmd-key hint text is NOT derived
    * here; the page passes it from the store's exported single source
    * (src/app/data/store.js → cmdKeyLabel). Empty/absent hides the chip. */
-  static observedAttributes = ['kbd-label', 'selectable'];
+  static observedAttributes = ['kbd-label', 'selectable', 'importable'];
 
   constructor() {
     super();
@@ -1244,6 +1247,16 @@ class UiStakeholderTable extends HTMLElement {
   attributeChangedCallback(name) {
     if (name === 'kbd-label') this.#syncKbd();
     if (name === 'selectable') this.#render(); // column set changed
+    if (name === 'importable') this.#syncImportable();
+  }
+
+  /* Phase 18: opt-in footer Import affordance (declared placement — the quiet
+   * control NEXT TO Export CSV the sealed import spec asks for). Hosts
+   * without an import flow never render a dead affordance (make-real law);
+   * the button only EMITS import-open — the wizard is host-owned. */
+  #syncImportable() {
+    const btn = this.shadowRoot.querySelector('.import-btn');
+    if (btn) btn.hidden = !this.hasAttribute('importable');
   }
 
   /* ── public API ────────────────────────────────────────────────── */
@@ -1386,6 +1399,11 @@ class UiStakeholderTable extends HTMLElement {
 
     // export — the CURRENT filtered/sorted set (sealed)
     sr.querySelector('.export-btn').addEventListener('click', () => this.#exportCsv());
+
+    // import (Phase 18, opt-in via `importable`): the footer affordance only
+    // signals — the host owns the wizard (mirrors the bulk-action seam).
+    sr.querySelector('.import-btn').addEventListener('click', () => this.#emit('import-open', {}));
+    this.#syncImportable();
 
     // one scroll container; .scrolled-x drives the frozen-edge shadow (sealed;
     // guarded so re-renders never double-bind). Phase 17: the SAME listener

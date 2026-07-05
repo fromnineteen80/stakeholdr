@@ -72,7 +72,7 @@ import {
   SEED_STAKEHOLDERS, SEED_SCORES, SEED_TEAM, SEED_USERS, SEED_COMMUNITY,
   SEED_WORKSPACES, SEED_STAKEHOLDER_WORKSPACES, SEED_MESSAGES, SEED_PLANS,
 } from '../data/seed.js';
-import { GEOGRAPHIES, US_STATES, siteLabel } from '../data/catalogs.js';
+import { GEOGRAPHIES, US_STATES, STAKEHOLDER_STATUS, siteLabel } from '../data/catalogs.js';
 /* REAL as of Phase 11: the editable company sets (categories/markets/sites/
  * issues/tags) read the LIVE appConfig-with-seed-fallback seam (sealed
  * present-AND-non-empty contract) — Settings edits propagate to every select
@@ -82,7 +82,7 @@ import { useCompanyCatalogs } from '../data/company.js';
 // (the sealed Shared-primitives formula lives beside the table that renders
 // it); PRIORITY_OPTIONS is the sealed hardcoded High/Medium/Low catalog the
 // Phase-17 bulk Set-priority menu reuses (one source, never re-typed).
-import { displayName, PRIORITY_OPTIONS } from '../../../design-system/components/stakeholder-table.js';
+import { displayName, normalizeUrl, PRIORITY_OPTIONS } from '../../../design-system/components/stakeholder-table.js';
 // Phase 17: the pure single-setState bulk patch builders (see their header).
 import {
   bulkPatchStakeholders, bulkAddTag, bulkAssignWorkspace, bulkActionSummary,
@@ -97,6 +97,12 @@ import {
 } from '../data/workspace.js';
 import { WorkHQBand } from './workhq.jsx';
 import { withIgnores, withoutIgnore } from './workhq-logic.js';
+// Phase 18: the import wizard (sealed demo-features BUILD-MAP) + its pure
+// commit builders / copy (node-tested in scripts/import-test.mjs).
+import { ImportWizard } from '../import/import-wizard.jsx';
+import {
+  buildImportRecords, importedBody, importedSnack,
+} from '../import/import-logic.js';
 
 /* workHQ layout-mode persistence (DECLARED per-device UI preference — the
  * table's column-order localStorage pattern; NOT a synced store table). */
@@ -196,6 +202,8 @@ export function SheetPage({
   const [bulkIds, setBulkIds] = useState([]);
   const [notesFor, setNotesFor] = useState(null);
   const [noteDraft, setNoteDraft] = useState('');
+  // Phase 18: the import wizard (opened by the table's footer import-open).
+  const [importOpen, setImportOpen] = useState(false);
 
   // StakeholderModal routing state: null | { mode:'create' } |
   // { mode:'edit', id, view? }. The Lists edit routes (frozen edit icon +
@@ -292,7 +300,11 @@ export function SheetPage({
     // PHASE 17: the bulk selection stream — the table owns the checkboxes
     // (incl. select-all-filtered + shift ranges), the page owns the actions.
     const onBulkSelection = (e) => setBulkIds(e.detail.ids);
+    // PHASE 18: the footer Import affordance (the `importable` attribute)
+    // only signals — this host owns the wizard.
+    const onImportOpen = () => setImportOpen(true);
     el.addEventListener('row-change', onRowChange);
+    el.addEventListener('import-open', onImportOpen);
     el.addEventListener('notes-open', onNotesOpen);
     el.addEventListener('selection-change', onSelect);
     el.addEventListener('open-record', onOpenRecord);
@@ -301,6 +313,7 @@ export function SheetPage({
     el.addEventListener('bulk-selection-change', onBulkSelection);
     return () => {
       el.removeEventListener('row-change', onRowChange);
+      el.removeEventListener('import-open', onImportOpen);
       el.removeEventListener('notes-open', onNotesOpen);
       el.removeEventListener('selection-change', onSelect);
       el.removeEventListener('open-record', onOpenRecord);
@@ -541,6 +554,62 @@ export function SheetPage({
   };
   const bulkClear = () => tableRef.current?.clearSelection();
 
+  /* ── PHASE 18: IMPORT (sealed demo-features flow) ─────────────────────── */
+
+  // The LIVE catalog context the validator + template read (the Phase-11
+  // company seam for every editable set; fixed enums from catalogs.js; the
+  // system user never resolves as an Owner or appears in the template).
+  const importCtx = useMemo(() => ({
+    categories: companyCategories,
+    markets: companyMarkets,
+    geographies: GEOGRAPHIES,
+    usStates: US_STATES,
+    sites: companySites,
+    siteLabel,
+    issues: companyIssues,
+    tags: companyTags,
+    users: users.filter((u) => u.role !== 'system'),
+    priorities: PRIORITY_OPTIONS,
+    statuses: STAKEHOLDER_STATUS,
+  }), [companyCategories, companyMarkets, companySites, companyIssues,
+    companyTags, users]);
+
+  /* COMMIT (sealed): mint uids + audit stamps (buildImportRecords), PREPEND
+   * in ONE setState (the standing scale ruling — never N writes); imported
+   * from a workspace → auto-assigned there via the sealed createJoinFor seam
+   * (Master → empty membership, exactly the create route); ONE aggregate
+   * scoring-needed system message (declared: the per-record post would spam
+   * c-system at import scale); sealed snackbar "Imported N stakeholders". */
+  const commitImport = (validRows) => {
+    const stamp = nowStamp();
+    const records = buildImportRecords(validRows, {
+      uid, stamp, currentUserId: currentUser ? currentUser.id : null, normalizeUrl,
+    });
+    if (!records.length) return;
+    setStakeholders((prev) => [...records, ...prev]);
+    const join = createJoinFor(activeWorkspaceId);
+    setStakeholderWorkspaces((prev) => {
+      const next = { ...prev };
+      for (const r of records) next[r.id] = [...join];
+      return next;
+    });
+    setMessages((prev) => ({
+      ...prev,
+      'c-system': [
+        ...(prev['c-system'] || []),
+        {
+          id: uid('m'),
+          from: 'u-system',
+          body: importedBody(records.length),
+          at: stamp,
+          kind: 'scoring-needed',
+        },
+      ],
+    }));
+    setImportOpen(false);
+    snackRef.current?.show(importedSnack(records.length));
+  };
+
   const shExisting = shModal && shModal.id
     ? stakeholders.find((s) => s.id === shModal.id) || null
     : null;
@@ -631,8 +700,19 @@ export function SheetPage({
             selectable (Phase 17): THIS host carries the bulk-action bar, so
             it opts into the table's selection column. */}
         <ui-stakeholder-table ref={tableRef} class="sheet-table" selectable=""
+                              importable=""
                               kbd-label={cmdKeyLabel}></ui-stakeholder-table>
       </div>
+
+      {/* PHASE 18 — IMPORT WIZARD (sealed 4-step ui-dialog flow; the table's
+          footer Import button opens it; commit lands above as ONE setState). */}
+      <ImportWizard
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onCommit={commitImport}
+        catalogsCtx={importCtx}
+        workspaceName={isMaster ? '' : (workspaces.find((w) => w.id === activeWorkspaceId)?.name || '')}
+      />
 
       {/* NotesModal → ui-dialog (sealed CANONICAL-UI map: scrim closes; head
           eyebrow "Notes" over the stakeholder name; history newest first;

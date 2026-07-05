@@ -92,8 +92,10 @@ await page.locator('ui-stakeholder-table .sheet-scroll').evaluate((el) => { el.s
 await page.locator('ui-stakeholder-table .sheet-cell.notes').first().click();
 await page.waitForTimeout(400);
 await page.screenshot({ path: `${OUT}/lists-notes-modal.png` });
-// close via the dialog API (Escape only lands when focus sits inside the card)
-await page.evaluate(() => document.querySelector('ui-dialog')?.close());
+// close via the dialog API (Escape only lands when focus sits inside the card).
+// Close ALL dialogs: the sheet page hosts several ui-dialog elements (notes,
+// import wizard, modals) — a single querySelector can land on a closed one.
+await page.evaluate(() => document.querySelectorAll('ui-dialog').forEach((d) => d.close()));
 await page.waitForTimeout(300);
 
 // ── PHASE-4 STAKEHOLDER MODAL CAPTURES ─────────────────────────────────────
@@ -746,6 +748,41 @@ await page.locator('ui-stakeholder-table .sheet-head ui-checkbox').click();
 await page.waitForTimeout(300);
 await page.screenshot({ path: `${OUT}/p17-bulk-select-all.png`, clip: { x: 0, y: 60, width: 1440, height: 520 } });
 await page.locator('.bulk-bar ui-button', { hasText: 'Clear selection' }).click();
+await page.waitForTimeout(300);
+
+// ── PHASE-18 IMPORT WIZARD CAPTURES (each of the sealed 4 steps) ───────────
+// defensive: no stray dialog may sit over the table when the wizard opens
+await page.evaluate(() => document.querySelectorAll('ui-dialog[open]').forEach((d) => d.close()));
+await page.waitForTimeout(300);
+// 1 · UPLOAD — the footer Import affordance opens the wizard: ui-dropzone +
+//     the Download-template buttons
+await page.locator('ui-stakeholder-table .import-btn').click();
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p18-import-upload.png` });
+// 2 · COLUMN MAP — a synthetic CSV (2 valid + 1 Unknown-Category row):
+//     auto-matched selects + match chips, computed columns labeled honestly
+const p18csv = [
+  'Stakeholder,Organization,Category,Type,Market,Region,Geography,Priority,Status,x,Relationship',
+  '"Import Probe One","Acme Imports",Government,Mayor,Americas,United States,Local,High,Active,3.4,Collaborate',
+  '"Import Probe Two","Beta Imports",Communities,Church,Americas,Canada,Local,Medium,Watch,,',
+  '"Import Probe Bad","Gamma Imports",Aliens,Mayor,Americas,United States,Local,High,Active,,',
+].join('\n');
+await page.locator('ui-dropzone input[type="file"]').setInputFiles({
+  name: 'probe.csv', mimeType: 'text/csv', buffer: Buffer.from(p18csv),
+});
+await page.waitForTimeout(600);
+await page.screenshot({ path: `${OUT}/p18-import-map.png` });
+// 3 · VALIDATION PREVIEW — "2 rows ready · 1 row with errors", the error
+//     icon + error chip on the bad row, the Skip-invalid switch (default ON)
+await page.locator('.import-actions ui-button', { hasText: 'Next' }).click();
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p18-import-validate.png` });
+// 4 · COMMIT — "Import 2 stakeholders" with the skip note + workspace note
+await page.locator('.import-actions ui-button', { hasText: 'Next' }).click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p18-import-commit.png` });
+// close without committing (the captures must not mutate the store)
+await page.locator('.import-actions ui-button', { hasText: 'Cancel' }).click();
 await page.waitForTimeout(300);
 
 await browser.close(); srv.close();

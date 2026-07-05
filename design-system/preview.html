@@ -132,6 +132,7 @@
       <a href="#badge">ui-badge</a>
       <a href="#owner-picker">ui-owner-picker</a>
       <a href="#coachmark">ui-coachmark</a>
+      <a href="#dropzone">ui-dropzone</a>
       <a href="#swatch-card">ui-swatch-card</a>
       <a href="#color-field">ui-color-field</a>
     </nav>
@@ -318,6 +319,7 @@
         <ui-chip variant="priority" value="Low">Low</ui-chip>
         <ui-chip variant="tag">public-official</ui-chip>
         <ui-chip variant="tag">ally</ui-chip>
+        <ui-chip variant="error">Unknown Category value</ui-chip>
       </ui-chip-set></div>
       <!-- segment pills (sealed SegmentBadge; unknown falls back to Corporate Functions) -->
       <div class="row"><ui-chip-set>
@@ -735,6 +737,23 @@
         sync();
       });
     })();
+  </script>
+</section>
+
+    <section id="dropzone">
+  <h3>ui-dropzone <span class="hint">— file drop target (GAP, Phase 18): drag-over accent state, rejected-type error state, keyboard/browse fallback; the host owns all parsing</span></h3>
+  <div class="row" style="max-width:520px">
+    <div style="flex:1">
+      <ui-dropzone id="dz-demo" accept=".xlsx,.csv">Drop your .xlsx or .csv here, or</ui-dropzone>
+    </div>
+  </div>
+  <p class="demo-note">Last event: <code id="dz-log">—</code> (a non-.xlsx/.csv file shows the error state)</p>
+  <script type="module">
+    import './components/dropzone.js';
+    const dz = document.getElementById('dz-demo');
+    const log = document.getElementById('dz-log');
+    dz.addEventListener('file', (e) => { log.textContent = 'file: ' + e.detail.name; });
+    dz.addEventListener('reject', (e) => { log.textContent = 'reject: ' + e.detail.name + ' — ' + e.detail.reason; });
   </script>
 </section>
 

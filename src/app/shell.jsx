@@ -684,7 +684,7 @@ export function AppShell() {
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Phase 17 — Scale (virtualized Lists · bulk actions)</span>
+        <span>Phase 18 — Import (wizard · XLSX/CSV template · round-trip)</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
 

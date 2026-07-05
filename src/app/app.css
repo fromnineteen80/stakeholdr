@@ -2168,3 +2168,72 @@ ui-sidebar.record-nav[collapsed] .record-nav-title { display: none; }
 .bulk-count strong { font-weight: 600; }
 .bulk-spacer { flex: 1 1 0; }
 .intel-split[data-mode="intel"] > .bulk-bar { display: none; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * PHASE 18 — IMPORT WIZARD (sealed demo-features BUILD-MAP: one ui-dialog,
+ * 4 steps, ui-progress header, ui-dropzone, ui-data-table column map +
+ * validation preview, ui-switch skip-invalid). Token-only layout; the wide
+ * card width is the tokens.css wide-dialog step (never a literal here).
+ * ═════════════════════════════════════════════════════════════════════════ */
+.import-dialog { --ui-sys-dialog-card-width: var(--ui-sys-dialog-card-width-wide); }
+.import-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-sys-space-2);
+  width: calc(var(--ui-sys-dialog-card-width) - var(--ui-sys-space-6) * 2);
+  max-width: 100%;
+}
+.import-title { font: var(--ui-sys-font-title); color: var(--ui-sys-on-surface); }
+.import-step-label {
+  font: var(--ui-sys-font-caption);
+  color: var(--ui-sys-on-surface-muted);
+}
+.import-body {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: var(--ui-sys-space-2);
+}
+.import-step { display: flex; flex-direction: column; gap: var(--ui-sys-space-3); }
+.import-note {
+  font: var(--ui-sys-font-caption);
+  color: var(--ui-sys-on-surface-muted);
+  margin: 0;
+}
+.import-note strong { color: var(--ui-sys-on-surface); font-weight: 600; }
+.import-template-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-sys-space-2);
+}
+.import-parse-error {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-sys-space-2);
+  font: var(--ui-sys-font-caption);
+  color: var(--ui-sys-error);
+}
+.import-validate-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ui-sys-space-3);
+}
+.import-summary { font: var(--ui-sys-font-label); color: var(--ui-sys-on-surface); }
+.import-skip-note { font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted); }
+.import-spacer { flex: 1 1 0; }
+/* the tables scroll INSIDE the card (ui-data-table wraps its own x-scroll) */
+.import-map-table, .import-preview-table { max-width: 100%; }
+.import-preview-table { max-height: 46vh; overflow-y: auto; }
+/* the per-row error flag cell (leading error icon + the error chips) */
+.import-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-sys-space-1);
+  color: var(--ui-sys-error);
+}
+.import-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-sys-space-2);
+  width: 100%;
+}
