@@ -487,5 +487,32 @@ await page.locator('.help-formula').scrollIntoViewIfNeeded();
 await page.waitForTimeout(300);
 await page.screenshot({ path: `${OUT}/p10-help-formula.png` });
 
+// ── PHASE-11 SETTINGS CAPTURES ─────────────────────────────────────────────
+// The sealed entry: the identity-footer ProfileMenu (manager-gated Settings).
+await page.locator('#me-anchor').click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p11-profile-menu.png` });
+await page.locator('ui-menu.profile-menu ui-menu-item', { hasText: 'Settings' }).click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p11-settings-identity.png` });
+await page.locator('.settings-nav ui-list-item', { hasText: 'Fiscal Calendar' }).click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p11-settings-fiscal.png` });
+await page.locator('.settings-nav ui-list-item', { hasText: 'Your Structure' }).click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p11-settings-structure.png` });
+await page.locator('.settings-nav ui-list-item', { hasText: 'Geography' }).click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p11-settings-geography.png` });
+await page.locator('.settings-nav ui-list-item', { hasText: 'Team Management' }).click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p11-settings-management.png` });
+await page.locator('.settings-nav ui-list-item', { hasText: 'Design' }).click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p11-settings-design.png` });
+await page.locator('.settings-nav ui-list-item', { hasText: 'Integrations' }).click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p11-settings-integrations.png` });
+
 await browser.close(); srv.close();
 console.log('shots written to', OUT);

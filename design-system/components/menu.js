@@ -261,7 +261,15 @@ class UiMenu extends HTMLElement {
     const rect = this.#anchorEl.getBoundingClientRect();
     const scrollY = window.scrollY;
     const scrollX = window.scrollX;
-    this.style.top  = `${rect.bottom + scrollY + 4}px`;
+    let top = rect.bottom + 4;
+    // FLIP-UP: a menu anchored near the viewport bottom (e.g. the sidebar
+    // identity footer) opens ABOVE its anchor instead of clipping offscreen —
+    // measured after [open] applies, so offsetHeight is real.
+    const h = this.offsetHeight || 0;
+    if (h && top + h > window.innerHeight - 8 && rect.top - h - 4 >= 8) {
+      top = rect.top - h - 4;
+    }
+    this.style.top  = `${top + scrollY}px`;
     this.style.left = `${rect.left  + scrollX}px`;
   }
 

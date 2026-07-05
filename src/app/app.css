@@ -44,14 +44,9 @@ body {
 }
 ui-sidebar[collapsed] .nav-sec { display: none; }
 
-/* Signed-in identity — ONE place: bottom-left of the sidebar (RULED). */
-.me { display: flex; align-items: center; gap: var(--ui-sys-space-2); padding: var(--ui-sys-space-2); }
-.me-name {
-  font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-ui-sidebar[collapsed] .me-name { display: none; }
-ui-sidebar[collapsed] .me { justify-content: center; padding: var(--ui-sys-space-2) 0; }
+/* Signed-in identity — ONE place: bottom-left of the sidebar (RULED). Phase
+ * 11 makes it a REAL control: a ui-sidebar-item (its own layout/states)
+ * anchoring the ProfileMenu — no layout rules needed here. */
 
 /* Main work area runway — pages mount inside; white content per the design rules. */
 .work {
@@ -1160,3 +1155,188 @@ ui-sidebar[collapsed] .brand { margin-left: 0; }
   color: var(--ui-sys-on-surface-muted);
   white-space: pre; overflow-x: auto;
 }
+
+/* ══ SETTINGS HUB (Phase 11 — sealed "Settings — manager-only org config
+ * hub" trees 1–10; token-only layout, components carry all chrome). ═══════ */
+.settings-layout {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  gap: 0 var(--ui-sys-space-6);
+  height: 100%;
+  padding: var(--ui-sys-space-4) var(--ui-sys-space-6);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.settings-explainer {
+  grid-column: 1 / -1;
+  margin: 0 0 var(--ui-sys-space-3);
+  font: var(--ui-sys-font-caption);
+}
+
+/* The settings rail (sealed settings-nav): ui-list items; ACTIVE via ink
+ * only (sealed design law) — a heavier label, never a background swap. */
+.settings-nav { overflow-y: auto; }
+/* Token re-point on the host (the established vote-button pattern): the
+ * shadow .item reads --ui-sys-on-surface, so idle items thin their ink to the
+ * muted role and the ACTIVE item restores the strong ink — ink only, never a
+ * background swap (sealed design law). */
+.settings-nav ui-list-item.settings-nav-item {
+  --ui-sys-list-item-min-height: 36px;
+  --ui-sys-on-surface: var(--ui-ref-ink-muted);
+}
+.settings-nav ui-list-item.settings-nav-item.active {
+  --ui-sys-on-surface: var(--ui-ref-ink-strong);
+  --ui-sys-font-body: var(--ui-sys-font-label);
+}
+
+/* The pane column (sealed settings-panes): scrolls; sections stack. */
+.settings-panes { overflow-y: auto; min-width: 0; max-width: 860px; }
+.setup-section { padding: var(--ui-sys-space-2) 0 var(--ui-sys-space-6); }
+.setup-section.seg-substack {
+  border-top: 1px solid var(--ui-sys-outline-subtle);
+  padding-top: var(--ui-sys-space-4);
+}
+.setup-section-head {
+  display: flex; align-items: baseline; gap: var(--ui-sys-space-3);
+  margin-bottom: var(--ui-sys-space-1);
+}
+.setup-section-head h3 {
+  margin: 0;
+  font: var(--ui-sys-font-title);
+}
+.sec-count { font: var(--ui-sys-font-caption); font-variant-numeric: tabular-nums; }
+.sec-intro { margin: 0 0 var(--ui-sys-space-4); max-width: 720px; font-size: 12.5px; line-height: 1.5; }
+
+/* Field grid (sealed settings-grid): two columns, airy 4px rhythm. */
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ui-sys-space-4) var(--ui-sys-space-6);
+}
+.settings-grid .sh-field { min-width: 0; }
+
+/* Brand icon row (sealed brand-icon-*). The preview circle wears the brand
+ * color: --tint is DATA from appConfig; the token is the fallback. */
+.brand-icon-row { display: flex; align-items: center; gap: var(--ui-sys-space-3); }
+.brand-icon-preview {
+  width: 40px; height: 40px; flex: none;
+  border-radius: var(--ui-sys-shape-pill);
+  background: var(--tint, var(--ui-sys-brand));
+  color: var(--ui-sys-on-accent);
+  display: inline-flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.brand-icon-img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Brand/accent color rows (sealed settings-swatch-*). */
+.color-row { display: flex; align-items: center; gap: var(--ui-sys-space-3); }
+.settings-swatch-preview {
+  width: 24px; height: 24px; flex: none;
+  border-radius: var(--ui-sys-shape-control);
+  border: 1px solid var(--ui-sys-outline);
+  background: var(--tint, var(--ui-sys-surface-field));
+}
+.hex-input { width: 120px; font-variant-numeric: tabular-nums; }
+.settings-swatch-row {
+  display: flex; align-items: center; gap: var(--ui-sys-space-1);
+  margin-top: var(--ui-sys-space-2);
+}
+.theme-choices { display: flex; align-items: stretch; gap: var(--ui-sys-space-2); flex-wrap: wrap; }
+.theme-auto-row { display: flex; align-items: center; gap: var(--ui-sys-space-3); }
+.seg-pair { display: inline-flex; align-items: center; gap: var(--ui-sys-space-1); }
+
+/* Fiscal pane (sealed TREE 4). */
+.fiscal-row { display: flex; gap: var(--ui-sys-space-2); }
+.fiscal-row > ui-select:first-child { flex: 1; min-width: 0; }
+.fiscal-day { width: 90px; flex: none; }
+.fiscal-day ui-select { width: 90px; min-width: 90px; }
+.quarters-list { display: flex; flex-direction: column; gap: var(--ui-sys-space-1); }
+.quarter-row {
+  display: flex; gap: var(--ui-sys-space-4); align-items: baseline;
+  padding: var(--ui-sys-space-1) 0;
+  border-bottom: 1px solid var(--ui-sys-outline-subtle);
+}
+.quarter-label { font: var(--ui-sys-font-label); width: 28px; }
+.quarter-range { font-variant-numeric: tabular-nums; color: var(--ui-sys-on-surface-muted); }
+
+/* Shared list editors (sealed TREES 8–9). */
+.issue-settings-list {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: var(--ui-sys-space-1);
+  margin-bottom: var(--ui-sys-space-2);
+}
+.issue-settings-add, .segset-add { max-width: 420px; }
+.segset { display: flex; flex-direction: column; gap: var(--ui-sys-space-3); }
+.segset-seg {
+  border: 1px solid var(--ui-sys-outline-subtle);
+  border-radius: var(--ui-sys-shape-card);
+  padding: var(--ui-sys-space-3);
+  background: var(--ui-sys-surface-card);
+}
+.segset-seg-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: var(--ui-sys-space-2);
+}
+.segset-unit-input { width: 160px; }
+
+/* Sites editor (sealed TREE 5). */
+.site-add-row { display: flex; align-items: center; gap: var(--ui-sys-space-2); flex-wrap: wrap; }
+.site-city-input { width: 160px; }
+
+/* Invite code (sealed TREE 7). The value renders in the body face at tabular
+ * settings — the oracle used <code>; NO mono family ships (sealed record). */
+.invite-code-display { display: flex; align-items: center; gap: var(--ui-sys-space-2); }
+.invite-code-value {
+  font: var(--ui-sys-font-label); font-variant-numeric: tabular-nums;
+  letter-spacing: .04em;
+  padding: var(--ui-sys-space-2) var(--ui-sys-space-3);
+  background: var(--ui-sys-surface-field);
+  border: 1px solid var(--ui-sys-outline);
+  border-radius: var(--ui-sys-shape-control);
+}
+.invite-modal-head { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+.invite-modal-body { font-size: 13px; line-height: 1.6; margin: 0; max-width: 380px; }
+.btn-link { text-decoration: none; }
+.plain-link { color: var(--ui-sys-accent); text-decoration: none; }
+.plain-link:hover { text-decoration: underline; }
+
+/* Roles (sealed TREE 6): search + table; the self row wears the accent-faint
+ * wash (census: roles-row.self → --ui-sys-accent-tint-faint). */
+.settings-search { max-width: 380px; margin-bottom: var(--ui-sys-space-3); }
+.roles-table { width: 100%; border-collapse: collapse; }
+.roles-table th {
+  text-align: left; font: var(--ui-sys-font-caption);
+  color: var(--ui-sys-on-surface-muted);
+  padding: var(--ui-sys-space-1) var(--ui-sys-space-2);
+  border-bottom: 1px solid var(--ui-sys-outline);
+}
+.roles-table td {
+  padding: var(--ui-sys-space-1) var(--ui-sys-space-2);
+  border-bottom: 1px solid var(--ui-sys-outline-subtle);
+}
+.roles-row.self td { background: var(--ui-sys-accent-tint-faint); }
+.roles-person { display: flex; align-items: center; gap: var(--ui-sys-space-2); }
+.roles-name { font-size: 12px; }
+.roles-email { font-size: 12px; }
+.roles-role-col { text-align: center; }
+.role-toggle { display: inline-flex; align-items: center; gap: var(--ui-sys-space-1); }
+.manager-star { color: var(--ui-sys-manager-amber); }
+
+/* Contact (sealed pane copy: 13px / 1.6 / 640). */
+.contact-copy { font-size: 13px; line-height: 1.6; max-width: 640px; margin: 0; }
+.contact-mail { font-size: 13px; margin: var(--ui-sys-space-3) 0 0; }
+
+/* Design dashboard (sealed p3). */
+.design-grid { display: flex; flex-direction: column; gap: var(--ui-sys-space-4); }
+.design-accent-custom {
+  display: flex; align-items: center; gap: var(--ui-sys-space-2);
+  margin-top: var(--ui-sys-space-2);
+  font: var(--ui-sys-font-caption);
+}
+
+/* Integrations (sealed forward-design shell). */
+.integrations-list { max-width: 560px; display: block; }
+.integration-trailing { display: inline-flex; align-items: center; gap: var(--ui-sys-space-2); }
+
+.settings-denied { padding: var(--ui-sys-space-6); }

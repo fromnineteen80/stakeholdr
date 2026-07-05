@@ -132,6 +132,8 @@
       <a href="#badge">ui-badge</a>
       <a href="#owner-picker">ui-owner-picker</a>
       <a href="#coachmark">ui-coachmark</a>
+      <a href="#swatch-card">ui-swatch-card</a>
+      <a href="#color-field">ui-color-field</a>
     </nav>
   </aside>
 
@@ -733,6 +735,59 @@
         sync();
       });
     })();
+  </script>
+</section>
+
+    <section id="swatch-card">
+  <h3>ui-swatch-card <span class="hint">— selectable preview swatch (card + dot variants; role=radio, arrow keys move + select)</span></h3>
+  <div class="row" role="radiogroup" aria-label="Theme" id="swatch-demo-themes">
+    <ui-swatch-card value="soapbox" label="Soapbox" sublabel="Warm beige" selected
+      swatch-bg="var(--ui-sys-theme-preview-soapbox-bg)"
+      swatch-dot="var(--ui-sys-theme-preview-soapbox-dot)"
+      swatch-border="var(--ui-sys-theme-preview-soapbox-border)"></ui-swatch-card>
+    <ui-swatch-card value="undecideds" label="Undecideds" sublabel="True greyscale"
+      swatch-bg="var(--ui-sys-theme-preview-undecideds-bg)"
+      swatch-dot="var(--ui-sys-theme-preview-undecideds-dot)"
+      swatch-border="var(--ui-sys-theme-preview-undecideds-border)"></ui-swatch-card>
+    <ui-swatch-card value="nightshift" label="Night Shift" sublabel="Warm charcoal" disabled
+      swatch-bg="var(--ui-sys-theme-preview-nightshift-bg)"
+      swatch-dot="var(--ui-sys-theme-preview-nightshift-dot)"
+      swatch-border="var(--ui-sys-theme-preview-nightshift-border)"></ui-swatch-card>
+  </div>
+  <div class="row" role="radiogroup" aria-label="Color" id="swatch-demo-dots" style="margin-top:var(--ui-sys-space-3)">
+    <ui-swatch-card variant="dot" value="s1" title="swatch 1" selected swatch-bg="var(--ui-sys-config-swatch-1)"></ui-swatch-card>
+    <ui-swatch-card variant="dot" value="s2" title="swatch 2" swatch-bg="var(--ui-sys-config-swatch-2)"></ui-swatch-card>
+    <ui-swatch-card variant="dot" value="s3" title="swatch 3" swatch-bg="var(--ui-sys-config-swatch-3)"></ui-swatch-card>
+    <ui-swatch-card variant="dot" value="s4" title="swatch 4" swatch-bg="var(--ui-sys-config-swatch-4)"></ui-swatch-card>
+    <ui-swatch-card variant="dot" value="s5" title="swatch 5" swatch-bg="var(--ui-sys-config-swatch-5)"></ui-swatch-card>
+    <ui-swatch-card variant="dot" value="s6" title="swatch 6" swatch-bg="var(--ui-sys-config-swatch-6)"></ui-swatch-card>
+    <ui-swatch-card variant="dot" value="s7" title="swatch 7" swatch-bg="var(--ui-sys-config-swatch-7)"></ui-swatch-card>
+  </div>
+  <script>
+    for (const groupId of ['swatch-demo-themes', 'swatch-demo-dots']) {
+      const g = document.getElementById(groupId);
+      g.addEventListener('change', (e) => {
+        const v = e.detail && e.detail.value;
+        if (!v) return;
+        g.querySelectorAll('ui-swatch-card').forEach((c) =>
+          c.getAttribute('value') === v ? c.setAttribute('selected', '') : c.removeAttribute('selected'));
+      });
+    }
+  </script>
+</section>
+
+    <section id="color-field">
+  <h3>ui-color-field <span class="hint">— the beaker custom-color escape hatch (hidden native picker; flask tints to the value)</span></h3>
+  <div class="row">
+    <ui-color-field id="color-field-demo" value="#B5552C"></ui-color-field>
+    <span class="hint" id="color-field-readout">#B5552C</span>
+    <ui-color-field disabled></ui-color-field><span class="hint">disabled</span>
+  </div>
+  <script>
+    document.getElementById('color-field-demo').addEventListener('change', (e) => {
+      document.getElementById('color-field-demo').setAttribute('value', e.detail.value);
+      document.getElementById('color-field-readout').textContent = e.detail.value;
+    });
   </script>
 </section>
   </main>

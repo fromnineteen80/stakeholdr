@@ -62,8 +62,8 @@ export function voteCounts(votes) {
 }
 
 /* ── FY ROLLUPS (sealed, USD, fiscal-year aware). fsMonth/fsDay default 1/1 —
- * the sealed appConfig.fiscalStartMonth/Day fallback (the Settings phase
- * re-points these at live config; the sealed present-AND-non-empty contract).
+ * the pure-suite default (REAL as of Phase 11: community.jsx passes the LIVE
+ * appConfig.fiscalStartMonth/Day through useCompanyCatalogs().fiscal).
  * DECLARED: the oracle parses bare dates with new Date(dateStr) (UTC — a
  * negative-offset timezone shifts Jan-1 into the prior FY); the repo-wide
  * timezone guard (local-midnight parse for bare YYYY-MM-DD, the shared
@@ -258,15 +258,17 @@ export function approveApplication(app, { approverId, now, today }) {
  * INTERIM DEFAULT only — the one behavior sealed either way is that the
  * oracle's silent invisible stranding is NOT replicated. If the user rules
  * visible-and-removable, only toggleMarket changes. ───────────────────────── */
-export function regionOptionsFor(markets) {
-  return (markets || []).flatMap((m) => MARKETS[m] || []);
+export function regionOptionsFor(markets, marketMap = MARKETS) {
+  /* marketMap: the LIVE Settings-fed companyMarkets (Phase 11) — the seed
+   * constant stays the default so the pure suite asserts the sealed shape. */
+  return (markets || []).flatMap((m) => marketMap[m] || []);
 }
-export function toggleMarket(d, market) {
+export function toggleMarket(d, market, marketMap = MARKETS) {
   const cur = d.markets || [];
   const markets = cur.includes(market)
     ? cur.filter((m) => m !== market)
     : [...cur, market];
-  const opts = regionOptionsFor(markets);
+  const opts = regionOptionsFor(markets, marketMap);
   return { markets, regions: (d.regions || []).filter((r) => opts.includes(r)) };
 }
 export function toggleValue(list, v) {

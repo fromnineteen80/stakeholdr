@@ -7,19 +7,19 @@
  *
  * SEALED SEGMAP CONTRACT (load-bearing — DO NOT hardcode D.SEGMENTS at a use
  * site): the effective segment → business-unit map is appConfig.segments when
- * present AND non-empty, else the seed catalog. The Settings phase lands the
- * appConfig editor; every consumer already reads through this ONE derivation
- * so re-pointing needs no page change.
+ * present AND non-empty, else the seed catalog. REAL as of Phase 11: Settings
+ * edits appConfig.segments and every consumer reads through this ONE
+ * derivation live — no page change was needed, as designed.
  */
 import { SEGMENTS, MARKETS } from '../data/catalogs.js';
+import { deriveCompanyCatalogs } from './settings-logic.js';
 
-/* Sealed app.jsx derivation, verbatim shape: companySegments =
- * (cfg.segments && Object.keys(cfg.segments).length) ? cfg.segments
- *   : D.SEGMENTS. The shell computes this from the appConfig store and hands
- * it down as the companySegments prop. */
+/* Sealed app.jsx derivation: companySegments = (cfg.segments && keys.length)
+ * ? cfg.segments : D.SEGMENTS. The predicate is single-sourced in
+ * settings-logic.deriveCompanyCatalogs (replace-don't-duplicate); this
+ * wrapper keeps the sealed shell-side name. */
 export function companySegmentsFrom(cfg) {
-  const segs = (cfg || {}).segments;
-  return (segs && Object.keys(segs).length) ? segs : SEGMENTS;
+  return deriveCompanyCatalogs(cfg).companySegments;
 }
 
 /* Sealed SetupView-side re-application (the modal re-applies it again as SEG —

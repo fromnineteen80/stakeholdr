@@ -281,6 +281,80 @@ for (const path of pages) {
     const formulaText = await page.locator('.help-formula').textContent().catch(() => '');
     if (!(formulaText || '').includes('Σ (member.x × member.weight)'))
       errs.push('P10FORMULA: the sealed formula block is missing or paraphrased');
+    // Phase 11: Settings — the sealed manager-gated ProfileMenu entry (census
+    // A9), the 9 oracle panes + Design + Integrations, the LIVE inheritance
+    // edges (segments → Workspaces create modal; org goals → Plan editor),
+    // and the design dashboard (live :root token writes, reload persistence,
+    // reset-to-start-state).
+    const openSettings = async (tag) => {
+      await page.locator('#me-anchor').click({ timeout: 3000 }).catch(e => errs.push(tag + 'MENU: ' + e.message));
+      await page.waitForTimeout(300);
+      await page.locator('ui-menu.profile-menu ui-menu-item', { hasText: 'Settings' }).click({ timeout: 3000 }).catch(e => errs.push(tag + 'ITEM: ' + e.message));
+      await page.waitForTimeout(400);
+    };
+    await openSettings('P11');
+    const railCount = await page.locator('.settings-nav ui-list-item').count();
+    if (railCount !== 11) errs.push(`P11RAIL: expected 9 sealed panes + Design + Integrations = 11 rail items, saw ${railCount}`);
+    // structure pane: add a segment (Enter commit) + an org goal
+    await page.locator('.settings-nav ui-list-item', { hasText: 'Your Structure' }).click({ timeout: 3000 }).catch(e => errs.push('P11STRUCT: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('.segset-add ui-text-field input').fill('Emerging Tech').catch(e => errs.push('P11SEGFILL: ' + e.message));
+    await page.locator('.segset-add ui-text-field input').press('Enter').catch(e => errs.push('P11SEGENTER: ' + e.message));
+    await page.waitForTimeout(300);
+    const segBlock = await page.locator('.segset-seg strong', { hasText: 'Emerging Tech' }).count();
+    if (segBlock !== 1) errs.push(`P11SEGADD: expected the new segment block, saw ${segBlock}`);
+    await page.locator('.issue-settings-add ui-text-field input').first().fill('Ship Phase 11').catch(e => errs.push('P11GOALFILL: ' + e.message));
+    await page.locator('.issue-settings-add ui-text-field input').first().press('Enter').catch(e => errs.push('P11GOALENTER: ' + e.message));
+    await page.waitForTimeout(300);
+    const goalChip = await page.locator('.issue-settings-list ui-chip', { hasText: 'Ship Phase 11' }).count();
+    if (goalChip !== 1) errs.push(`P11GOALADD: expected the new goal chip, saw ${goalChip}`);
+    // LIVE EDGE 1 — segments → the Workspaces create modal's Segment select
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Workspaces' }).click({ timeout: 3000 }).catch(e => errs.push('P11WSNAV: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('ui-app-bar ui-icon-button[aria-label="Create new"]').click({ timeout: 3000 }).catch(e => errs.push('P11WSCREATE: ' + e.message));
+    await page.waitForTimeout(400);
+    const segOption = await page.locator('ui-option', { hasText: 'Emerging Tech' }).count();
+    if (segOption < 1) errs.push('P11SEGEDGE: the Settings-added segment did not reach the workspace modal Segment select');
+    await page.evaluate(() => document.querySelectorAll('ui-dialog').forEach(d => d.close && d.close()));
+    await page.waitForTimeout(300);
+    // LIVE EDGE 2 — org goals → the Plan editor's section 2
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Plans' }).click({ timeout: 3000 }).catch(e => errs.push('P11PLANNAV: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('ui-app-bar ui-icon-button[aria-label="Create new"]').click({ timeout: 3000 }).catch(e => errs.push('P11PLANNEW: ' + e.message));
+    await page.waitForTimeout(500);
+    const goalRow = await page.locator('.plan-goal-title', { hasText: 'Ship Phase 11' }).count();
+    if (goalRow !== 1) errs.push(`P11GOALEDGE: the Settings-added org goal did not reach the plan editor, saw ${goalRow}`);
+    // design dashboard: accent candidate + Modern wrapper apply LIVE to :root
+    await openSettings('P11B');
+    await page.locator('.settings-nav ui-list-item', { hasText: 'Design' }).click({ timeout: 3000 }).catch(e => errs.push('P11DESIGN: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('ui-swatch-card[value="#D96B43"]').click({ timeout: 3000 }).catch(e => errs.push('P11ACCENT: ' + e.message));
+    await page.waitForTimeout(300);
+    const accentLive = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--ui-sys-accent').trim());
+    if (accentLive !== '#D96B43') errs.push(`P11ACCENTLIVE: expected #D96B43 on :root, saw "${accentLive}"`);
+    await page.locator('ui-swatch-card[value="modern"]').click({ timeout: 3000 }).catch(e => errs.push('P11MODERN: ' + e.message));
+    await page.waitForTimeout(300);
+    const themeAttr = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+    if (themeAttr !== 'modern') errs.push(`P11MODERNATTR: expected data-theme="modern", saw "${themeAttr}"`);
+    const zoneAfter = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--ui-sys-zone-strategic-partner').trim());
+    if (zoneAfter !== '#74B556') errs.push(`P11ZONELAW: a theme/design swap touched a zone token: ${zoneAfter}`);
+    // persistence: the overrides survive a RELOAD (boot re-apply, no flash logic asserted)
+    await page.reload({ waitUntil: 'networkidle', timeout: 30000 }).catch(e => errs.push('P11RELOAD: ' + e.message));
+    await page.waitForTimeout(1500);
+    const accentBoot = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--ui-sys-accent').trim());
+    const themeBoot = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+    if (accentBoot !== '#D96B43') errs.push(`P11PERSIST: accent did not survive reload, saw "${accentBoot}"`);
+    if (themeBoot !== 'modern') errs.push(`P11PERSIST: wrapper theme did not survive reload, saw "${themeBoot}"`);
+    // reset-to-start-state restores tokens.css exactly
+    await openSettings('P11C');
+    await page.locator('.settings-nav ui-list-item', { hasText: 'Design' }).click({ timeout: 3000 }).catch(e => errs.push('P11DESIGN2: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('ui-button', { hasText: 'Reset to start-state' }).click({ timeout: 3000 }).catch(e => errs.push('P11RESET: ' + e.message));
+    await page.waitForTimeout(300);
+    const accentReset = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--ui-sys-accent').trim());
+    const themeReset = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+    if (accentReset !== '#B5552C') errs.push(`P11RESETACCENT: expected the tokens.css start-state #B5552C, saw "${accentReset}"`);
+    if (themeReset !== null) errs.push(`P11RESETTHEME: expected no data-theme after reset, saw "${themeReset}"`);
   }
   if (path.includes('wireframes')) {
     await page.locator('#theme-modern').click({ timeout: 3000 }).catch(e => errs.push('TOGGLE: ' + e.message));

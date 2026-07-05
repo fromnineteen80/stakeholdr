@@ -24,8 +24,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  CATEGORIES, MARKETS, GEOGRAPHIES, US_STATES, STATE_ABBR, SITES, siteLabel,
+  GEOGRAPHIES, US_STATES, STATE_ABBR, siteLabel,
 } from '../data/catalogs.js';
+/* REAL as of Phase 11: categories/markets/sites read the LIVE appConfig-with-
+ * seed-fallback seam (sealed present-AND-non-empty contract) — the modal's
+ * cascading selects follow Settings, never the raw seeds (sealed CONFIG →
+ * CATALOG OVERRIDE contract). */
+import { useCompanyCatalogs } from '../data/company.js';
 import { weightedCoord, statusFor } from '../data/engine.js';
 import {
   displayName, formatPhone, normalizeUrl,
@@ -367,12 +372,13 @@ export function StakeholderModal({
   onOpenWorkspace, // optional: opens that workspace's Lists tab (census C8)
 }) {
   const isEdit = !!existing;
+  const { companyCategories, companyMarkets, companySites } = useCompanyCatalogs();
   const dlgRef = useRef(null);
   const confirmRef = useRef(null);
   const viewAllRef = useRef(null);
   const orgRef = useRef(null);
 
-  const [draft, setDraft] = useState(() => draftFrom(existing, currentUser));
+  const [draft, setDraft] = useState(() => draftFrom(existing, currentUser, companyCategories));
   const [viewMode, setViewMode] = useState(!!(initialView && existing));
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [viewAll, setViewAll] = useState(false);
@@ -383,7 +389,7 @@ export function StakeholderModal({
   const existingId = existing ? existing.id : null;
   useEffect(() => {
     if (!open) return;
-    setDraft(draftFrom(existing, currentUser));
+    setDraft(draftFrom(existing, currentUser, companyCategories));
     setViewMode(!!(initialView && existing));
     setConfirmDelete(false);
     setViewAll(false);
@@ -413,7 +419,7 @@ export function StakeholderModal({
   });
 
   const set = (patch) => setDraft((d) => ({ ...d, ...patch }));
-  const missing = shMissing(draft);
+  const missing = shMissing(draft, companySites);
   const valid = missing.length === 0;
 
   const submit = () => {
@@ -432,7 +438,7 @@ export function StakeholderModal({
     ? (s.notesHistory || []).slice().sort((a, b) => (b.at || '').localeCompare(a.at || ''))
     : [];
   const userById = (id) => (users || []).find((u) => u.id === id);
-  const siteOf = (id) => SITES.find((x) => x.id === id);
+  const siteOf = (id) => companySites.find((x) => x.id === id);
 
   const profSub = s
     ? (s.isPerson && s.title
@@ -720,15 +726,15 @@ export function StakeholderModal({
                   <Sel
                     ariaLabel="Category"
                     value={draft.category}
-                    options={Object.keys(CATEGORIES)}
-                    onChange={(c) => set({ category: c, type: (CATEGORIES[c] || [])[0] || '' })}
+                    options={Object.keys(companyCategories)}
+                    onChange={(c) => set({ category: c, type: (companyCategories[c] || [])[0] || '' })}
                   />
                 </Field>
                 <Field label="Audience type">
                   <Sel
                     ariaLabel="Audience type"
                     value={draft.type}
-                    options={CATEGORIES[draft.category] || []}
+                    options={companyCategories[draft.category] || []}
                     onChange={(v) => set({ type: v })}
                   />
                 </Field>
@@ -740,15 +746,15 @@ export function StakeholderModal({
                   <Sel
                     ariaLabel="Market"
                     value={draft.market}
-                    options={Object.keys(MARKETS)}
-                    onChange={(m) => set({ market: m, region: (MARKETS[m] || [])[0] || '' })}
+                    options={Object.keys(companyMarkets)}
+                    onChange={(m) => set({ market: m, region: (companyMarkets[m] || [])[0] || '' })}
                   />
                 </Field>
                 <Field label="Region">
                   <Sel
                     ariaLabel="Region"
                     value={draft.region}
-                    options={MARKETS[draft.market] || []}
+                    options={companyMarkets[draft.market] || []}
                     onChange={(v) => set({ region: v })}
                   />
                 </Field>
@@ -763,9 +769,9 @@ export function StakeholderModal({
                   <Sel
                     ariaLabel="Site"
                     value={draft.site}
-                    options={[{ value: '', label: 'None' }, ...SITES.map((st) => ({ value: st.id, label: siteLabel(st) }))]}
+                    options={[{ value: '', label: 'None' }, ...companySites.map((st) => ({ value: st.id, label: siteLabel(st) }))]}
                     onChange={(id) => {
-                      const st = SITES.find((x) => x.id === id);
+                      const st = companySites.find((x) => x.id === id);
                       if (st && st.state) set({ site: id, state: st.state });
                       else set({ site: id });
                     }}

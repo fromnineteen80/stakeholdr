@@ -73,13 +73,16 @@ import {
   SEED_COMMUNITY, SEED_STAKEHOLDERS, SEED_SCORES, SEED_TEAM, SEED_USERS,
   SEED_WORKSPACES, SEED_STAKEHOLDER_WORKSPACES,
 } from '../data/seed.js';
-/* Company sets = the seeded catalogs until the Settings phase lands appConfig
- * (the sealed present-AND-non-empty fallback — same contract note as Plans). */
+/* REAL as of Phase 11: the editable company sets (markets/sites/issues/tags)
+ * read the LIVE appConfig-with-seed-fallback seam (sealed present-AND-non-
+ * empty contract); the FY rollup anchors on the LIVE fiscal keys. The
+ * COMMUNITY_* / GEOGRAPHIES / US_STATES enums stay fixed (sealed). */
 import {
-  MARKETS, GEOGRAPHIES, US_STATES, STATE_ABBR, SITES, siteLabel,
-  ISSUES, TAGS, COMMUNITY_KINDS, COMMUNITY_STAGES, COMMUNITY_ASK_TYPES,
+  GEOGRAPHIES, US_STATES, STATE_ABBR, siteLabel,
+  COMMUNITY_KINDS, COMMUNITY_STAGES, COMMUNITY_ASK_TYPES,
   COMMUNITY_RECURRENCE, COMMUNITY_GIVING_MODES,
 } from '../data/catalogs.js';
+import { useCompanyCatalogs } from '../data/company.js';
 import {
   moneyK, money, isDecided, approvedLabel, communityEntryAmount, valueScore,
   applyVote, voteCounts, communityRollup, askAmountText, askSuffix,
@@ -183,9 +186,10 @@ function StakeholderPills({ ids, stakeholders, onOpen }) {
 function CommunityCard({
   app, users, stakeholders, currentUser, onOpen, onEdit, onVote, onOpenStakeholder,
 }) {
+  const { companySites } = useCompanyCatalogs();
   const vs = valueScore(app);
   const appr = approvedLabel(app);
-  const site = app.site ? SITES.find((s) => s.id === app.site) : null;
+  const site = app.site ? companySites.find((s) => s.id === app.site) : null;
   const engaged = (app.linkedStakeholders || [])
     .map((id) => stakeholders.find((s) => s.id === id))
     .filter(Boolean);
@@ -248,14 +252,14 @@ function CommunityCard({
             />
           ))}
       </div>
-      {((app.markets || []).length > 0 || (app.regions || []).length > 0 || (app.site && SITES.length > 0)) && (
+      {((app.markets || []).length > 0 || (app.regions || []).length > 0 || (app.site && companySites.length > 0)) && (
         <div className="plan-card-meta">
           {(app.markets || []).length > 0 && metaRow('Markets', app.markets.join(', '))}
           {(app.regions || []).length > 0 && metaRow('Regions', app.regions.join(', '))}
           {/* Sealed: the Site row renders whenever app.site is SET (and the
               SITES catalog exists); "-" when the id doesn't resolve — the
               landing table column's exact fallback. */}
-          {app.site && SITES.length > 0
+          {app.site && companySites.length > 0
             ? metaRow('Site', site ? (siteLabel(site) || '-') : '-')
             : null}
         </div>
@@ -288,6 +292,7 @@ export function CommunityPage({
   const [workspaces] = usePersistentState('workspaces', SEED_WORKSPACES);
   const [stakeholderWorkspaces] =
     usePersistentState('stakeholderWorkspaces', SEED_STAKEHOLDER_WORKSPACES);
+  const { companyIssues, companyTags } = useCompanyCatalogs();
 
   // currentUser = the seeded first user until the login phase (sealed order).
   const currentUser = users[0] || null;
@@ -404,8 +409,8 @@ export function CommunityPage({
         initialView
         users={users}
         currentUser={currentUser}
-        companyIssues={ISSUES}
-        companyTags={TAGS}
+        companyIssues={companyIssues}
+        companyTags={companyTags}
         community={community}
         scores={scores}
         team={team}
@@ -428,6 +433,7 @@ export function CommunityPage({
 function CommunityLanding({
   community, users, stakeholders, currentUser, onOpen, onEdit, onVote, onOpenStakeholder,
 }) {
+  const { companySites, fiscal } = useCompanyCatalogs();
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState({});
   const [sort, setSort] = useState({ key: null, dir: 'asc' });
@@ -441,7 +447,11 @@ function CommunityLanding({
 
   /* FY rollups (sealed strip: Requested · Annual · 3YR Total; rollup.approved
    * is computed-never-rendered — sealed, no invented surface). */
-  const rollup = useMemo(() => communityRollup(community), [community]);
+  /* REAL as of Phase 11: the FY anchor = the LIVE Settings fiscal keys
+   * (sealed appConfig.fiscalStartMonth/Day; seed default Nov 1). */
+  const rollup = useMemo(
+    () => communityRollup(community, { fsMonth: fiscal.month, fsDay: fiscal.day }),
+    [community, fiscal]);
 
   const activeFilterCount = Object.values(filters).filter((v) => v && v.length).length;
   const toggleFilter = (key, value) => {
@@ -459,7 +469,7 @@ function CommunityLanding({
     }
     return [...set].sort();
   };
-  const siteOf = (a) => (a.site ? SITES.find((s) => s.id === a.site) : null);
+  const siteOf = (a) => (a.site ? companySites.find((s) => s.id === a.site) : null);
 
   return (
     <>
@@ -880,6 +890,7 @@ function CommunityEditor({
   existing, users, stakeholders, currentUser, onCancel, onSubmit, onOpenStakeholder,
 }) {
   const isEdit = !!existing;
+  const { companyMarkets, companySites, companyIssues } = useCompanyCatalogs();
   const [d, setD] = useState(() => (existing
     ? draftFromApp(existing)
     : blankApp(currentUser, { id: uid('ca'), now: nowStamp(), today: todayYMD() })));
@@ -895,7 +906,7 @@ function CommunityEditor({
   const missing = communityMissing(d);
   const valid = missing.length === 0;
   const vs = valueScore(d);
-  const regionOpts = regionOptionsFor(d.markets);
+  const regionOpts = regionOptionsFor(d.markets, companyMarkets);
   const submitters = users.filter((u) => u.role !== 'system');
   const committed = isDecided(d.stage);
 
@@ -1098,18 +1109,18 @@ function CommunityEditor({
             <span className="comm-value-num">{vs.toFixed(1)} / 10</span>
           </div>
           <Field label="Issues">
-            <IssueSelector selected={d.issues || []} company={ISSUES}
+            <IssueSelector selected={d.issues || []} company={companyIssues}
                            onChange={(v) => set({ issues: v })} />
           </Field>
           <div className="sh-row-2">
             <Field label="Markets">
               <ChipMulti
-                options={Object.keys(MARKETS)}
+                options={Object.keys(companyMarkets)}
                 selected={d.markets}
                 /* INTERIM cascade — deselecting a market prunes its orphaned
                    regions; the sealed decision is an OPEN USER RULING (see
                    toggleMarket in community-logic.js). */
-                onToggle={(m) => set(toggleMarket(d, m))}
+                onToggle={(m) => set(toggleMarket(d, m, companyMarkets))}
                 emptyText=""
               />
             </Field>
@@ -1129,9 +1140,9 @@ function CommunityEditor({
                 ariaLabel="Site"
                 value={d.site || ''}
                 options={[{ value: '', label: 'None' },
-                  ...SITES.map((s) => ({ value: s.id, label: siteLabel(s) }))]}
+                  ...companySites.map((s) => ({ value: s.id, label: siteLabel(s) }))]}
                 onChange={(id) => {
-                  const s = SITES.find((x) => x.id === id);
+                  const s = companySites.find((x) => x.id === id);
                   if (s && s.state) set({ site: id, state: s.state });
                   else set({ site: id });
                 }}
