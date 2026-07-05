@@ -1,6 +1,6 @@
 /* ============================================================================
  * <ui-chip-set> + <ui-chip> — chip variants: assist|filter|input|suggestion
- * plus the sealed PRESENTATIONAL pill variants: priority|zone|tag|segment —
+ * plus the sealed PRESENTATIONAL pill variants: priority|zone|tag|segment|goal —
  * and the companion <ui-status-dot> element (sealed Shared-UI-primitives box;
  * segment = the sealed SegmentBadge, Workspaces box, value attr = the segment
  * name, unknown → the Corporate Functions pair).
@@ -21,11 +21,15 @@
  *
  * Attrs on <ui-chip>:
  *   variant  — assist | filter | input | suggestion   (interactive; default assist)
- *              priority | zone | tag                  (presentational pills)
+ *              priority | zone | tag | segment | goal (presentational pills)
  *   selected — boolean, meaningful for filter chips
  *   disabled — boolean
  *   value    — priority variant only: High | Medium | Low (case-insensitive;
  *              unknown/absent falls back to the Low pair — sealed PriorityPill)
+ *              goal variant: the goal-model id (general | shared-value |
+ *              crisis | activist | dei | community | union); unknown/absent
+ *              falls back to the container/muted pair (sealed PLAN_GOAL_COLORS
+ *              fallback); colors from --ui-sys-goal-*-surface/-ink
  *   data-zone — zone variant only: the exact relationship-zone NAME. Colors
  *              read the single-sourced --ui-sys-zone-* + band-ink tokens.
  *              SEALED NULL-GUARD: a zone with no catalog entry renders
@@ -205,7 +209,8 @@ chipTpl.innerHTML = `
     :host([variant="priority"]) .chip,
     :host([variant="zone"]) .chip,
     :host([variant="tag"]) .chip,
-    :host([variant="segment"]) .chip {
+    :host([variant="segment"]) .chip,
+    :host([variant="goal"]) .chip {
       height: auto;
       padding: 1px var(--ui-sys-space-2);
       font: var(--ui-sys-font-caption);
@@ -215,7 +220,8 @@ chipTpl.innerHTML = `
     :host([variant="priority"]) .chip::before,
     :host([variant="zone"]) .chip::before,
     :host([variant="tag"]) .chip::before,
-    :host([variant="segment"]) .chip::before { content: none; } /* no state layer */
+    :host([variant="segment"]) .chip::before,
+    :host([variant="goal"]) .chip::before { content: none; } /* no state layer */
 
     /* segment — the sealed SegmentBadge (Workspaces box): uppercase caption
        pill reading the --ui-sys-segment-* pairs via the value attr; UNKNOWN
@@ -246,6 +252,24 @@ chipTpl.innerHTML = `
       --_bg: var(--ui-sys-segment-corporate-investments-surface);
       --_fg: var(--ui-sys-segment-corporate-investments-ink);
     }
+
+    /* goal — the sealed PLAN_GOAL_COLORS "type of plan" pill (Plan-page box):
+       one warm pair per goal-model id via the value attr, border transparent;
+       UNKNOWN or absent values fall back to the surface-container-high /
+       on-surface-muted pair (the sealed var(--bg-2)/var(--ink-2) fallback).
+       Colors read the single-sourced --ui-sys-goal-* tokens only. */
+    :host([variant="goal"]) {
+      --_bg:     var(--ui-sys-surface-container-high);
+      --_border: transparent;
+      --_fg:     var(--ui-sys-on-surface-muted);
+    }
+    :host([variant="goal"][value="general"])      { --_bg: var(--ui-sys-goal-general-surface);      --_fg: var(--ui-sys-goal-general-ink); }
+    :host([variant="goal"][value="shared-value"]) { --_bg: var(--ui-sys-goal-shared-value-surface); --_fg: var(--ui-sys-goal-shared-value-ink); }
+    :host([variant="goal"][value="crisis"])       { --_bg: var(--ui-sys-goal-crisis-surface);       --_fg: var(--ui-sys-goal-crisis-ink); }
+    :host([variant="goal"][value="activist"])     { --_bg: var(--ui-sys-goal-activist-surface);     --_fg: var(--ui-sys-goal-activist-ink); }
+    :host([variant="goal"][value="dei"])          { --_bg: var(--ui-sys-goal-dei-surface);          --_fg: var(--ui-sys-goal-dei-ink); }
+    :host([variant="goal"][value="community"])    { --_bg: var(--ui-sys-goal-community-surface);    --_fg: var(--ui-sys-goal-community-ink); }
+    :host([variant="goal"][value="union"])        { --_bg: var(--ui-sys-goal-union-surface);        --_fg: var(--ui-sys-goal-union-ink); }
 
     /* tag — the quiet .tag pill (sealed Tags primitive chip shape). */
     :host([variant="tag"]) {

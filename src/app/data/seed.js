@@ -500,21 +500,36 @@ export const SEED_COMMUNITY = [
   },
 ];
 
-/* ── PLANS — the 1 seed plan (sealed identity: id, name, workspace, models,
+/* ── PLANS — the 1 seed plan (sealed identity: id, title, workspace, models,
  * owners, status; sectorModel + goalModel are the load-bearing details — they
- * select the SEP scoring formulas). goals[] carries the 3 ORG_GOALS strings
- * (sealed: plan.goals is otherwise a DEAD field — only this seed plan
- * populates it). Full plan field structure lands with the Plan-page phase.   */
+ * select the plan-algorithm formulas). Now in the FULL sealed field shape
+ * (Plan-page box data model + oracle metadata fields): title · market/region
+ * (the community-linker scope) · site→state · geography · the three scenario
+ * fields · goalNotes · strategies in the sealed {id, title, how, timing,
+ * ownerId} shape · communityIds · measurement · priorityOverrides.
+ * goals[] carries the 3 ORG_GOALS strings (sealed: plan.goals is otherwise a
+ * DEAD field — only this seed plan populates it; nothing reads it).
+ * DELIBERATELY NO stakeholderIds field: the sealed migration/seed baseline
+ * for plans predating real per-plan membership = the oracle behavior
+ * (membership = the full workspace roster — planStakeholderIds resolves it). */
 export const SEED_PLANS = [
   {
     id: 'plan-gapp-na',
     workspaceId: 'ws-gapp-na',
-    name: 'FY26 Hawk Engagement Plan',
+    title: 'FY26 Hawk Engagement Plan',
     sectorModel: 'energy',
     goalModel: 'shared-value',
+    market: 'Americas',
+    region: 'United States',
+    site: 'site-corvallis',
+    state: 'Oregon',
+    geography: 'State',
     owners: ['u-jordan', 'u-alex'],
     status: 'Active',
     summary: 'Protect the license to operate for the Oregon sites through FY26 permitting season: shift the Save Our River narrative, hold regulator trust, and convert legislative allies into public champions.',
+    scenarioSolves: 'The Corvallis outfall-permit fight is hardening into an organized opposition story that threatens the FY27 modernization approvals and the broader Oregon license to operate.',
+    scenarioApproach: 'Phase 1: stabilize regulator trust with proactive data. Phase 2: reframe the riverfront narrative through the tribal consultation and visible stewardship. Phase 3: convert legislative allies into public champions ahead of the fall hearings.',
+    scenarioOutcome: 'The permit renews without contested hearings, the coalition narrative loses local traction, and the modernization slate enters FY27 with committed public champions.',
     goals: [
       "Defend the company's license to operate across key US markets",
       'Build trust capital with regulators and community leaders',
@@ -528,13 +543,14 @@ export const SEED_PLANS = [
       { userId: 'u-devon',  role: 'Sustainability data' },
     ],
     strategies: [
-      { id: 'st-01', title: 'Regulator confidence', detail: 'Monthly technical briefings with Oregon DEQ; publish discharge data proactively ahead of the permit decision.' },
-      { id: 'st-02', title: 'Community coalition', detail: 'Pair the tribal consultation and river-cleanup investment to reframe the riverfront story before the fall hearings.' },
+      { id: 'st-01', title: 'Regulator confidence', how: 'Monthly technical briefings with Oregon DEQ; publish discharge data proactively ahead of the permit decision.', timing: 'Q1–Q4', ownerId: 'u-devon' },
+      { id: 'st-02', title: 'Community coalition', how: 'Pair the tribal consultation and river-cleanup investment to reframe the riverfront story before the fall hearings.', timing: 'Q2–Q3', ownerId: 'u-jordan' },
     ],
     measurement: 'Quarterly re-score of the top-10 plan stakeholders; target: move Save Our River Coalition out of Proactively Defend and hold DEQ at Protect or better by FY26 Q4.',
-    communityIds: [],
+    communityIds: ['ca-02'],
     priorityOverrides: {},
     createdBy: 'u-jordan',
     createdAt: '2026-02-06T18:00:00.000Z',
+    updatedAt: '2026-06-11T15:20:00.000Z',
   },
 ];

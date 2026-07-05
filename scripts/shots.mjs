@@ -289,5 +289,85 @@ const scoringVisible = await page.locator('ui-sidebar > ui-sidebar-item', { hasT
 console.log('P6 Scoring nav on Master (expect 0):', scoringVisible);
 await page.screenshot({ path: `${OUT}/p6-master-back.png` });
 
+// ── PHASE-7 PLANS CAPTURES ─────────────────────────────────────────────────
+// 1 · landing cards (Master: all plans; sealed card anatomy + footer)
+await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Plans' }).click();
+await page.waitForTimeout(600);
+await page.screenshot({ path: `${OUT}/p7-plan-landing-cards.png` });
+// 1b · table mode ("See all") + filter popover
+await page.locator('.plan-toolbar ui-button', { hasText: 'See all' }).click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p7-plan-landing-table.png` });
+await page.locator('.plan-toolbar ui-button', { hasText: 'See all' }).click();
+await page.locator('#plan-filter-btn').click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p7-plan-filter-popover.png` });
+await page.keyboard.press('Escape');
+await page.waitForTimeout(200);
+// 2 · the EDITOR: metadata rail · five sections · right aside
+await page.locator('.plan-card-actions ui-button', { hasText: 'Edit' }).first().click();
+await page.waitForTimeout(600);
+await page.screenshot({ path: `${OUT}/p7-plan-editor-top.png` });
+// element-6 table + a Fit override popover open (manager = seed user u-alex)
+await page.locator('.plan-sh-table').scrollIntoViewIfNeeded();
+await page.waitForTimeout(300);
+await page.locator('.fit-cell').first().click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p7-plan-fit-popover.png` });
+// override to Low → the ·set mark; the row RE-SORTS live (effective band
+// drives the binding-schema order), so relocate it via the ·set mark
+await page.locator('ui-menu.fit-menu ui-menu-item', { hasText: 'Low' }).click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p7-plan-fit-overridden.png` });
+await page.locator('.fit-cell:has(.fit-mark-set)').first().scrollIntoViewIfNeeded();
+await page.locator('.fit-cell:has(.fit-mark-set)').first().click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p7-plan-fit-revert-item.png` });
+await page.locator('ui-menu.fit-menu ui-menu-item', { hasText: 'Use suggestion' }).click();
+await page.waitForTimeout(300);
+// 3 · goalNotes PERSISTED AFTER REOPEN (the sealed bug-fix proof)
+await page.locator('.plan-goal-item ui-textarea textarea').first().scrollIntoViewIfNeeded();
+await page.locator('.plan-goal-item ui-textarea textarea').first().click();
+await page.keyboard.type('Anchor the outfall-permit narrative on this goal through Q4.');
+await page.waitForTimeout(400);
+await page.locator('.plan-editor-bar ui-button', { hasText: 'All plans' }).click();
+await page.waitForTimeout(400);
+await page.locator('.plan-card-actions ui-button', { hasText: 'Edit' }).first().click();
+await page.waitForTimeout(600);
+await page.locator('.plan-goal-item').first().scrollIntoViewIfNeeded();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p7-plan-goalnotes-persisted.png` });
+const goalNotes = await page.evaluate(() => {
+  const p = (JSON.parse(localStorage.getItem('hpsm:plans') || '[]'))[0] || {};
+  return { notes: p.goalNotes, junkKeys: Object.keys(p).filter(k => /^[0-8]$/.test(k)) };
+});
+console.log('P7 goalNotes after reopen (expect the typed note, zero junk keys):',
+  JSON.stringify(goalNotes));
+// 4 · the community linker (right aside): linked row + add autocomplete open
+await page.locator('.plan-aside-right .plan-community').scrollIntoViewIfNeeded();
+await page.locator('.plan-community ui-button', { hasText: 'Add Community Investment' }).click();
+await page.waitForTimeout(400);
+await page.locator('.plan-community ui-autocomplete input').click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p7-plan-community-linker.png` });
+await page.keyboard.press('Escape');
+// 4b · add-stakeholder menu (three sealed entries)
+await page.locator('#plan-add-sh-btn').scrollIntoViewIfNeeded();
+await page.locator('#plan-add-sh-btn').click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p7-plan-add-stakeholder-menu.png` });
+await page.keyboard.press('Escape');
+await page.waitForTimeout(200);
+// 5 · REVIEW mode: header (goal chip · stage · owners · formula bar) + doc
+await page.locator('.plan-editor-bar ui-button', { hasText: 'Review' }).click();
+await page.waitForTimeout(600);
+await page.screenshot({ path: `${OUT}/p7-plan-review-top.png` });
+await page.locator('.plan-review-section', { hasText: 'Stakeholders In This Plan' }).scrollIntoViewIfNeeded();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p7-plan-review-stakeholders.png` });
+await page.locator('.plan-review-section', { hasText: 'Community Investment' }).scrollIntoViewIfNeeded();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p7-plan-review-tail.png` });
+
 await browser.close(); srv.close();
 console.log('shots written to', OUT);

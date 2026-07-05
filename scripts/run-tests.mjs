@@ -13,6 +13,7 @@ const SUITES = [
   'modal-test.mjs',
   'map-test.mjs',
   'scoring-test.mjs',
+  'plan-test.mjs',
 ];
 
 let failed = 0;

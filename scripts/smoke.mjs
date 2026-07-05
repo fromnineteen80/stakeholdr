@@ -64,6 +64,40 @@ for (const path of pages) {
     await page.waitForTimeout(400);
     await page.evaluate(() => document.querySelectorAll('ui-dialog').forEach(d => d.close && d.close()));
     await page.waitForTimeout(300);
+    // Phase 7: Plans — landing cards render, the editor mounts with the
+    // element-6 table, the Fit popover opens (manager), and goalNotes
+    // PERSISTS correctly (the sealed oracle set() bug is fixed: the note map
+    // saves and NO junk char-keys 0–8 land on the record).
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Plans' }).click({ timeout: 3000 }).catch(e => errs.push('PLANNAV: ' + e.message));
+    await page.waitForTimeout(500);
+    const planCards = await page.locator('.plan-card').count();
+    if (planCards < 1) errs.push(`PLANCARDS: expected >=1 plan card, saw ${planCards}`);
+    await page.locator('.plan-card-actions ui-button', { hasText: 'Edit' }).first().click({ timeout: 3000 }).catch(e => errs.push('PLANEDIT: ' + e.message));
+    await page.waitForTimeout(500);
+    const shRows = await page.locator('.plan-sh-table tbody tr').count();
+    if (shRows < 1) errs.push(`PLANROWS: expected element-6 rows, saw ${shRows}`);
+    await page.locator('.fit-cell').first().click({ timeout: 3000 }).catch(e => errs.push('PLANFIT: ' + e.message));
+    await page.waitForTimeout(300);
+    const fitMenu = await page.locator('ui-menu.fit-menu[open]').count();
+    if (fitMenu !== 1) errs.push(`PLANFITMENU: expected the override popover open, saw ${fitMenu}`);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+    await page.locator('.plan-goal-item ui-textarea textarea').first().click({ timeout: 3000 }).catch(e => errs.push('PLANGOAL: ' + e.message));
+    await page.keyboard.type('Anchor the permit narrative on this goal.');
+    await page.waitForTimeout(400);
+    const goalCheck = await page.evaluate(() => {
+      const plans = JSON.parse(localStorage.getItem('hpsm:plans') || '[]');
+      const p = plans[0] || {};
+      const notes = Object.values(p.goalNotes || {});
+      return {
+        saved: notes.some(v => String(v).includes('Anchor the permit narrative')),
+        junk: Object.keys(p).some(k => /^[0-8]$/.test(k)),
+      };
+    });
+    if (!goalCheck.saved) errs.push('PLANGOALNOTES: goalNotes did NOT persist (sealed bug-fix regression)');
+    if (goalCheck.junk) errs.push('PLANGOALNOTES: junk char-keys 0-8 landed on the plan record (oracle bug replicated)');
+    await page.locator('.plan-editor-bar ui-button', { hasText: 'All plans' }).click({ timeout: 3000 }).catch(e => errs.push('PLANBACK: ' + e.message));
+    await page.waitForTimeout(300);
   }
   if (path.includes('wireframes')) {
     await page.locator('#theme-modern').click({ timeout: 3000 }).catch(e => errs.push('TOGGLE: ' + e.message));
