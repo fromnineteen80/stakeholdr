@@ -489,7 +489,7 @@ export function ProfilePage({
           <ui-icon size="sm">search</ui-icon>
           <TF label="Search" placeholder={STR.searchPlaceholder} value={q} onValue={setQ} />
           <span className="plan-kbd muted"
-                title="Command palette — arrives with its build phase">{cmdKeyLabel}</span>
+                title="Command palette">{cmdKeyLabel}</span>
         </span>
         <ui-button
           id="profile-filter-btn"

@@ -88,6 +88,10 @@
   --ui-sys-shape-card:    var(--ui-ref-radius-md);
   --ui-sys-shape-pill:    var(--ui-ref-radius-full);
 
+  /* Dialog card width — the ONE constant ui-dialog's card and any fixed-width
+   * dialog content (the ⌘K bar) both read; they can never desync. */
+  --ui-sys-dialog-card-width: min(560px, calc(100vw - var(--ui-sys-space-6) * 2));
+
   /* Spacing roles (the only spacing vocabulary components may use) */
   --ui-sys-space-1: calc(var(--ui-ref-unit) * 1);  /* 4 */
   --ui-sys-space-2: calc(var(--ui-ref-unit) * 2);  /* 8 */
@@ -130,6 +134,10 @@
 
   /* Scrim (dialog/sheet backdrop) */
   --ui-sys-scrim: rgba(31,29,27,.32);
+  /* Blurred-veil scrim variant (the sealed cmdk-backdrop carried its
+     backdrop-blur 5px to the palette build box; the blur amount is a token —
+     ui-dialog[scrim-blur] reads it) */
+  --ui-sys-scrim-blur: 5px;
 
   /* Additional type roles */
   --ui-sys-font-body-lg:  400 14px/1.5  var(--ui-ref-typeface-body);

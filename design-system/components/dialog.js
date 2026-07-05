@@ -37,6 +37,14 @@ template.innerHTML = `
       visibility: visible;
     }
 
+    /* Blurred-veil variant (the sealed command-palette cmdk-backdrop): the
+       scrim additionally blurs the page behind it. Amount = the
+       --ui-sys-scrim-blur token — never a literal in a host stylesheet. */
+    :host([scrim-blur]) .scrim {
+      -webkit-backdrop-filter: blur(var(--ui-sys-scrim-blur));
+      backdrop-filter: blur(var(--ui-sys-scrim-blur));
+    }
+
     /* Dialog card */
     .dialog {
       position: fixed;
@@ -59,7 +67,7 @@ template.innerHTML = `
       border-radius: var(--ui-sys-shape-card);
       box-shadow: var(--ui-sys-elevation-3);
       min-width: 280px;
-      max-width: min(560px, calc(100vw - var(--ui-sys-space-6) * 2));
+      max-width: var(--ui-sys-dialog-card-width, min(560px, calc(100vw - var(--ui-sys-space-6) * 2)));
       max-height: calc(100dvh - var(--ui-sys-space-6) * 2);
       display: flex;
       flex-direction: column;

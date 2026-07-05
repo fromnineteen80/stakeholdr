@@ -22,6 +22,7 @@ const SUITES = [
   'profile-test.mjs',
   'record-test.mjs',
   'workhq-test.mjs',
+  'palette-test.mjs',
 ];
 
 let failed = 0;
