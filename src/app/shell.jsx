@@ -9,6 +9,7 @@ import { ScoringPage } from './pages/scoring.jsx';
 import { PlanPage } from './pages/plan.jsx';
 import { CommunityPage } from './pages/community.jsx';
 import { SetupPage } from './pages/setup.jsx';
+import { HelpPage } from './pages/help.jsx';
 import { usePersistentState, uid, nowStamp } from './data/store.js';
 import {
   SEED_WORKSPACES, SEED_STAKEHOLDERS, SEED_STAKEHOLDER_WORKSPACES,
@@ -366,22 +367,16 @@ export function AppShell() {
             onAddWorkspace={addWorkspace}
             onRemoveWorkspace={removeWorkspace}
           />
-        ) : (
-          <ui-card variant="outlined">
-            <div className="ph-title">
-              {(NAV_TABS.find((t) => t.id === view) || { label: 'Help' }).label}
-            </div>
-            <p className="ph-body">
-              Phase 1 scaffold — the shell is live (chrome, nav, tokens, theme cascade).
-              This page assembles in its build phase, node by node against its sealed
-              skeleton tree.
-            </p>
-          </ui-card>
-        )}
+        ) : view === 'help' ? (
+          /* Sealed: the static Help reference (framework funnel · how to read
+             the map · zone key/strategy reference — engine-single-sourced).
+             Zero handlers, zero props (sealed UX census). */
+          <HelpPage />
+        ) : null /* transient only: scoring-on-Master before the redirect effect lands */}
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Build: Phase 9 — Workspaces (segment groups · create/edit · delete cascade)</span>
+        <span>Build: Phase 10 — Help (framework funnel · map guide · zone key)</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
 

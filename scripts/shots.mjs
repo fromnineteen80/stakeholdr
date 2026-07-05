@@ -465,5 +465,27 @@ await page.screenshot({ path: `${OUT}/p9-delete-confirm.png` });
 await page.keyboard.press('Escape');
 await page.waitForTimeout(300);
 
+// ── PHASE-10 HELP CAPTURES ─────────────────────────────────────────────────
+// 1 · top of the reading column: prelude + the framework funnel figure/steps
+await page.locator('ui-sidebar ui-sidebar-item[slot="footer"]', { hasText: 'Help' }).click();
+await page.waitForTimeout(600);
+await page.screenshot({ path: `${OUT}/p10-help-framework.png` });
+// 2 · how to read the map: spectrum strip + the three help-cards
+await page.locator('.help-spectrum').scrollIntoViewIfNeeded();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p10-help-map-guide.png` });
+// 3 · the 24-zone grid figure + axis legend
+await page.locator('.help-grid-figure').scrollIntoViewIfNeeded();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p10-help-zone-grid.png` });
+// 4 · strategy reference (14 zone-spine cards, engine-single-sourced)
+await page.locator('.help-strat-grid').scrollIntoViewIfNeeded();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p10-help-strategy.png` });
+// 5 · scores → coordinates formula panel (page tail)
+await page.locator('.help-formula').scrollIntoViewIfNeeded();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p10-help-formula.png` });
+
 await browser.close(); srv.close();
 console.log('shots written to', OUT);
