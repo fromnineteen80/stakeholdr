@@ -45,10 +45,19 @@
  *    (negative/neutral/positive) — the two extreme zones' on-fill ink is
  *    WHITE (--ui-sys-zone-ink-on-strong), which is illegible as text on the
  *    white card; band ink preserves the zone-colored-text design legibly.
- *  · Funnel stage labels ink = --ui-sys-zone-ink-neutral (the amber-band
- *    ink, matching the sealed amber ramp; the box seals no label ink).
+ *  · Funnel stage labels ink = --ui-sys-zone-ink-neutral per the Color
+ *    census (group D: "funnel-arrow label ink" → zone-ink-neutral).
  *  · The 24-zone figure gets an explicit aspect ratio (8/5) — the sealed box
  *    fixes no height for the help-grid figure.
+ *  · The neg/pos card titles carry a 72px right clearance so the absolutely
+ *    positioned "Influencer" tag never collides with a wrapping title.
+ *  · Strategy-reference zone names render at the label weight (500) — the
+ *    sealed "bold" yields to the design law's modest-weights rule; the
+ *    <strong> element keeps the semantic emphasis.
+ *  · Row geometry: .help-step 34px / .help-bullet 26px min-height re-point
+ *    the ui-list item tokens (the box seals no row height); strategy-grid
+ *    metrics (sealed gap 10, card padding 12/14, radius 10) quantize to the
+ *    space scale and ui-card defaults per the BUILD-MAP's absorption lane.
  */
 import {
   PRELUDE_SEGMENTS, TITLE_FRAMEWORK, TITLE_MAP, H2_ZONES, H2_STRATEGY,
@@ -146,7 +155,6 @@ export function HelpPage() {
         <div className="help-cols">
           {HELP_CARDS.map((card) => (
             <ui-card key={card.tone} variant="outlined" class={`help-card help-card-${card.tone}`}>
-              {card.tag ? <div className="help-influencer-tag">{card.tag}</div> : null}
               <h3>{card.title}</h3>
               <ui-list>
                 {card.bullets.map((b) => (
@@ -156,6 +164,10 @@ export function HelpPage() {
                   </ui-list-item>
                 ))}
               </ui-list>
+              {/* Sealed tree order: the influencer-tag div comes LAST on the
+                  neg/pos cards; it positions absolutely, so DOM order is
+                  reading order only. */}
+              {card.tag ? <div className="help-influencer-tag">{card.tag}</div> : null}
             </ui-card>
           ))}
         </div>

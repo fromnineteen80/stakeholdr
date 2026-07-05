@@ -709,12 +709,14 @@
      "name": "disabled",
      "type": "boolean",
      "default": false
-    },
+    }
+   ],
+   "itemProps": [
     {
      "name": "wrap",
      "type": "boolean",
      "default": false,
-     "note": "ui-list-item attribute: headline wraps to multiple lines instead of single-line ellipsis."
+     "note": "ui-list-item variant: headline wraps to multiple lines instead of single-line ellipsis."
     }
    ],
    "states": [
@@ -722,8 +724,7 @@
     "interactive-hover",
     "interactive-pressed",
     "focus-visible",
-    "disabled",
-    "wrap"
+    "disabled"
    ],
    "import": "./components/list.js"
   },
