@@ -28,6 +28,8 @@ import {
 } from './data/workspace.js';
 import { unscoredCountFor } from './pages/scoring-logic.js';
 import { companySegmentsFrom } from './pages/setup-logic.js';
+import { StakeholderRecordPage } from './record/stakeholder-record.jsx';
+import { WorkspaceRecordPage } from './record/workspace-record.jsx';
 
 // NAV_TABS per the sealed App-shell box (icons = the captured semantic→ligature
 // map). Scoring carries hideWhenMaster (sealed rule — REAL as of Phase 6:
@@ -126,6 +128,40 @@ export function AppShell() {
   /* PLAN DEEP-LINK SEAM (Phase 12; census A21 FRAGILE window.__pendingPlanId
    * → first-class): Plans view with that plan open in REVIEW.               */
   const [pendingPlanId, setPendingPlanId] = useState(null);
+
+  /* RECORD-PAGE ROUTES (Phase 14 — the RecordShell surfaces; DECLARED, the
+   * sealed record box names no page routes):
+   *  · record.stakeholder opens from the Map scorecard's "Open record"
+   *    action (census B3 MAKE-REAL, verbatim: "an explicit 'Open record'
+   *    action in the ui-inspector scorecard").
+   *  · record.workspace opens from the Setup card's quiet "Open record"
+   *    icon-button (declared forward-design addition mirroring B3).
+   * Each remembers the launching view so Back is a real route (never the
+   * oracle's no-op back — census L1 do-not-replicate); both ride the
+   * census-A23 existence guard (toast + stay put).                          */
+  const [recordSh, setRecordSh] = useState(null); // { id, from } | null
+  const [recordWs, setRecordWs] = useState(null); // { id, from } | null
+  const openStakeholderRecord = (id) => {
+    if (!stakeholders.some((s) => s.id === id)) {
+      snackRef.current?.show('That stakeholder no longer exists');
+      return;
+    }
+    setRecordSh({ id, from: view });
+    setView('record-sh');
+  };
+  const openWorkspaceRecord = (id) => {
+    if (!workspaces.some((w) => w.id === id)) {
+      snackRef.current?.show('That workspace no longer exists');
+      return;
+    }
+    setRecordWs({ id, from: view });
+    setView('record-ws');
+  };
+  const RECORD_BACK_LABELS = {
+    sheet: 'Lists', scoring: 'Scoring', map: 'Map', plan: 'Plans',
+    community: 'Community', setup: 'Workspaces', profile: 'Profile',
+    messages: 'Messages', settings: 'Settings', help: 'Help',
+  };
 
   /* MESSAGING SHELL-STATE (sealed: BOTH surfaces share activeConversationId
    * in the shell, so expanding the sidebar to the page carries the open
@@ -479,6 +515,7 @@ export function AppShell() {
             onOpenCommunityEntry={openCommunityEntry}
             onOpenWorkspace={openWorkspaceTab}
             onOpenUserProfile={openUserProfile}
+            onOpenRecord={openStakeholderRecord}
           />
         ) : view === 'scoring' && !isMaster ? (
           /* Sealed: ScoringView gets workspaceOwners + onDeleteWorkspace only
@@ -531,6 +568,7 @@ export function AppShell() {
             onOpenWorkspace={openWorkspaceTab}
             onAddWorkspace={addWorkspace}
             onRemoveWorkspace={removeWorkspace}
+            onOpenWorkspaceRecord={openWorkspaceRecord}
           />
         ) : view === 'help' ? (
           /* Sealed: the static Help reference (framework funnel · how to read
@@ -568,11 +606,36 @@ export function AppShell() {
             onOpenStakeholder={(id) => openMention('stk', id)}
             onOpenUser={openUserProfile}
           />
+        ) : view === 'record-sh' && recordSh ? (
+          /* Phase 14: record.stakeholder — the page-shell record surface
+             (sealed: DISTINCT from the modal profile), poured through
+             RecordShell; entered via the Map scorecard's B3 make-real
+             "Open record". */
+          <StakeholderRecordPage
+            stakeholderId={recordSh.id}
+            backLabel={RECORD_BACK_LABELS[recordSh.from] || 'Back'}
+            onBack={() => { setView(recordSh.from); setRecordSh(null); }}
+            onOpenWorkspace={openWorkspaceTab}
+            onOpenCommunityEntry={openCommunityEntry}
+            onOpenUserProfile={openUserProfile}
+          />
+        ) : view === 'record-ws' && recordWs ? (
+          /* Phase 14: record.workspace — the workspace record page with the
+             LIVE embedded ui-stakeholder-table; entered via the Setup card's
+             declared "Open record". */
+          <WorkspaceRecordPage
+            workspaceId={recordWs.id}
+            backLabel={RECORD_BACK_LABELS[recordWs.from] || 'Back'}
+            onBack={() => { setView(recordWs.from); setRecordWs(null); }}
+            onOpenStakeholderRecord={openStakeholderRecord}
+            onOpenCommunityEntry={openCommunityEntry}
+            onOpenUserProfile={openUserProfile}
+          />
         ) : null /* transient only: scoring-on-Master before the redirect effect lands */}
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Phase 13 — Profiles (user profile page · people panel · owner-avatar routes · edit profile)</span>
+        <span>Phase 14 — Record scaffold (RecordShell · record.stakeholder · record.workspace · map scorecard rail · SampleRecord preview)</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
 

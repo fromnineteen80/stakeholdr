@@ -19,7 +19,7 @@ const srv = createServer(async (req, res) => {
 });
 await new Promise(r => srv.listen(4173, r));
 
-const pages = ['/index.html', '/app.html', '/design-system/preview.html', '/design-system/wireframes.html'];
+const pages = ['/index.html', '/app.html', '/record.html', '/design-system/preview.html', '/design-system/wireframes.html'];
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
 let totalErrors = 0;
 for (const path of pages) {
@@ -34,19 +34,20 @@ for (const path of pages) {
     await page.locator('md-list-item, li, [role="listitem"]').first().click({ timeout: 3000 }).catch(() => {});
   }
   if (path === '/app.html') {
-    // Phase 5: drive the Map view — select a dot, enter history (assert the
-    // trail renders), close + reopen the scorecard rail; any error counts.
+    // Phase 5 (selectors recomposed at Phase 14 — the PAGE hosts the sealed
+    // scorecard rail now): drive the Map view — select a dot, enter history
+    // (assert the trail renders), close + reopen the scorecard rail.
     await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Map' }).click({ timeout: 3000 }).catch(e => errs.push('MAPNAV: ' + e.message));
     await page.waitForTimeout(500);
     await page.locator('ui-stakeholder-map .dot[aria-label^="Mayor Maria Chen"]').click({ timeout: 3000 }).catch(e => errs.push('MAPDOT: ' + e.message));
     await page.waitForTimeout(300);
-    await page.locator('ui-stakeholder-map ui-chip.history-toggle').click({ timeout: 3000 }).catch(e => errs.push('MAPHIST: ' + e.message));
+    await page.locator('.map-scorecard ui-chip.history-toggle').click({ timeout: 3000 }).catch(e => errs.push('MAPHIST: ' + e.message));
     await page.waitForTimeout(300);
     const trail = await page.locator('ui-stakeholder-map .trail-svg path').count();
     if (trail !== 1) errs.push(`MAPTRAIL: expected 1 history trail path, saw ${trail}`);
-    await page.locator('ui-stakeholder-map ui-inspector .close-btn').click({ timeout: 3000 }).catch(e => errs.push('MAPCLOSE: ' + e.message));
+    await page.locator('ui-inspector.map-scorecard .close-btn').click({ timeout: 3000 }).catch(e => errs.push('MAPCLOSE: ' + e.message));
     await page.waitForTimeout(400);
-    await page.locator('ui-stakeholder-map .map-detail-reopen').click({ timeout: 3000 }).catch(e => errs.push('MAPREOPEN: ' + e.message));
+    await page.locator('.map-wrap .map-detail-reopen').click({ timeout: 3000 }).catch(e => errs.push('MAPREOPEN: ' + e.message));
     await page.waitForTimeout(300);
     // Phase 6: workspace switch + the Scoring matrix — switch to Hawk via the
     // real selector, open Scoring, step a score, open the add-teammate dialog.
@@ -580,6 +581,101 @@ for (const path of pages) {
     if (await page.locator('.profile-page').count() !== 1) errs.push('P13LISTSOWNER: the owners-popover row did not open a user profile (census I6)');
     const listsWho = (await page.locator('.profile-name').textContent().catch(() => '') || '').trim();
     if (!popWho || listsWho !== popWho) errs.push(`P13LISTSWHO: expected "${popWho}"'s profile from the popover row, saw "${listsWho}"`);
+    // Phase 14: the RECORD SCAFFOLD — the Map scorecard rail is the sealed
+    // page-hosted ui-inspector (11 detail rows; census B3's make-real "Open
+    // record" action routes to the record.stakeholder PAGE); the record page
+    // flips read↔edit (writes persist through updateStakeholder), its rails
+    // collapse independently, Back is a real route; the workspace record
+    // embeds the REAL live table.
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Map' }).click({ timeout: 3000 }).catch(e => errs.push('P14MAPNAV: ' + e.message));
+    await page.waitForTimeout(500);
+    await page.locator('ui-stakeholder-map .dot[aria-label^="Mayor Maria Chen"]').click({ timeout: 3000 }).catch(e => errs.push('P14DOT: ' + e.message));
+    await page.waitForTimeout(400);
+    const scTitle = (await page.locator('.map-scorecard .det-title').textContent().catch(() => '') || '').trim();
+    if (scTitle !== 'Mayor Maria Chen') errs.push(`P14SCORECARD: expected the selected record in the rail, saw "${scTitle}"`);
+    const scRows = await page.locator('.map-scorecard .detail-row').count();
+    if (scRows !== 11) errs.push(`P14ROWS: expected the sealed 11 detail rows, saw ${scRows}`);
+    await page.locator('ui-inspector.map-scorecard ui-icon-button[aria-label="Open record"]').click({ timeout: 3000 }).catch(e => errs.push('P14OPENREC: ' + e.message));
+    await page.waitForTimeout(500);
+    if (await page.locator('.record-wrap').count() !== 1) errs.push('P14PAGE: the record.stakeholder page did not mount (census B3 make-real)');
+    const recTitle = (await page.locator('.record-page-title').textContent().catch(() => '') || '').trim();
+    if (recTitle !== 'Mayor Maria Chen') errs.push(`P14TITLE: expected the record page header title, saw "${recTitle}"`);
+    // (textContent includes the slotted icon ligature — assert the label tail)
+    const backTxt = (await page.locator('.record-topbar ui-button.plan-back').textContent().catch(() => '') || '').trim();
+    if (!/Map$/.test(backTxt)) errs.push(`P14BACKLABEL: expected the launching view's label "Map", saw "${backTxt}"`);
+    // section nav selects which section renders
+    await page.locator('ui-sidebar.record-nav ui-sidebar-item', { hasText: 'Contact' }).click({ timeout: 3000 }).catch(e => errs.push('P14SECTION: ' + e.message));
+    await page.waitForTimeout(300);
+    const secHead = (await page.locator('.record-section-head').textContent().catch(() => '') || '').trim();
+    if (secHead !== 'Contact') errs.push(`P14SECHEAD: expected the Contact section, saw "${secHead}"`);
+    // read↔edit parity: Edit flips the SAME section to fields; a phone edit
+    // persists through the ONE updateStakeholder seam; Done flips back
+    await page.locator('.record-topbar .record-edit-btn').click({ timeout: 3000 }).catch(e => errs.push('P14EDIT: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('.record-section-body input[placeholder="(555) 555-0100"]').click({ timeout: 3000 }).catch(e => errs.push('P14PHONE: ' + e.message));
+    await page.keyboard.press('ControlOrMeta+a');
+    await page.keyboard.type('5035550123');
+    await page.waitForTimeout(400);
+    const phoneSaved = await page.evaluate(() => {
+      const shs = JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]');
+      return (shs.find(s => s.name === 'Mayor Maria Chen') || {}).phone;
+    });
+    if (phoneSaved !== '5035550123') errs.push(`P14PATCH: the phone edit did not persist, saw "${phoneSaved}"`);
+    await page.locator('.record-topbar .record-edit-btn').click({ timeout: 3000 }).catch(e => errs.push('P14DONE: ' + e.message));
+    await page.waitForTimeout(300);
+    const phoneRead = (await page.locator('.record-section-body .mf-value').nth(2).textContent().catch(() => '') || '').trim();
+    if (!/503.*555.*0123/.test(phoneRead)) errs.push(`P14PARITY: the read state did not re-render the edit, saw "${phoneRead}"`);
+    // the right rail collapses independently and reopens
+    await page.locator('ui-inspector.record-rail .close-btn').click({ timeout: 3000 }).catch(e => errs.push('P14RAILCLOSE: ' + e.message));
+    await page.waitForTimeout(400);
+    if (await page.locator('.record-rail-reopen').count() !== 1) errs.push('P14REOPENTAB: the rail reopen control did not appear');
+    await page.locator('.record-rail-reopen').click({ timeout: 3000 }).catch(e => errs.push('P14RAILREOPEN: ' + e.message));
+    await page.waitForTimeout(400);
+    if (await page.locator('ui-inspector.record-rail[open]').count() !== 1) errs.push('P14RAILBACK: the rail did not reopen');
+    // Back is a REAL route (never the oracle's no-op — census L1)
+    await page.locator('.record-topbar ui-button.plan-back').click({ timeout: 3000 }).catch(e => errs.push('P14BACK: ' + e.message));
+    await page.waitForTimeout(400);
+    if (await page.locator('.map-wrap').count() !== 1) errs.push('P14BACKROUTE: Back did not return to the launching Map view');
+    // record.workspace: the Setup card's declared Open-record → the page with
+    // the REAL embedded table (live rows, not the SampleRecord stub form)
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Workspaces' }).click({ timeout: 3000 }).catch(e => errs.push('P14WSNAV: ' + e.message));
+    await page.waitForTimeout(500);
+    await page.locator('.ws-card', { hasText: 'Google Beam Tour' }).locator('ui-icon-button[aria-label="Open workspace record"]').click({ timeout: 3000 }).catch(e => errs.push('P14WSOPEN: ' + e.message));
+    await page.waitForTimeout(500);
+    const wsRecTitle = (await page.locator('.record-page-title').textContent().catch(() => '') || '').trim();
+    if (wsRecTitle !== 'Google Beam Tour') errs.push(`P14WSREC: expected the workspace record page, saw "${wsRecTitle}"`);
+    await page.locator('ui-sidebar.record-nav ui-sidebar-item', { hasText: 'Stakeholders' }).click({ timeout: 3000 }).catch(e => errs.push('P14WSTAB: ' + e.message));
+    await page.waitForTimeout(600);
+    const embedRows = await page.locator('.record-table-embed ui-stakeholder-table .sheet-row').count();
+    if (embedRows !== 4) errs.push(`P14EMBED: expected the workspace's 4 live rows in the embedded table (never the gallery sample), saw ${embedRows}`);
+    const embedHasOrtiz = await page.locator('.record-table-embed ui-stakeholder-table .sheet-row', { hasText: 'Provost Lena Ortiz' }).count();
+    if (embedHasOrtiz !== 1) errs.push('P14EMBEDROWS: the embedded table did not show THIS workspace\'s stakeholders');
+  }
+  if (path === '/record.html') {
+    // Phase 14: SampleRecord — the sealed neutral tuning preview (standalone
+    // entry; the dev Scaffolds-menu mount was ruled dropped, census L1/L2).
+    if (await page.locator('.record-wrap').count() !== 1) errs.push('SAMPLE: the scaffold preview did not mount');
+    const sampleTitle = (await page.locator('.record-page-title').textContent().catch(() => '') || '').trim();
+    if (sampleTitle !== 'Sample Record') errs.push(`SAMPLETITLE: expected the sealed seed title, saw "${sampleTitle}"`);
+    // sealed L1: the back button renders but is honestly inert (disabled)
+    const backDisabled = await page.locator('.record-topbar ui-button.plan-back').getAttribute('disabled').catch(() => null);
+    if (backDisabled === null) errs.push('SAMPLEL1: the sealed no-op back button must LOOK inert (disabled)');
+    // LIVE retitle: editing Name retitles the page header (sealed)
+    await page.locator('ui-sidebar.record-nav ui-sidebar-item', { hasText: 'Field stack' }).click({ timeout: 3000 }).catch(e => errs.push('SAMPLENAV: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('.record-topbar .record-edit-btn').click({ timeout: 3000 }).catch(e => errs.push('SAMPLEEDIT: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('.record-section-body ui-text-field input').first().click({ timeout: 3000 }).catch(e => errs.push('SAMPLENAME: ' + e.message));
+    await page.keyboard.press('End');
+    await page.keyboard.type(' X');
+    await page.waitForTimeout(300);
+    const retitled = (await page.locator('.record-page-title').textContent().catch(() => '') || '').trim();
+    if (retitled !== 'Sample Record X') errs.push(`SAMPLERETITLE: expected the live header retitle, saw "${retitled}"`);
+    // sealed Table embed: the REAL ui-stakeholder-table, capped at 8 rows
+    await page.locator('ui-sidebar.record-nav ui-sidebar-item', { hasText: 'Table embed' }).click({ timeout: 3000 }).catch(e => errs.push('SAMPLETABLE: ' + e.message));
+    await page.waitForTimeout(600);
+    const sampleRows = await page.locator('.record-table-embed ui-stakeholder-table .sheet-row').count();
+    if (sampleRows !== 8) errs.push(`SAMPLECAP: expected the sealed 8-row cap, saw ${sampleRows}`);
   }
   if (path.includes('wireframes')) {
     await page.locator('#theme-modern').click({ timeout: 3000 }).catch(e => errs.push('TOGGLE: ' + e.message));

@@ -160,7 +160,7 @@ await page.waitForTimeout(400);
 await page.screenshot({ path: `${OUT}/p5-map-selected-scorecard.png` });
 // 3 · history mode on sh-01 — the dashed trail + quarter dots (seed carries
 //     the sealed FY26 Q1→Q3 trail; other dots must hide)
-await page.locator('ui-stakeholder-map ui-chip.history-toggle').click();
+await page.locator('.map-scorecard ui-chip.history-toggle').click();
 await page.mouse.move(700, 620);
 await page.waitForTimeout(400);
 await page.screenshot({ path: `${OUT}/p5-map-history-trail.png` });
@@ -178,11 +178,11 @@ await page.evaluate(() => {
   document.querySelector('ui-stakeholder-map').setAttribute('map-style', 'halo');
 });
 // 5 · collapsed scorecard → the reopen tab at top 16 / right 0
-await page.locator('ui-stakeholder-map ui-inspector .close-btn').click();
+await page.locator('ui-inspector.map-scorecard .close-btn').click();
 await page.waitForTimeout(500);
 await page.screenshot({ path: `${OUT}/p5-map-scorecard-closed.png` });
 await page.screenshot({ path: `${OUT}/p5-map-reopen-tab.png`, clip: { x: 1040, y: 60, width: 400, height: 300 } });
-await page.locator('ui-stakeholder-map .map-detail-reopen').click();
+await page.locator('.map-wrap .map-detail-reopen').click();
 await page.waitForTimeout(400);
 // back to Lists so the shell/rail captures below stay phase-stable
 await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'List' }).click();
@@ -593,6 +593,55 @@ await page.waitForTimeout(400);
 await page.screenshot({ path: `${OUT}/p13-edit-profile-cascade.png` });
 await page.keyboard.press('Escape');
 await page.waitForTimeout(300);
+
+// ── PHASE-14 RECORD SCAFFOLD CAPTURES ──────────────────────────────────────
+// 1 · the Map scorecard rail (page-hosted ui-inspector) with a selection
+await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Map' }).click();
+await page.waitForTimeout(600);
+await page.locator('ui-stakeholder-map .dot[aria-label^="Mayor Maria Chen"]').click();
+await page.mouse.move(700, 620);
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p14-map-scorecard.png` });
+// 2 · census B3 make-real: Open record → the record.stakeholder page (read)
+await page.locator('ui-inspector.map-scorecard ui-icon-button[aria-label="Open record"]').click();
+await page.waitForTimeout(600);
+await page.screenshot({ path: `${OUT}/p14-record-stakeholder.png` });
+// 3 · the SAME section in edit mode (read↔edit parity)
+await page.locator('.record-topbar .record-edit-btn').click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p14-record-edit.png` });
+await page.locator('.record-topbar .record-edit-btn').click();
+await page.waitForTimeout(300);
+// 4 · both rails collapsed independently
+await page.locator('ui-inspector.record-rail .close-btn').click();
+await page.waitForTimeout(400);
+await page.locator('ui-sidebar.record-nav').evaluate((el) => el.shadowRoot.querySelector('.toggle-btn').click());
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p14-record-rails-collapsed.png` });
+await page.locator('.record-rail-reopen').click();
+await page.waitForTimeout(300);
+// 5 · the workspace record with the LIVE embedded table
+await page.locator('.record-topbar ui-button.plan-back').click();
+await page.waitForTimeout(400);
+await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Workspaces' }).click();
+await page.waitForTimeout(500);
+await page.locator('.ws-card', { hasText: 'Google Beam Tour' }).locator('ui-icon-button[aria-label="Open workspace record"]').click();
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p14-record-workspace.png` });
+await page.locator('ui-sidebar.record-nav ui-sidebar-item', { hasText: 'Stakeholders' }).click();
+await page.waitForTimeout(700);
+await page.screenshot({ path: `${OUT}/p14-record-workspace-table.png` });
+// 6 · SampleRecord — the standalone tuning preview (record.html)
+await page.goto('http://127.0.0.1:4174/record.html', { waitUntil: 'networkidle' });
+await page.waitForTimeout(1200);
+await page.screenshot({ path: `${OUT}/p14-sample-record.png` });
+await page.locator('ui-sidebar.record-nav ui-sidebar-item', { hasText: 'Field stack' }).click();
+await page.locator('.record-topbar .record-edit-btn').click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p14-sample-edit.png` });
+await page.locator('ui-sidebar.record-nav ui-sidebar-item', { hasText: 'Table embed' }).click();
+await page.waitForTimeout(700);
+await page.screenshot({ path: `${OUT}/p14-sample-table-embed.png` });
 
 await browser.close(); srv.close();
 console.log('shots written to', OUT);

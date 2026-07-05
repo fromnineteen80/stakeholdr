@@ -97,8 +97,18 @@
    "tag": "ui-app-shell",
    "status": "built",
    "category": "scaffold",
-   "summary": "CSS-grid app layout host. Slots header/nav/(main)/aside/footer; empty side/header/footer tracks auto-collapse via slotchange (no-* host attrs). main scrolls. Works with 0, 1, or 2 side columns.",
-   "props": [],
+   "summary": "CSS-grid app layout host. Slots header/nav/(main)/aside/footer; empty side/header/footer tracks auto-collapse via slotchange (no-* host attrs). main scrolls. Works with 0, 1, or 2 side columns. variant=record = the record-page grid (sealed Record-scaffold box): header/footer span full width; nav+aside live in the body row only.",
+   "props": [
+    {
+     "name": "variant",
+     "type": "enum",
+     "values": [
+      "default",
+      "record"
+     ],
+     "default": "default"
+    }
+   ],
    "states": [
     "no-header",
     "no-nav",

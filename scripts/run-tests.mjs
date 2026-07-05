@@ -20,6 +20,7 @@ const SUITES = [
   'settings-test.mjs',
   'messages-test.mjs',
   'profile-test.mjs',
+  'record-test.mjs',
 ];
 
 let failed = 0;

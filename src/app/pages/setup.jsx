@@ -123,7 +123,7 @@ function FilterPop({ anchorId, label, options, active, onToggleValue, onClear, o
 /* ══ WORKSPACE CARD (sealed TREE 2, node by node) ═══════════════════════════ */
 function WorkspaceCard({
   ws, isActive, count, markets, regions, users, canDelete,
-  onActivate, onEdit, onDelete, onUpdate,
+  onActivate, onEdit, onDelete, onUpdate, onOpenRecord,
 }) {
   return (
     <ui-card
@@ -178,6 +178,17 @@ function WorkspaceCard({
           <span className="muted ws-tnum">{formatCreated(ws.createdAt)}</span>
           <span slot="content">Date created</span>
         </ui-tooltip>
+        {/* Phase 14 (DECLARED forward-design addition, mirrors census B3's
+            scorecard action): the quiet route into the record.workspace
+            page — the sealed card body still activates, the name still
+            opens the edit modal. */}
+        {onOpenRecord ? (
+          <ui-icon-button variant="standard" aria-label="Open workspace record"
+                          title="Open workspace record"
+                          onClick={(e) => { e.stopPropagation(); onOpenRecord(); }}>
+            <ui-icon>open_in_full</ui-icon>
+          </ui-icon-button>
+        ) : null}
         {canDelete ? (
           <ui-icon-button variant="standard" aria-label="Delete"
                           title="Delete workspace"
@@ -323,6 +334,7 @@ export function SetupPage({
   onOpenWorkspace,           // shell openWorkspaceTab (census H1)
   onAddWorkspace,            // shell addWorkspace (sealed; auto-opens — census H4)
   onRemoveWorkspace,         // shell removeWorkspace (the sealed cascade)
+  onOpenWorkspaceRecord,     // Phase 14: the record.workspace page route (declared)
 }) {
   const [workspaces, setWorkspaces] = usePersistentState('workspaces', SEED_WORKSPACES);
   const [stakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
@@ -486,6 +498,9 @@ export function SetupPage({
                       onEdit={() => setEditId(w.id)}
                       onDelete={() => attemptDelete(w)}
                       onUpdate={(patch) => updateWorkspace(w.id, patch)}
+                      onOpenRecord={onOpenWorkspaceRecord
+                        ? () => onOpenWorkspaceRecord(w.id)
+                        : undefined}
                     />
                   ))}
                 </div>

@@ -336,7 +336,7 @@ export function TagPills({ values }) {
   );
 }
 
-function StatusDot({ value }) {
+export function StatusDot({ value }) {
   // ui-status-dot null-guards an empty value (renders nothing); the profile's
   // empty-field convention is a literal "-", so guard here.
   if (!value) return <span className="muted">-</span>;
@@ -369,7 +369,7 @@ export function PRow({ k, children, full }) {
  * declared C9 recomposition), whose stakeholder pills re-open the shared
  * profile (census F4) — the same record-to-record hop, via first-class
  * routes instead of a stacked modal. */
-function EngagementRow({ a, onOpen }) {
+export function EngagementRow({ a, onOpen }) {
   return (
     <div
       className={'profile-entry' + (onOpen ? ' profile-entry-link' : '')}
