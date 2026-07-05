@@ -171,8 +171,15 @@ export function topFactors(sector, goal, n = 3) {
 /* ── PLAN FIT (the sealed recommendation): equal blend of the picked sector
  * and goal models → band. The score is INTERNAL (band cut + sort tie-break —
  * the never-a-number ruling); the surfaced parts are band + the model-scoped
- * "weighs" labels (the plain-English reason) + the zone's prescribed MOVE
- * (framed at the render, from the relationship engine's strategy). ───────── */
+ * "weighs" labels (the plain-English reason) + the zone's prescribed MOVE.
+ * PARKED — CATEGORY AFFINITY (sealed design layer, guide "Relationship
+ * recommendation alignment"): designed as an editable per-plan-type category
+ * weight table, but the capture seals NO numeric contribution (no table
+ * values, no normalization, no blend weight); computation stays
+ * oracle-verbatim until the user rules the affinity table + blend weight.
+ * PARKED — plan-type FRAMING of the move (14 zones × 18 models of copy) is
+ * NOT sealed; move = zone strategy + action verbatim (engine STATUSES)
+ * until the user rules the framing copy. ─────────────────────────────────── */
 export function planFit(s, sector, goal, ctx) {
   const sig = planSignals(s, ctx);
   const score01 = 0.5 * modelScore(sector, sig) + 0.5 * modelScore(goal, sig);
@@ -260,15 +267,18 @@ export function missingReadout(missing) {
     (missing.length > 2 ? '…' : '');
 }
 
-/* ── NEW PLAN DEFAULTS (sealed newPlan, verbatim + the rebuild's real
- * per-plan membership): workspaceId = isMaster ? workspaces[0]?.id :
+/* ── NEW PLAN DEFAULTS (sealed newPlan + declared additions): workspaceId =
+ * isMaster ? workspaces[0]?.id :
  * activeWorkspaceId (undefined-safe — an empty list yields undefined, never a
  * crash); title = "{workspace.name} Engagement Plan" when the workspace
  * resolves, bare "Engagement Plan" when it does not; sectorModel "energy",
  * goalModel "general" (both valid preselects — never an empty select).
  * stakeholderIds [] is the MAKE-REAL per-plan membership field (sealed
  * STAKEHOLDER MEMBERSHIP decision); plans WITHOUT the field read the oracle
- * baseline (the full workspace roster) via planStakeholderIds below. ─────── */
+ * baseline (the full workspace roster) via planStakeholderIds below.
+ * REBUILD EXTENSIONS (additive — the sealed newPlan leaves these UNDEFINED):
+ * site '' · state '' · geography '' · goalNotes {} are initialized here so
+ * the editor's controlled fields never flip undefined→value. ─────────────── */
 export function newPlan({ workspaces = [], activeWorkspaceId, isMaster = false, id, now }) {
   const workspaceId = isMaster
     ? (workspaces[0] && workspaces[0].id)
@@ -281,13 +291,13 @@ export function newPlan({ workspaces = [], activeWorkspaceId, isMaster = false, 
     sectorModel: 'energy',
     goalModel: 'general',
     market: '', region: '',
-    site: '', state: '', geography: '',
+    site: '', state: '', geography: '', // REBUILD EXTENSIONS (see above)
     owners: [],
     summary: '',
     status: 'Idea',
     scenarioSolves: '', scenarioApproach: '', scenarioOutcome: '',
     goals: [], // sealed DEAD field (only the seed plan populates it; nothing reads it)
-    goalNotes: {},
+    goalNotes: {}, // REBUILD EXTENSION (see above)
     issues: [],
     team: [],
     strategies: [],
@@ -396,6 +406,12 @@ export const PRIORITIZE_EXPLAINER_END = ').';
 /* Sealed Personas add-on note (element-9 locked stub). */
 export const PERSONAS_ADDON_NOTE =
   'Add-on - persona modeling from polling & listening sessions.';
+
+/* Polling add-on note (element-8 locked stub). DECLARED: the sealed add-ons
+ * box mandates a Polling lock mirroring the Personas note but seals NO copy
+ * string for it; this line is written to the Personas note's pattern. */
+export const POLLING_ADDON_NOTE =
+  'Add-on - stakeholder surveys: polling questions & results.';
 
 /* Search + filter + sort over the plans (pure, shared by cards + table). */
 export function filterPlans(plans, { query = '', filters = {} } = {}) {

@@ -32,7 +32,12 @@
  *  · The element-6 / review / landing tables are token-styled <table>s (the
  *    scoring-matrix precedent): ui-data-table renders text-only cells and
  *    cannot host the chip/override/autocomplete cells the binding schema
- *    requires; every INTERACTIVE element inside remains a real ui-*.
+ *    requires; every INTERACTIVE element inside remains a real ui-*, and
+ *    clickable rows + the Fit cell carry button semantics (role="button" +
+ *    tabIndex + Enter/Space activation) — never a raw button element.
+ *  · The editor toolbar adds a "Review" ui-button not in the sealed toolbar
+ *    order (back · title · spacer · sector · goal · Save · missing): it is
+ *    the only route from the editor into the sealed read-only review mode.
  *  · All ui-menus PORTAL to document.body (the component positions in page
  *    coordinates — the shell set this precedent for the workspace menu).
  */
@@ -44,6 +49,11 @@ import {
   SEED_PLANS, SEED_STAKEHOLDERS, SEED_SCORES, SEED_TEAM, SEED_USERS,
   SEED_COMMUNITY, SEED_WORKSPACES, SEED_STAKEHOLDER_WORKSPACES, SEED_MESSAGES,
 } from '../data/seed.js';
+/* Until the Settings phase lands appConfig, the company sets are the seeded
+   catalogs (the sealed Catalogs box: ORG_GOALS/MARKETS/SITES/ISSUES/
+   GEOGRAPHIES inherit LIVE from Settings once it exists; the sealed
+   present-AND-non-empty fallback resolves to exactly these when nothing is
+   configured). */
 import {
   MARKETS, GEOGRAPHIES, US_STATES, STATE_ABBR, SITES, siteLabel,
   ISSUES, TAGS, ORG_GOALS,
@@ -60,7 +70,7 @@ import {
   PLAN_FILTER_DEFS, PLAN_SORT_FIELDS, PLAN_EMPTY_TEXT, PLAN_FOOTER_EXPLAINER,
   PRIORITIZE_EXPLAINER_PRE, PRIORITIZE_EXPLAINER_BOLD,
   PRIORITIZE_EXPLAINER_POST, PRIORITIZE_EXPLAINER_END, PERSONAS_ADDON_NOTE,
-  filterPlans, sortPlans,
+  POLLING_ADDON_NOTE, filterPlans, sortPlans,
 } from './plan-logic.js';
 import { displayName } from '../../../design-system/components/stakeholder-table.js';
 import {
@@ -143,7 +153,16 @@ function FitCell({ row, canOverride, open, onOpen }) {
     <span
       className={'fit-cell' + (canOverride ? ' fit-cell-editable' : '')}
       id={`fit-${row.s.id}`}
+      role={canOverride ? 'button' : undefined}
+      tabIndex={canOverride ? 0 : undefined}
       onClick={canOverride ? (e) => { e.stopPropagation(); onOpen(); } : undefined}
+      onKeyDown={canOverride ? (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === ' ') e.preventDefault();
+          e.stopPropagation();
+          onOpen();
+        }
+      } : undefined}
       title={canOverride ? 'Adjust Plan Fit' : undefined}
       aria-expanded={open ? 'true' : undefined}
     >
@@ -221,7 +240,15 @@ function PlanShTable({ rows, readOnly, canOverride, fitOpenFor, onFitOpen, onRow
             key={r.s.id}
             className={readOnly ? undefined : 'plan-sh-trow'}
             title={readOnly ? undefined : 'Open stakeholder'}
+            role={readOnly ? undefined : 'button'}
+            tabIndex={readOnly ? undefined : 0}
             onClick={readOnly ? undefined : () => onRowOpen(r.s.id)}
+            onKeyDown={readOnly ? undefined : (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                if (e.key === ' ') e.preventDefault();
+                onRowOpen(r.s.id);
+              }
+            }}
           >
             <td className="plan-sh-name">{displayName(r.s) || r.s.name}</td>
             <td className="muted">{r.s.type}</td>
@@ -241,7 +268,13 @@ function PlanShTable({ rows, readOnly, canOverride, fitOpenFor, onFitOpen, onRow
             </td>
             <td className="plan-sh-reason">
               <span className="plan-sh-reason-line">{r.fit.reason}</span>
-              <span className="plan-sh-move muted">Move: {r.move}</span>
+              {/* THE MOVE (sealed) = the zone's strategy + ACTION, verbatim
+                  from the 14-zone engine; the action rides a ui-tooltip on
+                  the strategy text (row density stays one line). */}
+              <ui-tooltip>
+                <span className="plan-sh-move muted">Move: {r.move}</span>
+                <span slot="content">{r.moveAction}</span>
+              </ui-tooltip>
             </td>
           </tr>
         ))}
@@ -807,7 +840,19 @@ function PlanLanding({ plans, users, workspaces, wsCount, onReview, onOpen }) {
             </thead>
             <tbody>
               {shown.map((p) => (
-                <tr key={p.id} title="Open" onClick={() => onReview(p.id)}>
+                <tr
+                  key={p.id}
+                  title="Open"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onReview(p.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      if (e.key === ' ') e.preventDefault();
+                      onReview(p.id);
+                    }
+                  }}
+                >
                   <td className="plan-td-title">{p.title}</td>
                   <td>{wsOf(p)?.name || '-'}</td>
                   <td>{goalName(p.goalModel)}</td>
@@ -937,7 +982,10 @@ function usePlanRows(plan, { stakeholders, roster, scores, team, community }) {
         return {
           s, zone, fit, override,
           effective: effectiveBand(override, fit.band),
+          /* THE MOVE (sealed) = zone strategy + action, verbatim from the
+             engine's STATUSES (plan-type framing is PARKED — see planFit). */
           move: (STATUSES[zone] || {}).strategy || '',
+          moveAction: (STATUSES[zone] || {}).action || '',
           // comparator inputs (the numeric core is INTERNAL — sort only)
           priority: s.priority, band: effectiveBand(override, fit.band), score: fit.score,
         };
@@ -1009,12 +1057,26 @@ function PlanEditor({
             onValue={(v) => set({ title: v })}
           />
         </span>
-        {!planValid && (
-          <ui-tooltip>
-            <span slot="content">{missing.join(', ')}</span>
-            <span className="plan-missing muted">{missingReadout(missing)}</span>
-          </ui-tooltip>
-        )}
+        {/* Sealed TREE 3 toolbar order: back · title · spacer · sector select
+            · goal select · Save · missing readout (the spacer is the app-bar's
+            flexing title slot). Review is the DECLARED recomposition (header);
+            it sits between the sealed items without reordering them. */}
+        <span slot="trailing" className="plan-model-pick">
+          <Sel
+            ariaLabel="Industry sector"
+            value={sector.id}
+            options={PLAN_SECTOR_MODELS.map((m) => ({ value: m.id, label: m.name }))}
+            onChange={(v) => set({ sectorModel: v })}
+          />
+        </span>
+        <span slot="trailing" className="plan-model-pick">
+          <Sel
+            ariaLabel="Type of plan"
+            value={goal.id}
+            options={PLAN_GOAL_MODELS.map((m) => ({ value: m.id, label: m.name }))}
+            onChange={(v) => set({ goalModel: v })}
+          />
+        </span>
         <ui-button slot="trailing" variant="text" onClick={onReview}>
           <ui-icon slot="leading">visibility</ui-icon>
           Review
@@ -1026,6 +1088,12 @@ function PlanEditor({
           title={planValid ? undefined : 'Fill required fields: ' + missing.join(', ')}
           onClick={onBack}
         >Save</ui-button>
+        {!planValid && (
+          <ui-tooltip slot="trailing">
+            <span className="plan-missing muted">{missingReadout(missing)}</span>
+            <span slot="content">{missing.join(', ')}</span>
+          </ui-tooltip>
+        )}
         {/* MAKE-REAL plan deletion (sealed: impossible in the oracle UI). */}
         <ui-icon-button
           slot="trailing"
@@ -1039,7 +1107,10 @@ function PlanEditor({
       </ui-app-bar>
 
       <div className="plan-body">
-        {/* ── LEFT metadata rail (sealed field order + the algorithm picks) ── */}
+        {/* ── LEFT metadata rail (sealed field order: summary · status ·
+            workspace · market · region · site · state · geography · owners ·
+            issues · linked community investment; the sector/goal model picks
+            live in the TOOLBAR per sealed TREE 3) ── */}
         <aside className="plan-aside">
           <Field label="One-line summary">
             <TA
@@ -1110,23 +1181,6 @@ function PlanEditor({
             />
           </Field>
           <div className="plan-divider"></div>
-          <Field label="Industry sector">
-            <Sel
-              ariaLabel="Industry sector"
-              value={sector.id}
-              options={PLAN_SECTOR_MODELS.map((m) => ({ value: m.id, label: m.name }))}
-              onChange={(v) => set({ sectorModel: v })}
-            />
-          </Field>
-          <Field label="Type of plan">
-            <Sel
-              ariaLabel="Type of plan"
-              value={goal.id}
-              options={PLAN_GOAL_MODELS.map((m) => ({ value: m.id, label: m.name }))}
-              onChange={(v) => set({ goalModel: v })}
-            />
-          </Field>
-          <div className="plan-divider"></div>
           <Field label="Owners">
             <Owners users={users} value={p.owners || []} onChange={(v) => set({ owners: v })} />
           </Field>
@@ -1135,6 +1189,16 @@ function PlanEditor({
               selected={p.issues || []}
               company={ISSUES}
               onChange={(v) => set({ issues: v })}
+            />
+          </Field>
+          <div className="plan-divider"></div>
+          <Field label="Linked community investment">
+            <PlanCommunity
+              community={community}
+              market={p.market}
+              region={p.region}
+              communityIds={p.communityIds || []}
+              onChange={(v) => set({ communityIds: v })}
             />
           </Field>
         </aside>
@@ -1188,6 +1252,9 @@ function PlanEditor({
                 canOverride={canOverride}
                 fitOpenFor={fitOpenFor}
                 onFitOpen={(id) => setFitOpenFor(id)}
+                /* INTERIM — the sealed REBUILD DECISION keeps row-click →
+                   the stakeholder PROFILE overlay; the shared modal in view
+                   mode stands in; retarget when the Profiles phase lands. */
                 onRowOpen={(id) => setShModal({ mode: 'view', id })}
               />
             )}
@@ -1220,7 +1287,13 @@ function PlanEditor({
           </PlanSection>
         </div>
 
-        {/* ── RIGHT aside: team · prioritization · personas · community ── */}
+        {/* ── RIGHT aside (sealed): team · prioritization · then the locked
+            add-on stubs — Polling (element 8) · Personas (element 9). SCOPE:
+            plan elements 2/5/7/10–14 beyond the shipped set (summary of
+            concerns · team & sponsors · involvement/risk/opportunity ·
+            execution checklist · community-investment plan · predictions ·
+            key messages · feedback) land in later phases per the sealed
+            phase plan. ── */}
         <aside className="plan-aside plan-aside-right">
           <Field label="Cross-functional team">
             <PlanTeam team={p.team || []} users={users} onChange={(v) => set({ team: v })} />
@@ -1237,21 +1310,20 @@ function PlanEditor({
             <FactorReadout sector={sector} goal={goal} />
           </Field>
           <div className="plan-divider"></div>
+          {/* Element-8 locked stub (sealed: "stub with a locked affordance,
+              do not build now") — mirrors the Personas note pattern. */}
+          <Field label="Polling">
+            <p className="plan-addon-note muted">
+              <ui-icon size="sm">lock</ui-icon>
+              {POLLING_ADDON_NOTE}
+            </p>
+          </Field>
+          <div className="plan-divider"></div>
           <Field label="Personas">
             <p className="plan-addon-note muted">
               <ui-icon size="sm">lock</ui-icon>
               {PERSONAS_ADDON_NOTE}
             </p>
-          </Field>
-          <div className="plan-divider"></div>
-          <Field label="Linked community investment">
-            <PlanCommunity
-              community={community}
-              market={p.market}
-              region={p.region}
-              communityIds={p.communityIds || []}
-              onChange={(v) => set({ communityIds: v })}
-            />
           </Field>
         </aside>
       </div>
@@ -1319,7 +1391,9 @@ function PlanEditor({
         )}
       </ui-dialog>
 
-      {/* Create-new / row-click profile (the shared sealed StakeholderModal). */}
+      {/* Create-new / row-click view (the shared sealed StakeholderModal).
+          INTERIM for row-click: the sealed target is the stakeholder PROFILE
+          overlay — retarget when the Profiles phase lands. */}
       <StakeholderModal
         open={!!shModal}
         existing={shView}
