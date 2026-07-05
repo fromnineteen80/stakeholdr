@@ -22,6 +22,65 @@
  * user-open {userId} (I6 make-real: an owners-popover row opens that user's
  * profile), export-csv {csv,filename}.
  *
+ * ══ PHASE 17 — SCALE HARDENING (DECLARED 2026-07-05; unsealed scale
+ * engineering + forward-design, per the standing thousands-of-stakeholders
+ * ruling — nothing sealed changes below the declared surface) ══
+ * · VIRTUALIZED BODY: above VIRTUAL_THRESHOLD filtered rows the grid renders
+ *   ONLY the scroll window (+ VIRTUAL_OVERSCAN rows each side) between two
+ *   full-width spacer rows (the standard fixed-row-height windowing pattern;
+ *   no library — deps are guard-forbidden). Below the threshold behavior is
+ *   IDENTICAL to the sealed render (every row mounted), so demo-scale
+ *   workspaces, the record embeds and the gallery are pixel-unchanged. Row
+ *   height is MEASURED from the first rendered body row (fallback
+ *   DEFAULT_ROW_H) — the sealed 36px min-height cell + 1px rule. Everything
+ *   sealed rides on top unchanged: the filter/sort pipeline runs over the
+ *   FULL set, the footer counts and Avg x/y read #filtered (never the
+ *   window), the CSV export serializes the FULL filtered/sorted set, sticky
+ *   header/frozen columns/editors/popovers work inside the window. ACCEPTED
+ *   TRADEOFF (declared): tracks stay max-content (the sealed no-fixed-widths
+ *   truth), so column widths can shift as the window scrolls past longer
+ *   values; frozen offsets re-measure per window.
+ * · SELECTION (forward-design; the sealed box names bulk actions with no
+ *   oracle spec): an OPT-IN leading frozen checkbox column (the `selectable`
+ *   attribute — hosts without a bulk-action surface never show a dead
+ *   affordance, make-real law). Row checkboxes are REAL ui-checkbox
+ *   elements; the header checkbox selects the FILTERED set (indeterminate on
+ *   a partial selection); shift-click extends from the last-clicked anchor
+ *   (industry standard). Selection is exposed as the `selection` property
+ *   (id array), and every change emits bulk-selection-change {ids,count};
+ *   clearSelection() and exportSelected()
+ *   (the sealed CSV logic over the selected rows, filtered order) serve the
+ *   host-owned action bar. Checking a row never row-highlights it (the
+ *   sealed single-row selection-change stays a separate channel).
+ * · SELECTION SCOPE (RULED 2026-07-05, scale-audit F2): the selection is
+ *   ALWAYS a subset of the FILTERED rows — it is PRUNED on every pipeline
+ *   change (search, filters, sort presets, data swaps; Gmail-style least
+ *   surprise: what you see is what you act on). The bar count, Export
+ *   selected and every bulk write therefore trivially agree with the
+ *   visible set; nothing off-filter is ever silently written.
+ * ── SCALE-AUDIT FIXES (2026-07-05, all declared) ──
+ * · F1 SCROLL STABILITY: #renderGrid captures scrollTop BEFORE clearing the
+ *   grid (clearing collapses the scroll height and the browser clamps
+ *   scrollTop to 0 before the spacers regrow), computes the virtual window
+ *   from the CAPTURED value, and restores the position after the rebuild —
+ *   an identity data re-push, a checkbox at depth, or the sealed inline-edit
+ *   chain (row-change → host setStakeholders → .data re-push) never
+ *   teleports the viewport back to row 1.
+ * · F3 RESIZE/ZOOM: a ResizeObserver on .sheet-scroll drives the same
+ *   rAF-coalesced window rebuild (computeWindow reads clientHeight live) and
+ *   re-measures the row height; disconnected in disconnectedCallback.
+ * · F4 KEYBOARD OPERABILITY: selection changes sync IN PLACE (row checkbox
+ *   state + row wash + header tri-state — no grid rebuild), so focus stays
+ *   on the toggled ui-checkbox; virtual window shifts update INCREMENTALLY
+ *   (surviving rows keep their DOM nodes; only edges churn); where a full
+ *   rebuild IS required (data/pipeline changes, disjoint scroll jumps)
+ *   focus is restored to the same logical control (row id + column key)
+ *   with preventScroll.
+ * · F6 RECALIBRATION GUARD: the row-height recalibration inside
+ *   #renderWindow retries ONCE, then accepts the measurement — a height that
+ *   oscillates around the threshold can never recurse unbounded.
+ * ══════════════════════════════════════════════════════════════════════════
+ *
  * NORMALIZATION RULINGS honored (recorded in the sealed box, ruled for this
  * build by the phase directive): all four toolbar popovers are mutually
  * exclusive and ALL close on outside-mousedown + Escape (the oracle's
@@ -79,6 +138,7 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
   import('./select.js');
   import('./date-picker.js');
   import('./avatar.js');
+  import('./checkbox.js'); // Phase 17: the REAL selection checkboxes
 }
 
 /* ── ZONE + BAND CATALOGS (sealed Relationship-engine box) ─────────────── */
@@ -154,6 +214,12 @@ export const REORDER_COLS = [
 ];
 
 export const REORDER_KEYS = REORDER_COLS.map((c) => c.key);
+
+/* Phase 17 (declared forward-design): the OPT-IN leading selection column —
+ * rendered only when the host sets the `selectable` attribute. Deliberately
+ * NOT added to FROZEN_COLS: the sealed frozen four stay the sealed contract;
+ * this column is a declared addition ahead of them.                         */
+export const SELECT_COL = { key: 'sel', label: '', field: null };
 
 /* Sealed LIVE localStorage key (per-device, not synced).                     */
 export const COL_ORDER_STORAGE_KEY = 'hp_map_col_order_v3';
@@ -466,6 +532,96 @@ export function cellClass(key) {
   return cls.join(' ');
 }
 
+/* ── PHASE 17 PURE LOGIC — virtualization window math + selection sets ──
+ * (declared scale hardening; unit-tested by scripts/scale-test.mjs)        */
+
+/* The body virtualizes only past this filtered-row count — below it every
+ * row mounts exactly as the sealed render did (transparent at demo scale). */
+export const VIRTUAL_THRESHOLD = 150;
+/* Overscan rows rendered beyond each viewport edge — generous so text-target
+ * drives (and fast wheel scrolling) always find near-window rows mounted.   */
+export const VIRTUAL_OVERSCAN = 15;
+/* Fallback row height until the first body row is measured: the sealed
+ * 36px cell min-height + the 1px row rule.                                  */
+export const DEFAULT_ROW_H = 37;
+
+/* computeWindow — the one windowing formula: which slice of the filtered
+ * array renders, and the spacer heights that keep the scrollbar honest.
+ * Row i's content top = headerHeight + i*rowHeight (the sticky header also
+ * occupies the first grid row in normal flow). Clamped at both edges; a
+ * total at-or-under the window renders whole (start 0 / end total).         */
+export function computeWindow({
+  scrollTop = 0, viewportHeight = 0, rowHeight = DEFAULT_ROW_H,
+  total = 0, overscan = VIRTUAL_OVERSCAN, headerHeight = 0,
+} = {}) {
+  const t = Math.max(0, Math.floor(total));
+  const rh = Math.max(1, rowHeight);
+  if (!t) return { start: 0, end: 0, topPad: 0, bottomPad: 0 };
+  const first = Math.floor(Math.max(0, scrollTop - headerHeight) / rh);
+  const visible = Math.ceil(Math.max(0, viewportHeight) / rh) + 1;
+  const start = Math.min(Math.max(0, first - overscan), t);
+  const end = Math.min(t, Math.max(start, first + visible + overscan));
+  return {
+    start,
+    end,
+    topPad: Math.round(start * rh),
+    bottomPad: Math.round((t - end) * rh),
+  };
+}
+
+/* selectAllState(selectedIds, filteredIds) → 'none' | 'some' | 'all' — the
+ * header checkbox tri-state, computed against the FILTERED set (the ruled
+ * select-all semantics: select-all means everything the filters admit,
+ * never just the rendered window).                                          */
+export function selectAllState(selectedIds, filteredIds) {
+  const sel = new Set(asArr(selectedIds));
+  const ids = asArr(filteredIds);
+  if (!ids.length || !sel.size) return 'none';
+  const hit = ids.filter((id) => sel.has(id)).length;
+  if (!hit) return 'none';
+  return hit === ids.length ? 'all' : 'some';
+}
+
+/* toggleSelectAll — header-checkbox action: 'all' → drop the filtered ids
+ * from the selection (ids selected outside the current filter survive);
+ * otherwise → union the filtered set in.                                    */
+export function toggleSelectAll(selectedIds, filteredIds) {
+  const sel = new Set(asArr(selectedIds));
+  const ids = asArr(filteredIds);
+  if (selectAllState(selectedIds, filteredIds) === 'all') {
+    for (const id of ids) sel.delete(id);
+  } else {
+    for (const id of ids) sel.add(id);
+  }
+  return [...sel];
+}
+
+/* rangeIds(orderedIds, anchorId, targetId) — the shift-click span, inclusive,
+ * in the CURRENT filtered/sorted order; a missing anchor (filtered away or
+ * never set) degrades to the single target.                                 */
+export function rangeIds(orderedIds, anchorId, targetId) {
+  const ids = asArr(orderedIds);
+  const a = ids.indexOf(anchorId);
+  const b = ids.indexOf(targetId);
+  if (a < 0 || b < 0) return b < 0 ? [] : [targetId];
+  return ids.slice(Math.min(a, b), Math.max(a, b) + 1);
+}
+
+/* applyRangeSelection — shift-click semantics: the whole span takes the
+ * CLICKED checkbox's new state (check extends, uncheck clears the span).    */
+export function applyRangeSelection(selectedIds, span, checked) {
+  const sel = new Set(asArr(selectedIds));
+  for (const id of asArr(span)) checked ? sel.add(id) : sel.delete(id);
+  return [...sel];
+}
+
+/* pruneSelection — selection survives filter changes but never dangles past
+ * a delete/data swap: keep only ids present in the current data.            */
+export function pruneSelection(selectedIds, rows) {
+  const live = new Set(asArr(rows).map((r) => r.id));
+  return asArr(selectedIds).filter((id) => live.has(id));
+}
+
 /* ════════════════════════════════════════════════════════════════════════
  * DOM COMPONENT — defined only in a browser context (node imports the pure
  * logic above without touching the DOM).
@@ -741,6 +897,7 @@ template.innerHTML = `
      land in the --_fl-* custom properties on the grid. */
   .sheet-cell.frozen { position: sticky; z-index: 10; }
   .sheet-head .sheet-cell.frozen { z-index: 30; }
+  .frozen-sel  { left: var(--_fl-sel, 0px); }  /* Phase 17 opt-in selection column */
   .frozen-idx  { left: var(--_fl-idx, 0px); }
   .frozen-edit { left: var(--_fl-edit, 0px); }
   .frozen-name { left: var(--_fl-name, 0px); }
@@ -750,9 +907,19 @@ template.innerHTML = `
 
   /* Body rows: hover + selection (hover matches through display:contents) */
   .sheet-row:hover .sheet-cell { background: var(--ui-sys-surface-hover); }
+  /* Phase 17: bulk-checked rows wear the SAME selected-row wash token (one
+     visual language for "this row is picked"); the single-click .selected
+     highlight below still wins when both apply. */
+  .sheet-row.checked .sheet-cell { background: var(--ui-sys-row-selected); }
   .sheet-row.selected .sheet-cell { background: var(--ui-sys-row-selected); }
   .sheet-row.selected .sheet-cell.idx { background: var(--ui-sys-row-selected-strong); }
   .sheet-row { cursor: default; }
+
+  /* Phase 17: the opt-in selection cell (a REAL ui-checkbox, centered) and
+     the virtualization spacer rows (full-width grid items whose heights keep
+     the scrollbar honest while off-window rows stay unmounted). */
+  .sheet-cell.sel { justify-content: center; padding: 0 var(--ui-sys-space-2); }
+  .v-spacer { grid-column: 1 / -1; background: var(--ui-sys-surface-card); }
 
   .sheet-cell.idx {
     justify-content: center;
@@ -803,8 +970,14 @@ template.innerHTML = `
   /* Dropdown/date DISPLAY cells (lightweight renders per the COMPOSITION
      RULING). Clicking one mounts the REAL editor — <ui-select> / <ui-date-
      picker> — absolutely positioned in the cell; the display hides while the
-     editor is mounted so the max-content track keeps its size. */
-  .sheet-cell:not(.frozen) { position: relative; }
+     editor is mounted so the max-content track keeps its size.
+     FIX (Phase-17 visual gate, 2026-07-05): scoped to BODY cells. Unscoped,
+     this rule also matched non-frozen HEADER cells and its position:relative
+     silently out-cascaded their sealed position:sticky (equal specificity,
+     later rule) — the header lost its right half on deep vertical scroll, a
+     defect invisible at demo scroll depths and exposed by the 2,000-row
+     virtualization probe. Editors only ever mount in body cells. */
+  .sheet-row .sheet-cell:not(.frozen) { position: relative; }
   .cell-dd { display: inline-flex; }
   .cell-dd-trigger {
     appearance: none;
@@ -1043,10 +1216,25 @@ class UiStakeholderTable extends HTMLElement {
   #docMousedown = null;
   #docKeydown = null;
 
+  /* Phase 17 — bulk selection (opt-in via the `selectable` attribute) */
+  #selection = new Set();   // selected row ids (persists across filters; pruned on data swap)
+  #selAnchor = null;        // last-clicked row id — the shift-click range anchor
+  #shiftPending = false;    // shiftKey captured on the checkbox click, read by its change
+
+  /* Phase 17 — virtualization internals */
+  #virtual = false;         // true when #filtered.length > VIRTUAL_THRESHOLD
+  #rowH = DEFAULT_ROW_H;    // measured from the first rendered body row
+  #winStart = -1;           // rendered window [start, end) over #filtered
+  #winEnd = -1;
+  #topSpacer = null;
+  #bottomSpacer = null;
+  #scrollRaf = 0;
+  #resizeObs = null;        // F3: viewport/zoom recompute (disconnected on detach)
+
   /* kbd-label (finding: single source) — the cmd-key hint text is NOT derived
    * here; the page passes it from the store's exported single source
    * (src/app/data/store.js → cmdKeyLabel). Empty/absent hides the chip. */
-  static observedAttributes = ['kbd-label'];
+  static observedAttributes = ['kbd-label', 'selectable'];
 
   constructor() {
     super();
@@ -1055,6 +1243,7 @@ class UiStakeholderTable extends HTMLElement {
 
   attributeChangedCallback(name) {
     if (name === 'kbd-label') this.#syncKbd();
+    if (name === 'selectable') this.#render(); // column set changed
   }
 
   /* ── public API ────────────────────────────────────────────────── */
@@ -1064,9 +1253,51 @@ class UiStakeholderTable extends HTMLElement {
     else this.removeAttribute('kbd-label');
   }
 
+  /* Phase 17: opt-in selection column (attribute) — hosts without a bulk
+   * action surface never render a dead affordance (make-real law). */
+  get selectable() { return this.hasAttribute('selectable'); }
+  set selectable(v) {
+    if (v) this.setAttribute('selectable', '');
+    else this.removeAttribute('selectable');
+  }
+
+  /* Phase 17: the live selection (id array). Writable so a host can restore
+   * or clear programmatically; every change (user or property) emits
+   * bulk-selection-change so the host bar stays in sync.
+   * F2 (ruled): programmatic writes obey the same subset contract — pruned
+   * to the current filtered rows once data exists (a restore written BEFORE
+   * .data lands is kept whole; the first #render prunes it).
+   * F4: a selection write syncs the grid IN PLACE — selection never forces
+   * a rebuild, so focus survives Clear/restore. */
+  get selection() { return [...this.#selection]; }
+  set selection(ids) {
+    this.#selection = new Set(Array.isArray(ids) ? ids : []);
+    this.#selAnchor = null;
+    if (this.#data.length) {
+      this.#selection = new Set(pruneSelection([...this.#selection], this.#filtered));
+    }
+    this.#syncSelectionUI();
+    this.#emitSelection();
+  }
+  clearSelection() { this.selection = []; }
+
+  /* Selected rows in the CURRENT filtered/sorted order (feeds the host's
+   * "Export selected" through the one sealed CSV path). */
+  get selectedRows() { return this.#filtered.filter((r) => this.#selection.has(r.id)); }
+
+  /* Export ONLY the selection — the sealed exportCsv logic (column set,
+   * escaping, filename rule) over the selected rows, filtered order. */
+  exportSelected() {
+    if (this.#selection.size) this.#exportCsv(this.selectedRows);
+  }
+
   get data() { return this.#data; }
   set data(rows) {
     this.#data = Array.isArray(rows) ? rows : [];
+    // F2 (ruled): the data-swap prune now rides the ONE render-level prune —
+    // #render prunes the selection to the filtered set on EVERY pipeline
+    // change (data ⊇ filtered, so a delete/swap prune is subsumed) and emits
+    // bulk-selection-change when the selection shrank. Single-sourced.
     this.#render();
   }
   get catalogs() { return this.#catalogs; }
@@ -1157,13 +1388,44 @@ class UiStakeholderTable extends HTMLElement {
     sr.querySelector('.export-btn').addEventListener('click', () => this.#exportCsv());
 
     // one scroll container; .scrolled-x drives the frozen-edge shadow (sealed;
-    // guarded so re-renders never double-bind)
+    // guarded so re-renders never double-bind). Phase 17: the SAME listener
+    // drives the virtualization window (rAF-coalesced — one body rebuild per
+    // frame at most while scrolling).
     const scroll = sr.querySelector('.sheet-scroll');
     if (!scroll._scrollBound) {
       scroll._scrollBound = true;
       scroll.addEventListener('scroll', () => {
         scroll.classList.toggle('scrolled-x', scroll.scrollLeft > 0);
+        if (this.#virtual && !this.#scrollRaf) {
+          this.#scrollRaf = requestAnimationFrame(() => {
+            this.#scrollRaf = 0;
+            this.#renderWindow();
+          });
+        }
       });
+    }
+
+    // F3 (2026-07-05 audit): scroll is NOT the only thing that moves the
+    // window — resize/zoom change the viewport height and the row height. A
+    // ResizeObserver on the scroll container drives the SAME rAF-coalesced
+    // rebuild (computeWindow reads clientHeight live, so a changed viewport
+    // changes start/end; an unchanged window no-ops) and re-measures #rowH
+    // (zoom scales it; a changed height forces the pads to recompute).
+    if (!this.#resizeObs && typeof ResizeObserver !== 'undefined') {
+      this.#resizeObs = new ResizeObserver(() => {
+        if (!this.#virtual || this.#scrollRaf) return;
+        this.#scrollRaf = requestAnimationFrame(() => {
+          this.#scrollRaf = 0;
+          const cell = this.shadowRoot.querySelector('.sheet-grid .sheet-row .sheet-cell');
+          const h = cell ? cell.getBoundingClientRect().height : 0;
+          if (h && Math.abs(h - this.#rowH) > 0.5) {
+            this.#rowH = h;
+            this.#winStart = this.#winEnd = -1; // heights changed — rebuild the pads
+          }
+          this.#renderWindow();
+        });
+      });
+      this.#resizeObs.observe(scroll);
     }
 
     this.#render();
@@ -1173,6 +1435,9 @@ class UiStakeholderTable extends HTMLElement {
 
   disconnectedCallback() {
     this.#unbindDoc();
+    if (this.#scrollRaf) { cancelAnimationFrame(this.#scrollRaf); this.#scrollRaf = 0; }
+    // F3: the observer must not outlive the element (re-created on reconnect)
+    if (this.#resizeObs) { this.#resizeObs.disconnect(); this.#resizeObs = null; }
   }
 
   #syncKbd() {
@@ -1236,18 +1501,50 @@ class UiStakeholderTable extends HTMLElement {
   #render() {
     if (!this.shadowRoot.querySelector('.sheet-grid')) return; // pre-connect
     this.#filtered = this.#pipeline();
+    // F2 (RULED 2026-07-05): the selection is ALWAYS ⊆ the filtered rows —
+    // prune on EVERY pipeline change (search/filter/sort-preset/data swap;
+    // Gmail-style least surprise: what you see is what you act on), so the
+    // bar count, Export selected and every bulk write trivially agree with
+    // the visible set. Emits AFTER the rebuild so the host reads a settled
+    // grid.
+    let selShrank = false;
+    if (this.#selection.size) {
+      const pruned = pruneSelection([...this.#selection], this.#filtered);
+      if (pruned.length !== this.#selection.size) {
+        this.#selection = new Set(pruned);
+        selShrank = true;
+      }
+    }
     this.#renderGrid();
     this.#syncToolbar();
     this.#renderFooter();
+    if (selShrank) this.#emitSelection();
   }
 
   #cols() {
     const byKey = Object.fromEntries(REORDER_COLS.map((c) => [c.key, c]));
-    return [...FROZEN_COLS, ...this.#colOrder.map((k) => byKey[k]).filter(Boolean)];
+    const frozen = this.selectable ? [SELECT_COL, ...FROZEN_COLS] : [...FROZEN_COLS];
+    return [...frozen, ...this.#colOrder.map((k) => byKey[k]).filter(Boolean)];
+  }
+
+  /* A column is frozen when it is one of the sealed four OR the declared
+   * Phase-17 selection column. */
+  #isFrozen(key) {
+    return key === 'sel' || FROZEN_COLS.some((f) => f.key === key);
   }
 
   #renderGrid() {
     const grid = this.shadowRoot.querySelector('.sheet-grid');
+    const scroll = this.shadowRoot.querySelector('.sheet-scroll');
+    // F1 (HIGH, 2026-07-05 audit): capture the scroll position BEFORE the
+    // grid clears — clearing collapses the scroll height and the browser
+    // CLAMPS scrollTop to 0 before the spacers regrow, so reading it later
+    // teleported every full re-render (identity re-push, checkbox at depth,
+    // the sealed inline-edit chain) back to row 1. The virtual window is
+    // computed from the CAPTURED value and the position restored after the
+    // rebuild. F4: focus inside the grid is restored the same way.
+    const prevScrollTop = scroll ? scroll.scrollTop : 0;
+    const focusSpec = this.#captureFocus();
     const cols = this.#cols();
     grid.style.gridTemplateColumns = `repeat(${cols.length}, max-content)`; // sealed: every track max-content
     grid.textContent = '';
@@ -1260,14 +1557,140 @@ class UiStakeholderTable extends HTMLElement {
     for (const col of cols) head.appendChild(this.#buildHeaderCell(col));
     grid.appendChild(head);
 
-    // VIRTUALIZATION (declared): the sealed build map names a virtualized body
-    // for large workspaces; DEFERRED at demo scale (~20 rows) — to be
-    // implemented when workspaces exceed ~200 rows. Declared, not forgotten.
-    const frag = document.createDocumentFragment();
-    this.#filtered.forEach((row, i) => frag.appendChild(this.#buildRow(row, i, cols)));
-    grid.appendChild(frag);
+    // VIRTUALIZATION (Phase 17, declared — the build map named it; the
+    // thousands-of-stakeholders ruling landed it): past the threshold only
+    // the scroll window mounts, between two spacer rows. At-or-under the
+    // threshold the sealed every-row render is byte-identical.
+    this.#virtual = this.#filtered.length > VIRTUAL_THRESHOLD;
+    if (!this.#virtual) {
+      this.#topSpacer = this.#bottomSpacer = null;
+      this.#winStart = this.#winEnd = -1;
+      const frag = document.createDocumentFragment();
+      this.#filtered.forEach((row, i) => frag.appendChild(this.#buildRow(row, i, cols)));
+      grid.appendChild(frag);
+      this.#measureFrozen();
+      // F1: all rows are back — restore the clamped scroll position
+      if (scroll && scroll.scrollTop !== prevScrollTop) scroll.scrollTop = prevScrollTop;
+      this.#restoreFocus(focusSpec);
+      return;
+    }
 
+    this.#topSpacer = document.createElement('div');
+    this.#topSpacer.className = 'v-spacer';
+    this.#topSpacer.setAttribute('aria-hidden', 'true');
+    this.#bottomSpacer = this.#topSpacer.cloneNode();
+    grid.appendChild(this.#topSpacer);
+    grid.appendChild(this.#bottomSpacer);
+    this.#winStart = this.#winEnd = -1; // force a full window build
+    // F1: build the window from the CAPTURED position (scrollTop is already
+    // clamped to 0 here), then restore — the spacers now carry the full
+    // height, so the restore sticks (a shrunken filtered set clamps to its
+    // new max and the scroll listener recomputes the window there).
+    this.#renderWindow(prevScrollTop);
+    if (scroll && scroll.scrollTop !== prevScrollTop) scroll.scrollTop = prevScrollTop;
+    this.#restoreFocus(focusSpec);
+  }
+
+  /* The current scroll window over #filtered (pure math in computeWindow).
+   * scrollTopOverride (F1): a caller that captured the position before the
+   * browser clamped it passes it here; live reads stay the default.         */
+  #windowMetrics(scrollTopOverride = null) {
+    const scroll = this.shadowRoot.querySelector('.sheet-scroll');
+    const headCell = this.shadowRoot.querySelector('.sheet-head .sheet-cell');
+    return computeWindow({
+      scrollTop: scrollTopOverride != null ? scrollTopOverride : (scroll ? scroll.scrollTop : 0),
+      viewportHeight: scroll ? (scroll.clientHeight || 600) : 600,
+      rowHeight: this.#rowH,
+      total: this.#filtered.length,
+      overscan: VIRTUAL_OVERSCAN,
+      headerHeight: headCell ? headCell.getBoundingClientRect().height : 34,
+    });
+  }
+
+  /* Update ONLY the windowed body rows between the spacers (virtual mode).
+   * In-grid popovers/editors live inside rows, so an open one closes before
+   * any row churn (same rule the full re-render applies).
+   * F4: overlapping window shifts are INCREMENTAL (survivors keep their DOM
+   * nodes — a focused control is never destroyed by a mere shift); a
+   * disjoint/forced rebuild restores focus to the same logical control.
+   * F6: `recalibrated` is the depth guard — ONE row-height recalibration
+   * retry, then the measurement is accepted (never unbounded recursion).    */
+  #renderWindow(scrollTopOverride = null, recalibrated = false) {
+    if (!this.#virtual || !this.#topSpacer) return;
+    const w = this.#windowMetrics(scrollTopOverride);
+    if (w.start === this.#winStart && w.end === this.#winEnd) return;
+    if (this.#openDD) this.#openDD.close();
+    if (this.#openEditor) this.#openEditor();
+    const focusSpec = this.#captureFocus();
+
+    const grid = this.shadowRoot.querySelector('.sheet-grid');
+    const cols = this.#cols();
+    // F4: INCREMENTAL window update — when the new window overlaps the
+    // mounted one (every scroll tick and viewport resize, incl. the host
+    // bar mounting above the table), surviving rows KEEP their DOM nodes
+    // (so a focused checkbox mid-keyboard-walk is never destroyed) and only
+    // the edges churn. Disjoint jumps (fast scrubs) and forced rebuilds
+    // (#winStart = -1: data/pipeline/recalibration) rebuild whole. Safe
+    // because every #filtered change resets the window through #renderGrid
+    // — a survivor can never show stale row data.
+    const mStart = this.#winStart;
+    const mEnd = this.#winEnd;
+    const mounted = grid.querySelectorAll('.sheet-row'); // static list, index order
+    const overlap = mStart >= 0 && mounted.length === (mEnd - mStart) &&
+      w.start < mEnd && w.end > mStart;
+    if (!overlap) {
+      mounted.forEach((el) => el.remove());
+      const frag = document.createDocumentFragment();
+      for (let i = w.start; i < w.end; i++) {
+        frag.appendChild(this.#buildRow(this.#filtered[i], i, cols));
+      }
+      grid.insertBefore(frag, this.#bottomSpacer);
+    } else {
+      const keepFrom = Math.max(mStart, w.start);
+      const keepTo = Math.min(mEnd, w.end); // exclusive; overlap ⇒ keepFrom < keepTo
+      for (let i = mStart; i < keepFrom; i++) mounted[i - mStart].remove();
+      for (let i = keepTo; i < mEnd; i++) mounted[i - mStart].remove();
+      if (w.start < mStart) {
+        const frag = document.createDocumentFragment();
+        for (let i = w.start; i < mStart; i++) {
+          frag.appendChild(this.#buildRow(this.#filtered[i], i, cols));
+        }
+        grid.insertBefore(frag, mounted[keepFrom - mStart]); // before the first survivor
+      }
+      if (w.end > mEnd) {
+        const frag = document.createDocumentFragment();
+        for (let i = mEnd; i < w.end; i++) {
+          frag.appendChild(this.#buildRow(this.#filtered[i], i, cols));
+        }
+        grid.insertBefore(frag, this.#bottomSpacer);
+      }
+    }
+    this.#topSpacer.style.height = w.topPad + 'px';
+    this.#bottomSpacer.style.height = w.bottomPad + 'px';
+    this.#winStart = w.start;
+    this.#winEnd = w.end;
+
+    // calibrate the measured row height off the first real body row once —
+    // if it differs from the assumption, the pads/window recompute ONE time
+    // (F6 depth guard: `recalibrated` blocks a second retry — two rows that
+    // disagree about height, e.g. sub-pixel zoom rounding, must not recurse)
+    if (!recalibrated) {
+      const cell = grid.querySelector('.sheet-row .sheet-cell');
+      if (cell) {
+        const h = cell.getBoundingClientRect().height;
+        if (h && Math.abs(h - this.#rowH) > 0.5) {
+          this.#rowH = h;
+          this.#winStart = this.#winEnd = -1;
+          this.#renderWindow(scrollTopOverride, true);
+          this.#restoreFocus(focusSpec);
+          return;
+        }
+      }
+    }
+    // max-content tracks can resize as the window changes — re-measure the
+    // frozen sticky lefts per window (declared tradeoff, header comment)
     this.#measureFrozen();
+    this.#restoreFocus(focusSpec);
   }
 
   /* frozen sticky lefts — MEASURED after layout (sealed tree-proven note):
@@ -1284,7 +1707,7 @@ class UiStakeholderTable extends HTMLElement {
   }
 
   #buildHeaderCell(col) {
-    const isFrozen = FROZEN_COLS.some((f) => f.key === col.key);
+    const isFrozen = this.#isFrozen(col.key);
     const cell = document.createElement('div');
     cell.setAttribute('role', 'columnheader');
     cell.dataset.key = col.key;
@@ -1292,6 +1715,28 @@ class UiStakeholderTable extends HTMLElement {
       (isFrozen ? ` frozen frozen-${col.key}` : ' col-draggable') +
       (col.key === 'idx' ? ' idx' : '') + (col.key === 'edit' ? ' edit' : '') +
       (col.key === '_x' || col.key === '_y' ? ' coord' : '');
+
+    // Phase 17: the select-all checkbox — the FILTERED set, tri-state
+    // (indeterminate on a partial selection); a REAL ui-checkbox.
+    if (col.key === 'sel') {
+      cell.classList.add('sel');
+      const filteredIds = this.#filtered.map((r) => r.id);
+      const state = selectAllState([...this.#selection], filteredIds);
+      const cb = document.createElement('ui-checkbox');
+      cb.setAttribute('aria-label', 'Select all filtered stakeholders');
+      if (state === 'all') cb.setAttribute('checked', '');
+      if (state === 'some') cb.setAttribute('indeterminate', '');
+      cb.addEventListener('change', (e) => {
+        e.stopPropagation();
+        this.#selection = new Set(toggleSelectAll([...this.#selection], filteredIds));
+        this.#selAnchor = null;
+        // F4: sync IN PLACE — a rebuild would drop focus from this checkbox
+        this.#syncSelectionUI();
+        this.#emitSelection();
+      });
+      cell.appendChild(cb);
+      return cell;
+    }
 
     if (!isFrozen) {
       // drag-to-reorder (sealed mechanics incl. the guarded no-op drop and
@@ -1381,7 +1826,10 @@ class UiStakeholderTable extends HTMLElement {
   /* ── rows + cells ──────────────────────────────────────────────── */
   #buildRow(row, index, cols) {
     const tr = document.createElement('div');
-    tr.className = 'sheet-row' + (row.id === this.#selectedId ? ' selected' : '');
+    tr.className = 'sheet-row' +
+      (row.id === this.#selectedId ? ' selected' : '') +
+      (this.selectable && this.#selection.has(row.id) ? ' checked' : '');
+    tr.dataset.id = row.id; // F4: row identity for in-place sync + focus restore
     tr.setAttribute('role', 'row');
     tr.addEventListener('click', () => {
       this.#selectedId = row.id;
@@ -1397,6 +1845,69 @@ class UiStakeholderTable extends HTMLElement {
     this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
   }
   #patch(row, patch) { this.#emit('row-change', { id: row.id, patch }); }
+  /* Phase 17: every selection change flows out here — the host owns the
+   * action bar and all bulk writes (the events-out/props-in contract). */
+  #emitSelection() {
+    this.#emit('bulk-selection-change', { ids: [...this.#selection], count: this.#selection.size });
+  }
+
+  /* ── F4 (2026-07-05 audit): keyboard-operable selection ─────────────────
+   * Selection state touches ONLY checkbox states, row washes and the header
+   * tri-state — never the pipeline — so it syncs IN PLACE. Rebuilding the
+   * grid on every check dropped focus from the toggled ui-checkbox to
+   * <body>, making Space-walking the column impossible.                    */
+  #syncSelectionUI() {
+    if (!this.selectable) return;
+    const grid = this.shadowRoot.querySelector('.sheet-grid');
+    if (!grid) return;
+    grid.querySelectorAll('.sheet-row').forEach((tr) => {
+      const checked = this.#selection.has(tr.dataset.id);
+      tr.classList.toggle('checked', checked);
+      const cb = tr.querySelector('.sheet-cell.sel ui-checkbox');
+      if (cb) cb.toggleAttribute('checked', checked);
+    });
+    const head = grid.querySelector('.sheet-head .sheet-cell.sel ui-checkbox');
+    if (head) {
+      const state = selectAllState([...this.#selection], this.#filtered.map((r) => r.id));
+      head.toggleAttribute('checked', state === 'all');
+      head.toggleAttribute('indeterminate', state === 'some');
+    }
+  }
+
+  /* F4: where a rebuild IS genuinely required (data/pipeline changes,
+   * virtual window shifts under a focused control), focus is restored to
+   * the SAME LOGICAL CONTROL — located by row id + column key, never by the
+   * destroyed node. preventScroll keeps the F1 scroll restore authoritative. */
+  #captureFocus() {
+    const active = this.shadowRoot.activeElement;
+    if (!active) return null;
+    const grid = this.shadowRoot.querySelector('.sheet-grid');
+    if (!grid || !grid.contains(active)) return null;
+    const cell = active.closest('.sheet-cell');
+    if (!cell) return null;
+    const rowEl = active.closest('.sheet-row');
+    return { key: cell.dataset.key, rowId: rowEl ? rowEl.dataset.id : null };
+  }
+
+  #restoreFocus(spec) {
+    if (!spec || !spec.key) return;
+    const grid = this.shadowRoot.querySelector('.sheet-grid');
+    if (!grid) return;
+    let cell = null;
+    if (spec.rowId == null) {
+      cell = grid.querySelector(`.sheet-head .sheet-cell[data-key="${CSS.escape(spec.key)}"]`);
+    } else {
+      const row = grid.querySelector(`.sheet-row[data-id="${CSS.escape(spec.rowId)}"]`);
+      cell = row ? row.querySelector(`.sheet-cell[data-key="${CSS.escape(spec.key)}"]`) : null;
+    }
+    if (!cell) return; // the control left the window/filtered set — no theft
+    const target = cell.hasAttribute('tabindex')
+      ? cell
+      : cell.querySelector('ui-checkbox, ui-icon-button, button, input, a, [tabindex]');
+    if (target && typeof target.focus === 'function') {
+      target.focus({ preventScroll: true });
+    }
+  }
 
   #muted(cell) {
     const s = document.createElement('span');
@@ -1415,7 +1926,7 @@ class UiStakeholderTable extends HTMLElement {
    * community pills (the engagement name). Owner avatars carry the REAL
    * owners popover (sealed OwnersDisplay) instead of stacked title text.     */
   #buildCell(col, row, index) {
-    const isFrozen = FROZEN_COLS.some((f) => f.key === col.key);
+    const isFrozen = this.#isFrozen(col.key);
     const cell = document.createElement('div');
     cell.setAttribute('role', 'gridcell');
     cell.dataset.key = col.key;
@@ -1424,6 +1935,41 @@ class UiStakeholderTable extends HTMLElement {
     if (emphasis) cell.className += ' ' + emphasis;
 
     switch (col.key) {
+      // Phase 17: the row selection checkbox (REAL ui-checkbox). Checking a
+      // row is a BULK act — it never row-highlights (stopPropagation keeps
+      // the sealed single-row selection-change channel separate). Shift-click
+      // extends from the last-clicked anchor across the filtered order.
+      case 'sel': {
+        cell.classList.add('sel');
+        const cb = document.createElement('ui-checkbox');
+        cb.setAttribute('aria-label', `Select ${displayName(row) || row.name || 'row'}`);
+        if (this.#selection.has(row.id)) cb.setAttribute('checked', '');
+        // capture shiftKey BEFORE the component's own click toggles + fires
+        // change (this listener registers first — creation order)
+        cb.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.#shiftPending = e.shiftKey;
+        });
+        cb.addEventListener('change', (e) => {
+          e.stopPropagation();
+          const checked = cb.hasAttribute('checked'); // state AFTER the toggle
+          if (this.#shiftPending && this.#selAnchor && this.#selAnchor !== row.id) {
+            const span = rangeIds(this.#filtered.map((r) => r.id), this.#selAnchor, row.id);
+            this.#selection = new Set(applyRangeSelection([...this.#selection], span, checked));
+          } else {
+            checked ? this.#selection.add(row.id) : this.#selection.delete(row.id);
+          }
+          this.#shiftPending = false;
+          this.#selAnchor = row.id;
+          // F4 (2026-07-05 audit): sync IN PLACE — the old full #render()
+          // destroyed this checkbox and dropped keyboard focus to <body>;
+          // repeated Space presses now toggle with focus held.
+          this.#syncSelectionUI();
+          this.#emitSelection();
+        });
+        cell.appendChild(cb);
+        break;
+      }
       case 'idx': {
         cell.classList.add('idx');
         cell.textContent = String(index + 1);
@@ -2078,8 +2624,12 @@ class UiStakeholderTable extends HTMLElement {
     sr.querySelector('.footer-avgy').textContent = avg('_y');
   }
 
-  #exportCsv() {
-    const csv = buildCsv(this.#filtered, this.#users);                   // the CURRENT filtered/sorted set (sealed)
+  /* Sealed export path — default rows = the CURRENT filtered/sorted set
+   * (sealed; virtualization never narrows this — the window is a render
+   * detail). Phase 17's exportSelected() feeds the selected rows through
+   * the SAME serializer/filename/download (replace-don't-duplicate). */
+  #exportCsv(rows = this.#filtered) {
+    const csv = buildCsv(rows, this.#users);
     const filename = csvFilename(this.#workspaceLabel);
     try {
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });

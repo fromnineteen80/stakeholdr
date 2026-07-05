@@ -23,6 +23,7 @@ const SUITES = [
   'record-test.mjs',
   'workhq-test.mjs',
   'palette-test.mjs',
+  'scale-test.mjs',
 ];
 
 let failed = 0;

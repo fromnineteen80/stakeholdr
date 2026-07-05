@@ -723,5 +723,30 @@ await page.screenshot({ path: `${OUT}/p16-palette-empty.png`, clip: { x: 380, y:
 await page.keyboard.press('Escape');
 await page.waitForTimeout(300);
 
+// ── PHASE-17 BULK-ACTION CAPTURES ──────────────────────────────────────────
+// (the virtualized 2,000-row captures — p17-virtual-*.png — come from
+// scripts/scale-probe.mjs; here: the opt-in selection column, a shift-click
+// range with the selected-row wash, the host action bar, its menus, and the
+// header select-all tri-state.) The view is Lists (table mode) after P15/16.
+const p17cbs = page.locator('ui-stakeholder-table .sheet-row ui-checkbox');
+await p17cbs.nth(0).click();
+await page.waitForTimeout(200);
+await p17cbs.nth(4).click({ modifiers: ['Shift'] });   // range: rows 1–5
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p17-bulk-bar.png` });
+await page.screenshot({ path: `${OUT}/p17-bulk-rows.png`, clip: { x: 0, y: 60, width: 1440, height: 520 } });
+// the Set-priority menu open over the bar
+await page.locator('#bulk-priority-btn').click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p17-bulk-priority-menu.png`, clip: { x: 0, y: 60, width: 1440, height: 520 } });
+await page.keyboard.press('Escape');
+await page.waitForTimeout(200);
+// header select-all: partial (indeterminate) → the whole filtered set
+await page.locator('ui-stakeholder-table .sheet-head ui-checkbox').click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p17-bulk-select-all.png`, clip: { x: 0, y: 60, width: 1440, height: 520 } });
+await page.locator('.bulk-bar ui-button', { hasText: 'Clear selection' }).click();
+await page.waitForTimeout(300);
+
 await browser.close(); srv.close();
 console.log('shots written to', OUT);

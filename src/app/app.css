@@ -2142,3 +2142,29 @@ ui-sidebar.record-nav[collapsed] .record-nav-title { display: none; }
   font: var(--ui-sys-font-caption);
   padding: var(--ui-sys-space-2) var(--ui-sys-space-2) 0;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * PHASE 17 — BULK SELECTION ACTION BAR (FORWARD-DESIGN, declared 2026-07-05).
+ * The declared pattern: when ≥1 Lists row is checked, this host-owned bar
+ * surfaces ABOVE the table (between the workHQ divider and the grid); the
+ * table's own toolbar stays intact. Accent-tinted so a live selection is
+ * unmissable at scale; tokens only. Intel mode hides the table, so the bar
+ * folds with it. No bulk delete (deferred to Enterprise soft-delete).
+ * ═════════════════════════════════════════════════════════════════════════ */
+.bulk-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ui-sys-space-2);
+  padding: var(--ui-sys-space-2) var(--ui-sys-space-4);
+  background: var(--ui-sys-accent-tint-soft);
+  border: 1px solid var(--ui-sys-accent);
+  border-radius: var(--ui-sys-shape-card);
+  font: var(--ui-sys-font-body);
+  color: var(--ui-sys-on-surface);
+}
+.bulk-count { font: var(--ui-sys-font-label); white-space: nowrap; }
+.bulk-count strong { font-weight: 600; }
+.bulk-spacer { flex: 1 1 0; }
+.intel-split[data-mode="intel"] > .bulk-bar { display: none; }
