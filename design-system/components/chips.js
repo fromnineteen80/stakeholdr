@@ -1,9 +1,12 @@
 /* ============================================================================
  * <ui-chip-set> + <ui-chip> — chip variants: assist|filter|input|suggestion
- * plus the sealed PRESENTATIONAL pill variants: priority|zone|tag|segment|goal —
+ * plus the sealed PRESENTATIONAL pill variants:
+ * priority|zone|tag|segment|goal|kind —
  * and the companion <ui-status-dot> element (sealed Shared-UI-primitives box;
  * segment = the sealed SegmentBadge, Workspaces box, value attr = the segment
- * name, unknown → the Corporate Functions pair).
+ * name, unknown → the Corporate Functions pair; kind = the sealed community
+ * KindBadge, Community box, value attr = the exact kind name, unknown → the
+ * container/muted pair).
  *
  * Usage:
  *   <ui-chip-set>
@@ -210,7 +213,8 @@ chipTpl.innerHTML = `
     :host([variant="zone"]) .chip,
     :host([variant="tag"]) .chip,
     :host([variant="segment"]) .chip,
-    :host([variant="goal"]) .chip {
+    :host([variant="goal"]) .chip,
+    :host([variant="kind"]) .chip {
       height: auto;
       padding: 1px var(--ui-sys-space-2);
       font: var(--ui-sys-font-caption);
@@ -221,7 +225,8 @@ chipTpl.innerHTML = `
     :host([variant="zone"]) .chip::before,
     :host([variant="tag"]) .chip::before,
     :host([variant="segment"]) .chip::before,
-    :host([variant="goal"]) .chip::before { content: none; } /* no state layer */
+    :host([variant="goal"]) .chip::before,
+    :host([variant="kind"]) .chip::before { content: none; } /* no state layer */
 
     /* segment — the sealed SegmentBadge (Workspaces box): uppercase caption
        pill reading the --ui-sys-segment-* pairs via the value attr; UNKNOWN
@@ -270,6 +275,24 @@ chipTpl.innerHTML = `
     :host([variant="goal"][value="dei"])          { --_bg: var(--ui-sys-goal-dei-surface);          --_fg: var(--ui-sys-goal-dei-ink); }
     :host([variant="goal"][value="community"])    { --_bg: var(--ui-sys-goal-community-surface);    --_fg: var(--ui-sys-goal-community-ink); }
     :host([variant="goal"][value="union"])        { --_bg: var(--ui-sys-goal-union-surface);        --_fg: var(--ui-sys-goal-union-ink); }
+
+    /* kind — the sealed community KindBadge (Community box KIND_COLORS): one
+       pill pair per kind via the exact kind name in the value attr, border
+       transparent; UNKNOWN or absent values fall back to the
+       surface-container-high / on-surface-muted pair (the sealed
+       var(--bg-2)/var(--ink-2) fallback). Colors read the single-sourced
+       --ui-sys-kind-* tokens only. */
+    :host([variant="kind"]) {
+      --_bg:     var(--ui-sys-surface-container-high);
+      --_border: transparent;
+      --_fg:     var(--ui-sys-on-surface-muted);
+    }
+    :host([variant="kind"][value="Philanthropy"])           { --_bg: var(--ui-sys-kind-philanthropy-surface);         --_fg: var(--ui-sys-kind-philanthropy-ink); }
+    :host([variant="kind"][value="Volunteering"])           { --_bg: var(--ui-sys-kind-volunteering-surface);         --_fg: var(--ui-sys-kind-volunteering-ink); }
+    :host([variant="kind"][value="Corporate Giving"])       { --_bg: var(--ui-sys-kind-corporate-giving-surface);     --_fg: var(--ui-sys-kind-corporate-giving-ink); }
+    :host([variant="kind"][value="Political Action (PAC)"]) { --_bg: var(--ui-sys-kind-political-action-pac-surface); --_fg: var(--ui-sys-kind-political-action-pac-ink); }
+    :host([variant="kind"][value="Sustainability"])         { --_bg: var(--ui-sys-kind-sustainability-surface);       --_fg: var(--ui-sys-kind-sustainability-ink); }
+    :host([variant="kind"][value="Social Impact"])          { --_bg: var(--ui-sys-kind-social-impact-surface);        --_fg: var(--ui-sys-kind-social-impact-ink); }
 
     /* tag — the quiet .tag pill (sealed Tags primitive chip shape). */
     :host([variant="tag"]) {
@@ -384,9 +407,11 @@ class UiChip extends HTMLElement {
   get selected() { return this.hasAttribute('selected'); }
   set selected(v) { v ? this.setAttribute('selected', '') : this.removeAttribute('selected'); }
 
-  /* priority/zone/tag/segment are display-only pills — no widget role, no tabstop. */
+  /* priority/zone/tag/segment/goal/kind are display-only pills — no widget
+   * role, no tabstop. */
   #isPresentation() {
-    return ['priority', 'zone', 'tag', 'segment'].includes(this.getAttribute('variant'));
+    return ['priority', 'zone', 'tag', 'segment', 'goal', 'kind']
+      .includes(this.getAttribute('variant'));
   }
 
   #syncRole() {

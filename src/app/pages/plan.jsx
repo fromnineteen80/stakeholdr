@@ -78,7 +78,7 @@ import {
 } from '../modals/stakeholder-logic.js';
 import {
   StakeholderModal, useUiEvent, Field, TF, Sel, TA, Owners, IssueSelector,
-  PriorityPill,
+  PriorityPill, Picker, PopMenu,
 } from '../modals/stakeholder-modal.jsx';
 
 /* Zone pill (the shared StatusPill composition — sealed single source). */
@@ -100,50 +100,8 @@ function StageText({ status }) {
   );
 }
 
-/* ui-autocomplete bridge in PICKER mode (sealed PLANAUTOCOMPLETE config:
- * 8-result cap, open-on-focus full list on empty query, label-OR-sub match,
- * two-line rows, pick clears + closes). */
-function Picker({ options, placeholder, onPick, autoFocus }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.options = options || [];
-  }, [options]);
-  useEffect(() => {
-    if (autoFocus && ref.current) {
-      const t = setTimeout(() => ref.current && ref.current.focus(), 60);
-      return () => clearTimeout(t);
-    }
-  }, [autoFocus]);
-  useUiEvent(ref, 'change', (e) => onPick(e.detail.value));
-  return (
-    <ui-autocomplete
-      ref={ref}
-      class="plan-picker"
-      placeholder={placeholder}
-      max-results="8"
-      clear-on-select=""
-    ></ui-autocomplete>
-  );
-}
-
-/* Portal-mounted ui-menu that opens on mount and reports its close (the
- * component owns positioning/outside-dismiss/keyboard). */
-function PopMenu({ anchorId, onClose, className, children }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.setAttribute('anchor', anchorId);
-    el.show();
-  }, [anchorId]);
-  useUiEvent(ref, 'ui-menu-close', onClose);
-  return createPortal(
-    <ui-menu ref={ref} class={className}>{children}</ui-menu>,
-    document.body,
-  );
-}
+/* Picker + PopMenu moved to their shared home (stakeholder-modal.jsx) at the
+ * Community phase — both pages compose the ONE definition. */
 
 /* ══ PLAN FIT CELL (binding element-6 schema: the override targets the FIT
  * band — band-only, ✦ suggested / ·set overridden marks, manager-only). ══ */

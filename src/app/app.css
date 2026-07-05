@@ -557,14 +557,18 @@ ui-sidebar[collapsed] .brand { margin-left: 0; }
   padding-bottom: var(--ui-sys-space-3);
 }
 
-/* Plan stage text (sealed PLAN_STAGE_FG — colored TEXT, no badge; unknown
- * stages fall back to the muted ink, the sealed var(--ink-2) rule). */
+/* Plan + Community stage text (sealed PLAN_STAGE_FG / community STAGE_COLORS
+ * fg — colored TEXT, no badge; the community StageBadge pill is sealed DEAD
+ * CODE, never replicated; unknown stages fall back to the muted ink, the
+ * sealed var(--ink-2) rule). ONE composition for both pages. */
 .plan-stage-text { font: var(--ui-sys-font-caption); font-weight: 500; color: var(--ui-sys-on-surface-muted); white-space: nowrap; }
 .plan-stage-text[data-stage="idea"]         { color: var(--ui-sys-stage-idea); }
 .plan-stage-text[data-stage="proposed"]     { color: var(--ui-sys-stage-proposed); }
 .plan-stage-text[data-stage="under-review"] { color: var(--ui-sys-stage-under-review); }
 .plan-stage-text[data-stage="active"]       { color: var(--ui-sys-stage-active); }
 .plan-stage-text[data-stage="complete"]     { color: var(--ui-sys-stage-complete); }
+.plan-stage-text[data-stage="approved"]     { color: var(--ui-sys-stage-approved); }
+.plan-stage-text[data-stage="declined"]     { color: var(--ui-sys-stage-declined); }
 
 /* ── PLAN CARD (sealed TREE 2) ── */
 .plan-card { display: flex; flex-direction: column; gap: var(--ui-sys-space-2); padding: var(--ui-sys-space-3); }
@@ -820,3 +824,85 @@ ui-sidebar[collapsed] .brand { margin-left: 0; }
 .plan-review-strat-title { font: var(--ui-sys-font-label); }
 .plan-review-strat-meta { display: flex; gap: var(--ui-sys-space-3); font: var(--ui-sys-font-caption); }
 .plan-review-comm { font: var(--ui-sys-font-body); }
+
+/* ══ COMMUNITY PAGE (Phase 8 — sealed "Community" box trees; the landing
+ * reuses the Plans landing composition classes above (declared, one shared
+ * pattern); everything below is community-specific, token-only) ══ */
+
+/* Rollup strip (sealed toolbarRight: three "label value" spans, tnum). */
+.comm-rollup-inline {
+  display: inline-flex; align-items: baseline; gap: var(--ui-sys-space-4);
+  font: var(--ui-sys-font-label); font-feature-settings: "tnum";
+  white-space: nowrap;
+}
+.comm-rollup-lbl {
+  font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted);
+  text-transform: uppercase; letter-spacing: .07em;
+  margin-right: var(--ui-sys-space-1);
+}
+
+/* Vote group (sealed .comm-vote): two ui-buttons; the SELECTED (.on) state is
+ * a token re-point — the filled variant's --ui-sys-primary reads the pos/neg
+ * valence token on that host (declared; never a component override). */
+.comm-vote { display: inline-flex; align-items: center; gap: var(--ui-sys-space-1); }
+.comm-vote-for     { --ui-sys-primary: var(--ui-sys-pos); }
+.comm-vote-against { --ui-sys-primary: var(--ui-sys-neg); }
+
+/* Value bar (sealed .comm-value-bar → ui-linear-progress) + tnum readout. */
+.comm-value-wrap { display: inline-flex; align-items: center; gap: var(--ui-sys-space-2); min-width: 0; }
+.comm-value-wrap .comm-value-bar { width: 72px; }
+.comm-value-num {
+  font: var(--ui-sys-font-caption); font-feature-settings: "tnum";
+  white-space: nowrap;
+}
+
+/* Approved label tones (sealed approvedLabel: pos / neg / muted). */
+.comm-approved { font-feature-settings: "tnum"; }
+.comm-tone-pos { color: var(--ui-sys-pos); }
+.comm-tone-neg { color: var(--ui-sys-neg); }
+.comm-tone-muted { color: var(--ui-sys-on-surface-muted); }
+
+/* Landing table Amount cell (tnum numerals). */
+.comm-td-amount { font-feature-settings: "tnum"; white-space: nowrap; }
+
+/* Profile / editor document column (rides the plan-review-doc shell). */
+.comm-doc { gap: var(--ui-sys-space-3); }
+.comm-doc .cm-section-label { margin-top: var(--ui-sys-space-4); }
+.cm-valuescore {
+  display: flex; align-items: center; gap: var(--ui-sys-space-2);
+}
+.cm-valuescore .prof-k { flex: none; }
+.cm-valuescore .comm-value-bar { flex: 1; max-width: 280px; }
+
+/* Editor form widths (single-column stack; the fields fill the doc column). */
+.comm-form .sh-field ui-text-field,
+.comm-form .sh-field ui-select,
+.comm-form .sh-field ui-textarea,
+.comm-form .sh-field ui-date-picker { width: 100%; }
+.comm-slider-val {
+  color: var(--ui-sys-on-surface-muted); font-feature-settings: "tnum";
+  margin-left: var(--ui-sys-space-1);
+}
+
+/* Date cells: ui-date-picker carries its OWN floating label (the Phase-4
+ * precedent — no doubled Field caption); in a captioned grid row the control
+ * bottoms out level with its captioned siblings. The floating label sits
+ * above the border, so clear headroom for it. */
+.comm-date-cell { justify-content: flex-end; padding-top: var(--ui-sys-space-3); }
+
+/* Connected-stakeholders picker (chips + shared Picker composition). */
+.comm-sh-picker { display: flex; flex-direction: column; gap: var(--ui-sys-space-2); }
+.comm-sh-picker ui-autocomplete { width: 100%; }
+
+/* Risk & compliance stack (sealed cm-attest-row; the conflict detail indents
+ * one space-6 step — the sealed 26px maps to the 24px token step, declared). */
+.comm-attest { display: flex; flex-direction: column; gap: var(--ui-sys-space-2); }
+.comm-conflict-detail { margin-left: var(--ui-sys-space-6); }
+
+/* Attachments (declared real minimal control). */
+.comm-attachments { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ui-sys-space-2); }
+
+/* Stakeholder-profile engagement rows are interactive where the C9 route is
+ * wired (Community phase) — hover affordance, token-only. */
+.profile-entry-link { cursor: pointer; }
+.profile-entry-link:hover { background: var(--ui-sys-row-hover); }

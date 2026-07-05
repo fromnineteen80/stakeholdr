@@ -344,7 +344,8 @@ const goalNotes = await page.evaluate(() => {
 console.log('P7 goalNotes after reopen (expect the typed note, zero junk keys):',
   JSON.stringify(goalNotes));
 // 4 · the community linker (right aside): linked row + add autocomplete open
-await page.locator('.plan-aside-right .plan-community').scrollIntoViewIfNeeded();
+// (the linker lives in the LEFT metadata rail — sealed placement, Phase-7 audit)
+await page.locator('.plan-aside .plan-community').first().scrollIntoViewIfNeeded();
 await page.locator('.plan-community ui-button', { hasText: 'Add Community Investment' }).click();
 await page.waitForTimeout(400);
 await page.locator('.plan-community ui-autocomplete input').click();
@@ -368,6 +369,63 @@ await page.screenshot({ path: `${OUT}/p7-plan-review-stakeholders.png` });
 await page.locator('.plan-review-section', { hasText: 'Community Investment' }).scrollIntoViewIfNeeded();
 await page.waitForTimeout(300);
 await page.screenshot({ path: `${OUT}/p7-plan-review-tail.png` });
+
+// ── PHASE-8 COMMUNITY CAPTURES ─────────────────────────────────────────────
+// 1 · landing cards (4 seed applications; rollup strip; vote groups; footer)
+await page.locator('.plan-editor-bar ui-button', { hasText: 'Plans' }).click().catch(() => {});
+await page.waitForTimeout(300);
+await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Community' }).click();
+await page.waitForTimeout(600);
+await page.screenshot({ path: `${OUT}/p8-community-landing-cards.png` });
+// 1b · table mode + filter popover
+await page.locator('.plan-toolbar ui-button', { hasText: 'See all' }).click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p8-community-landing-table.png` });
+await page.locator('.plan-toolbar ui-button', { hasText: 'See all' }).click();
+await page.locator('#comm-filter-btn').click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p8-community-filter-popover.png` });
+await page.keyboard.press('Escape');
+await page.waitForTimeout(200);
+// 2 · a vote lands (u-alex casts "against" on the PAC application)
+await page.locator('.comm-card', { hasText: 'Oregon Modernization PAC' })
+  .locator('.comm-vote-against').click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p8-community-card-voted.png`, clip: { x: 300, y: 80, width: 1140, height: 620 } });
+// 3 · the read-only profile (asPage) with the manager Approve action
+await page.locator('.comm-card', { hasText: 'Willamette River Cleanup Day' })
+  .locator('.plan-card-actions ui-button', { hasText: 'Review' }).click();
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p8-community-profile.png` });
+// 3b · Approve (manager u-alex): stage flips, the action retires
+await page.locator('.comm-profile ui-button', { hasText: 'Approve' }).click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p8-community-profile-approved.png` });
+// 4 · the stakeholder BRIDGE: a Stakeholders pill opens the shared record
+await page.locator('.comm-profile .prof-grid ui-chip[variant="assist"]').first().click();
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p8-community-bridge-profile.png` });
+await page.evaluate(() => document.querySelectorAll('ui-dialog').forEach(d => d.close && d.close()));
+await page.waitForTimeout(400);
+// 5 · the record editor (asPage): sections · sliders · chips · counters
+await page.locator('.comm-card', { hasText: 'LATAM E-Waste' })
+  .locator('.plan-card-actions ui-button', { hasText: 'Edit' }).click();
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p8-community-editor-top.png` });
+await page.locator('.comm-form .cm-valuescore').scrollIntoViewIfNeeded();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p8-community-editor-alignment.png` });
+await page.locator('.comm-form .comm-attest').scrollIntoViewIfNeeded();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p8-community-editor-risk.png` });
+await page.locator('.comm-editor ui-button', { hasText: 'All community' }).click();
+await page.waitForTimeout(300);
+// 6 · CREATE via the shell (+): blank form, Create disabled, "{N} left"
+await page.locator('ui-app-bar ui-icon-button[aria-label="Create new"]').click();
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p8-community-create-blank.png` });
+await page.locator('.comm-editor ui-button', { hasText: 'All community' }).click();
+await page.waitForTimeout(300);
 
 await browser.close(); srv.close();
 console.log('shots written to', OUT);

@@ -7,6 +7,7 @@ import { SheetPage } from './pages/sheet.jsx';
 import { MapPage } from './pages/map.jsx';
 import { ScoringPage } from './pages/scoring.jsx';
 import { PlanPage } from './pages/plan.jsx';
+import { CommunityPage } from './pages/community.jsx';
 import { usePersistentState } from './data/store.js';
 import {
   SEED_WORKSPACES, SEED_STAKEHOLDERS, SEED_STAKEHOLDER_WORKSPACES,
@@ -35,7 +36,7 @@ const NAV_TABS = [
 // exactly these views. Live views open their create flow via createNonce;
 // the rest stay honestly inert until their phases land.
 const CREATE_VIEWS = ['sheet', 'scoring', 'plan', 'community', 'setup'];
-const CREATE_LIVE = ['sheet', 'scoring', 'plan'];
+const CREATE_LIVE = ['sheet', 'scoring', 'plan', 'community'];
 
 export function AppShell() {
   const [view, setView] = useState('sheet');
@@ -266,6 +267,11 @@ export function AppShell() {
           /* Sealed: Plans render on Master (all plans) and per workspace
              (that workspace's plans); creation flows through createNonce. */
           <PlanPage createNonce={createNonce} activeWorkspaceId={activeWorkspaceId} />
+        ) : view === 'community' ? (
+          /* Sealed: Community aggregates org-wide (never workspace-scoped);
+             creation flows through createNonce (the shell (+) is the sealed
+             New-application affordance). */
+          <CommunityPage createNonce={createNonce} />
         ) : (
           <ui-card variant="outlined">
             <div className="ph-title">
@@ -281,7 +287,7 @@ export function AppShell() {
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Build: Phase 7 — Plans (landing · editor · review · Plan Fit)</span>
+        <span>Build: Phase 8 — Community (applications · votes · approval · FY rollups)</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
 

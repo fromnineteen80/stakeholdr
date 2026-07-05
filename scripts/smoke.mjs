@@ -98,6 +98,51 @@ for (const path of pages) {
     if (goalCheck.junk) errs.push('PLANGOALNOTES: junk char-keys 0-8 landed on the plan record (oracle bug replicated)');
     await page.locator('.plan-editor-bar ui-button', { hasText: 'All plans' }).click({ timeout: 3000 }).catch(e => errs.push('PLANBACK: ' + e.message));
     await page.waitForTimeout(300);
+    // Phase 8: Community — landing cards render with the rollup strip; a vote
+    // TOGGLES (u-alex re-clicks his seeded ca-01 "for" → cleared) and the
+    // make-real upsert stamps updatedAt; the manager Approve action moves a
+    // Proposed application to Approved with approverId/approvedAt stamps.
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Community' }).click({ timeout: 3000 }).catch(e => errs.push('COMMNAV: ' + e.message));
+    await page.waitForTimeout(500);
+    const commCards = await page.locator('.comm-card').count();
+    if (commCards < 4) errs.push(`COMMCARDS: expected the 4 seed applications, saw ${commCards}`);
+    const rollups = await page.locator('.comm-rollup-inline > span').count();
+    if (rollups !== 3) errs.push(`COMMROLLUP: expected 3 rollup groups (Requested/Annual/3YR), saw ${rollups}`);
+    await page.locator('.comm-card', { hasText: 'Cedarville STEM Classroom Grant' })
+      .locator('.comm-vote-for').click({ timeout: 3000 }).catch(e => errs.push('COMMVOTE: ' + e.message));
+    await page.waitForTimeout(400);
+    const voteCheck = await page.evaluate(() => {
+      const comm = JSON.parse(localStorage.getItem('hpsm:community') || '[]');
+      const a = comm.find(x => x.id === 'ca-01') || {};
+      return { vote: (a.votes || {})['u-alex'], stamped: a.updatedAt !== '2026-01-22T18:30:00.000Z' };
+    });
+    if (voteCheck.vote !== undefined) errs.push('COMMVOTE: re-clicking my own "for" vote did not toggle it off');
+    if (!voteCheck.stamped) errs.push('COMMVOTE: the vote save did not stamp updatedAt (make-real regression)');
+    await page.locator('.comm-card', { hasText: 'Willamette River Cleanup Day' })
+      .locator('.plan-card-actions ui-button', { hasText: 'Review' }).click({ timeout: 3000 }).catch(e => errs.push('COMMREVIEW: ' + e.message));
+    await page.waitForTimeout(500);
+    await page.locator('.comm-profile ui-button', { hasText: 'Approve' }).click({ timeout: 3000 }).catch(e => errs.push('COMMAPPROVE: ' + e.message));
+    await page.waitForTimeout(400);
+    const apprCheck = await page.evaluate(() => {
+      const comm = JSON.parse(localStorage.getItem('hpsm:community') || '[]');
+      const a = comm.find(x => x.id === 'ca-02') || {};
+      return { stage: a.stage, approver: a.approverId, at: !!a.approvedAt, date: a.dateApproved };
+    });
+    if (apprCheck.stage !== 'Approved') errs.push(`COMMAPPROVE: expected stage Approved, saw ${apprCheck.stage}`);
+    if (apprCheck.approver !== 'u-alex' || !apprCheck.at) errs.push('COMMAPPROVE: approverId/approvedAt not stamped');
+    if (!apprCheck.date) errs.push('COMMAPPROVE: dateApproved did not default');
+    await page.locator('.comm-profile ui-button', { hasText: 'Community' }).first().click({ timeout: 3000 }).catch(e => errs.push('COMMPROFBACK: ' + e.message));
+    await page.waitForTimeout(400);
+    // The editor mounts asPage with the sealed sections + the "{N} left"
+    // readout on a fresh create (via the shell's context-aware +).
+    await page.locator('ui-app-bar ui-icon-button[aria-label="Create new"]').click({ timeout: 3000 }).catch(e => errs.push('COMMNEW: ' + e.message));
+    await page.waitForTimeout(500);
+    const missingReadout = await page.locator('.comm-editor .plan-missing').textContent().catch(() => '');
+    if (!/left$/.test((missingReadout || '').trim())) errs.push(`COMMNEW: expected the "{N} left" readout, saw "${missingReadout}"`);
+    const commTextareas = await page.locator('.comm-form ui-textarea').count();
+    if (commTextareas < 2) errs.push(`COMMFORM: expected the two counted textareas, saw ${commTextareas}`);
+    await page.locator('.comm-editor ui-button', { hasText: 'All community' }).click({ timeout: 3000 }).catch(e => errs.push('COMMEDBACK: ' + e.message));
+    await page.waitForTimeout(300);
   }
   if (path.includes('wireframes')) {
     await page.locator('#theme-modern').click({ timeout: 3000 }).catch(e => errs.push('TOGGLE: ' + e.message));
