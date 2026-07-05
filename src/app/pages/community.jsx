@@ -277,7 +277,9 @@ function CommunityCard({
 }
 
 /* ══ THE PAGE ══════════════════════════════════════════════════════════════ */
-export function CommunityPage({ createNonce = 0, openCommunityId = null, onConsumeOpen }) {
+export function CommunityPage({
+  createNonce = 0, openCommunityId = null, onConsumeOpen, onOpenWorkspace,
+}) {
   const [community, setCommunity] = usePersistentState('community', SEED_COMMUNITY);
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
   const [scores] = usePersistentState('scores', SEED_SCORES);
@@ -416,6 +418,7 @@ export function CommunityPage({ createNonce = 0, openCommunityId = null, onConsu
           setViewStakeholderId(null);
         }}
         onOpenCommunity={(id) => { setViewStakeholderId(null); setViewId(id); }}
+        onOpenWorkspace={onOpenWorkspace}
       />
     </div>
   );

@@ -159,6 +159,91 @@ for (const path of pages) {
     if (c9Title !== 'Cedarville STEM Classroom Grant') errs.push(`C9ROUTE: expected the clicked engagement's Community read view, saw "${c9Title}"`);
     const c9ModalOpen = await page.locator('ui-dialog.sh-dialog[open]').count();
     if (c9ModalOpen !== 0) errs.push(`C9CLOSE: the stakeholder modal should close when routing, saw ${c9ModalOpen} open`);
+    // Phase 9: Workspaces (Setup) — segment-grouped cards render; the
+    // selector's "New workspace…" lands on Setup WITH the create modal
+    // (census A3); create stamps createdBy/createdAt/updatedAt, honors the
+    // sealed blank defaults, and AUTO-OPENS the workspace (census H4); the
+    // edit modal saves; delete runs the FULL cascade (record + joins + plans
+    // + active fallback to Master).
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Workspaces' }).click({ timeout: 3000 }).catch(e => errs.push('P9NAV: ' + e.message));
+    await page.waitForTimeout(500);
+    const segGroups = await page.locator('.seg-group').count();
+    if (segGroups < 3) errs.push(`P9GROUPS: expected the 3 seeded segment groups, saw ${segGroups}`);
+    const wsCards = await page.locator('.ws-card').count();
+    if (wsCards < 6) errs.push(`P9CARDS: expected the 6 seed workspaces, saw ${wsCards}`);
+    await page.locator('#ws-select-anchor').click({ timeout: 3000 }).catch(e => errs.push('P9MENU: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('ui-menu ui-menu-item', { hasText: 'New workspace' }).click({ timeout: 3000 }).catch(e => errs.push('P9CTA: ' + e.message));
+    await page.waitForTimeout(500);
+    const createDisabled = await page.locator('.ws-modal ui-button', { hasText: 'Create workspace' }).getAttribute('disabled').catch(() => null);
+    if (createDisabled === null) errs.push('P9CREATE: Create must be DISABLED while the name is empty (sealed validity)');
+    // real typing (fill()'s synthetic input event is non-composed and never
+    // escapes the ui-text-field shadow root, so the draft would stay empty)
+    await page.locator('.ws-modal ui-text-field input').click({ timeout: 3000 }).catch(e => errs.push('P9NAME: ' + e.message));
+    await page.keyboard.type('EMEA Water Stewardship');
+    await page.waitForTimeout(300);
+    await page.locator('.ws-modal ui-button', { hasText: 'Create workspace' }).click({ timeout: 3000 }).catch(e => errs.push('P9SUBMIT: ' + e.message));
+    await page.waitForTimeout(500);
+    const created = await page.evaluate(() => {
+      const wss = JSON.parse(localStorage.getItem('hpsm:workspaces') || '[]');
+      const w = wss.find(x => x.name === 'EMEA Water Stewardship');
+      return w ? { createdBy: w.createdBy, createdAt: !!w.createdAt, updatedAt: !!w.updatedAt, segment: w.segment, businessUnit: w.businessUnit, owners: w.owners } : null;
+    });
+    if (!created) errs.push('P9CREATE: the new workspace did not persist');
+    else {
+      if (created.createdBy !== 'u-alex' || !created.createdAt || !created.updatedAt) errs.push('P9CREATE: createdBy/createdAt/updatedAt stamps missing');
+      if (created.segment !== 'Corporate Functions' || created.businessUnit !== 'Legal / GA&PP') errs.push('P9CREATE: sealed blank defaults did not hold');
+      if (!(created.owners || []).includes('u-alex')) errs.push('P9CREATE: the creator must pre-own (sealed)');
+    }
+    const activeName = (await page.locator('.ws-select-name').textContent().catch(() => '') || '').trim();
+    if (activeName !== 'EMEA Water Stewardship') errs.push(`P9AUTOOPEN: expected the new workspace active on Lists (census H4), saw "${activeName}"`);
+    // edit: card NAME click opens the edit modal; Save persists the patch
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Workspaces' }).click({ timeout: 3000 }).catch(e => errs.push('P9NAV2: ' + e.message));
+    await page.waitForTimeout(500);
+    await page.locator('.ws-card', { hasText: 'EMEA Water Stewardship' }).locator('.plan-card-title').click({ timeout: 3000 }).catch(e => errs.push('P9EDITOPEN: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('.ws-modal ui-text-field input').click({ timeout: 3000 }).catch(e => errs.push('P9EDITNAME: ' + e.message));
+    await page.keyboard.press('ControlOrMeta+a');
+    await page.keyboard.type('EMEA Water Stewardship FY27');
+    await page.waitForTimeout(200);
+    await page.locator('.ws-modal ui-button', { hasText: 'Save changes' }).click({ timeout: 3000 }).catch(e => errs.push('P9EDITSAVE: ' + e.message));
+    await page.waitForTimeout(400);
+    const renamed = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('hpsm:workspaces') || '[]').some(w => w.name === 'EMEA Water Stewardship FY27'));
+    if (!renamed) errs.push('P9EDIT: the rename did not persist');
+    // delete the ACTIVE workspace → confirm → record gone + fallback to Master
+    await page.locator('.ws-card', { hasText: 'EMEA Water Stewardship FY27' }).locator('ui-icon-button[aria-label="Delete"]').click({ timeout: 3000 }).catch(e => errs.push('P9DELOPEN: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('.ws-confirm ui-button', { hasText: 'Yes, delete' }).click({ timeout: 3000 }).catch(e => errs.push('P9DELCONFIRM: ' + e.message));
+    await page.waitForTimeout(500);
+    const afterDelete = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('hpsm:workspaces') || '[]').some(w => w.name === 'EMEA Water Stewardship FY27'));
+    if (afterDelete) errs.push('P9DELETE: the workspace record survived the delete');
+    const fellBack = (await page.locator('.ws-select-name').textContent().catch(() => '') || '').trim();
+    if (fellBack !== 'Master') errs.push(`P9FALLBACK: deleting the active workspace must fall back to Master, saw "${fellBack}"`);
+    // delete Hawk (seed plan + stakeholders): the confirm DISCLOSES the plans
+    // leg; the cascade strips joins and deletes the scoped plan
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Workspaces' }).click({ timeout: 3000 }).catch(e => errs.push('P9NAV3: ' + e.message));
+    await page.waitForTimeout(500);
+    await page.locator('.ws-card', { hasText: 'Hawk' }).locator('ui-icon-button[aria-label="Delete"]').click({ timeout: 3000 }).catch(e => errs.push('P9HAWKDEL: ' + e.message));
+    await page.waitForTimeout(400);
+    const confirmCopy = await page.locator('.ws-confirm').textContent().catch(() => '');
+    if (!/will also be deleted/.test(confirmCopy || '')) errs.push('P9CASCADE: the confirm did not disclose the plans-cascade leg');
+    await page.locator('.ws-confirm ui-button', { hasText: 'Yes, delete' }).click({ timeout: 3000 }).catch(e => errs.push('P9HAWKCONFIRM: ' + e.message));
+    await page.waitForTimeout(500);
+    const cascade = await page.evaluate(() => {
+      const wss = JSON.parse(localStorage.getItem('hpsm:workspaces') || '[]');
+      const plans = JSON.parse(localStorage.getItem('hpsm:plans') || '[]');
+      const join = JSON.parse(localStorage.getItem('hpsm:stakeholderWorkspaces') || '{}');
+      return {
+        ws: wss.some(w => w.id === 'ws-gapp-na'),
+        plan: plans.some(p => p.workspaceId === 'ws-gapp-na'),
+        join: Object.values(join).some(l => (l || []).includes('ws-gapp-na')),
+      };
+    });
+    if (cascade.ws) errs.push('P9CASCADE: ws-gapp-na record survived');
+    if (cascade.plan) errs.push('P9CASCADE: the plans leg did not delete the scoped plan');
+    if (cascade.join) errs.push('P9CASCADE: the join strip left ws-gapp-na on a stakeholder');
   }
   if (path.includes('wireframes')) {
     await page.locator('#theme-modern').click({ timeout: 3000 }).catch(e => errs.push('TOGGLE: ' + e.message));

@@ -15,6 +15,7 @@ const SUITES = [
   'scoring-test.mjs',
   'plan-test.mjs',
   'community-test.mjs',
+  'setup-test.mjs',
 ];
 
 let failed = 0;

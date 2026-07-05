@@ -499,6 +499,7 @@ function PlanSection({ n, title, children }) {
 /* ══ THE PAGE ══════════════════════════════════════════════════════════════ */
 export function PlanPage({
   createNonce = 0, activeWorkspaceId = MASTER_WORKSPACE_ID, onOpenCommunityEntry,
+  onOpenWorkspace,
 }) {
   const [plansRaw, setPlans] = usePersistentState('plans', SEED_PLANS);
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
@@ -634,6 +635,7 @@ export function PlanPage({
           getWorkspacesForStakeholder={(id) =>
             workspaces.filter((w) => (stakeholderWorkspaces[id] || []).includes(w.id))}
           onOpenCommunityEntry={onOpenCommunityEntry}
+          onOpenWorkspace={onOpenWorkspace}
         />
       ) : open && mode === 'review' ? (
         <PlanReview
@@ -961,7 +963,7 @@ function PlanEditor({
   plan, users, workspaces, community, scores, team, stakeholders, roster,
   currentUser, onChange, onBack, onReview, onDelete,
   addStakeholderToPlan, createStakeholder, updateStakeholder,
-  getWorkspacesForStakeholder, onOpenCommunityEntry,
+  getWorkspacesForStakeholder, onOpenCommunityEntry, onOpenWorkspace,
 }) {
   const p = plan;
   const set = (patch) => onChange({ ...p, ...patch });
@@ -1389,6 +1391,7 @@ function PlanEditor({
           setShModal(null);
         }}
         onOpenCommunity={openCommunityFromModal}
+        onOpenWorkspace={onOpenWorkspace}
       />
 
       {/* Delete confirm (sibling dialog; closes only itself). */}

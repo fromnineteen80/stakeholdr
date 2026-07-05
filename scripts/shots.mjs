@@ -427,5 +427,43 @@ await page.screenshot({ path: `${OUT}/p8-community-create-blank.png` });
 await page.locator('.comm-editor ui-button', { hasText: 'All community' }).click();
 await page.waitForTimeout(300);
 
+// ── PHASE-9 WORKSPACES (SETUP) CAPTURES ────────────────────────────────────
+// 1 · landing: toolbar + segment-grouped card grid + footer
+await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Workspaces' }).click();
+await page.waitForTimeout(600);
+await page.screenshot({ path: `${OUT}/p9-workspaces-landing.png` });
+// 1b · Segments filter popover (sealed head + checkable options)
+await page.locator('#setup-filter-seg').click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p9-filter-popover.png` });
+await page.keyboard.press('Escape');
+await page.waitForTimeout(200);
+// 2 · CREATE modal via the shell (+): sealed blank (CF · Legal / GA&PP),
+//     created-by line, Create disabled while the name is empty
+await page.locator('ui-app-bar ui-icon-button[aria-label="Create new"]').click();
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p9-create-modal.png` });
+// 2b · the conditional State select (scope → State)
+await page.locator('.ws-modal ui-select[aria-label="Scope (optional)"]').click();
+await page.waitForTimeout(300);
+await page.locator('.ws-modal ui-select[aria-label="Scope (optional)"] ui-option', { hasText: 'State' }).click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p9-create-scope-state.png` });
+await page.keyboard.press('Escape');
+await page.waitForTimeout(300);
+// 3 · EDIT modal via the card name (sealed name-click route)
+await page.locator('.ws-card', { hasText: 'Hawk' }).locator('.plan-card-title').click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p9-edit-modal.png` });
+await page.keyboard.press('Escape');
+await page.waitForTimeout(300);
+// 4 · DELETE confirm (danger; sealed copy + the plans-cascade disclosure on
+//     Hawk, which carries the seed plan)
+await page.locator('.ws-card', { hasText: 'Hawk' }).locator('ui-icon-button[aria-label="Delete"]').click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p9-delete-confirm.png` });
+await page.keyboard.press('Escape');
+await page.waitForTimeout(300);
+
 await browser.close(); srv.close();
 console.log('shots written to', OUT);

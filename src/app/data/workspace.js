@@ -53,3 +53,15 @@ export function countForWorkspace(stakeholderWorkspaces, wsId) {
 export function stakeholderCountLabel(count) {
   return `${count} stakeholder${count === 1 ? '' : 's'}`;
 }
+
+/* Sealed removeWorkspace join leg (App-shell box): the cleanup strips the
+ * deleted wsId from EVERY stakeholder's list — stakeholders stay in the
+ * Master pool, never orphaned. Pure, single-sourced here; the shell's
+ * removeWorkspace cascade applies it.                                       */
+export function stripWorkspaceFromJoins(stakeholderWorkspaces, wsId) {
+  const next = {};
+  for (const [sid, list] of Object.entries(stakeholderWorkspaces || {})) {
+    next[sid] = (list || []).filter((id) => id !== wsId);
+  }
+  return next;
+}

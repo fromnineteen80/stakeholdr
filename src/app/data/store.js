@@ -172,16 +172,35 @@ export const Store = {
 export function usePersistentState(table, seed) {
   const [value, setValue] = useState(() => Store.load(table, seed));
   const skipPersist = useRef(false);
+  const mounted = useRef(false);
   const latest = useRef(value);
   latest.current = value;
 
   useEffect(() => {
+    /* MOUNT-RUN GUARD (Phase 9): never re-save the value Store.load just
+     * returned. Store.load already persists the seed on a miss, and a mount
+     * that lands in the SAME COMMIT as another instance's write (the shell
+     * appends a workspace → view switches → the new page mounts) would
+     * otherwise fan out its STALE load first — child effects run before
+     * parent effects — silently clobbering the fresh write.               */
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
     if (skipPersist.current) {
       skipPersist.current = false;
       return;
     }
     Store.save(table, value);
   }, [table, value]);
+
+  /* StrictMode re-arm (unmount-ONLY cleanup — a [table,value] cleanup would
+   * fire on every re-run and swallow real saves): dev's simulated
+   * unmount/remount re-runs the persist effect with mounted already true,
+   * re-saving the stale load — the exact save the guard suppresses. Resetting
+   * on unmount makes every (re)mount pass equally guarded; prod unmounts
+   * discard the hook anyway.                                                */
+  useEffect(() => () => { mounted.current = false; }, []);
 
   useEffect(() => Store.subscribe(table, (incoming) => {
     /* Reference-identity guard: save()'s same-tab fan-out replays the saving

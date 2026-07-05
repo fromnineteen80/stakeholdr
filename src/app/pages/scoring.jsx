@@ -46,7 +46,7 @@ import { StakeholderModal } from '../modals/stakeholder-modal.jsx';
 
 export function ScoringPage({
   activeWorkspaceId, workspaceOwners = [], createNonce = 0, onDeleteWorkspace,
-  onOpenCommunityEntry,
+  onOpenCommunityEntry, onOpenWorkspace,
 }) {
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
   const [scores, setScores] = usePersistentState('scores', SEED_SCORES);
@@ -630,6 +630,7 @@ export function ScoringPage({
           setShModal(null);
         }}
         onOpenCommunity={openCommunityFromModal}
+        onOpenWorkspace={onOpenWorkspace}
       />
     </div>
   );
