@@ -20,11 +20,18 @@
  * SampleRecord set(k,v) pattern; Done just leaves edit mode). Fields whose
  * sealed edit semantics are CASCADES owned by the StakeholderModal
  * (category→type, market→region, site, state, person/title composition,
- * issues/tags pickers, owners) stay READ-ONLY here — their MetaFields render
- * the honest disabled edit form; the modal remains the sealed full editor.
+ * issues/tags pickers, owners) stay READ-ONLY here: the geography chain
+ * renders the honest disabled edit form; Type and the Ownership-&-reach
+ * section stay in READ presentation during edit (aggregate/derived rows
+ * have no field form to disable) — the modal remains the sealed full editor.
  * Editable here: the plain fields — org (an org's name mirrors org, the
  * sealed Lists inline-edit rule; a person's name is untouched), status,
  * priority, last contact, website, email, phone, X account.
+ *
+ * OPEN NOTE for the user review: the sealed modal header's photo cover
+ * (s.photo) has no home on this page yet — the head renders the generic
+ * record icon. Where the photo lands page-side is a ruling to take when
+ * the record pages are reviewed on the .io.
  */
 import { useMemo, useState } from 'react';
 import { RecordShell, MetaField } from './record-shell.jsx';

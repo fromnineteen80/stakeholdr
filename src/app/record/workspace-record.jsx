@@ -19,6 +19,11 @@
  * plain fields and edit here (writes stamp updatedAt); Segment / Business
  * unit / Scope state stay read-only (the Setup modal owns their sealed
  * cascade + validation); Owners edit stays on the sealed card/modal controls.
+ *
+ * NOTES ROUTE (declared departure from census C3): the embed's notes-open
+ * routes to record.stakeholder (whose Notes section carries the history)
+ * instead of mounting a second NotesModal on this page — the sealed
+ * NotesModal remains the Lists behavior; one modal, one home.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { RecordShell, MetaField } from './record-shell.jsx';

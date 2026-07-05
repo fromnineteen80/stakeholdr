@@ -156,11 +156,15 @@ export function SampleRecord() {
       sections={sections}
       toolbar={(
         <span className="scaffold-controls">
-          {/* Sealed decorative toolbar chrome — disabled, never dead-live. */}
+          {/* Sealed decorative toolbar chrome — disabled, never dead-live.
+              Sealed search anatomy: leading search icon + input + the ⌘K kbd
+              INSIDE the box (leading/trailing slots). */}
           <ui-text-field variant="plain" class="scaffold-search" disabled
                          label="Search" placeholder={SAMPLE_STRINGS.searchPlaceholder}
-                         title={INERT_NOTE}></ui-text-field>
-          <span className="kbd kbd-cmdk">{cmdKeyLabel}</span>
+                         title={INERT_NOTE}>
+            <ui-icon slot="leading" size="sm">search</ui-icon>
+            <span slot="trailing" className="kbd kbd-cmdk">{cmdKeyLabel}</span>
+          </ui-text-field>
           <ui-button variant="outlined" disabled title={INERT_NOTE}>Filter</ui-button>
           <ui-button variant="outlined" disabled title={INERT_NOTE}>Sort</ui-button>
         </span>

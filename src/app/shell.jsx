@@ -161,6 +161,7 @@ export function AppShell() {
     sheet: 'Lists', scoring: 'Scoring', map: 'Map', plan: 'Plans',
     community: 'Community', setup: 'Workspaces', profile: 'Profile',
     messages: 'Messages', settings: 'Settings', help: 'Help',
+    'record-sh': 'Stakeholder record', 'record-ws': 'Workspace record',
   };
 
   /* MESSAGING SHELL-STATE (sealed: BOTH surfaces share activeConversationId

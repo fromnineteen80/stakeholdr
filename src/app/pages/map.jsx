@@ -22,10 +22,11 @@
  * The oracle's dead onOpenFull prop is NOT replicated — this control is real.
  *
  * Scorecard content derivations are single-sourced: EMPTY_PROMPT /
- * HISTORY_TIP_* / latestNote / noteDateShort / tagsOverflow from the
- * design-system map module (node-tested), the 11-row descriptor order from
- * map-logic.js (record-test), strategy copy + zone tokens from engine.js
- * STATUSES, dates from the sealed formatDateLong single source.
+ * HISTORY_TIP_* / latestNote / noteDateShort from the design-system map
+ * module (node-tested; its tagsOverflow stays a pure export for map-test —
+ * this page renders Tags via the shared TagPills primitive), the 11-row
+ * descriptor order from map-logic.js (record-test), strategy copy + zone
+ * tokens from engine.js STATUSES, dates from formatDateLong.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePersistentState, nowStamp } from '../data/store.js';
