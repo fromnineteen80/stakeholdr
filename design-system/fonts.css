@@ -1,11 +1,11 @@
 /* Self-hosted fonts (industry practice: no runtime Google dependency,
    no icon-ligature text flash). Downloaded 2026-07-03 from Google Fonts.
-   Icon font re-subset 2026-07-05 (Phase 11) via the same icon_names pipeline:
-   the prior vocabulary (verified by ligature diff — every name used in code
-   still covered, nothing dropped) + science (the sealed BeakerColorField
-   flask) + star (the ManagerStar in Settings -> Roles). Extend the subset
-   again BEFORE using any new ligature - an out-of-subset name renders as
-   raw text. */
+   Icon font re-subset 2026-07-05 (Phase 14) via the same icon_names pipeline:
+   the prior vocabulary (verified by GSUB ligature diff — all 117 prior names
+   still covered, nothing dropped) + notes + view_column (the sealed
+   SampleRecord section icons, Record-scaffold box). Extend the subset again
+   BEFORE using any new ligature - an out-of-subset name renders as raw
+   text. */
 @font-face {
   font-family: 'Inter';
   font-style: normal;

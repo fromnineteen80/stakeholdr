@@ -63,11 +63,20 @@ ui-sidebar[collapsed] .nav-sec { display: none; }
 .sheet-wrap { height: 100%; }
 .sheet-table { display: flex; height: 100%; }
 
-/* Map page — the sealed map-wrap two-column layout lives INSIDE
- * ui-stakeholder-map (plot stage + ui-inspector scorecard rail); this is
- * pure sizing so the component fills the work runway. */
-.map-page { height: 100%; }
-.map-view { display: flex; height: 100%; }
+/* Map page — Phase 14: div.map-wrap is the sealed PAGE CONTAINER (the
+ * layout row: plot stage beside the page-hosted ui-inspector scorecard rail,
+ * with the reopen edge tab; the inspector animates its own width — the
+ * oracle's 1fr 320px → 1fr 0 grid). Token-only container. */
+.map-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.map-wrap .map-stage { flex: 1 1 0; min-width: 0; height: auto; }
 
 /* NOTES MODAL (sealed NotesModal spec) — layout-only, token-only classes for
  * the ui-dialog + ui-textarea composition hosted by the Lists page. */
@@ -1629,3 +1638,335 @@ ui-tab[active] .profile-tab-count {
 }
 .avatar-swatch-row { display: inline-flex; flex-wrap: wrap; gap: var(--ui-sys-space-1); }
 .profile-chip-pick { display: flex; flex-wrap: wrap; gap: var(--ui-sys-space-1); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * PHASE 14 — RECORD SCAFFOLD (sealed box "Record scaffold, landing pages &
+ * page shells") + the page-hosted MAP SCORECARD RAIL (sealed MapDetail).
+ * Layout-only, token-only — all component structure lives in ui-*.
+ * ═════════════════════════════════════════════════════════════════════════ */
+
+/* ── THE MAP SCORECARD RAIL (page-hosted ui-inspector; sealed SCORECARD
+ * CHROME: a CONTAINER surface — sidebars never white). Interior start-state
+ * ported verbatim from the Phase-5 component composition (values sealed). ── */
+ui-inspector.map-scorecard { background: var(--ui-sys-surface-container); }
+.det-head-label {
+  font: var(--ui-sys-font-caption);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ui-sys-on-surface-muted);
+}
+.det-body { font-size: 12px; }
+.det-title {
+  font-family: var(--ui-ref-typeface-title);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  margin: 0 0 4px;
+  color: var(--ui-sys-on-surface);
+}
+.det-org {
+  font-size: 12px;
+  color: var(--ui-sys-on-surface-muted);
+  margin-bottom: 10px;
+}
+.det-website {
+  color: var(--ui-sys-accent);
+  font-size: 12px;
+  text-decoration: none;
+}
+.det-website:hover { text-decoration: underline; }
+.det-website-wrap { margin-bottom: 6px; }
+.history-toggle-wrap { display: inline-block; margin: 6px 0 8px; }
+.status-pill-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-sys-space-2);
+  margin: 8px 0;
+  flex-wrap: wrap;
+}
+.det-coords {
+  font-size: 12px;
+  color: var(--ui-sys-on-surface-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.strategy-card {
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 10px 0;
+}
+.strategy-eyebrow {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.75;
+  margin-bottom: 4px;
+}
+.strategy-title { font-weight: 600; margin-bottom: 4px; }
+.strategy-action { font-size: 12px; line-height: 1.5; }
+/* Zone fills for the strategy card — the SAME --ui-sys-zone-* single source
+ * the Map/Lists/Help read (sealed zone catalog; bg + paired ink per band). */
+.strategy-card[data-zone="Proactively Defend"] { background: var(--ui-sys-zone-proactively-defend); color: var(--ui-sys-zone-ink-on-strong); }
+.strategy-card[data-zone="Defend"] { background: var(--ui-sys-zone-defend); color: var(--ui-sys-zone-ink-negative); }
+.strategy-card[data-zone="Protect"] { background: var(--ui-sys-zone-protect); color: var(--ui-sys-zone-ink-negative); }
+.strategy-card[data-zone="Respond"] { background: var(--ui-sys-zone-respond); color: var(--ui-sys-zone-ink-negative); }
+.strategy-card[data-zone="Identify"] { background: var(--ui-sys-zone-identify); color: var(--ui-sys-zone-ink-negative); }
+.strategy-card[data-zone="Monitor"] { background: var(--ui-sys-zone-monitor); color: var(--ui-sys-zone-ink-neutral); }
+.strategy-card[data-zone="Maintain"] { background: var(--ui-sys-zone-maintain); color: var(--ui-sys-zone-ink-neutral); }
+.strategy-card[data-zone="Connect"] { background: var(--ui-sys-zone-connect); color: var(--ui-sys-zone-ink-neutral); }
+.strategy-card[data-zone="Commit"] { background: var(--ui-sys-zone-commit); color: var(--ui-sys-zone-ink-neutral); }
+.strategy-card[data-zone="Cooperate"] { background: var(--ui-sys-zone-cooperate); color: var(--ui-sys-zone-ink-positive); }
+.strategy-card[data-zone="Collaborate"] { background: var(--ui-sys-zone-collaborate); color: var(--ui-sys-zone-ink-positive); }
+.strategy-card[data-zone="Valuable Relationship"] { background: var(--ui-sys-zone-valuable-relationship); color: var(--ui-sys-zone-ink-positive); }
+.strategy-card[data-zone="High Value Relationship"] { background: var(--ui-sys-zone-high-value-relationship); color: var(--ui-sys-zone-ink-positive); }
+.strategy-card[data-zone="Strategic Partner"] { background: var(--ui-sys-zone-strategic-partner); color: var(--ui-sys-zone-ink-on-strong); }
+/* Sealed metadata rows: 86px/1fr k/v grid, top rules between rows. */
+.detail-row {
+  display: grid;
+  grid-template-columns: 86px 1fr;
+  gap: 4px;
+  padding: 6px 0;
+  font-size: 12px;
+}
+.detail-row + .detail-row { border-top: 1px solid var(--ui-sys-outline-subtle); }
+.detail-row .k {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ui-sys-on-surface-muted);
+  padding-top: 1px;
+}
+.detail-row .v {
+  color: var(--ui-sys-on-surface);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.v-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--ui-sys-space-1);
+  align-items: center;
+}
+/* Sealed LATEST-NOTE card. */
+.detail-latest-note {
+  margin-top: 14px;
+  padding: 10px 12px;
+  background: var(--ui-sys-surface-container);
+  border: 1px solid var(--ui-sys-outline-subtle);
+  border-radius: 8px;
+}
+.detail-latest-note-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+.detail-latest-note-cap {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ui-sys-on-surface-muted);
+}
+.detail-latest-note-date { font-size: 11px; color: var(--ui-sys-on-surface-muted); }
+.detail-latest-note-body {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ui-sys-on-surface);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+/* Sealed EMPTY STATE: prompt block + "Recently scored" ghost rows. */
+.empty-block {
+  padding: 30px 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-sys-space-2);
+}
+.empty-title {
+  font-family: var(--ui-ref-typeface-title);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ui-sys-on-surface);
+}
+.empty-prompt { font-size: 12px; }
+.recent-caption {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ui-sys-on-surface-muted);
+  margin-top: var(--ui-sys-space-3);
+  text-align: left;
+}
+.recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: stretch;
+}
+.recent-list ui-button { width: 100%; }
+.recent-row-text {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 400;
+}
+/* Sealed reopen edge tab (top 16 / right 0). */
+.map-detail-reopen {
+  position: absolute;
+  top: 16px;
+  right: 0;
+  z-index: 5;
+}
+
+/* ── RECORDSHELL (sealed TREE SURFACE 1: ui-app-shell record variant hosting
+ * ui-app-bar · ui-sidebar section rail · white center · ui-inspector rail ·
+ * ui-status-bar footer). ─────────────────────────────────────────────────── */
+.record-wrap { height: 100%; }
+/* The section rail is narrower than the app rail (declared re-point — the
+ * sealed box names no width; the token stays the ONE styling surface). */
+ui-sidebar.record-nav { --ui-sys-sidebar-width: 216px; }
+.record-nav-title {
+  font: var(--ui-sys-font-caption);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ui-sys-on-surface-muted);
+  white-space: nowrap;
+}
+/* CENTER — the only width-flexible region; full-width white (sealed). */
+.record-main {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  background: var(--ui-sys-surface-card);
+  padding: var(--ui-sys-space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-sys-space-4);
+}
+.record-page-head {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-sys-space-3);
+}
+.record-page-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--ui-sys-shape-pill);
+  background: var(--ui-sys-surface-container);
+  color: var(--ui-sys-on-surface-muted);
+  flex-shrink: 0;
+}
+.record-page-titles { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.record-page-eyebrow {
+  font: var(--ui-sys-font-caption);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ui-sys-on-surface-muted);
+}
+.record-page-title {
+  font-family: var(--ui-ref-typeface-title);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: var(--ui-sys-on-surface);
+  overflow-wrap: anywhere;
+}
+.record-section-head {
+  font: var(--ui-sys-font-caption);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ui-sys-on-surface-muted);
+  border-bottom: 1px solid var(--ui-sys-outline-subtle);
+  padding-bottom: var(--ui-sys-space-2);
+}
+.record-section-body { min-width: 0; flex: 1; }
+/* Right rail (ui-inspector) — container surface, never white (sealed). */
+ui-inspector.record-rail { background: var(--ui-sys-surface-container); }
+.record-rail-title {
+  font: var(--ui-sys-font-caption);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ui-sys-on-surface-muted);
+}
+.record-rail-reopen {
+  position: absolute;
+  top: 16px;
+  right: 0;
+  z-index: 5;
+}
+.record-rail-inner { display: flex; flex-direction: column; gap: var(--ui-sys-space-4); }
+.record-rail-sec { display: flex; flex-direction: column; gap: var(--ui-sys-space-2); }
+.record-rail-title-cap {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ui-sys-on-surface-muted);
+}
+.record-rail-zone {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-sys-space-2);
+  flex-wrap: wrap;
+}
+/* Top-bar slots. */
+.record-toolbar { display: inline-flex; align-items: center; gap: var(--ui-sys-space-2); }
+.scaffold-controls { display: inline-flex; align-items: center; gap: var(--ui-sys-space-2); }
+.scaffold-search { width: 200px; }
+.kbd {
+  font: var(--ui-sys-font-caption);
+  color: var(--ui-sys-on-surface-muted);
+  border: 1px solid var(--ui-sys-outline-subtle);
+  border-radius: var(--ui-sys-shape-control);
+  padding: 0 var(--ui-sys-space-1);
+  background: var(--ui-sys-surface-field);
+}
+
+/* ── SECTION LAYOUT VARIANTS (sealed TREE SURFACE 1b) ─────────────────────── */
+.record-prose { max-width: 62ch; display: flex; flex-direction: column; gap: var(--ui-sys-space-3); }
+.record-prose p { margin: 0; line-height: 1.6; color: var(--ui-sys-on-surface); }
+.record-prose-tags { display: flex; flex-wrap: wrap; gap: var(--ui-sys-space-1); }
+.record-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-sys-space-3);
+  min-width: 0;
+  max-width: 460px;
+  flex: 1;
+}
+.record-twocol { display: flex; gap: var(--ui-sys-space-6); flex-wrap: wrap; }
+.record-table-embed {
+  min-width: 0;
+  height: 100%;
+  min-height: 320px;
+  display: flex;
+  border: 1px solid var(--ui-sys-outline-subtle);
+  border-radius: var(--ui-sys-shape-control);
+  overflow: hidden;
+}
+.record-table-embed ui-stakeholder-table { flex: 1; min-width: 0; }
+.record-community { display: flex; flex-direction: column; gap: var(--ui-sys-space-3); max-width: 560px; }
+
+/* ── METAFIELD (sealed SURFACE 1a: label · read value | edit input) ───────── */
+.mf { display: flex; flex-direction: column; gap: var(--ui-sys-space-1); min-width: 0; }
+.mf-label {
+  font: var(--ui-sys-font-caption);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ui-sys-on-surface-muted);
+}
+.mf-value { font-size: 13px; color: var(--ui-sys-on-surface); overflow-wrap: anywhere; }
+.mf-empty { color: var(--ui-sys-on-surface-faint); }
+.mf-tags { display: inline-flex; flex-wrap: wrap; gap: var(--ui-sys-space-1); }
+/* Collapsed section rail: the title hides (sealed — hidden when collapsed);
+ * the icon column carries the nav alone. */
+ui-sidebar.record-nav[collapsed] .record-nav-title { display: none; }

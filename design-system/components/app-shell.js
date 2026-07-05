@@ -8,6 +8,11 @@
  * have no assigned nodes (via slotchange listeners toggling data-attributes on
  * the host, then CSS :host([...]) rules collapse the tracks to 0).
  *
+ * variant="record" — the RECORD-PAGE grid (sealed Record-scaffold box: static
+ * top bar full-width ABOVE the 3-region body, pinned footer full-width BELOW
+ * it; the section rail never spans the top bar). Default (no variant) keeps
+ * the ruled Claude form factor: the nav rail full-height beside header/footer.
+ *
  * Style ONLY via --ui-sys-* tokens. No hardcoded colors or font families.
  * ==========================================================================*/
 
@@ -48,6 +53,32 @@ template.innerHTML = `
       grid-template-rows: auto 1fr;
     }
     :host([no-header][no-footer]) {
+      grid-template-areas: "nav main aside";
+      grid-template-rows: 1fr;
+    }
+
+    /* variant="record": header and footer span FULL WIDTH; the nav rail and
+       aside sit inside the middle body row only (sealed record-page order:
+       top bar → 3-region body → pinned footer). */
+    :host([variant="record"]) {
+      grid-template-areas:
+        "header header header"
+        "nav    main   aside"
+        "footer footer footer";
+    }
+    :host([variant="record"][no-header]) {
+      grid-template-areas:
+        "nav    main   aside"
+        "footer footer footer";
+      grid-template-rows: 1fr auto;
+    }
+    :host([variant="record"][no-footer]) {
+      grid-template-areas:
+        "header header header"
+        "nav    main   aside";
+      grid-template-rows: auto 1fr;
+    }
+    :host([variant="record"][no-header][no-footer]) {
       grid-template-areas: "nav main aside";
       grid-template-rows: 1fr;
     }

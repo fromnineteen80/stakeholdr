@@ -1,15 +1,21 @@
 /* ============================================================================
- * <ui-stakeholder-map> — domain component: THE MAP, at the full sealed spec
- * ("Map — coordinate→pixel translation, dots, zones, read-only positions,
- * history trail, scorecard" in src/guide.jsx).
+ * <ui-stakeholder-map> — domain component: THE MAP STAGE, at the full sealed
+ * spec ("Map — coordinate→pixel translation, dots, zones, read-only
+ * positions, history trail, scorecard" in src/guide.jsx).
+ *
+ * SEALED COMPOSITION (Phase-14 recomposition to the sealed tree, guide
+ * ~350–351): div.map-wrap is the PAGE container — a layout row of the plot
+ * stage beside the ui-inspector scorecard rail; div.map-stage "is the HOST of
+ * ui-stakeholder-map — everything nested under it is INTERNAL". This host IS
+ * the sealed map-stage; the SCORECARD RAIL (ui-inspector + reopen tab) is
+ * HOSTED BY THE PAGE (src/app/pages/map.jsx), never inside this component.
+ * The pure scorecard derivations (EMPTY_PROMPT, HISTORY_TIP_*, latestNote,
+ * noteDateShort, tagsOverflow, ZONE_STRATEGIES) stay exported from this
+ * module as the node-tested single source the page composes from.
  *
  * The plot internals (zone grid, dots layer, ticks, trail SVG) are the ONE
- * sanctioned inline-SVG / positioned-div composition per the manifest; the
- * chrome/panel surfaces compose REAL ui-* elements (ui-inspector scorecard
- * rail, ui-icon-button reopen tab, ui-chip zone/priority/tag pills + filter
- * history toggle, ui-status-dot, ui-avatar owner stack, ui-button recent
- * rows, ui-tooltip hover tips). Styled ONLY with --ui-sys-* tokens — no
- * literal hex, no !important.
+ * sanctioned inline-SVG / positioned-div composition per the manifest.
+ * Styled ONLY with --ui-sys-* tokens — no literal hex, no !important.
  *
  * READ-ONLY (sealed ruling): the map displays weighted positions; it never
  * edits them. The oracle's drag-to-rescore (pointermove/pointerup writers,
@@ -21,7 +27,6 @@
  *   .data   Array of stakeholder rows carrying RAW precomputed _x/_y/_status
  *           (the page computes weightedCoord/statusFor live) plus the
  *           stakeholder fields incl. history[] and notesHistory[].
- *   .users  Array of users (resolves the scorecard Owner avatar stack).
  *   .selectedId  Controlled selection (string id | null). The page owns
  *           selection (sealed: "selection lifts to the page"); the component
  *           emits selection-change and the page passes the id back here.
@@ -30,13 +35,18 @@
  *   show-labels      "true"/"" | "false"              (default false)
  *   show-zone-labels "true"/"" | "false"              (default true)
  *   dot-size         px, sealed slider range 14–36    (default 22)
+ *   history-mode     boolean — CONTROLLED BY THE PAGE (the sealed toggle
+ *                    lives in the scorecard rail): when present AND the
+ *                    selected stakeholder has history, only that dot renders,
+ *                    plus the dashed trail + quarter snapshots.
  *   gallery          boolean — preview/wireframes ONLY: renders the built-in
  *                    sample when no .data is set. Without it the component
  *                    renders EMPTY until .data arrives (make-real rule: the
  *                    app never shows a live-looking fake dataset).
  * Events (composed, bubble):
- *   selection-change {id}   single click / recent-row select (wrapSelect:
- *                           select + force scorecard open + exit history)
+ *   selection-change {id}   single click (wrapSelect intent: the page
+ *                           selects + forces the scorecard open + exits
+ *                           history — sealed semantics, page-owned)
  *   open-profile     {id}   dot double-click (the full stakeholder profile)
  *
  * SINGLE-SOURCE NOTE: GRID / statusFor / coordToPct / the zone token map and
@@ -46,7 +56,7 @@
  * character parity between this module and the engine on every one of them.
  * ========================================================================= */
 
-import { abbrev, displayName, normalizeUrl } from './stakeholder-table.js';
+import { abbrev, displayName } from './stakeholder-table.js';
 
 /* ─────────────────────────────────────────────────────────────────────────
  * PURE, NODE-IMPORTABLE LOGIC (everything below is asserted by map-test.mjs)
@@ -299,38 +309,28 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
   const template = document.createElement('template');
   template.innerHTML = `
   <style>
-    /* HOST = the sealed map-wrap: plot stage beside the ui-inspector rail
-       (the inspector animates its own width open/closed — the oracle's
-       1fr 320px → 1fr 0 grid). */
+    /* HOST = the sealed map-stage (sealed tree ~351: "the HOST of
+       ui-stakeholder-map"): paper-2 runway, asymmetric 28/14/14/18 padding —
+       deep top clearance, wider left edge for the y-tick strip — flex
+       column, min-0, overflow hidden. The page composes this host beside
+       the ui-inspector scorecard rail inside div.map-wrap. */
     :host {
       position: relative;
       display: flex;
-      flex-direction: row;
-      align-items: stretch;
+      flex-direction: column;
+      flex: 1 1 0;
       width: 100%;
       height: 100%;
+      min-width: 0;
       min-height: 420px;
       box-sizing: border-box;
+      padding: 28px 14px 14px 18px;
+      background: var(--ui-sys-surface);
       font: var(--ui-sys-font-body);
       color: var(--ui-sys-on-surface);
       overflow: hidden;
     }
     *, *::before, *::after { box-sizing: border-box; }
-
-    /* ── THE STAGE (sealed EXACT ORACLE VALUES: paper-2 runway, asymmetric
-       28/14/14/18 padding — deep top clearance, wider left edge for the
-       y-tick strip — flex column, min-0, overflow hidden) ─────────────── */
-    .map-stage {
-      flex: 1 1 0;
-      min-width: 0;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      padding: 28px 14px 14px 18px;
-      background: var(--ui-sys-surface);
-      overflow: hidden;
-    }
 
     /* ── THE PLOT AREA (92% / max 920px / centered / flex 1 / relative /
        min-height 0 — grid, ticks and legend share this constraint so they
@@ -611,228 +611,24 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
       -webkit-text-stroke: 0.7px var(--ui-sys-on-surface);
       font-size: 12px;
     }
-
-    /* ── THE SCORECARD RAIL: the REAL ui-inspector. Sealed SCORECARD CHROME:
-       the rail is a CONTAINER surface (oracle var(--bg-2); sidebars never
-       white) — set on the host element (outer-tree host styling, not a
-       shadow-internal override).
-       INTERIOR-METRIC MAPPING DECLARED: the sealed rail interior is 14px 16px
-       padding with a head row at margin -4px 0 8px / padding-bottom 6px /
-       1px bottom rule; ui-inspector ships its own defaults instead
-       (--ui-sys-space-4 = 16px content padding, 52px bordered header). The
-       sealed values become --ui-sys-* tokens on the inspector composition at
-       the Design (Settings→Design) pass — not a component override here. */
-    ui-inspector.detail { background: var(--ui-sys-surface-container); }
-    /* Sealed head-row treatment: 10-11px caps 0.08em muted ink. */
-    .det-head-label {
-      font: var(--ui-sys-font-caption);
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--ui-sys-on-surface-muted);
-    }
-
-    /* Scorecard interior (slotted into ui-inspector, styled here — the
-       sealed rail-interior start-state, token-only). */
-    .det-body { font-size: 12px; }
-    .det-title {
-      font-family: var(--ui-ref-typeface-title);
-      font-size: 16px;
-      font-weight: 500;
-      letter-spacing: -0.005em;
-      margin: 0 0 4px;
-      color: var(--ui-sys-on-surface);
-    }
-    .det-org {
-      font-size: 12px;
-      color: var(--ui-sys-on-surface-muted);
-      margin-bottom: 10px;
-    }
-    .det-website {
-      color: var(--ui-sys-accent);
-      font-size: 12px;
-      text-decoration: none;
-    }
-    .det-website:hover { text-decoration: underline; }
-    .det-website-wrap { margin-bottom: 6px; }
-    .history-toggle-wrap { margin: 6px 0 8px; }
-    .status-pill-row {
-      display: flex;
-      align-items: center;
-      gap: var(--ui-sys-space-2);
-      margin: 8px 0;
-      flex-wrap: wrap;
-    }
-    .det-coords {
-      font-size: 12px;
-      color: var(--ui-sys-on-surface-muted);
-      font-variant-numeric: tabular-nums;
-      white-space: nowrap;
-    }
-    .strategy-card {
-      border-radius: 8px;
-      padding: 10px 12px;
-      margin: 10px 0;
-    }
-    .strategy-eyebrow {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      opacity: 0.75;
-      margin-bottom: 4px;
-    }
-    .strategy-title { font-weight: 600; margin-bottom: 4px; }
-    .strategy-action { font-size: 12px; line-height: 1.5; }
-
-    /* Sealed metadata rows: 86px/1fr k/v grid, 4px gap, 6px block padding,
-       12px type; consecutive rows separated by a subtle top rule (the first
-       row ruleless). */
-    .detail-row {
-      display: grid;
-      grid-template-columns: 86px 1fr;
-      gap: 4px;
-      padding: 6px 0;
-      font-size: 12px;
-    }
-    .detail-row + .detail-row { border-top: 1px solid var(--ui-sys-outline-subtle); }
-    .detail-row .k {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--ui-sys-on-surface-muted);
-      padding-top: 1px;
-    }
-    .detail-row .v {
-      color: var(--ui-sys-on-surface);
-      min-width: 0;
-      overflow-wrap: anywhere;
-    }
-    .v-chips {
-      display: inline-flex;
-      flex-wrap: wrap;
-      gap: var(--ui-sys-space-1);
-      align-items: center;
-    }
-    .muted { color: var(--ui-sys-on-surface-muted); }
-    .owner-stack { display: inline-flex; align-items: center; }
-    .owner-stack ui-avatar:not(:first-child) { margin-left: calc(-1 * var(--ui-sys-space-1)); }
-
-    /* Sealed LATEST-NOTE card. */
-    .detail-latest-note {
-      margin-top: 14px;
-      padding: 10px 12px;
-      background: var(--ui-sys-surface-container);
-      border: 1px solid var(--ui-sys-outline-subtle);
-      border-radius: 8px;
-    }
-    .detail-latest-note-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 6px;
-    }
-    .detail-latest-note-cap {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--ui-sys-on-surface-muted);
-    }
-    .detail-latest-note-date {
-      font-size: 11px;
-      color: var(--ui-sys-on-surface-muted);
-    }
-    .detail-latest-note-body {
-      font-size: 12.5px;
-      line-height: 1.5;
-      color: var(--ui-sys-on-surface);
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    /* Empty state (sealed): prompt block + "Recently scored" ghost rows. */
-    .empty-block {
-      padding: 30px 12px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      gap: var(--ui-sys-space-2);
-    }
-    .empty-title {
-      font-family: var(--ui-ref-typeface-title);
-      font-size: 16px;
-      font-weight: 500;
-      color: var(--ui-sys-on-surface);
-    }
-    .empty-prompt { font-size: 12px; }
-    .recent-caption {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--ui-sys-on-surface-muted);
-      margin-top: var(--ui-sys-space-3);
-      text-align: left;
-    }
-    .recent-list {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      align-items: stretch;
-    }
-    .recent-list ui-button { width: 100%; }
-    /* Slotted row text (our light-DOM content inside the real ui-button):
-       one flexing block so the row reads left-aligned and ellipsizes
-       (sealed: left-aligned ghost rows) without touching button internals. */
-    .recent-row-text {
-      flex: 1;
-      min-width: 0;
-      text-align: left;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-weight: 400;
-    }
-
-    /* Reopen tab (sealed: top 16 / right 0, chevron-left, title "Reopen
-       scorecard") — the REAL ui-icon-button; its geometry is the
-       component's own (law 1: never a hand-rolled lookalike). */
-    .map-detail-reopen {
-      position: absolute;
-      top: 16px;
-      right: 0;
-      z-index: 5;
-    }
-    .map-detail-reopen[hidden] { display: none; }
   </style>
 
-  <div class="map-stage">
-    <div class="map-grid-area">
-      <div class="map-yaxis-ticks" aria-hidden="true"></div>
-      <div class="map-grid" role="img"
-           aria-label="Stakeholder relationship map: a 4-column by 6-row zone grid with one dot per stakeholder positioned by weighted alignment (x) and influence (y). Read-only."></div>
-      <div class="axis-lines" aria-hidden="true"></div>
-      <div class="dots-layer" role="group" aria-label="Stakeholder dots"></div>
-    </div>
-    <div class="map-xaxis-ticks" aria-hidden="true"></div>
-    <!-- Legend copy: centre-segment spacing is a DECLARED RESOLUTION (box
-         body double-space vs the box's own skeleton single-space; single
-         ships) — see the LEGEND_* constants above. -->
-    <div class="map-axis-legend" aria-hidden="true">
-      <span class="leg-start"></span>
-      <span class="leg-mid"></span>
-      <span class="leg-end"></span>
-    </div>
+  <div class="map-grid-area">
+    <div class="map-yaxis-ticks" aria-hidden="true"></div>
+    <div class="map-grid" role="img"
+         aria-label="Stakeholder relationship map: a 4-column by 6-row zone grid with one dot per stakeholder positioned by weighted alignment (x) and influence (y). Read-only."></div>
+    <div class="axis-lines" aria-hidden="true"></div>
+    <div class="dots-layer" role="group" aria-label="Stakeholder dots"></div>
   </div>
-
-  <!-- Built-in close × carries the sealed oracle intent via close-label. -->
-  <ui-inspector class="detail" open close-label="Hide scorecard panel">
-    <span slot="title" class="det-head-label">Scorecard</span>
-    <div class="det-body"></div>
-  </ui-inspector>
-
-  <ui-icon-button class="map-detail-reopen" variant="outlined" hidden
-                  title="Reopen scorecard" aria-label="Open scorecard">
-    <ui-icon>chevron_left</ui-icon>
-  </ui-icon-button>
+  <div class="map-xaxis-ticks" aria-hidden="true"></div>
+  <!-- Legend copy: centre-segment spacing is a DECLARED RESOLUTION (box
+       body double-space vs the box's own skeleton single-space; single
+       ships) — see the LEGEND_* constants above. -->
+  <div class="map-axis-legend" aria-hidden="true">
+    <span class="leg-start"></span>
+    <span class="leg-mid"></span>
+    <span class="leg-end"></span>
+  </div>
   `;
 
   const h = (tag, cls, text) => {
@@ -843,14 +639,11 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
   };
 
   class UiStakeholderMap extends HTMLElement {
-    static observedAttributes = ['map-style', 'show-labels', 'show-zone-labels', 'dot-size'];
+    static observedAttributes = ['map-style', 'show-labels', 'show-zone-labels', 'dot-size', 'history-mode'];
 
     #data = null;
-    #users = [];
     #rows = [];
     #selectedId = null;
-    #detailOpen = true;   // sealed: the scorecard DEFAULTS OPEN
-    #historyMode = false; // sealed: defaults false
     #els = {};
 
     constructor() {
@@ -863,9 +656,6 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
         grid: $('.map-grid'),
         dots: $('.dots-layer'),
         legend: $('.map-axis-legend'),
-        inspector: $('ui-inspector.detail'),
-        detBody: $('.det-body'),
-        reopen: $('.map-detail-reopen'),
       };
     }
 
@@ -876,29 +666,26 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
       this.#normalize();
       if (this.#selectedId && !this.#rows.some((r) => r.id === this.#selectedId)) {
         this.#selectedId = null;
-        this.#historyMode = false;
       }
       if (this.isConnected) this.#render();
-    }
-
-    get users() { return this.#users; }
-    set users(val) {
-      this.#users = val || [];
-      if (this.isConnected) this.#renderDetail();
     }
 
     get selectedId() { return this.#selectedId; }
     /* Controlled selection (sealed: "selection lifts to the page" — the page
      * owns it and passes it back; selection-change is the emit half).
-     * Setting the SAME id is a no-op (breaks the page-echo loop); setting a
-     * new id mirrors wrapSelect's state (exits history) without re-emitting. */
+     * Setting the SAME id is a no-op (breaks the page-echo loop). The sealed
+     * exit-history half of wrapSelect is page-owned too: the page clears its
+     * history-mode attribute alongside the id.                              */
     set selectedId(val) {
       const id = val || null;
       if (id === this.#selectedId) return;
       this.#selectedId = id;
-      this.#historyMode = false;
       if (this.isConnected) this.#render();
     }
+
+    /* history-mode — controlled by the page (the sealed toggle lives in the
+     * scorecard rail the page hosts). */
+    get historyMode() { return this.hasAttribute('history-mode'); }
 
     /* Display options (attributes with the sealed TWEAK_DEFAULTS). */
     get mapStyle() {
@@ -923,14 +710,6 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
       this.#renderLegend();
       this.#normalize();
       this.#render();
-      // Scorecard rail close (the inspector's built-in ×) + reopen tab.
-      this.#els.inspector.addEventListener('close', this.#onRailClose);
-      this.#els.reopen.addEventListener('click', this.#onReopen);
-    }
-
-    disconnectedCallback() {
-      this.#els.inspector.removeEventListener('close', this.#onRailClose);
-      this.#els.reopen.removeEventListener('click', this.#onReopen);
     }
 
     attributeChangedCallback() {
@@ -939,29 +718,16 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
 
     /* ---- state transitions ---- */
 
-    /* wrapSelect (sealed): select + force scorecard open + EXIT history. */
+    /* The click half of the sealed wrapSelect: select here + emit; the page
+     * completes it (force scorecard open + exit history — sealed, page-owned
+     * because the scorecard rail is the page's ui-inspector).               */
     #wrapSelect(id) {
       this.#selectedId = id;
-      this.#historyMode = false;
-      this.#setDetailOpen(true);
       this.#render();
       this.dispatchEvent(new CustomEvent('selection-change', {
         bubbles: true, composed: true, detail: { id },
       }));
     }
-
-    #setDetailOpen(open) {
-      this.#detailOpen = open;
-      this.#els.inspector.toggleAttribute('open', open);
-      this.#els.reopen.toggleAttribute('hidden', open);
-    }
-
-    #onRailClose = () => {
-      this.#detailOpen = false;
-      this.#els.reopen.toggleAttribute('hidden', false);
-    };
-
-    #onReopen = () => { this.#setDetailOpen(true); };
 
     /* ---- rendering ---- */
 
@@ -983,9 +749,6 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
     #render() {
       this.#renderGrid();
       this.#renderDots();
-      this.#renderDetail();
-      this.#els.inspector.toggleAttribute('open', this.#detailOpen);
-      this.#els.reopen.toggleAttribute('hidden', this.#detailOpen);
     }
 
     #renderTicks() {
@@ -1109,7 +872,7 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
       const layer = this.#els.dots;
       layer.textContent = '';
       const sel = this.#selected();
-      const inHistory = this.#historyMode && sel && (sel.history || []).length > 0;
+      const inHistory = this.historyMode && sel && (sel.history || []).length > 0;
 
       if (inHistory) {
         // Sealed HISTORY TRAIL SVG: viewBox 0 0 100 100, preserveAspectRatio
@@ -1146,228 +909,6 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined') {
       }
 
       for (const d of this.#rows) layer.appendChild(this.#makeDot(d));
-    }
-
-    /* ---- scorecard (inside the real ui-inspector) ---- */
-
-    #renderDetail() {
-      const body = this.#els.detBody;
-      body.textContent = '';
-      const sel = this.#selected();
-      if (!sel) this.#renderEmptyDetail(body);
-      else this.#renderSelectedDetail(body, sel);
-    }
-
-    /* Sealed EMPTY STATE: the de-staled READ-ONLY prompt + "Recently scored"
-     * = the first six stakeholders as real ui-button text rows. Per the
-     * sealed skeleton tree, the caption + rows nest INSIDE the anonymous
-     * prompt block (one padded, centered block holds title, prompt, caption
-     * and the six rows) — never siblings of it.                             */
-    #renderEmptyDetail(body) {
-      const block = h('div', 'empty-block');
-      block.appendChild(h('div', 'empty-title', 'Scorecard'));
-      block.appendChild(h('div', 'empty-prompt muted', EMPTY_PROMPT));
-      if (this.#rows.length) {
-        block.appendChild(h('div', 'recent-caption', 'Recently scored'));
-        const list = h('div', 'recent-list');
-        for (const s of this.#rows.slice(0, 6)) {
-          const btn = document.createElement('ui-button');
-          btn.setAttribute('variant', 'text');
-          const text = h('span', 'recent-row-text');
-          text.append(
-            h('span', null, displayName(s) || s.name || ''),
-            h('span', 'muted', ' - ' + (s.type || '')),
-          );
-          btn.appendChild(text);
-          btn.addEventListener('click', () => this.#wrapSelect(s.id));
-          list.appendChild(btn);
-        }
-        block.appendChild(list);
-      }
-      body.appendChild(block);
-    }
-
-    #metaRow(rows, k, v) {
-      const row = h('div', 'detail-row');
-      row.appendChild(h('div', 'k', k));
-      const vc = h('div', 'v');
-      if (v == null || v === '' || (Array.isArray(v) && !v.length)) {
-        vc.appendChild(h('span', 'muted', '-'));
-      } else if (typeof v === 'string') {
-        vc.textContent = v;
-      } else {
-        vc.appendChild(v);
-      }
-      row.appendChild(vc);
-      rows.appendChild(row);
-    }
-
-    /* Sealed SELECTED STATE anatomy. */
-    #renderSelectedDetail(body, s) {
-      const tok = ZONE_TOKENS[s._status] || {};
-
-      body.appendChild(h('h3', 'det-title', displayName(s) || s.name || ''));
-      if (s.org) body.appendChild(h('div', 'det-org', s.org));
-
-      if (s.url) {
-        const wrap = h('div', 'det-website-wrap');
-        const a = h('a', 'det-website', 'Visit Website');
-        a.href = normalizeUrl(s.url);
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        wrap.appendChild(a);
-        body.appendChild(wrap);
-      }
-
-      // "Show history" toggle — only when history is non-empty (sealed);
-      // a real ui-chip filter carrying the sealed tooltip copy via
-      // ui-tooltip. Toggling ON enters history; wrapSelect exits.
-      if ((s.history || []).length) {
-        const tipWrap = document.createElement('ui-tooltip');
-        tipWrap.className = 'history-toggle-wrap';
-        const chip = document.createElement('ui-chip');
-        chip.className = 'history-toggle';
-        chip.setAttribute('variant', 'filter');
-        if (this.#historyMode) chip.setAttribute('selected', '');
-        const icon = document.createElement('ui-icon');
-        icon.slot = 'icon';
-        icon.textContent = 'history'; // sealed icon map: clock → history
-        chip.append(icon, document.createTextNode(
-          this.#historyMode ? 'Exit history' : 'Show history'));
-        chip.addEventListener('change', (e) => {
-          this.#historyMode = !!(e.detail && e.detail.selected);
-          this.#renderDots();
-          this.#renderDetail();
-        });
-        const tip = h('span', null, this.#historyMode ? HISTORY_TIP_ON : HISTORY_TIP_OFF);
-        tip.slot = 'content';
-        tipWrap.append(chip, tip);
-        body.appendChild(tipWrap);
-      }
-
-      // Large zone pill + live coords (1 decimal). Sealed: StatusPill
-      // size "lg" (12px font / 3px 10px padding) — the ui-chip zone
-      // variant's size="lg" (registered in manifest.json).
-      const pillRow = h('div', 'status-pill-row');
-      const zoneChip = document.createElement('ui-chip');
-      zoneChip.setAttribute('variant', 'zone');
-      zoneChip.setAttribute('size', 'lg');
-      zoneChip.setAttribute('data-zone', s._status);
-      zoneChip.textContent = s._status;
-      pillRow.appendChild(zoneChip);
-      pillRow.appendChild(h('span', 'det-coords',
-        `(${(+s._x).toFixed(1)}, ${(+s._y).toFixed(1)})`));
-      body.appendChild(pillRow);
-
-      // STRATEGY card tinted by the zone (sealed: zone.strategy bold +
-      // zone.action, verbatim engine copy).
-      const strat = ZONE_STRATEGIES[s._status];
-      if (strat) {
-        const card = h('div', 'strategy-card');
-        card.style.background = `var(${tok.bg})`;
-        card.style.color = `var(${tok.ink})`;
-        card.appendChild(h('div', 'strategy-eyebrow', 'Strategy'));
-        card.appendChild(h('div', 'strategy-title', strat.strategy));
-        card.appendChild(h('div', 'strategy-action', strat.action));
-        body.appendChild(card);
-      }
-
-      // Metadata rows (sealed order): Category · Type · Market · Region ·
-      // Geography · Issues · Priority · Owner · Last contact · Status · Tags.
-      const rows = h('div', 'detail-rows');
-      this.#metaRow(rows, 'Category', s.category);
-      this.#metaRow(rows, 'Type', s.type);
-      this.#metaRow(rows, 'Market', s.market);
-      this.#metaRow(rows, 'Region', s.region);
-      this.#metaRow(rows, 'Geography', s.geography);
-
-      // Issues: tag chips (all values) or muted "-".
-      let issuesNode = null;
-      if ((s.issues || []).length) {
-        issuesNode = h('span', 'v-chips');
-        for (const v of s.issues) {
-          const c = document.createElement('ui-chip');
-          c.setAttribute('variant', 'tag');
-          c.textContent = v;
-          issuesNode.appendChild(c);
-        }
-      }
-      this.#metaRow(rows, 'Issues', issuesNode);
-
-      // Priority: the real priority pill.
-      let prio = null;
-      if (s.priority) {
-        prio = document.createElement('ui-chip');
-        prio.setAttribute('variant', 'priority');
-        prio.setAttribute('value', s.priority);
-        prio.textContent = s.priority;
-      }
-      this.#metaRow(rows, 'Priority', prio);
-
-      // Owner: read-only ui-avatar stack (sealed OwnersDisplay resolution:
-      // unresolvable owner ids silently drop). SIZE MAPPING DECLARED: the
-      // sealed OwnersDisplay avatars are 22px; ui-avatar's token scale has
-      // no 22px step, so this ships size="sm" (--ui-sys-avatar-size-sm =
-      // 24px, the nearest step).
-      let ownersNode = null;
-      const owners = (s.owners || [])
-        .map((id) => (this.#users || []).find((u) => u.id === id))
-        .filter(Boolean);
-      if (owners.length) {
-        ownersNode = h('span', 'owner-stack');
-        for (const u of owners) {
-          const av = document.createElement('ui-avatar');
-          av.setAttribute('ring', '');
-          if (u.avatarColor) av.style.setProperty('--ui-avatar-bg', u.avatarColor); // token ref from seed
-          av.setAttribute('name', u.name || '');
-          av.setAttribute('size', 'sm');
-          if (u.avatarUrl) av.setAttribute('src', u.avatarUrl);
-          av.title = u.name || '';
-          ownersNode.appendChild(av);
-        }
-      }
-      this.#metaRow(rows, 'Owner', ownersNode);
-
-      this.#metaRow(rows, 'Last contact',
-        s.lastContact ? formatDateLong(s.lastContact) : null);
-
-      // Status: the real ui-status-dot (null-guard renders nothing when empty).
-      let statusNode = null;
-      if (s.status) {
-        statusNode = document.createElement('ui-status-dot');
-        statusNode.setAttribute('value', s.status);
-      }
-      this.#metaRow(rows, 'Status', statusNode);
-
-      // Tags: sealed Tags primitive — first 3 + muted "+N".
-      let tagsNode = null;
-      const { shown, more } = tagsOverflow(s.tags);
-      if (shown.length) {
-        tagsNode = h('span', 'v-chips');
-        for (const v of shown) {
-          const c = document.createElement('ui-chip');
-          c.setAttribute('variant', 'tag');
-          c.textContent = v;
-          tagsNode.appendChild(c);
-        }
-        if (more > 0) tagsNode.appendChild(h('span', 'muted', '+' + more));
-      }
-      this.#metaRow(rows, 'Tags', tagsNode);
-      body.appendChild(rows);
-
-      // LATEST NOTE (sealed: newest notesHistory by .at, fallback notes;
-      // renders nothing when no note resolves).
-      const note = latestNote(s);
-      if (note && note.body) {
-        const card = h('div', 'detail-latest-note');
-        const head = h('div', 'detail-latest-note-head');
-        head.appendChild(h('span', 'detail-latest-note-cap', 'Latest note'));
-        const stamp = noteDateShort(note.at);
-        if (stamp) head.appendChild(h('span', 'detail-latest-note-date', stamp));
-        card.appendChild(head);
-        card.appendChild(h('div', 'detail-latest-note-body', note.body));
-        body.appendChild(card);
-      }
     }
   }
 
