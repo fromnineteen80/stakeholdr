@@ -643,5 +643,62 @@ await page.locator('ui-sidebar.record-nav ui-sidebar-item', { hasText: 'Table em
 await page.waitForTimeout(700);
 await page.screenshot({ path: `${OUT}/p14-sample-table-embed.png` });
 
+// ── PHASE-15 WORKHQ CAPTURES ───────────────────────────────────────────────
+// Arrange a deterministic signal state (the seed ships no cold/dev fixtures):
+// one HIGH stale + one MEDIUM staler (gated out), a development, one
+// unscored-by-me, one awaiting vote — then capture the three sealed modes and
+// the ruled ignore-review popover.
+await page.goto('http://127.0.0.1:4174/app.html', { waitUntil: 'networkidle' });
+await page.waitForTimeout(1200);
+await page.evaluate(() => {
+  const shs = JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]');
+  const hi = shs.find(s => s.id === 'sh-01');
+  const hi2 = shs.find(s => s.id === 'sh-02');
+  const med = shs.find(s => s.id === 'sh-04');
+  hi.lastContact = '2026-01-10';
+  hi2.lastContact = '2026-03-15';
+  med.lastContact = '2025-12-01';
+  hi.notesHistory = [...(hi.notesHistory || []), {
+    id: 'n-shot15a', body: 'Filed a new comment letter on the outfall permit docket',
+    at: '2026-07-04T10:00:00.000Z', by: 'u-jordan',
+  }];
+  hi2.notesHistory = [...(hi2.notesHistory || []), {
+    id: 'n-shot15b', body: 'Committee hearing moved up to July 21 — briefing needed',
+    at: '2026-07-03T09:00:00.000Z', by: 'u-alex',
+  }];
+  localStorage.setItem('hpsm:stakeholders', JSON.stringify(shs));
+  const scores = JSON.parse(localStorage.getItem('hpsm:scores') || '{}');
+  if (scores['sh-03']) delete scores['sh-03']['tm-alex'];
+  if (scores['sh-05']) delete scores['sh-05']['tm-alex'];
+  localStorage.setItem('hpsm:scores', JSON.stringify(scores));
+  const comm = JSON.parse(localStorage.getItem('hpsm:community') || '[]');
+  const pac = comm.find(x => x.id === 'ca-03');
+  if (pac && pac.votes) delete pac.votes['u-alex'];
+  localStorage.setItem('hpsm:community', JSON.stringify(comm));
+  localStorage.removeItem('hp_workhq_mode');
+});
+await page.reload({ waitUntil: 'networkidle' });
+await page.waitForTimeout(1500);
+// 1 · split mode (default): band above the table, four cards, divider
+await page.screenshot({ path: `${OUT}/p15-workhq-split.png` });
+// 2 · intel mode: the band takes over, cards re-track to 2 columns
+await page.locator('.intel-modes ui-icon-button[aria-label="Expand intelligence"]').click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p15-workhq-intel.png` });
+// 3 · ignore a cold entry, then open the "Ignored (1)" review popover
+await page.locator('.intel-card[data-card="cold"] ui-list-item ui-icon-button[aria-label^="Ignore:"]').first().click();
+await page.waitForTimeout(300);
+await page.locator('.intel-card[data-card="cold"] .intel-ignored-btn').click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p15-workhq-ignored.png` });
+// restore it (leaves the demo store clean for the table capture)
+await page.locator('ui-menu.intel-ignored-menu[open] ui-menu-item').first().click();
+await page.waitForTimeout(300);
+// 4 · table (collapsed) mode: head-only band with the summary + mix/plans chips
+await page.locator('.intel-modes ui-icon-button[aria-label="Expand table"]').click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p15-workhq-table.png` });
+await page.screenshot({ path: `${OUT}/p15-workhq-table-head.png`, clip: { x: 0, y: 0, width: 1440, height: 260 } });
+
 await browser.close(); srv.close();
 console.log('shots written to', OUT);

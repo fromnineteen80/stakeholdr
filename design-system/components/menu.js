@@ -269,8 +269,16 @@ class UiMenu extends HTMLElement {
     if (h && top + h > window.innerHeight - 8 && rect.top - h - 4 >= 8) {
       top = rect.top - h - 4;
     }
+    // HORIZONTAL CLAMP (Phase-15 visual gate — the vertical flip's mirror):
+    // a menu anchored near the RIGHT viewport edge (e.g. the right-most
+    // workHQ card's ignored-review button) shifts left instead of clipping.
+    let left = rect.left;
+    const w = this.offsetWidth || 0;
+    if (w && left + w > window.innerWidth - 8) {
+      left = Math.max(8, window.innerWidth - w - 8);
+    }
     this.style.top  = `${top + scrollY}px`;
-    this.style.left = `${rect.left  + scrollX}px`;
+    this.style.left = `${left + scrollX}px`;
   }
 
   #handleListKey = (e) => {

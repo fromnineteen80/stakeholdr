@@ -1204,6 +1204,12 @@
      "type": "string",
      "default": "",
      "note": "attribute/property (kbdLabel); the search kbd hint text. NOT derived inside the component — the page passes the store's exported single source (src/app/data/store.js → cmdKeyLabel). Empty/absent hides the chip."
+    },
+    {
+     "name": "preset",
+     "type": "object",
+     "default": null,
+     "note": "write-only JS property (DECLARED Phase 15): programmatically arms the SAME filter/sort state the toolbar popovers set — { filters?: {type/priority/status/owners/issues/zone arrays}, sortKey?, sortDir? }; badges and Clear all reflect it exactly as a hand-armed state (the workHQ cold-card pre-filtered \"View all\" landing)"
     }
    ],
    "events": [

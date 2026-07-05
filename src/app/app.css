@@ -1970,3 +1970,125 @@ ui-inspector.record-rail { background: var(--ui-sys-surface-container); }
 /* Collapsed section rail: the title hides (sealed — hidden when collapsed);
  * the icon column carries the nav alone. */
 ui-sidebar.record-nav[collapsed] .record-nav-title { display: none; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * PHASE 15 — workHQ (the sealed IntelPanel band, host tree: .intel-split with
+ * data-mode lives HERE in the Lists host; the band sits ABOVE the table with
+ * a divider between; token-only containers — components carry all real
+ * structure). Sealed modes: split (default, band + table share) · intel (the
+ * band takes over — the table + divider collapse) · table (the band folds to
+ * its head/summary line and the table takes over).
+ * ═════════════════════════════════════════════════════════════════════════ */
+.intel-split {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-sys-space-3);
+  height: 100%;
+  min-height: 0;
+}
+.intel-split > ui-divider { flex: none; }
+.intel-split > .sheet-table { flex: 1 1 auto; min-height: 0; }
+.intel-split[data-mode="intel"] > .sheet-table,
+.intel-split[data-mode="intel"] > ui-divider { display: none; }
+
+/* The band: a tokened surface-container section, a step darker than the white
+ * table runway (sealed REBUILD BUILD-MAP). */
+.intel-band {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-sys-space-3);
+  background: var(--ui-sys-surface-container);
+  border: 1px solid var(--ui-sys-outline-subtle);
+  border-radius: var(--ui-sys-shape-card);
+  padding: var(--ui-sys-space-3) var(--ui-sys-space-4);
+  min-height: 0;
+}
+.intel-split[data-mode="intel"] > .intel-band {
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
+/* Head strip (sealed order: title · [table] summary · spacer · quick-add ·
+ * mode group). */
+.intel-head {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-sys-space-3);
+  min-width: 0;
+}
+.intel-title { font: var(--ui-sys-font-title); flex: none; }
+.intel-spacer { flex: 1 1 0; }
+.intel-modes { display: inline-flex; align-items: center; gap: var(--ui-sys-space-1); }
+
+/* The one-line summary (table mode; carries the ruled mix/plans chips). */
+.intel-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-sys-space-2);
+  font: var(--ui-sys-font-label);
+  color: var(--ui-sys-on-surface-muted);
+  min-width: 0;
+}
+.intel-summary-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.intel-mix { display: inline-flex; align-items: center; gap: var(--ui-sys-space-1); }
+.intel-mix i {
+  width: 8px; height: 8px;
+  border-radius: var(--ui-sys-shape-pill);
+  display: inline-block;
+}
+.intel-mix i.pos { background: var(--ui-sys-pos); }
+.intel-mix i.neu { background: var(--ui-sys-neu); }
+.intel-mix i.neg { background: var(--ui-sys-neg); }
+
+/* Cards grid — the ruled FOUR cards on one row in split mode: the sealed wide
+ * flag (Alerts, Need-your-score) takes 3 of 10 tracks; votes + cold take 2
+ * (visual gate: a 6-track 2/2/1/1 split starved the narrow cards — titles
+ * truncated, foot buttons wrapped). Intel mode re-tracks to 2 columns so
+ * every card breathes (more rows). */
+.intel-cards {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: var(--ui-sys-space-3);
+  align-items: stretch;
+}
+.intel-card { grid-column: span 2; min-width: 0; }
+.intel-card-wide { grid-column: span 3; }
+.intel-split[data-mode="intel"] .intel-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.intel-split[data-mode="intel"] .intel-card,
+.intel-split[data-mode="intel"] .intel-card-wide { grid-column: span 1; }
+
+/* Card internals (inside the ui-card body slot). */
+.intel-card-label {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-sys-space-2);
+  font: var(--ui-sys-font-label);
+  min-width: 0;
+}
+.intel-card-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.intel-card-label-spacer { flex: 1 1 0; }
+/* Compact rows: the sanctioned ui-list token re-point (never an override). */
+.intel-card ui-list {
+  --ui-sys-list-item-min-height: 32px;
+  --ui-sys-list-item-pad-block: 2px;
+  --ui-sys-list-item-pad-inline: var(--ui-sys-space-2);
+  margin: var(--ui-sys-space-2) 0 0;
+}
+.intel-name { font: var(--ui-sys-font-body); }
+.intel-card-empty {
+  font: var(--ui-sys-font-caption);
+  color: var(--ui-sys-on-surface-muted);
+  padding: var(--ui-sys-space-3) 0;
+}
+.intel-card-foot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;            /* whole buttons wrap; labels never break */
+  white-space: nowrap;        /* inherited into the button shadow labels */
+  gap: var(--ui-sys-space-1) var(--ui-sys-space-2);
+  margin-top: var(--ui-sys-space-2);
+  min-width: 0;
+  justify-content: flex-end;
+}
+.intel-card-foot-spacer { flex: 1 1 0; }

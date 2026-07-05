@@ -650,6 +650,144 @@ for (const path of pages) {
     if (embedRows !== 4) errs.push(`P14EMBED: expected the workspace's 4 live rows in the embedded table (never the gallery sample), saw ${embedRows}`);
     const embedHasOrtiz = await page.locator('.record-table-embed ui-stakeholder-table .sheet-row', { hasText: 'Provost Lena Ortiz' }).count();
     if (embedHasOrtiz !== 1) errs.push('P14EMBEDROWS: the embedded table did not show THIS workspace\'s stakeholders');
+    // Phase 15: workHQ — the intelligence band hosts on Lists (sealed tree:
+    // band ABOVE the table, divider between, .intel-split data-mode in the
+    // host); the ruled FOUR cards; cold is HIGH-GATED; per-user ignores
+    // persist through the store and un-ignore restores; the sealed mode
+    // toggle persists per-device; entries drill through (census G1
+    // make-real); the cold "View all" lands on Lists PRE-FILTERED via the
+    // declared table preset; the summary's mix/plans segments route.
+    // Arrange a deterministic signal state (the seed carries no cold/dev
+    // fixtures): one HIGH stale (must appear), one MEDIUM staler (must NOT —
+    // ruling B), one development, one unscored-by-me, one awaiting vote.
+    const p15fx = await page.evaluate(() => {
+      const shs = JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]');
+      const hi = shs.find(s => s.id === 'sh-01');
+      const med = shs.find(s => s.id === 'sh-04');
+      hi.lastContact = '2026-01-10';   // ~176 days — cold
+      med.lastContact = '2025-12-01';  // staler — but Medium: must NOT appear
+      hi.notesHistory = [...(hi.notesHistory || []), {
+        id: 'n-smoke15', body: 'Filed a new comment letter on the outfall permit docket',
+        at: '2026-07-04T10:00:00.000Z', by: 'u-jordan',
+      }];
+      localStorage.setItem('hpsm:stakeholders', JSON.stringify(shs));
+      const scores = JSON.parse(localStorage.getItem('hpsm:scores') || '{}');
+      if (scores['sh-03']) delete scores['sh-03']['tm-alex'];
+      localStorage.setItem('hpsm:scores', JSON.stringify(scores));
+      const comm = JSON.parse(localStorage.getItem('hpsm:community') || '[]');
+      const pac = comm.find(x => x.id === 'ca-03');
+      if (pac && pac.votes) delete pac.votes['u-alex'];
+      localStorage.setItem('hpsm:community', JSON.stringify(comm));
+      localStorage.removeItem('hp_workhq_mode'); // deterministic split start
+      const nameOfSh = (id) => (shs.find(s => s.id === id) || {}).name;
+      return { hi: nameOfSh('sh-01'), med: nameOfSh('sh-04'), needs: nameOfSh('sh-03'), vote: (pac || {}).name };
+    });
+    await page.reload({ waitUntil: 'networkidle', timeout: 30000 }).catch(e => errs.push('P15RELOAD: ' + e.message));
+    await page.waitForTimeout(1500);
+    if (await page.locator('.intel-band').count() !== 1) errs.push('P15BAND: the workHQ band did not render on Lists');
+    if (await page.locator('.intel-split[data-mode="split"]').count() !== 1) errs.push('P15HOST: the host .intel-split default data-mode=split is missing');
+    if (await page.locator('.intel-card').count() !== 4) errs.push(`P15CARDS: expected the ruled FOUR cards, saw ${await page.locator('.intel-card').count()}`);
+    const bandOrder = await page.evaluate(() => {
+      const split = document.querySelector('.intel-split');
+      const kids = [...split.children].map(el => el.tagName.toLowerCase() + (el.className ? '.' + String(el.className).split(' ')[0] : ''));
+      return kids.join(' > ');
+    });
+    if (!/intel-band.*ui-divider.*ui-stakeholder-table/.test(bandOrder)) errs.push(`P15TREE: expected band > divider > table (sealed host tree), saw "${bandOrder}"`);
+    // cold: ONLY the High stale entry; the staler Medium is gated out
+    const coldCard = page.locator('.intel-card[data-card="cold"]');
+    if (await coldCard.locator('ui-list-item', { hasText: p15fx.hi }).count() !== 1) errs.push('P15COLDIN: the High stale stakeholder is missing from the cold card');
+    if (await coldCard.locator('ui-list-item', { hasText: p15fx.med }).count() !== 0) errs.push('P15COLDGATE: a sub-High stale stakeholder leaked into the cold card (ruling B)');
+    // alerts carries the development; needs-score reads the CANONICAL
+    // team-member-keyed predicate (exactly sh-03 after the tm-alex deletion —
+    // the sealed buggy user-id lookup would flood the card with everything)
+    if (await page.locator('.intel-card[data-card="alerts"] ui-list-item', { hasText: 'comment letter' }).count() !== 1) errs.push('P15ALERT: the development did not surface in Alerts');
+    const needsCard = page.locator('.intel-card[data-card="needs-score"]');
+    const needsRows = await needsCard.locator('ui-list-item').count();
+    if (needsRows !== 1) errs.push(`P15NEEDS: expected exactly 1 canonical needs-score row, saw ${needsRows} (the sealed bug would show ~all)`);
+    if (await needsCard.locator('ui-list-item', { hasText: p15fx.needs }).count() !== 1) errs.push('P15NEEDSWHO: the unscored-by-me stakeholder is missing');
+    // needs-score "View all" is honestly inert on Master (sealed
+    // Scoring-hidden-on-Master; make-real law: disabled + phase note)
+    const needsVA = needsCard.locator('ui-button.intel-view-all');
+    if (await needsVA.getAttribute('disabled').catch(() => null) === null) errs.push('P15MASTERGATE: needs-score View-all must be DISABLED on Master (Scoring needs a workspace)');
+    // IGNORE (ruling C): per-entry × drops the count, persists per-user
+    // through the store, survives reload, un-ignores from the review popover
+    await coldCard.locator('ui-list-item ui-icon-button[aria-label^="Ignore:"]').first().click({ timeout: 3000 }).catch(e => errs.push('P15IGNORE: ' + e.message));
+    await page.waitForTimeout(400);
+    if (await coldCard.locator('ui-list-item').count() !== 0) errs.push('P15IGNOREDROP: the ignored cold entry did not leave the card');
+    if (await coldCard.locator('.intel-card-empty').count() !== 1) errs.push('P15IGNOREEMPTY: the emptied cold card must show its empty text');
+    const igShape = await page.evaluate(() => JSON.parse(localStorage.getItem('hpsm:intelIgnores') || '{}'));
+    if (!Array.isArray(igShape['u-alex']?.cold) || igShape['u-alex'].cold[0] !== 'sh-01') errs.push(`P15IGNORESHAPE: expected {u-alex:{cold:['sh-01']}}, saw ${JSON.stringify(igShape)}`);
+    await page.reload({ waitUntil: 'networkidle', timeout: 30000 }).catch(e => errs.push('P15RELOAD2: ' + e.message));
+    await page.waitForTimeout(1500);
+    if (await page.locator('.intel-card[data-card="cold"] ui-list-item').count() !== 0) errs.push('P15IGNOREPERSIST: the ignore did not survive a reload');
+    await page.locator('.intel-card[data-card="cold"] .intel-ignored-btn').click({ timeout: 3000 }).catch(e => errs.push('P15IGNBTN: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('ui-menu.intel-ignored-menu[open] ui-menu-item', { hasText: p15fx.hi }).click({ timeout: 3000 }).catch(e => errs.push('P15RESTORE: ' + e.message));
+    await page.waitForTimeout(400);
+    if (await page.locator('.intel-card[data-card="cold"] ui-list-item', { hasText: p15fx.hi }).count() !== 1) errs.push('P15UNIGNORE: un-ignoring did not restore the entry');
+    // "Ignore all" folds the whole card at once (votes card, 1 entry)
+    await page.locator('.intel-card[data-card="votes"] ui-button.intel-ignore-all').click({ timeout: 3000 }).catch(e => errs.push('P15IGNALL: ' + e.message));
+    await page.waitForTimeout(300);
+    if (await page.locator('.intel-card[data-card="votes"] ui-list-item').count() !== 0) errs.push('P15IGNALLDROP: Ignore all left entries behind');
+    await page.locator('.intel-card[data-card="votes"] .intel-ignored-btn').click({ timeout: 3000 }).catch(e => errs.push('P15IGNBTN2: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('ui-menu.intel-ignored-menu[open] ui-menu-item').first().click({ timeout: 3000 }).catch(e => errs.push('P15RESTORE2: ' + e.message));
+    await page.waitForTimeout(300);
+    // MODE TOGGLE (sealed three modes; per-device persistence): table mode
+    // folds the cards to the head summary (with the ruled mix/plans chips)
+    await page.locator('.intel-modes ui-icon-button[aria-label="Expand table"]').click({ timeout: 3000 }).catch(e => errs.push('P15MODE: ' + e.message));
+    await page.waitForTimeout(300);
+    if (await page.locator('.intel-split[data-mode="table"]').count() !== 1) errs.push('P15TABLEMODE: data-mode did not flip to table');
+    if (await page.locator('.intel-card').count() !== 0) errs.push('P15TABLECARDS: cards must not render in table mode (sealed)');
+    const sumText = (await page.locator('.intel-summary-text').textContent().catch(() => '') || '').trim();
+    if (!/going cold|need your score|awaiting your vote/.test(sumText)) errs.push(`P15SUMMARY: expected the sealed summary join, saw "${sumText}"`);
+    await page.reload({ waitUntil: 'networkidle', timeout: 30000 }).catch(e => errs.push('P15RELOAD3: ' + e.message));
+    await page.waitForTimeout(1500);
+    if (await page.locator('.intel-split[data-mode="table"]').count() !== 1) errs.push('P15MODEPERSIST: the layout mode did not survive a reload');
+    // ruled summary routes: mix chip → Map; plans chip → Plans
+    await page.locator('.intel-summary ui-chip.intel-mix-chip').click({ timeout: 3000 }).catch(e => errs.push('P15MIXCHIP: ' + e.message));
+    await page.waitForTimeout(400);
+    if (await page.locator('.map-wrap').count() !== 1) errs.push('P15MIXROUTE: the mix segment did not route to Map');
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Lists' }).click({ timeout: 3000 }).catch(e => errs.push('P15BACK1: ' + e.message));
+    await page.waitForTimeout(500);
+    await page.locator('.intel-summary ui-chip.intel-plans-chip').click({ timeout: 3000 }).catch(e => errs.push('P15PLANSCHIP: ' + e.message));
+    await page.waitForTimeout(400);
+    if (await page.locator('.plan-toolbar').count() !== 1) errs.push('P15PLANSROUTE: the plans segment did not route to Plans');
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Lists' }).click({ timeout: 3000 }).catch(e => errs.push('P15BACK2: ' + e.message));
+    await page.waitForTimeout(500);
+    // back to split for the drill-throughs
+    await page.locator('.intel-modes ui-icon-button[aria-label="Split view"]').click({ timeout: 3000 }).catch(e => errs.push('P15MODE2: ' + e.message));
+    await page.waitForTimeout(400);
+    // census G1 make-real: an Alerts entry opens the stakeholder READ view
+    // (A20/I4 — Edit one click away)
+    await page.locator('.intel-card[data-card="alerts"] ui-list-item', { hasText: 'comment letter' }).click({ timeout: 3000 }).catch(e => errs.push('P15DRILL: ' + e.message));
+    await page.waitForTimeout(500);
+    if (await page.locator('ui-dialog.sh-dialog[open]').count() !== 1) errs.push('P15DRILLOPEN: the alert entry did not open the stakeholder record');
+    const p15DlgText = await page.locator('ui-dialog.sh-dialog').textContent().catch(() => '');
+    if (!/Edit stakeholder/i.test(p15DlgText || '')) errs.push('P15READVIEW: the drill must land on the READ view (A20 ruling)');
+    await page.evaluate(() => document.querySelectorAll('ui-dialog').forEach(d => d.close && d.close()));
+    await page.waitForTimeout(300);
+    // a Vote entry drills to that community entry's read page
+    await page.locator('.intel-card[data-card="votes"] ui-list-item', { hasText: 'Vote:' }).click({ timeout: 3000 }).catch(e => errs.push('P15VOTEDRILL: ' + e.message));
+    await page.waitForTimeout(600);
+    const p15CommTitle = (await page.locator('.comm-profile .plan-review-toolbar-title').textContent().catch(() => '') || '').trim();
+    if (p15CommTitle !== p15fx.vote) errs.push(`P15VOTEROUTE: expected the "${p15fx.vote}" read page, saw "${p15CommTitle}"`);
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Lists' }).click({ timeout: 3000 }).catch(e => errs.push('P15BACK3: ' + e.message));
+    await page.waitForTimeout(500);
+    // ruled cold "View all": Lists PRE-FILTERED (High only, stalest first)
+    // via the declared table preset; the band collapses to table mode
+    await page.locator('.intel-card[data-card="cold"] ui-button.intel-view-all').click({ timeout: 3000 }).catch(e => errs.push('P15COLDVA: ' + e.message));
+    await page.waitForTimeout(500);
+    if (await page.locator('.intel-split[data-mode="table"]').count() !== 1) errs.push('P15COLDMODE: cold View-all must collapse the band to table mode');
+    const preset = await page.evaluate(() => {
+      const t = document.querySelector('ui-stakeholder-table');
+      const rows = [...t.shadowRoot.querySelectorAll('.sheet-row')];
+      const firstName = rows.length ? (rows[0].querySelector('[data-key="name"]')?.textContent || '').trim() : '';
+      const shs = JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]');
+      return { shown: rows.length, high: shs.filter(s => s.priority === 'High').length, firstName };
+    });
+    if (preset.shown !== preset.high) errs.push(`P15PRESET: expected the ${preset.high} High-priority rows, saw ${preset.shown}`);
+    if (!preset.firstName.includes(p15fx.hi)) errs.push(`P15PRESETSORT: expected the stalest High row first ("${p15fx.hi}"), saw "${preset.firstName}"`);
   }
   if (path === '/record.html') {
     // Phase 14: SampleRecord — the sealed neutral tuning preview (standalone
