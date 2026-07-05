@@ -16,13 +16,32 @@
  * Scoping (sealed Ecosystem box, REAL as of Phase 6): Lists filters to the
  * active workspace via the stakeholderWorkspaces join (Master = the union of
  * ALL stakeholders); the workspace name feeds the sealed CSV filename rule.
+ *
+ * PHASE 15 — workHQ: this page is the sealed HOST of the intelligence band —
+ * the .intel-split parent carrying data-mode lives HERE (sealed skeleton
+ * host note); the band renders ABOVE the table with a divider between; the
+ * table is untouched below. Host-owned workHQ state:
+ *  · mode (split/intel/table) — DECLARED per-device persistence (localStorage
+ *    key hp_workhq_mode, mirroring the table's column-order key pattern; the
+ *    sealed capture held mode in volatile shell state — persisting the layout
+ *    preference is the minimal industry-standard choice).
+ *  · intelIgnores — the RULED (2026-07-05) per-user ignore table through the
+ *    ONE Store seam: { userId -> { cardKey -> [entryKey] } }.
+ *  · drill-throughs (census G1 MAKE-REAL): entry names open the stakeholder
+ *    READ view (the A20/I4 ruling) / the community read page; quick-add opens
+ *    the same create modal the shell (+) nonce opens (census G2); the cold
+ *    card's "View all" arms the table's DECLARED preset property (High
+ *    priority filter + lastContact stalest-first sort) and collapses the band
+ *    to table mode; summary mix/plans segments and the needs-score/votes
+ *    "View all" ride NEW onOpenMap/onOpenPlans/onOpenScoring/onOpenCommunity
+ *    shell props (mirroring the established onOpen* seam pattern — ruled).
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePersistentState, uid, nowStamp, cmdKeyLabel } from '../data/store.js';
 import { weightedCoord, statusFor } from '../data/engine.js';
 import {
   SEED_STAKEHOLDERS, SEED_SCORES, SEED_TEAM, SEED_USERS, SEED_COMMUNITY,
-  SEED_WORKSPACES, SEED_STAKEHOLDER_WORKSPACES, SEED_MESSAGES,
+  SEED_WORKSPACES, SEED_STAKEHOLDER_WORKSPACES, SEED_MESSAGES, SEED_PLANS,
 } from '../data/seed.js';
 import { GEOGRAPHIES, US_STATES, siteLabel } from '../data/catalogs.js';
 /* REAL as of Phase 11: the editable company sets (categories/markets/sites/
@@ -39,7 +58,21 @@ import { affiliatedCommunity, scoringNeededBody } from '../modals/stakeholder-lo
 import { StakeholderModal } from '../modals/stakeholder-modal.jsx';
 import {
   MASTER_WORKSPACE_ID, isMasterWorkspace, visibleStakeholders, createJoinFor,
+  workspaceLabel as workspaceLabelOf,
 } from '../data/workspace.js';
+import { WorkHQBand } from './workhq.jsx';
+import { withIgnores, withoutIgnore } from './workhq-logic.js';
+
+/* workHQ layout-mode persistence (DECLARED per-device UI preference — the
+ * table's column-order localStorage pattern; NOT a synced store table). */
+const WORKHQ_MODE_KEY = 'hp_workhq_mode';
+const WORKHQ_MODES = ['split', 'intel', 'table'];
+function loadWorkhqMode() {
+  try {
+    const v = localStorage.getItem(WORKHQ_MODE_KEY);
+    return WORKHQ_MODES.includes(v) ? v : 'split';
+  } catch { return 'split'; }
+}
 
 /* Sealed NotesModal date stamp: toLocaleDateString {month:short, day:numeric,
  * year:numeric}, or "-" when the entry has no date.                          */
@@ -53,6 +86,9 @@ function noteDate(at) {
 export function SheetPage({
   createNonce = 0, activeWorkspaceId = MASTER_WORKSPACE_ID, onOpenCommunityEntry,
   onOpenWorkspace, onOpenUserProfile, openStakeholderId = null, onConsumeOpen,
+  /* Phase 15 (ruled workHQ seams, mirroring the onOpen* pattern): plain view
+   * switches for the summary's mix/plans segments and the card View-alls. */
+  onOpenMap, onOpenPlans, onOpenScoring, onOpenCommunity,
 }) {
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
   const [scores, setScores] = usePersistentState('scores', SEED_SCORES);
@@ -63,8 +99,21 @@ export function SheetPage({
   const [stakeholderWorkspaces, setStakeholderWorkspaces] =
     usePersistentState('stakeholderWorkspaces', SEED_STAKEHOLDER_WORKSPACES);
   const [, setMessages] = usePersistentState('messages', SEED_MESSAGES);
+  /* Phase 15: plans feed the workHQ summary's active-plans segment (read-only
+   * here); intelIgnores is the RULED per-user ignore table (Store seam). */
+  const [plans] = usePersistentState('plans', SEED_PLANS);
+  const [intelIgnores, setIntelIgnores] = usePersistentState('intelIgnores', {});
   const { companyCategories, companyMarkets, companySites, companyIssues,
           companyTags } = useCompanyCatalogs();
+
+  /* workHQ layout mode (sealed three modes; per-device persistence declared
+   * above). */
+  const [intelMode, setIntelMode] = useState(loadWorkhqMode);
+  const setWorkhqMode = (m) => {
+    if (!WORKHQ_MODES.includes(m)) return;
+    setIntelMode(m);
+    try { localStorage.setItem(WORKHQ_MODE_KEY, m); } catch { /* memory-only */ }
+  };
 
   const tableRef = useRef(null);
   const dialogRef = useRef(null);
@@ -348,6 +397,47 @@ export function SheetPage({
   const getWorkspacesForStakeholder = (id) =>
     workspaces.filter((w) => (stakeholderWorkspaces[id] || []).includes(w.id));
 
+  /* ── PHASE 15: workHQ handlers ────────────────────────────────────────── */
+  const isMaster = isMasterWorkspace(activeWorkspaceId);
+
+  // Census G2: the band's quick-add opens the SAME create modal the shell's
+  // context-aware (+) nonce route opens (the one create seam's endpoint).
+  const workhqAddStakeholder = () => setShModal({ mode: 'create' });
+
+  // Census G1 MAKE-REAL + the A20/I4 ruling: band entry names open the
+  // stakeholder's READ view (Edit one click away), guarded against a
+  // mid-flight delete like the deep-link seam above.
+  const workhqOpenStakeholder = (id) => {
+    if (stakeholders.some((s) => s.id === id)) {
+      setShModal({ mode: 'edit', id, view: true });
+    }
+  };
+
+  /* Ruled cold "View all": arm the table's DECLARED preset (the exact state
+   * the Filter/Sort popovers set — High priority, lastContact stalest-first)
+   * and collapse the band so the table takes over. */
+  const workhqViewAllCold = () => {
+    const el = tableRef.current;
+    if (el) {
+      el.preset = {
+        filters: { priority: ['High'] },
+        sortKey: 'lastContact',
+        sortDir: 'asc', // oldest lastContact first = stalest first ('' leads)
+      };
+    }
+    setWorkhqMode('table');
+  };
+
+  /* Ruled ignores (per-user, through the ONE Store seam). liveKeys = the
+   * card's current entry keys, passed by the band so each WRITE also GCs
+   * ignore keys whose entry no longer exists (bounded — never on render). */
+  const workhqIgnore = (cardKey, entryKey, liveKeys) =>
+    setIntelIgnores((prev) => withIgnores(prev, currentUser?.id, cardKey, [entryKey], liveKeys));
+  const workhqIgnoreAll = (cardKey, entryKeys, liveKeys) =>
+    setIntelIgnores((prev) => withIgnores(prev, currentUser?.id, cardKey, entryKeys, liveKeys));
+  const workhqUnignore = (cardKey, entryKey) =>
+    setIntelIgnores((prev) => withoutIgnore(prev, currentUser?.id, cardKey, entryKey));
+
   const shExisting = shModal && shModal.id
     ? stakeholders.find((s) => s.id === shModal.id) || null
     : null;
@@ -362,9 +452,40 @@ export function SheetPage({
 
   return (
     <div className="sheet-wrap">
-      {/* kbd-label: the cmd-key hint is single-sourced in the store
-          (cmdKeyLabel) and PASSED to the table — never re-derived inside. */}
-      <ui-stakeholder-table ref={tableRef} class="sheet-table" kbd-label={cmdKeyLabel}></ui-stakeholder-table>
+      {/* SEALED HOST TREE (workHQ box): .intel-split carries data-mode HERE
+          in the host; the band renders ABOVE the table, divider between,
+          table untouched below. */}
+      <div className="intel-split" data-mode={intelMode}>
+        <WorkHQBand
+          mode={intelMode}
+          setMode={setWorkhqMode}
+          stakeholders={rows}
+          scores={scores}
+          team={team}
+          community={community}
+          plans={plans}
+          currentUser={currentUser}
+          isMaster={isMaster}
+          workspaceLabel={workspaceLabelOf(workspaces, activeWorkspaceId)}
+          workspaceId={activeWorkspaceId}
+          ignores={intelIgnores}
+          onIgnore={workhqIgnore}
+          onIgnoreAll={workhqIgnoreAll}
+          onUnignore={workhqUnignore}
+          onAddStakeholder={workhqAddStakeholder}
+          onOpenStakeholder={workhqOpenStakeholder}
+          onOpenCommunityEntry={onOpenCommunityEntry}
+          onOpenCommunity={onOpenCommunity}
+          onOpenMap={onOpenMap}
+          onOpenPlans={onOpenPlans}
+          onOpenScoring={onOpenScoring}
+          onViewAllCold={workhqViewAllCold}
+        />
+        <ui-divider></ui-divider>
+        {/* kbd-label: the cmd-key hint is single-sourced in the store
+            (cmdKeyLabel) and PASSED to the table — never re-derived inside. */}
+        <ui-stakeholder-table ref={tableRef} class="sheet-table" kbd-label={cmdKeyLabel}></ui-stakeholder-table>
+      </div>
 
       {/* NotesModal → ui-dialog (sealed CANONICAL-UI map: scrim closes; head
           eyebrow "Notes" over the stakeholder name; history newest first;

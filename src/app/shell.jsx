@@ -508,6 +508,14 @@ export function AppShell() {
             onOpenCommunityEntry={openCommunityEntry}
             onOpenWorkspace={openWorkspaceTab}
             onOpenUserProfile={openUserProfile}
+            /* Phase 15 (ruled workHQ seams, the onOpen* pattern): the band's
+               summary mix segment -> Map, plans segment -> Plans; card
+               View-alls -> Scoring (workspace-scoped; the band renders its
+               Master control honestly inert) / Community. */
+            onOpenMap={() => setView('map')}
+            onOpenPlans={() => setView('plan')}
+            onOpenScoring={() => setView('scoring')}
+            onOpenCommunity={() => setView('community')}
           />
         ) : view === 'map' ? (
           /* Sealed: the Map IS available on Master (the org-wide overview). */
@@ -636,7 +644,7 @@ export function AppShell() {
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Phase 14 — Record scaffold (RecordShell · record.stakeholder · record.workspace · map scorecard rail · SampleRecord preview)</span>
+        <span>Phase 15 — workHQ (intelligence band on Lists · 4 cards · per-user ignore/snooze · summary mix/plans routes · pre-filtered drill-throughs)</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
 
