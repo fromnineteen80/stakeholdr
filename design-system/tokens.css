@@ -336,6 +336,17 @@
      CAPTURED→TOKEN catalog, not here.) */
   --ui-sys-mention-stakeholder: #2E7D32;  /* t-stk stakeholder mention dot */
   --ui-sys-mention-plan:        #6A1B9A;  /* t-pln plan mention dot */
+  --ui-sys-mention-workspace: var(--ui-sys-config-swatch-2); /* t-wsp — the shared census group-F swatch literal */
+  --ui-sys-mention-community: var(--ui-sys-config-swatch-3); /* t-cmy — the shared census group-F swatch literal */
+
+  /* Messaging (Phase 12) — the sealed system-row wash pair (Reminders
+     conversation row: faint dark-ink wash resting, deeper on hover; census
+     rgba(31,26,20,.03)/.08), the live-presence dot, and the right-edge
+     ui-sheet panel width (the sealed messaging-sidebar overlay). */
+  --ui-sys-system-row-wash:       rgba(31,26,20,.03);
+  --ui-sys-system-row-wash-hover: rgba(31,26,20,.08);
+  --ui-sys-presence-online: var(--ui-sys-pos);
+  --ui-sys-sheet-side-width: 360px;
 
   /* Manager badge pair (census group J — siblings of --ui-sys-manager-amber
      #E0A21A, the ManagerStar fill, which arrives with its CAPTURED→TOKEN group) */

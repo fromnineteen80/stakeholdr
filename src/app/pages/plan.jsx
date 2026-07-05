@@ -499,7 +499,7 @@ function PlanSection({ n, title, children }) {
 /* ══ THE PAGE ══════════════════════════════════════════════════════════════ */
 export function PlanPage({
   createNonce = 0, activeWorkspaceId = MASTER_WORKSPACE_ID, onOpenCommunityEntry,
-  onOpenWorkspace,
+  onOpenWorkspace, openPlanId = null, onConsumeOpen,
 }) {
   const [plansRaw, setPlans] = usePersistentState('plans', SEED_PLANS);
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
@@ -553,6 +553,19 @@ export function PlanPage({
       setMode('edit');
     }
   }, [createNonce]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* DEEP-LINK OPEN (Phase 12; census A21 FRAGILE window.__pendingPlanId →
+   * this first-class seam): a shell-routed plan request (mention chip, later
+   * palette/profile rows) opens that plan in REVIEW, exists-guarded (the
+   * sealed bridge's own guard, kept page-side too), then consumes the seam. */
+  useEffect(() => {
+    if (!openPlanId) return;
+    if (plans.some((p) => p.id === openPlanId)) {
+      setOpenId(openPlanId);
+      setMode('review');
+    }
+    if (onConsumeOpen) onConsumeOpen();
+  }, [openPlanId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* Landing scope: a workspace sees ITS plans; Master sees all (plans are
    * one-per-workspace scoped views; sealed workspace scoping). */
@@ -625,7 +638,7 @@ export function PlanPage({
                 ...(prev['c-system'] || []),
                 {
                   id: uid('m'), from: 'u-system',
-                  body: scoringNeededBody(rec.name, rec.type),
+                  body: scoringNeededBody(rec.name, rec.type, rec.id),
                   at: nowStamp(), kind: 'scoring-needed',
                 },
               ],

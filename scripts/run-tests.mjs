@@ -18,6 +18,7 @@ const SUITES = [
   'setup-test.mjs',
   'help-test.mjs',
   'settings-test.mjs',
+  'messages-test.mjs',
 ];
 
 let failed = 0;

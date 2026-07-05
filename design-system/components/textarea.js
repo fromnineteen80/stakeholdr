@@ -217,6 +217,13 @@ class UiTextarea extends HTMLElement {
   /* Delegate programmatic focus to the real control (dialog focus pass etc.). */
   focus(options) { this.#textarea.focus(options); }
 
+  /* Caret access for caret-anchored features (the sealed mention composer
+     reads selectionStart on every input; a pick re-places the caret). */
+  get selectionStart() { return this.#textarea.selectionStart; }
+  setSelectionRange(start, end, direction) {
+    this.#textarea.setSelectionRange(start, end ?? start, direction);
+  }
+
   get value()  { return this.#textarea.value; }
   set value(v) {
     this.#textarea.value = v ?? '';

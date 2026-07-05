@@ -7,6 +7,9 @@
  *
  * size = sm | md | lg  → --ui-sys-avatar-size-*  (the only place avatar px live)
  * Fill = --ui-sys-primary / --ui-sys-on-primary so it re-themes with the wrapper.
+ * presence = "online" renders the sealed lower-right live-presence dot
+ * (--ui-sys-presence-online, ~28% of the avatar size, surface ring); any
+ * other value renders no dot (sealed: the dot exists only when online).
  * role="img" + aria-label from name.
  */
 const tpl = document.createElement('template');
@@ -33,8 +36,32 @@ tpl.innerHTML = `
       font-size: calc(var(--_sz, var(--ui-sys-avatar-size-md, 32px)) * 0.4);
       line-height: 1;
       letter-spacing: 0;
-      overflow: hidden;
+      position: relative;
       user-select: none;
+    }
+    /* Clip photo/initials to the circle on an inner layer so the presence
+       dot can sit at the circle edge without being clipped by the host. */
+    [part="initials"] {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      border-radius: inherit;
+      overflow: hidden;
+    }
+    /* Presence dot (sealed av-presence geometry, token-derived): ~28% of the
+       avatar, tucked into the lower-right quadrant, surface ring. */
+    [part="presence"] { display: none; }
+    :host([presence="online"]) [part="presence"] {
+      display: block;
+      position: absolute;
+      right: calc(var(--_sz, var(--ui-sys-avatar-size-md, 32px)) * 0.02);
+      bottom: calc(var(--_sz, var(--ui-sys-avatar-size-md, 32px)) * 0.02);
+      width: max(6px, calc(var(--_sz, var(--ui-sys-avatar-size-md, 32px)) * 0.28));
+      height: max(6px, calc(var(--_sz, var(--ui-sys-avatar-size-md, 32px)) * 0.28));
+      border-radius: var(--ui-sys-shape-pill);
+      background: var(--ui-sys-presence-online, var(--ui-sys-pos));
+      box-shadow: 0 0 0 max(1px, calc(var(--_sz, var(--ui-sys-avatar-size-md, 32px)) * 0.05)) var(--ui-sys-surface-card);
     }
     /* Stack ring: overlapping avatars separate with a clean surface ring —
        the industry standard for owner stacks. */
@@ -47,6 +74,7 @@ tpl.innerHTML = `
     img { width: 100%; height: 100%; object-fit: cover; display: block; }
   </style>
   <span part="initials"></span>
+  <span part="presence" aria-hidden="true"></span>
 `;
 
 if (!customElements.get('ui-avatar')) {

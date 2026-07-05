@@ -176,7 +176,7 @@ export function ScoringPage({
       ...prev,
       'c-system': [
         ...(prev['c-system'] || []),
-        { id: uid('m'), from: 'u-system', body: scoringNeededBody(rec.name, rec.type), at: nowStamp(), kind: 'scoring-needed' },
+        { id: uid('m'), from: 'u-system', body: scoringNeededBody(rec.name, rec.type, rec.id), at: nowStamp(), kind: 'scoring-needed' },
       ],
     }));
     return id;

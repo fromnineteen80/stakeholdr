@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 // Canonical UI: the ONE component source. Side-effect import registers every
 // ui-* element and loads the token contract (tokens.css).
 import '../../design-system/entry.js';
@@ -11,12 +11,15 @@ import { CommunityPage } from './pages/community.jsx';
 import { SetupPage } from './pages/setup.jsx';
 import { HelpPage } from './pages/help.jsx';
 import { SettingsPage } from './pages/settings.jsx';
+import { MessagesPage, MessagingSidebar } from './pages/messages.jsx';
 import { usePersistentState, uid, nowStamp } from './data/store.js';
 import { APP_CONFIG_SEED, applyAppConfigLive, appNameFrom } from './data/company.js';
 import {
   SEED_WORKSPACES, SEED_STAKEHOLDERS, SEED_STAKEHOLDER_WORKSPACES,
-  SEED_TEAM, SEED_SCORES, SEED_USERS, SEED_PLANS,
+  SEED_TEAM, SEED_SCORES, SEED_USERS, SEED_PLANS, SEED_COMMUNITY,
+  SEED_CONVERSATIONS, SEED_MESSAGES, SEED_READS,
 } from './data/seed.js';
+import { unreadTotal } from './pages/messages-logic.js';
 import {
   MASTER_WORKSPACE_ID, isMasterWorkspace, countForWorkspace,
   stakeholderCountLabel, workspaceLabel, stripWorkspaceFromJoins,
@@ -44,6 +47,7 @@ const CREATE_LIVE = ['sheet', 'scoring', 'plan', 'community', 'setup'];
 
 export function AppShell() {
   const [view, setView] = useState('sheet');
+  const snackRef = useRef(null);
 
   /* ── WORKSPACE SHELL-STATE (sealed TAB-STRIP STATE MACHINE, adapted to the
    * ruled shell: the bottom strip is RETIRED; its open-set/active data lives
@@ -64,6 +68,13 @@ export function AppShell() {
   const [scores] = usePersistentState('scores', SEED_SCORES);
   const [users] = usePersistentState('users', SEED_USERS);
   const [plans, setPlans] = usePersistentState('plans', SEED_PLANS);
+  const [community] = usePersistentState('community', SEED_COMMUNITY);
+  /* Messaging stores (Phase 12): read here for the unread badge + the
+   * deep-link guards; the messaging surfaces own their mutations (same-tab
+   * fan-out keeps every instance in step — store.js).                       */
+  const [conversations] = usePersistentState('conversations', SEED_CONVERSATIONS);
+  const [messages] = usePersistentState('messages', SEED_MESSAGES);
+  const [reads] = usePersistentState('reads', SEED_READS);
   /* Sealed Settings-override contract: appConfig.segments (present AND
    * non-empty) overrides the seed SEGMENTS catalog everywhere segments are
    * grouped — REAL as of Phase 11 (Settings edits it; this read is live). */
@@ -101,6 +112,23 @@ export function AppShell() {
     setPendingCommunityId(id);
     setView('community');
   };
+
+  /* STAKEHOLDER DEEP-LINK SEAM (Phase 12; mirrors the community seam): the
+   * shell lands on Master Lists and hands the id down the first-class
+   * openStakeholderId/onConsumeOpen channel; the Sheet page opens the record
+   * in the READ view (the sealed A20/I4 ruling: deep links land on the read
+   * view with Edit one click away — never straight into edit).              */
+  const [pendingShId, setPendingShId] = useState(null);
+
+  /* PLAN DEEP-LINK SEAM (Phase 12; census A21 FRAGILE window.__pendingPlanId
+   * → first-class): Plans view with that plan open in REVIEW.               */
+  const [pendingPlanId, setPendingPlanId] = useState(null);
+
+  /* MESSAGING SHELL-STATE (sealed: BOTH surfaces share activeConversationId
+   * in the shell, so expanding the sidebar to the page carries the open
+   * conversation over — census J2).                                          */
+  const [msgSidebarOpen, setMsgSidebarOpen] = useState(false);
+  const [activeConversationId, setActiveConversationId] = useState(null);
 
   /* Sealed openWorkspaceTab: add to the open set if absent → activate →
    * view "sheet". activateWorkspaceTab: same without the add.               */
@@ -180,6 +208,61 @@ export function AppShell() {
     () => unscoredCountFor(stakeholders, scores, team, currentUser?.id),
     [stakeholders, scores, team, currentUser]);
 
+  /* REAL unread badge (sealed DO-NOT-REPLICATE: the oracle's badge merely
+   * mirrored unscoredCount while claiming to count messages): per-user read
+   * markers + the LIVE unscoredCount as the system conversation's sealed
+   * contribution (messages-logic.unreadTotal).                              */
+  const unreadCount = useMemo(
+    () => unreadTotal(conversations, messages, reads, currentUser?.id, unscoredCount),
+    [conversations, messages, reads, currentUser, unscoredCount]);
+
+  /* THE ONE MENTION RESOLVER (census A26/J6 FRAGILE window.__openMention →
+   * first-class; sealed code map stk→stakeholder · wsp→workspace · pln→plan
+   * · cmy→community) WITH the census-A23 make-real guard: every deep link
+   * verifies the record exists and falls back gracefully (toast + stay put —
+   * the oracle's stale-workspace render crash is not replicated). A route
+   * from the sidebar closes it (the overlay never lingers over the target). */
+  const MENTION_MISSING = {
+    stk: 'That stakeholder no longer exists',
+    wsp: 'That workspace no longer exists',
+    pln: 'That plan no longer exists',
+    cmy: 'That community entry no longer exists',
+  };
+  const openMention = (type, id) => {
+    let ok = false;
+    if (type === 'stk' && stakeholders.some((s) => s.id === id)) {
+      setActiveWorkspaceId(MASTER_WORKSPACE_ID);
+      setView('sheet');
+      setPendingShId(id);
+      ok = true;
+    } else if (type === 'wsp' && workspaces.some((w) => w.id === id)) {
+      openWorkspaceTab(id);
+      ok = true;
+    } else if (type === 'pln' && plans.some((p) => p.id === id)) {
+      setPendingPlanId(id);
+      setView('plan');
+      ok = true;
+    } else if (type === 'cmy' && community.some((c) => c.id === id)) {
+      openCommunityEntry(id);
+      ok = true;
+    }
+    if (ok) setMsgSidebarOpen(false);
+    else snackRef.current?.show(MENTION_MISSING[type] || 'That record no longer exists');
+  };
+
+  /* Census J8 make-real action route: Scoring in the reminder subject's
+   * workspace; an unassigned/stale subject falls back to the record itself. */
+  const openScoringFor = (stakeholderId, workspaceId) => {
+    if (workspaceId && workspaces.some((w) => w.id === workspaceId)) {
+      setOpenWorkspaceIds((prev) => (prev.includes(workspaceId) ? prev : [...prev, workspaceId]));
+      setActiveWorkspaceId(workspaceId);
+      setView('scoring');
+      setMsgSidebarOpen(false);
+      return;
+    }
+    openMention('stk', stakeholderId);
+  };
+
   const visibleTabs = NAV_TABS.filter((t) => !(isMaster && t.hideWhenMaster));
 
   /* Selector rows: every workspace grouped by segment (sealed
@@ -248,6 +331,17 @@ export function AppShell() {
             <ui-icon>add</ui-icon>
           </ui-icon-button>
         )}
+        {/* Sealed A14 (Phase 12, REAL): the Messages toggle with the REAL
+            unread badge (ui-badge anchored over the icon button; count =
+            per-conversation unread + live unscoredCount — never the oracle's
+            mislabeled unscored mirror). */}
+        <ui-badge slot="trailing" count={unreadCount}
+                  aria-label={`${unreadCount} unread`}>
+          <ui-icon-button variant="standard" aria-label="Messages" title="Messages"
+                          onClick={() => setMsgSidebarOpen((o) => !o)}>
+            <ui-icon>chat</ui-icon>
+          </ui-icon-button>
+        </ui-badge>
         <ui-icon-button slot="trailing" variant="standard" disabled aria-label="Search"
                         title="Search (⌘K) arrives with the command-palette phase">
           <ui-icon>search</ui-icon>
@@ -330,6 +424,8 @@ export function AppShell() {
           <SheetPage
             createNonce={createNonce}
             activeWorkspaceId={activeWorkspaceId}
+            openStakeholderId={pendingShId}
+            onConsumeOpen={() => setPendingShId(null)}
             onOpenCommunityEntry={openCommunityEntry}
             onOpenWorkspace={openWorkspaceTab}
           />
@@ -357,6 +453,8 @@ export function AppShell() {
           <PlanPage
             createNonce={createNonce}
             activeWorkspaceId={activeWorkspaceId}
+            openPlanId={pendingPlanId}
+            onConsumeOpen={() => setPendingPlanId(null)}
             onOpenCommunityEntry={openCommunityEntry}
             onOpenWorkspace={openWorkspaceTab}
           />
@@ -392,6 +490,17 @@ export function AppShell() {
              the map · zone key/strategy reference — engine-single-sourced).
              Zero handlers, zero props (sealed UX census). */
           <HelpPage />
+        ) : view === 'messages' ? (
+          /* Sealed MessagingPage (census A8 entry): shares
+             activeConversationId with the sidebar (J2 carry-over); mention
+             links + the J8 scoring action route through the shell's guarded
+             first-class resolvers. */
+          <MessagesPage
+            activeConversationId={activeConversationId}
+            onSetActiveConversation={setActiveConversationId}
+            onOpenMention={openMention}
+            onOpenScoringFor={openScoringFor}
+          />
         ) : view === 'settings' && currentUser?.role === 'manager' ? (
           /* Sealed: SettingsView, gated by currentUser.role === "manager"
              (census A9; the ProfileMenu item is the only entry). The page
@@ -401,21 +510,42 @@ export function AppShell() {
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Phase 11 — Settings (9 panes · design dashboard · live inheritance)</span>
+        <span>Phase 12 — Messaging (conversations · threads · @/#/$ mention links · real unread)</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
 
+      {/* MESSAGING SIDEBAR (sealed TREE 1) — the right-edge overlay, mounted
+          at the shell so it opens over ANY view (census A14); the expand
+          control navigates to the full page AND closes the overlay in the
+          same click (census J2 — the open conversation carries over). */}
+      <MessagingSidebar
+        open={msgSidebarOpen}
+        onClose={() => setMsgSidebarOpen(false)}
+        onOpenPage={() => { setView('messages'); setMsgSidebarOpen(false); }}
+        activeConversationId={activeConversationId}
+        onSetActiveConversation={setActiveConversationId}
+        onOpenMention={openMention}
+        onOpenScoringFor={openScoringFor}
+      />
+
+      {/* Shell snackbar — the census-A23 graceful fallback for stale mention
+          links (toast + stay put; never the oracle's render crash). */}
+      <ui-snackbar ref={snackRef}></ui-snackbar>
+
       {/* PROFILE MENU (sealed exact labels/order/icons, App-shell box) —
           anchored at the RULED identity footer. "Settings" is the sealed
-          manager-only entry (A9, live); View profile / Messages / Log out
-          arrive with the Profiles / Messaging / Login phases and are
-          honestly inert (disabled + phase note, make-real law). */}
+          manager-only entry (A9, live); "Messages" is live as of Phase 12
+          (census A8); View profile / Log out arrive with the Profiles /
+          Login phases and are honestly inert (disabled + phase note,
+          make-real law). */}
       <ui-menu anchor="me-anchor" class="profile-menu">
         <ui-menu-item disabled title="Arrives with the Profiles phase">
           <ui-icon slot="icon" size="sm">person</ui-icon>
           View profile
         </ui-menu-item>
-        <ui-menu-item disabled title="Arrives with the Messaging phase">
+        {/* Census A8 (Phase 12, REAL): ProfileMenu "Messages" → the full
+            Messages page. */}
+        <ui-menu-item onClick={() => { setView('messages'); setMsgSidebarOpen(false); }}>
           <ui-icon slot="icon" size="sm">chat</ui-icon>
           Messages
         </ui-menu-item>

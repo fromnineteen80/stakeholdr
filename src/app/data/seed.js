@@ -401,6 +401,14 @@ export const SEED_MESSAGES = {
   ],
 };
 
+/* ── READS — per-user read markers: reads[userId][conversationId] = the
+ * last-seen message ISO. DECLARED NEW TABLE (Phase 12): the sealed capture
+ * rules the oracle's fake unread badge DO-NOT-REPLICATE and mandates REAL
+ * per-conversation read state; the map shape is the minimal
+ * industry-standard choice (per-user rows map 1:1 onto the Supabase swap).
+ * Ships empty — every seeded message starts unread.                         */
+export const SEED_READS = {};
+
 /* ── COMMUNITY — 4 applications, one per major KIND (sealed counts/kinds/
  * stages), in the SEALED FIELD SHAPE (Community box data model): identity +
  * kind + stage + summary/description/rationale + submitter/submitterRole/
