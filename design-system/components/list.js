@@ -2,6 +2,10 @@
  * <ui-list> + <ui-list-item> — vertical list with optional interactivity.
  * ui-list-item slots: leading, default (headline), supporting, trailing.
  * Attr `interactive` → role=button, hover state layer, keyboard activation.
+ * Attr `wrap` (item) → the headline flows to multiple lines (reading lists)
+ * instead of the default single-line ellipsis truncation.
+ * Row geometry reads --ui-sys-list-item-min-height / -pad-block / -pad-inline
+ * (tokens.css) so hosts re-point tokens for compact lists — never overrides.
  * ARIA role=list / listitem (or button when interactive).
  * ==========================================================================*/
 
@@ -21,8 +25,9 @@ itemTemplate.innerHTML = `
       grid-template-columns: auto 1fr auto;
       align-items: center;
       gap: 0 var(--ui-sys-space-3);
-      min-height: 48px;
-      padding: var(--ui-sys-space-2) var(--ui-sys-space-4);
+      min-height: var(--ui-sys-list-item-min-height, 48px);
+      padding: var(--ui-sys-list-item-pad-block, var(--ui-sys-space-2))
+               var(--ui-sys-list-item-pad-inline, var(--ui-sys-space-4));
       background: transparent;
       color: var(--ui-sys-on-surface);
       font: var(--ui-sys-font-body);
@@ -80,6 +85,14 @@ itemTemplate.innerHTML = `
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    /* wrap — reading-list variant: the headline flows to multiple lines
+       instead of truncating (registered in manifest.json). */
+    :host([wrap]) .headline {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
     }
 
     .supporting {

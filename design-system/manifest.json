@@ -698,7 +698,7 @@
    "tag": "ui-list",
    "status": "built",
    "category": "native",
-   "summary": "Vertical list; ui-list-item with leading/supporting/trailing slots and interactive (button-like) mode.",
+   "summary": "Vertical list; ui-list-item with leading/supporting/trailing slots, interactive (button-like) mode, and a wrap variant (multi-line headline for reading lists). Row geometry reads --ui-sys-list-item-min-height / -pad-block / -pad-inline so hosts re-point tokens for compact lists.",
    "props": [
     {
      "name": "interactive",
@@ -709,6 +709,12 @@
      "name": "disabled",
      "type": "boolean",
      "default": false
+    },
+    {
+     "name": "wrap",
+     "type": "boolean",
+     "default": false,
+     "note": "ui-list-item attribute: headline wraps to multiple lines instead of single-line ellipsis."
     }
    ],
    "states": [
@@ -716,7 +722,8 @@
     "interactive-hover",
     "interactive-pressed",
     "focus-visible",
-    "disabled"
+    "disabled",
+    "wrap"
    ],
    "import": "./components/list.js"
   },

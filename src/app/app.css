@@ -952,3 +952,211 @@ ui-sidebar[collapsed] .brand { margin-left: 0; }
   padding-top: var(--ui-sys-space-2); margin-top: var(--ui-sys-space-1);
 }
 .ws-created-name { color: var(--ui-sys-on-surface); }
+
+/* ══ HELP PAGE (sealed "Help — the engagement framework + how to read the
+ * map + zone key/strategy reference") — a static reading page. Layout-only,
+ * token-only classes; all zone color reads the SAME --ui-sys-zone-* single
+ * source as Map/Lists/scorecard (parity-asserted by scripts/help-test.mjs). */
+
+/* The reading column (DECLARED 880px measure; the box fixes none). */
+.help-wrap { height: 100%; overflow: auto; }
+.help-inner {
+  max-width: 880px; margin: 0 auto;
+  padding: var(--ui-sys-space-6) var(--ui-sys-space-4);
+  display: flex; flex-direction: column; gap: var(--ui-sys-space-4);
+}
+
+/* Prelude — the sealed em-emphasized opening line. */
+.help-prelude p {
+  margin: 0; font: var(--ui-sys-font-body-lg);
+  color: var(--ui-sys-on-surface);
+}
+
+/* Section titles — the title typeface (Newsreader token). */
+.help-title {
+  font: var(--ui-sys-font-headline);
+  margin-top: var(--ui-sys-space-4);
+}
+.help-grid-section { margin-top: var(--ui-sys-space-4); }
+.help-grid-section h2 { margin: 0 0 var(--ui-sys-space-2); font: var(--ui-sys-font-title); }
+.help-grid-section p {
+  margin: 0 0 var(--ui-sys-space-3);
+  font: var(--ui-sys-font-body); color: var(--ui-sys-on-surface);
+}
+
+/* ── Block 1: the funnel figure (sanctioned tokened inline SVG — census
+ * amber ramp fills; label ink DECLARED --ui-sys-zone-ink-neutral) ─────── */
+.help-funnel { display: flex; flex-direction: column; gap: var(--ui-sys-space-3); }
+.help-funnel-svg { display: block; width: 100%; height: auto; }
+.help-funnel-stage-1 { fill: var(--ui-sys-band-middle); }
+.help-funnel-stage-2 { fill: var(--ui-sys-funnel-2); }
+.help-funnel-stage-3 { fill: var(--ui-sys-funnel-3); }
+.help-funnel-label {
+  fill: var(--ui-sys-zone-ink-neutral);
+  font-family: var(--ui-ref-typeface-body);
+  font-size: 15px; font-weight: 500; letter-spacing: .02em;
+}
+.help-funnel-cols {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--ui-sys-space-3);
+}
+/* Compact reading rows — the registered --ui-sys-list-item-* token
+ * re-points (never a component override). */
+.help-step {
+  --ui-sys-list-item-min-height: 34px;
+  --ui-sys-list-item-pad-block: var(--ui-sys-space-1);
+  --ui-sys-list-item-pad-inline: var(--ui-sys-space-3);
+}
+/* The sealed funnel-step-lead: the emphasized row = token re-points
+ * (stronger ink via the label font, fill via surface-hover). */
+.help-step-lead {
+  --ui-sys-font-body: var(--ui-sys-font-label);
+  background: var(--ui-sys-surface-hover);
+}
+
+/* ── Block 2: spectrum strip + the three help-cards ─────────────────────── */
+.help-spectrum {
+  display: flex; flex-wrap: wrap; gap: var(--ui-sys-space-1);
+  margin-bottom: var(--ui-sys-space-3);
+}
+.help-cols {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--ui-sys-space-3);
+}
+/* Valence border tints (census --ui-sys-*-border-soft) via the card's
+ * outline-token re-point. */
+.help-card { position: relative; }
+.help-card-neg { --ui-sys-outline-subtle: var(--ui-sys-neg-border-soft); }
+.help-card-mid { --ui-sys-outline-subtle: var(--ui-sys-neu-border-soft); }
+.help-card-pos { --ui-sys-outline-subtle: var(--ui-sys-pos-border-soft); }
+.help-card h3 {
+  margin: 0 0 var(--ui-sys-space-1);
+  font: var(--ui-sys-font-label); color: var(--ui-sys-on-surface);
+}
+/* Tagged cards reserve title clearance so the corner tag never collides. */
+.help-card-neg h3, .help-card-pos h3 { padding-right: 72px; }
+/* The sealed corner tag — the literal quoted "Influencer". */
+.help-influencer-tag {
+  position: absolute; top: var(--ui-sys-space-2); right: var(--ui-sys-space-3);
+  font: var(--ui-sys-font-caption); font-style: italic;
+  color: var(--ui-sys-on-surface-muted);
+}
+.help-bullet {
+  --ui-sys-list-item-min-height: 26px;
+  --ui-sys-list-item-pad-block: 2px;
+  --ui-sys-list-item-pad-inline: 0;
+}
+.help-bullet-dot {
+  display: inline-block; width: 5px; height: 5px;
+  border-radius: var(--ui-sys-shape-pill);
+  background: var(--ui-sys-on-surface-faint);
+}
+
+/* ── Block 3: the 24-zone figure — drawn IDENTICALLY to the Map's grid
+ * (same fr proportions, hairlines, outer border; label 11.5px sealed) ──── */
+.help-grid-figure {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-rows: 2fr 1fr 1fr 1fr 1fr 2fr;
+  gap: 0;
+  border: 1px solid var(--ui-sys-outline-strong);
+  aspect-ratio: 8 / 5;
+}
+.help-zone {
+  position: relative; overflow: hidden;
+  padding: 8px 10px;
+  display: flex; flex-direction: column;
+  align-items: flex-start; justify-content: flex-start;
+  border-right: 1px solid var(--ui-sys-zone-grid-line);
+  border-bottom: 1px solid var(--ui-sys-zone-grid-line);
+}
+.help-zone:nth-child(4n) { border-right: none; }
+.help-zone:nth-last-child(-n+4) { border-bottom: none; }
+.help-zone-label {
+  font-size: 11.5px; font-weight: 500; line-height: 1.15;
+  letter-spacing: .01em; opacity: .78;
+  max-width: 100%; word-break: break-word; user-select: none;
+}
+
+/* Zone fills + on-fill ink — the 14-zone single source (engine cssVar/inkVar
+ * parity-asserted by scripts/help-test.mjs; the strategy spine shares the
+ * fill selector). */
+.help-zone[data-zone="Proactively Defend"], .help-strat-spine[data-zone="Proactively Defend"] { background: var(--ui-sys-zone-proactively-defend); }
+.help-zone[data-zone="Defend"], .help-strat-spine[data-zone="Defend"] { background: var(--ui-sys-zone-defend); }
+.help-zone[data-zone="Protect"], .help-strat-spine[data-zone="Protect"] { background: var(--ui-sys-zone-protect); }
+.help-zone[data-zone="Respond"], .help-strat-spine[data-zone="Respond"] { background: var(--ui-sys-zone-respond); }
+.help-zone[data-zone="Identify"], .help-strat-spine[data-zone="Identify"] { background: var(--ui-sys-zone-identify); }
+.help-zone[data-zone="Monitor"], .help-strat-spine[data-zone="Monitor"] { background: var(--ui-sys-zone-monitor); }
+.help-zone[data-zone="Maintain"], .help-strat-spine[data-zone="Maintain"] { background: var(--ui-sys-zone-maintain); }
+.help-zone[data-zone="Connect"], .help-strat-spine[data-zone="Connect"] { background: var(--ui-sys-zone-connect); }
+.help-zone[data-zone="Commit"], .help-strat-spine[data-zone="Commit"] { background: var(--ui-sys-zone-commit); }
+.help-zone[data-zone="Cooperate"], .help-strat-spine[data-zone="Cooperate"] { background: var(--ui-sys-zone-cooperate); }
+.help-zone[data-zone="Collaborate"], .help-strat-spine[data-zone="Collaborate"] { background: var(--ui-sys-zone-collaborate); }
+.help-zone[data-zone="Valuable Relationship"], .help-strat-spine[data-zone="Valuable Relationship"] { background: var(--ui-sys-zone-valuable-relationship); }
+.help-zone[data-zone="High Value Relationship"], .help-strat-spine[data-zone="High Value Relationship"] { background: var(--ui-sys-zone-high-value-relationship); }
+.help-zone[data-zone="Strategic Partner"], .help-strat-spine[data-zone="Strategic Partner"] { background: var(--ui-sys-zone-strategic-partner); }
+.help-zone[data-zone="Proactively Defend"] { color: var(--ui-sys-zone-ink-on-strong); }
+.help-zone[data-zone="Defend"] { color: var(--ui-sys-zone-ink-negative); }
+.help-zone[data-zone="Protect"] { color: var(--ui-sys-zone-ink-negative); }
+.help-zone[data-zone="Respond"] { color: var(--ui-sys-zone-ink-negative); }
+.help-zone[data-zone="Identify"] { color: var(--ui-sys-zone-ink-negative); }
+.help-zone[data-zone="Monitor"] { color: var(--ui-sys-zone-ink-neutral); }
+.help-zone[data-zone="Maintain"] { color: var(--ui-sys-zone-ink-neutral); }
+.help-zone[data-zone="Connect"] { color: var(--ui-sys-zone-ink-neutral); }
+.help-zone[data-zone="Commit"] { color: var(--ui-sys-zone-ink-neutral); }
+.help-zone[data-zone="Cooperate"] { color: var(--ui-sys-zone-ink-positive); }
+.help-zone[data-zone="Collaborate"] { color: var(--ui-sys-zone-ink-positive); }
+.help-zone[data-zone="Valuable Relationship"] { color: var(--ui-sys-zone-ink-positive); }
+.help-zone[data-zone="High Value Relationship"] { color: var(--ui-sys-zone-ink-positive); }
+.help-zone[data-zone="Strategic Partner"] { color: var(--ui-sys-zone-ink-on-strong); }
+
+/* The sealed 3-span axis legend strip (marginTop 12; start/center/end). */
+.help-axis-legend {
+  margin-top: 12px;
+  display: grid; grid-template-columns: 1fr auto 1fr;
+  column-gap: var(--ui-sys-space-4); align-items: center;
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--ui-sys-on-surface-muted);
+}
+.help-axis-left { justify-self: start; }
+.help-axis-center { justify-self: center; }
+.help-axis-right { justify-self: end; }
+
+/* ── Block 4: strategy reference — 2-col card grid, 8px zone spine ─────── */
+.help-strat-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: var(--ui-sys-space-3);
+}
+.help-strat-inner {
+  display: grid; grid-template-columns: 8px 1fr;
+  gap: var(--ui-sys-space-3); align-items: start;
+  height: 100%;
+}
+.help-strat-spine { align-self: stretch; border-radius: 4px; }
+.help-strat-content { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.help-strat-head {
+  display: flex; align-items: baseline; gap: var(--ui-sys-space-2);
+  flex-wrap: wrap;
+}
+.help-strat-name { font: var(--ui-sys-font-label); }
+.help-strat-sep { font-size: 11px; }
+/* Strategy ink = the zone's BAND ink (DECLARED legibility departure — the
+ * two extremes' on-fill ink is white, illegible on the card surface). */
+.help-strat-strategy { font-size: 12px; }
+.help-strat-strategy[data-tone="negative"] { color: var(--ui-sys-zone-ink-negative); }
+.help-strat-strategy[data-tone="neutral-low"] { color: var(--ui-sys-zone-ink-neutral); }
+.help-strat-strategy[data-tone="positive"] { color: var(--ui-sys-zone-ink-positive); }
+.help-strat-action { font-size: 12px; line-height: 1.45; }
+
+/* ── Block 5: the formula panel — body face at tabular settings (mono is
+ * forbidden; no mono token exists). ─────────────────────────────────────── */
+.help-formula {
+  margin: 0; padding: 12px 14px;
+  background: var(--ui-sys-surface-field);
+  border: 1px solid var(--ui-sys-outline);
+  border-radius: var(--ui-sys-shape-card);
+  font: var(--ui-sys-font-body); font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ui-sys-on-surface-muted);
+  white-space: pre; overflow-x: auto;
+}

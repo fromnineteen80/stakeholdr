@@ -167,6 +167,12 @@
   --ui-sys-badge-offset-block: -4px;
   --ui-sys-badge-offset-inline: -4px;
 
+  /* List-item sizing (the ONE place ui-list-item row geometry lives; hosts
+     re-point these for compact reading lists — never a component override) */
+  --ui-sys-list-item-min-height: 48px;
+  --ui-sys-list-item-pad-block: var(--ui-sys-space-2);
+  --ui-sys-list-item-pad-inline: var(--ui-sys-space-4);
+
   /* Icon sizing scale (modest, ~1em-relative; the ONE place icon px live).
      Every icon — inline SVG or <ui-icon> — sizes from these, never ad-hoc. */
   --ui-sys-icon-size-xs: 12px;  /* micro glyphs (matrix cell steppers) */
@@ -335,8 +341,10 @@
   --ui-sys-manager-badge-surface: rgba(224,162,26,.14); /* .manager-badge background — 14% amber wash */
   --ui-sys-manager-badge-ink:     #7A5414;              /* .manager-badge ink — deep amber-brown */
 
-  /* Funnel amber ramp, stages 2-3 (census group K — the Help-page engagement
-     funnel SVG; stage 1 is --ui-sys-band-middle #E2A85F per the Lists box) */
+  /* Funnel amber ramp (census group K — the Help-page engagement funnel SVG;
+     stage 1 doubles as the Lists "Winnable middle" band swatch per the Lists
+     box's CAPTURED→TOKEN flag: --ui-sys-band-middle = #E2A85F) */
+  --ui-sys-band-middle: #E2A85F;  /* "Purpose" arrow fill + Lists band swatch */
   --ui-sys-funnel-2: #F0C988;  /* "Plan" arrow fill */
   --ui-sys-funnel-3: #F8E2B0;  /* "Execute" arrow fill */
 

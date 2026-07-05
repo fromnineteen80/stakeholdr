@@ -244,6 +244,43 @@ for (const path of pages) {
     if (cascade.ws) errs.push('P9CASCADE: ws-gapp-na record survived');
     if (cascade.plan) errs.push('P9CASCADE: the plans leg did not delete the scoped plan');
     if (cascade.join) errs.push('P9CASCADE: the join strip left ws-gapp-na on a stakeholder');
+    // Phase 10: Help — the sidebar-foot nav item mounts the static reference;
+    // the zone key renders 14 spectrum chips + 24 grid cells + 14 strategy
+    // cards, every fill resolved from the SAME --ui-sys-zone-* tokens the
+    // Map/Lists read (single source, never a fork).
+    await page.locator('ui-sidebar ui-sidebar-item[slot="footer"]', { hasText: 'Help' }).click({ timeout: 3000 }).catch(e => errs.push('P10NAV: ' + e.message));
+    await page.waitForTimeout(500);
+    const helpMounted = await page.locator('.help-inner').count();
+    if (helpMounted !== 1) errs.push(`P10MOUNT: expected the Help reading column, saw ${helpMounted}`);
+    const spectrumChips = await page.locator('.help-spectrum ui-chip[variant="zone"]').count();
+    if (spectrumChips !== 14) errs.push(`P10SPECTRUM: expected 14 zone chips, saw ${spectrumChips}`);
+    const zoneCells = await page.locator('.help-grid-figure .help-zone').count();
+    if (zoneCells !== 24) errs.push(`P10GRID: expected 24 zone cells, saw ${zoneCells}`);
+    const stratCards = await page.locator('.help-strat-card').count();
+    if (stratCards !== 14) errs.push(`P10STRAT: expected 14 strategy cards, saw ${stratCards}`);
+    const funnelSteps = await page.locator('.help-funnel-cols ui-list-item').count();
+    if (funnelSteps !== 12) errs.push(`P10FUNNEL: expected the 12 framework steps, saw ${funnelSteps}`);
+    const zoneTokenCheck = await page.evaluate(() => {
+      const hexToRgb = (h) => {
+        const v = h.trim().replace('#', '');
+        return `rgb(${parseInt(v.slice(0, 2), 16)}, ${parseInt(v.slice(2, 4), 16)}, ${parseInt(v.slice(4, 6), 16)})`;
+      };
+      const probe = (name, tokenName) => {
+        const cell = [...document.querySelectorAll('.help-zone')].find(z => z.dataset.zone === name);
+        const token = getComputedStyle(document.documentElement).getPropertyValue(tokenName);
+        return cell && token && getComputedStyle(cell).backgroundColor === hexToRgb(token);
+      };
+      return {
+        pd: probe('Proactively Defend', '--ui-sys-zone-proactively-defend'),
+        sp: probe('Strategic Partner', '--ui-sys-zone-strategic-partner'),
+        mon: probe('Monitor', '--ui-sys-zone-monitor'),
+      };
+    });
+    if (!zoneTokenCheck.pd || !zoneTokenCheck.sp || !zoneTokenCheck.mon)
+      errs.push(`P10ZONETOKENS: grid cells did not resolve the --ui-sys-zone-* fills: ${JSON.stringify(zoneTokenCheck)}`);
+    const formulaText = await page.locator('.help-formula').textContent().catch(() => '');
+    if (!(formulaText || '').includes('Σ (member.x × member.weight)'))
+      errs.push('P10FORMULA: the sealed formula block is missing or paraphrased');
   }
   if (path.includes('wireframes')) {
     await page.locator('#theme-modern').click({ timeout: 3000 }).catch(e => errs.push('TOGGLE: ' + e.message));
