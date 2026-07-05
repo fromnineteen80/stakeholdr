@@ -23,10 +23,18 @@
  *   interactive (readonly only) each visible circle becomes a REAL button
  *              that emits `open` {userId} — the census-I6 make-real route
  *              (owner avatars open that user's profile).
+ *   stack-button (readonly only; wins over interactive) the WHOLE cluster —
+ *              every circle AND the "+N" overflow — is ONE role=button
+ *              control emitting `stack-open` on press; NO per-avatar
+ *              buttons. Accessible name = the host's aria-label attribute
+ *              (caller-supplied — the sealed UserStack passes "People in
+ *              this workspace"). This is the sealed app-bar people stack:
+ *              a single click surface opening the people panel.
  *
  * Events (composed: true):
- *   change → detail { value } (the new id array) on every add / remove.
- *   open   → detail { userId } (readonly + interactive) on avatar press.
+ *   change     → detail { value } (the new id array) on every add / remove.
+ *   open       → detail { userId } (readonly + interactive) on avatar press.
+ *   stack-open → no detail (readonly + stack-button) on cluster press.
  *
  * Interactions (editable mode — oracle handler census #40–43 + UA #33–39):
  *   • Overlapping avatar stack, NO names; each avatar tooltip = the name.
@@ -120,6 +128,29 @@ template.innerHTML = `
        never a hover background). */
     :host([readonly][interactive]) .owner { cursor: pointer; }
     :host([readonly][interactive]) .owner:hover ui-avatar { transform: translateY(-1px); }
+
+    /* Read-only + stack-button: the ONE aggregate control wrapping the whole
+       cluster (sealed UserStack anatomy) — motion-only hover, never a hover
+       background (icon-hover ruling). */
+    .cluster {
+      appearance: none;
+      background: none;
+      border: 0;
+      padding: 0;
+      margin: 0;
+      display: inline-flex;
+      align-items: center;
+      border-radius: var(--ui-sys-shape-pill);
+      cursor: pointer;
+      font: inherit;
+      color: inherit;
+    }
+    .cluster:hover ui-avatar { transform: translateY(-1px); }
+    .cluster:focus-visible {
+      outline: 2px solid var(--ui-sys-focus-ring);
+      outline-offset: 2px;
+    }
+    :host([readonly][stack-button]) .owner { cursor: pointer; }
 
     /* "+N" overflow circle (readonly) */
     .more {
@@ -273,7 +304,7 @@ template.innerHTML = `
 `;
 
 class UiOwnerPicker extends HTMLElement {
-  static observedAttributes = ['readonly', 'size', 'max', 'interactive'];
+  static observedAttributes = ['readonly', 'size', 'max', 'interactive', 'stack-button', 'aria-label'];
 
   #users = [];
   #value = [];
@@ -471,7 +502,24 @@ class UiOwnerPicker extends HTMLElement {
         this.#stackEl.appendChild(dash);
       } else {
         const max = this.#max;
-        const interactive = this.hasAttribute('interactive');
+        // `stack-button` wins over `interactive`: the sealed UserStack is ONE
+        // click surface — per-avatar buttons inside a button are illegal DOM
+        // and a lie about the target (every circle opens the same panel).
+        const stackButton = this.hasAttribute('stack-button');
+        const interactive = !stackButton && this.hasAttribute('interactive');
+        let host = this.#stackEl;
+        if (stackButton) {
+          const cluster = document.createElement('button');
+          cluster.type = 'button';
+          cluster.className = 'cluster';
+          // Accessible name is caller-supplied (host aria-label attr) — the
+          // host itself is role-less, so the name lives on the real control.
+          cluster.setAttribute('aria-label', this.getAttribute('aria-label') || 'People');
+          cluster.addEventListener('click', () => this.dispatchEvent(
+            new CustomEvent('stack-open', { bubbles: true, composed: true })));
+          this.#stackEl.appendChild(cluster);
+          host = cluster;
+        }
         owners.slice(0, max).forEach(u => {
           // `interactive` (census I6 make-real): each readonly circle is a
           // REAL button emitting `open` {userId} — the host routes it to
@@ -486,7 +534,7 @@ class UiOwnerPicker extends HTMLElement {
               new CustomEvent('open', { detail: { userId: u.id }, bubbles: true, composed: true })));
           }
           cell.appendChild(this.#avatarFor(u));
-          this.#stackEl.appendChild(cell);
+          host.appendChild(cell);
         });
         const overflow = owners.length - max;
         if (overflow > 0) {
@@ -494,7 +542,7 @@ class UiOwnerPicker extends HTMLElement {
           more.className = 'more';
           more.textContent = `+${overflow}`;
           more.title = owners.slice(max).map(u => u.name).join(', ');
-          this.#stackEl.appendChild(more);
+          host.appendChild(more);
         }
       }
       this.#panelEl.hidden = true;

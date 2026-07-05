@@ -461,14 +461,16 @@
   /* Avatar identity palette (census group F CAPTURED→TOKEN — the seed users'
      stable per-user avatar colors + the Shared-primitives Avatar palette;
      identity-semantic: never touched by any theme swap. Seed data references
-     these token NAMES, never hex — the guard bans hex in app code.) */
+     these token NAMES, never hex — the guard bans hex in app code.
+     Slots that duplicate an 8-palette hex ALIAS it (one hex, one token);
+     palette-1..5 are seed-only values with no 8-palette twin, kept literal. */
   --ui-sys-avatar-palette-1: #AD1457;  /* seed: Alex Rivera */
   --ui-sys-avatar-palette-2: #E64A19;  /* seed: Jordan Kim */
   --ui-sys-avatar-palette-3: #388E3C;  /* seed: Sam Okafor */
   --ui-sys-avatar-palette-4: #1976D2;  /* seed: Devon Wright */
   --ui-sys-avatar-palette-5: #00897B;  /* seed: Kenji Tanaka */
-  --ui-sys-avatar-palette-6: #4F3F69;  /* Avatar-box palette slot 4 (regenerated: Priya Patel) */
-  --ui-sys-avatar-palette-7: #5A8F8F;  /* Avatar-box palette slot 8 (regenerated: Marisol Aguilar) */
+  --ui-sys-avatar-palette-6: var(--ui-sys-avatar-4);  /* Priya Patel = 8-palette slot 4 (single-sourced) */
+  --ui-sys-avatar-palette-7: var(--ui-sys-avatar-8);  /* Marisol Aguilar = 8-palette slot 8 (single-sourced) */
   --ui-sys-avatar-system:    #1F1A14;  /* the Reminders bot (u-system) — sealed seed value */
   --ui-sys-avatar-ink:       #FAF8F2;  /* avatar initials ink (Shared-primitives Avatar text) */
 

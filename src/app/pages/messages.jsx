@@ -29,6 +29,11 @@
  *    Reminders row's pending chip + sentence read the LIVE unscoredCount
  *    (sealed correction — never the lifetime message count), with the
  *    conjugated "needs" singular (sealed copy-bug fix).
+ *  · Census I6 MAKE-REAL (Phase 13): thread AUTHOR AVATARS open that user's
+ *    profile via the onOpenUserProfile prop the shell threads into BOTH
+ *    surfaces (its seam closes the sidebar first — the mention-chip
+ *    precedent). The system bot's avatar stays inert (no profile surface
+ *    lists it; every people picker excludes role "system").
  *
  * DECLARED RECOMPOSITIONS (never silent):
  *  · The sidebar = ui-sheet side="right" (the right-edge variant built into
@@ -230,7 +235,7 @@ function MentionChip({ seg, onOpen }) {
 }
 
 /* ── TREE 5 — MessageThread (shared) ─────────────────────────────────────── */
-function MessageThread({ S, conv, onOpenMention, onOpenScoringFor }) {
+function MessageThread({ S, conv, onOpenMention, onOpenScoringFor, onOpenUserProfile }) {
   const { messages, users, currentUser, stakeholderWorkspaces } = S;
   const msgs = messages[conv.id] || [];
   const endRef = useRef(null);
@@ -247,10 +252,18 @@ function MessageThread({ S, conv, onOpenMention, onOpenScoringFor }) {
         const mine = m.from === currentUser?.id;
         const author = users.find((u) => u.id === m.from);
         const action = onOpenScoringFor ? scoringActionFor(m, stakeholderWorkspaces) : null;
+        // Census I6: author avatars open that user's profile; the system bot
+        // stays inert (no profile surface lists it — every picker excludes
+        // role "system").
+        const authorOpen = onOpenUserProfile && author && author.role !== 'system'
+          ? () => onOpenUserProfile(author.id)
+          : null;
         return (
           <div key={m.id} className={'msg' + (mine ? ' mine' : '') + (grouped ? ' grouped' : '')}>
             {!mine && (!grouped && author
-              ? <UAv user={author} size="sm" />
+              ? <UAv user={author} size="sm"
+                     title={authorOpen ? `Open ${author.name}'s profile` : undefined}
+                     onOpen={authorOpen || undefined} />
               : <span className="msg-spacer" aria-hidden="true" />)}
             <div className="msg-body">
               {!grouped && (
@@ -491,7 +504,7 @@ function ConvHead({ S, conv, large }) {
 /* ── TREE 1 — the right-edge MessagingSidebar (ui-sheet side="right") ────── */
 export function MessagingSidebar({
   open, onClose, onOpenPage, activeConversationId, onSetActiveConversation,
-  onOpenMention, onOpenScoringFor,
+  onOpenMention, onOpenScoringFor, onOpenUserProfile,
 }) {
   const S = useMessaging();
   const sheetRef = useRef(null);
@@ -539,7 +552,8 @@ export function MessagingSidebar({
           <ConvHead S={S} conv={conv} />
           <MessageThread S={S} conv={conv}
                          onOpenMention={onOpenMention}
-                         onOpenScoringFor={onOpenScoringFor} />
+                         onOpenScoringFor={onOpenScoringFor}
+                         onOpenUserProfile={onOpenUserProfile} />
           {conv.kind !== 'system' && (
             <Composer placeholder={STR.reply} sources={S.mentionSources}
                       onSend={(b) => S.send(conv.id, b)} />
@@ -553,6 +567,7 @@ export function MessagingSidebar({
 /* ── TREE 2 — the full MessagesPage ──────────────────────────────────────── */
 export function MessagesPage({
   activeConversationId, onSetActiveConversation, onOpenMention, onOpenScoringFor,
+  onOpenUserProfile,
 }) {
   const S = useMessaging();
   const [newOpen, setNewOpen] = useState(false);
@@ -594,7 +609,8 @@ export function MessagesPage({
             <ConvHead S={S} conv={conv} large />
             <MessageThread S={S} conv={conv}
                            onOpenMention={onOpenMention}
-                           onOpenScoringFor={onOpenScoringFor} />
+                           onOpenScoringFor={onOpenScoringFor}
+                           onOpenUserProfile={onOpenUserProfile} />
             {conv.kind !== 'system' && (
               <Composer
                 placeholder={messagePlaceholder(conversationTitle(conv, S.users, S.currentUser?.id))}

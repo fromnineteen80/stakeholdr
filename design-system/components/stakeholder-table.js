@@ -19,7 +19,8 @@
  * workspaceLabel. Composed events: row-change {id,patch} (ALL edits flow out —
  * the page owns persistence), notes-open {id}, selection-change {id},
  * open-record {id}, community-open {id,name} (C5 make-real: no dead click),
- * export-csv {csv,filename}.
+ * user-open {userId} (I6 make-real: an owners-popover row opens that user's
+ * profile), export-csv {csv,filename}.
  *
  * NORMALIZATION RULINGS honored (recorded in the sealed box, ruled for this
  * build by the phase directive): all four toolbar popovers are mutually
@@ -854,8 +855,23 @@ template.innerHTML = `
   .owners-pop-row {
     display: flex; align-items: center;
     gap: var(--ui-sys-space-2);
-    padding: 2px 0;
+    padding: 2px var(--ui-sys-space-1);
     white-space: nowrap;
+    /* real button (census I6: the row opens that user's profile) */
+    appearance: none;
+    width: 100%;
+    background: none;
+    border: none;
+    border-radius: var(--ui-sys-shape-control);
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .owners-pop-row:hover { background: var(--ui-sys-surface-hover); }
+  .owners-pop-row:focus-visible {
+    outline: 2px solid var(--ui-sys-focus-ring);
+    outline-offset: -2px;
   }
   .owners-pop-names { display: flex; flex-direction: column; min-width: 0; }
   .owners-pop-name { font: var(--ui-sys-font-label); }
@@ -1673,8 +1689,19 @@ class UiStakeholderTable extends HTMLElement {
       head.textContent = `${list.length} ${list.length === 1 ? label.replace(/s$/, '') : label}`;
       pop.appendChild(head);
       for (const u of list) {
-        const rowEl = document.createElement('div');
+        // Census I6 make-real: the popover row is a REAL button — pressing
+        // it emits user-open {userId} (the page routes to that user's
+        // profile) and closes the popover. The pop's own click handler
+        // already stops propagation, so opening a profile never selects
+        // the row underneath.
+        const rowEl = document.createElement('button');
+        rowEl.type = 'button';
         rowEl.className = 'owners-pop-row';
+        rowEl.title = `Open ${u.name || 'user'}'s profile`;
+        rowEl.addEventListener('click', () => {
+          this.#openDD?.close();
+          this.#emit('user-open', { userId: u.id });
+        });
         const av = document.createElement('ui-avatar');                 // REAL avatar primitive (composition ruling)
         av.setAttribute('size', 'sm');
         av.setAttribute('name', u.name || '');

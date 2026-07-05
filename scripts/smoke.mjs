@@ -455,6 +455,14 @@ for (const path of pages) {
     // (I6); the panel's "Send message" starts/dedupes a DM and opens the
     // messaging sidebar (census J5); Edit profile saves the sealed name
     // recomposition.
+    // Sealed UserStack anatomy: the WHOLE cluster (circles + "+N") is ONE
+    // role=button control with the sealed accessible name — never
+    // per-avatar buttons (ui-owner-picker stack-button mode).
+    const stackBtn = page.locator('ui-app-bar .user-stack ui-owner-picker button');
+    const stackBtnCount = await stackBtn.count();
+    if (stackBtnCount !== 1) errs.push(`P13STACKBTN: the people stack must be ONE button, saw ${stackBtnCount}`);
+    const stackAria = await stackBtn.first().getAttribute('aria-label').catch(() => null);
+    if (stackAria !== 'People in this workspace') errs.push(`P13STACKARIA: expected the sealed "People in this workspace" aria-label, saw "${stackAria}"`);
     await page.locator('ui-app-bar .user-stack').click({ position: { x: 10, y: 12 }, timeout: 3000 }).catch(e => errs.push('P13STACK: ' + e.message));
     await page.waitForTimeout(400);
     if (await page.locator('ui-sheet.people-popup[open]').count() !== 1) errs.push('P13POPUP: the people panel did not open');
@@ -546,6 +554,32 @@ for (const path of pages) {
     if (savedUser.first !== 'Alexandra' || savedUser.last !== 'Rivera') errs.push('P13MERGE: firstName/lastName fallbacks not stamped');
     const heroAfter = (await page.locator('.profile-name').textContent().catch(() => '') || '').trim();
     if (heroAfter !== 'Alexandra Rivera') errs.push(`P13LIVE: the hero did not re-render the saved name, saw "${heroAfter}"`);
+    // Census I6 (full sweep, fixer pass): a thread AUTHOR AVATAR routes to
+    // that user's profile AND closes the sidebar first (the mention-chip
+    // precedent). The Jordan DM is still the active conversation.
+    await page.locator('ui-app-bar ui-icon-button[aria-label="Messages"]').click({ timeout: 3000 }).catch(e => errs.push('P13MSGTOGGLE: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('.messaging-sidebar .msg:not(.mine) ui-avatar[interactive]').first().click({ timeout: 3000 }).catch(e => errs.push('P13AUTHORAV: ' + e.message));
+    await page.waitForTimeout(500);
+    if (await page.locator('ui-sheet.messaging-sidebar[open]').count() !== 0) errs.push('P13AUTHORCLOSE: opening a profile from the sidebar must close the sidebar');
+    if (await page.locator('.profile-page').count() !== 1) errs.push('P13AUTHOR: the thread author avatar did not open a user profile (census I6)');
+    const authorWho = (await page.locator('.profile-name').textContent().catch(() => '') || '').trim();
+    if (authorWho !== 'Jordan Kim') errs.push(`P13AUTHORWHO: expected the author's (Jordan Kim) profile, saw "${authorWho}"`);
+    // Census I6 (full sweep): a Lists OWNER-COLUMN popover row routes to that
+    // user's profile (hover opens the sealed owners popover; the row is a
+    // real button emitting user-open).
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Master' }).click({ timeout: 3000 }).catch(e => errs.push('P13MASTERNAV: ' + e.message));
+    await page.waitForTimeout(600);
+    await page.locator('ui-stakeholder-table .owner-wrap').first().hover({ timeout: 3000 }).catch(e => errs.push('P13OWNERHOVER: ' + e.message));
+    await page.waitForTimeout(300);
+    const popRows = page.locator('ui-stakeholder-table .owners-pop-row');
+    if (await popRows.count() < 1) errs.push('P13OWNERPOP: the owners popover did not open with rows');
+    const popWho = (await popRows.first().locator('.owners-pop-name').textContent().catch(() => '') || '').trim();
+    await popRows.first().click({ timeout: 3000 }).catch(e => errs.push('P13OWNERROW: ' + e.message));
+    await page.waitForTimeout(500);
+    if (await page.locator('.profile-page').count() !== 1) errs.push('P13LISTSOWNER: the owners-popover row did not open a user profile (census I6)');
+    const listsWho = (await page.locator('.profile-name').textContent().catch(() => '') || '').trim();
+    if (!popWho || listsWho !== popWho) errs.push(`P13LISTSWHO: expected "${popWho}"'s profile from the popover row, saw "${listsWho}"`);
   }
   if (path.includes('wireframes')) {
     await page.locator('#theme-modern').click({ timeout: 3000 }).catch(e => errs.push('TOGGLE: ' + e.message));

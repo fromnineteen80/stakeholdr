@@ -8,9 +8,13 @@
  * logic lives in profile-logic.js (node-tested by scripts/profile-test.mjs).
  *
  * SEALED RULINGS / MAKE-REAL flags honored here:
- *  · Census I6 MAKE-REAL (user profiles were reachable ONLY via the palette):
- *    people-panel rows and owner-avatar stacks now open the user profile;
- *    "Message" stays the secondary action on the panel row.
+ *  · Census I6 MAKE-REAL (user profiles were reachable ONLY via the palette),
+ *    the FULL sealed sweep: people-panel rows, owner-avatar stacks (workspace/
+ *    plan/community cards + plan teams + this page's assignment tables), the
+ *    Lists OWNER-COLUMN popover rows (stakeholder-table 'user-open' → sheet),
+ *    message-thread author avatars (both messaging surfaces), and the
+ *    Settings roles-table avatars ALL open that user's profile; "Message"
+ *    stays the secondary action on the panel row.
  *  · Census I2/I3 (FRAGILE window.__pending* bridges): the SEP / Community
  *    tab rows route through the shell's first-class plan/community deep-link
  *    seams. Census I4 + the A20 READ-VIEW ruling: Relationships rows land on
@@ -40,9 +44,10 @@
  *  · The tab strip = ui-tabs/ui-tab with the sealed long/short label spans +
  *    count badge as slotted content; the long↔short swap breakpoint (960px)
  *    is a DECLARED industry default (the sealed box names no value).
- *  · UserStack = the readonly+interactive ui-owner-picker stack (max 3,
- *    "+N" overflow — the sealed anatomy); pressing ANY circle opens the
- *    people panel (the sealed single-control click, real button semantics).
+ *  · UserStack = the readonly ui-owner-picker in stack-button mode (max 3,
+ *    "+N" overflow — the sealed anatomy): the WHOLE cluster is the sealed
+ *    ONE role=button control ("People in this workspace") emitting
+ *    stack-open → the people panel; no per-avatar buttons.
  *  · EditProfileModal mounts INSIDE ProfilePage (its only sealed opener is
  *    the isSelf hero button — behavior-identical to the oracle's
  *    shell-mounted instance; the page-owns-its-stores pattern).
@@ -87,16 +92,23 @@ export function ManagerBadge() {
 /* ── UserStack — the app-bar people stack (sealed: first 3 + "+N") ───────── */
 export function UserStack({ users, currentUserId, onOpen, slot }) {
   const others = peopleOthers(users, currentUserId);
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.users = users || [];
+    el.value = others.map((u) => u.id);
+  });
+  useUiEvent(ref, 'stack-open', () => onOpen());
   if (!others.length) return null;
+  // Sealed: ONE click surface — the whole cluster (circles + "+N") is a
+  // single role=button titled/labelled "People in this workspace" that opens
+  // the UserListPopup; never per-avatar buttons (those would claim to open
+  // individual profiles while opening the panel).
   return (
     <span slot={slot || undefined} className="user-stack" title={STR.peopleTitle}>
-      <Owners
-        users={users}
-        value={others.map((u) => u.id)}
-        readonly
-        max={3}
-        onOpen={() => onOpen()}
-      />
+      <ui-owner-picker ref={ref} readonly="" stack-button="" size="sm" max="3"
+                       aria-label={STR.peopleTitle}></ui-owner-picker>
     </span>
   );
 }
@@ -600,9 +612,12 @@ export function ProfilePage({
                     <td key={c.key} className={c.key === 'name' ? 'plan-td-title' : undefined}>
                       {c.key === 'owner' ? (
                         /* Census I6: the owner stack routes to that user's
-                           profile; contained so the row-open never co-fires. */
+                           profile; contained so the row-open never co-fires —
+                           keydown too: Enter/Space on a focused avatar button
+                           bubbles (composed) into the row's rowKey handler. */
                         <span className="profile-owner-cell"
-                              onClick={(e) => e.stopPropagation()}>
+                              onClick={(e) => e.stopPropagation()}
+                              onKeyDown={(e) => e.stopPropagation()}>
                           <Owners users={users} value={r._owners} readonly
                                   onOpen={onOpenUser} />
                         </span>

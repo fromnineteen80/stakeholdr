@@ -547,12 +547,14 @@ export function AppShell() {
             onSetActiveConversation={setActiveConversationId}
             onOpenMention={openMention}
             onOpenScoringFor={openScoringFor}
+            onOpenUserProfile={openUserProfile}
           />
         ) : view === 'settings' && currentUser?.role === 'manager' ? (
           /* Sealed: SettingsView, gated by currentUser.role === "manager"
              (census A9; the ProfileMenu item is the only entry). The page
-             owns its stores (appConfig + users) per the page pattern. */
-          <SettingsPage />
+             owns its stores (appConfig + users) per the page pattern.
+             Census I6: roles-row avatars route through the one user seam. */
+          <SettingsPage onOpenUserProfile={openUserProfile} />
         ) : view === 'profile' ? (
           /* Sealed record.user (Phase 13): the user profile page. Row routes
              ride the SAME first-class seams every deep link uses — I1
@@ -586,6 +588,7 @@ export function AppShell() {
         onSetActiveConversation={setActiveConversationId}
         onOpenMention={openMention}
         onOpenScoringFor={openScoringFor}
+        onOpenUserProfile={openUserProfile}
       />
 
       {/* Shell snackbar — the census-A23 graceful fallback for stale mention
