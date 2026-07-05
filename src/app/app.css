@@ -2106,11 +2106,11 @@ ui-sidebar.record-nav[collapsed] .record-nav-title { display: none; }
  * component's scrim-blur variant (--ui-sys-scrim-blur). Everything visual
  * below is a token read or an established token re-point — no overrides. */
 .cmdk {
-  /* The "thin centered bar": fill the dialog card to its token max-width so
-   * the bar keeps one width whether or not results render. The card's body
-   * carries space-6 inline padding each side — subtract it, or fixed content
-   * overflows the card's 560px cap and clips the Enter commit. */
-  width: calc(min(560px, 86vw) - var(--ui-sys-space-6) * 2);
+  /* The "thin centered bar": fill the dialog card to its shared width token
+   * (the SAME var ui-dialog's card reads — the two can never desync). The
+   * card's body carries space-6 inline padding each side — subtract it, or
+   * fixed content overflows the card cap and clips the Enter commit. */
+  width: calc(var(--ui-sys-dialog-card-width) - var(--ui-sys-space-6) * 2);
   padding: var(--ui-sys-space-2) 0 var(--ui-sys-space-3);
 }
 .cmdk-input {

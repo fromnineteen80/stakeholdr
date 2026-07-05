@@ -39,6 +39,13 @@
  *    minimal industry-standard choice for an in-field commit hint).
  *  · Matching/ranking/caps live in palette-logic.js (node-tested); see THAT
  *    header for the sites-seam and kind-code departures.
+ *  · The sealed anatomy's CONTROLLED input (value=q) rides ui-text-field
+ *    UNCONTROLLED: q mirrors 'input' events; the open effect resets both q
+ *    and the element value — the observable contract (reset-on-open,
+ *    active-reset-per-keystroke) is identical.
+ *  · Sealed "if open is false, render null" holds for all palette CONTENT;
+ *    the ui-dialog HOST stays mounted closed (hidden), like every dialog
+ *    in the app.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useUiEvent } from './modals/stakeholder-modal.jsx';
