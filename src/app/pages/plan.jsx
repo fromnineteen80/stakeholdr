@@ -49,15 +49,15 @@ import {
   SEED_PLANS, SEED_STAKEHOLDERS, SEED_SCORES, SEED_TEAM, SEED_USERS,
   SEED_COMMUNITY, SEED_WORKSPACES, SEED_STAKEHOLDER_WORKSPACES, SEED_MESSAGES,
 } from '../data/seed.js';
-/* Until the Settings phase lands appConfig, the company sets are the seeded
-   catalogs (the sealed Catalogs box: ORG_GOALS/MARKETS/SITES/ISSUES/
-   GEOGRAPHIES inherit LIVE from Settings once it exists; the sealed
-   present-AND-non-empty fallback resolves to exactly these when nothing is
-   configured). */
+/* REAL as of Phase 11: the editable company sets (org goals / markets /
+   sites / issues / tags) read the LIVE appConfig-with-seed-fallback seam
+   (sealed present-AND-non-empty contract) — Settings edits propagate to the
+   editor/review/landing live. GEOGRAPHIES/US_STATES/STATE_ABBR stay fixed
+   enums (sealed). */
 import {
-  MARKETS, GEOGRAPHIES, US_STATES, STATE_ABBR, SITES, siteLabel,
-  ISSUES, TAGS, ORG_GOALS,
+  GEOGRAPHIES, US_STATES, STATE_ABBR, siteLabel,
 } from '../data/catalogs.js';
+import { useCompanyCatalogs } from '../data/company.js';
 import {
   MASTER_WORKSPACE_ID, isMasterWorkspace, visibleStakeholders,
 } from '../data/workspace.js';
@@ -665,6 +665,7 @@ export function PlanPage({
 
 /* ══ LANDING (sealed PlanHome through the shared LandingView shell) ═══════ */
 function PlanLanding({ plans, users, workspaces, wsCount, onReview, onOpen }) {
+  const { companySites } = useCompanyCatalogs();
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState({});
   const [sort, setSort] = useState({ key: null, dir: 'asc' });
@@ -679,7 +680,7 @@ function PlanLanding({ plans, users, workspaces, wsCount, onReview, onOpen }) {
   const activeFilterCount = Object.values(filters).filter((v) => v && v.length).length;
 
   const wsOf = (p) => workspaces.find((w) => w.id === p.workspaceId);
-  const siteOf = (p) => SITES.find((s) => s.id === p.site);
+  const siteOf = (p) => companySites.find((s) => s.id === p.site);
 
   const toggleFilter = (key, value) => {
     setFilters((prev) => {
@@ -967,6 +968,8 @@ function PlanEditor({
 }) {
   const p = plan;
   const set = (patch) => onChange({ ...p, ...patch });
+  const { companyMarkets, companySites, companyIssues, companyTags,
+          companyGoals } = useCompanyCatalogs();
 
   const missing = planMissing(p);
   const planValid = missing.length === 0;
@@ -1107,7 +1110,7 @@ function PlanEditor({
             <Sel
               ariaLabel="Market"
               value={p.market || ''}
-              options={[{ value: '', label: 'Select market…' }, ...Object.keys(MARKETS)]}
+              options={[{ value: '', label: 'Select market…' }, ...Object.keys(companyMarkets)]}
               /* Sealed MARKET RESET CASCADE: changing market RESETS region. */
               onChange={(v) => set({ market: v, region: '' })}
             />
@@ -1116,7 +1119,7 @@ function PlanEditor({
             <Sel
               ariaLabel="Region"
               value={p.region || ''}
-              options={[{ value: '', label: 'Select region…' }, ...(MARKETS[p.market] || [])]}
+              options={[{ value: '', label: 'Select region…' }, ...(companyMarkets[p.market] || [])]}
               onChange={(v) => set({ region: v })}
             />
           </Field>
@@ -1125,10 +1128,10 @@ function PlanEditor({
               ariaLabel="Site"
               value={p.site || ''}
               options={[{ value: '', label: 'None' },
-                ...SITES.map((s) => ({ value: s.id, label: siteLabel(s) }))]}
+                ...companySites.map((s) => ({ value: s.id, label: siteLabel(s) }))]}
               /* Sealed SITE→STATE CASCADE: a site with a state sets state. */
               onChange={(id) => {
-                const s = SITES.find((x) => x.id === id);
+                const s = companySites.find((x) => x.id === id);
                 if (s && s.state) set({ site: id, state: s.state });
                 else set({ site: id });
               }}
@@ -1158,7 +1161,7 @@ function PlanEditor({
           <Field label="Issues">
             <IssueSelector
               selected={p.issues || []}
-              company={ISSUES}
+              company={companyIssues}
               onChange={(v) => set({ issues: v })}
             />
           </Field>
@@ -1198,7 +1201,7 @@ function PlanEditor({
               defend your license to operate?
             </p>
             <div className="plan-goal-list">
-              {ORG_GOALS.map((g) => (
+              {companyGoals.map((g) => (
                 <div className="plan-goal-item" key={g}>
                   <div className="plan-goal-title">{g}</div>
                   {/* SEALED BUG FIX (goalNotes ORACLE BUG, do-not-replicate):
@@ -1372,8 +1375,8 @@ function PlanEditor({
         initialView={!!(shModal && shModal.mode === 'view')}
         users={users}
         currentUser={currentUser}
-        companyIssues={ISSUES}
-        companyTags={TAGS}
+        companyIssues={companyIssues}
+        companyTags={companyTags}
         community={community}
         scores={scores}
         team={team}
@@ -1445,12 +1448,13 @@ function AddShMenu({ onPickWorkspace, onPickMaster, onCreate }) {
 function PlanReview({
   plan, users, workspaces, community, scores, team, roster, onBack, onEdit,
 }) {
+  const { companySites, companyGoals } = useCompanyCatalogs();
   const p = plan;
   const { rows, sector, goal } = usePlanRows(p, {
     stakeholders: roster, roster, scores, team, community,
   });
   const ws = workspaces.find((w) => w.id === p.workspaceId);
-  const site = SITES.find((s) => s.id === p.site);
+  const site = companySites.find((s) => s.id === p.site);
   const linked = (p.communityIds || [])
     .map((id) => community.find((c) => c.id === id))
     .filter(Boolean);
@@ -1527,11 +1531,11 @@ function PlanReview({
           </RS>
 
           <RS title="Aligning With Organizational Goals">
-            {ORG_GOALS.length === 0 ? (
+            {companyGoals.length === 0 ? (
               <p className="muted">No goals listed.</p>
             ) : (
               <div className="plan-goal-list">
-                {ORG_GOALS.map((g) => (
+                {companyGoals.map((g) => (
                   <div className="plan-goal-item" key={g}>
                     <div className="plan-goal-title">{g}</div>
                     {(p.goalNotes || {})[g]

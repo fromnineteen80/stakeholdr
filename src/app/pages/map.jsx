@@ -28,7 +28,9 @@ import {
   SEED_STAKEHOLDERS, SEED_SCORES, SEED_TEAM, SEED_USERS, SEED_COMMUNITY,
   SEED_WORKSPACES, SEED_STAKEHOLDER_WORKSPACES,
 } from '../data/seed.js';
-import { ISSUES, TAGS } from '../data/catalogs.js';
+/* REAL as of Phase 11: issues/tags read the LIVE appConfig-with-seed-fallback
+ * seam (sealed present-AND-non-empty contract). */
+import { useCompanyCatalogs } from '../data/company.js';
 import { StakeholderModal } from '../modals/stakeholder-modal.jsx';
 import { MASTER_WORKSPACE_ID, visibleStakeholders } from '../data/workspace.js';
 
@@ -36,6 +38,7 @@ export function MapPage({
   activeWorkspaceId = MASTER_WORKSPACE_ID, onOpenCommunityEntry, onOpenWorkspace,
 }) {
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
+  const { companyIssues, companyTags } = useCompanyCatalogs();
   const [scores, setScores] = usePersistentState('scores', SEED_SCORES);
   const [team] = usePersistentState('team', SEED_TEAM);
   const [users] = usePersistentState('users', SEED_USERS);
@@ -157,8 +160,8 @@ export function MapPage({
         initialView={!!(shModal && shModal.view)}
         users={users}
         currentUser={currentUser}
-        companyIssues={ISSUES}
-        companyTags={TAGS}
+        companyIssues={companyIssues}
+        companyTags={companyTags}
         community={community}
         scores={scores}
         team={team}

@@ -50,7 +50,9 @@
    "badge",
    "owner-picker",
    "coachmark",
-   "status-dot"
+   "status-dot",
+   "swatch-card",
+   "color-field"
   ],
   "scaffold": [
    "app-shell",
@@ -576,7 +578,7 @@
    "tag": "ui-menu",
    "status": "built",
    "category": "native",
-   "summary": "Action menu anchored to a trigger by id; paired with ui-menu-item (leading icon, disabled); full keyboard nav.",
+   "summary": "Action menu anchored to a trigger by id; paired with ui-menu-item (leading icon, disabled); full keyboard nav. Opens below the anchor and FLIPS ABOVE it when the viewport bottom would clip the surface (bottom-edge anchors, e.g. a sidebar identity footer).",
    "props": [
     {
      "name": "anchor",
@@ -1655,6 +1657,125 @@
     "disabled"
    ],
    "import": "./components/upload.js"
+  },
+  "swatch-card": {
+   "tag": "ui-swatch-card",
+   "status": "built",
+   "category": "gapFill",
+   "summary": "Selectable preview-swatch card (the sealed Settings GAP): a real shadow <button> holding a preview circle (swatch-bg) with an inner dot (swatch-dot), a label, and a sublabel. variant=card (theme presets) | dot (circle-only color tile, the 7 brand/accent config swatches). selected (reflected) draws the ring from swatch-border. role=radio + aria-checked; a [role=radiogroup] container gets arrow-key movement + roving tabindex across sibling cards. Preview colors arrive as props (token references or data values) — never inline hex in screen markup.",
+   "props": [
+    {
+     "name": "value",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "label",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "sublabel",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "selected",
+     "type": "boolean",
+     "default": false,
+     "note": "reflected; draws the selection ring using swatch-border"
+    },
+    {
+     "name": "variant",
+     "type": "enum",
+     "values": [
+      "card",
+      "dot"
+     ],
+     "default": "card"
+    },
+    {
+     "name": "swatch-bg",
+     "type": "string",
+     "default": "",
+     "note": "preview circle fill — a var(--ui-sys-*) reference or a data value"
+    },
+    {
+     "name": "swatch-dot",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "swatch-border",
+     "type": "string",
+     "default": ""
+    },
+    {
+     "name": "disabled",
+     "type": "boolean",
+     "default": false
+    }
+   ],
+   "events": [
+    {
+     "name": "change",
+     "detail": "{ value }",
+     "note": "composed: true; fired on click/arrow-key selection"
+    }
+   ],
+   "states": [
+    "enabled",
+    "hover",
+    "pressed",
+    "focus-visible",
+    "selected",
+    "disabled"
+   ],
+   "import": "./components/swatch-card.js"
+  },
+  "color-field": {
+   "tag": "ui-color-field",
+   "status": "built",
+   "category": "gapFill",
+   "summary": "Custom-color escape hatch (the sealed BeakerColorField): a ui-icon 'science' flask tinted to the current value with a HIDDEN native <input type=color> overlaid — the flask is the affordance, the OS picker is the mechanism. The raw input lives inside the shadow root (the ui-upload precedent). title defaults to the sealed 'Pick a custom color'.",
+   "props": [
+    {
+     "name": "value",
+     "type": "string",
+     "default": "",
+     "note": "current color (a data value from app state, e.g. '#B5552C')"
+    },
+    {
+     "name": "disabled",
+     "type": "boolean",
+     "default": false
+    },
+    {
+     "name": "title",
+     "type": "string",
+     "default": "Pick a custom color"
+    }
+   ],
+   "events": [
+    {
+     "name": "change",
+     "detail": "{ value }",
+     "note": "composed: true; the picked color on every native change/input"
+    }
+   ],
+   "states": [
+    "enabled",
+    "hover",
+    "focus-within",
+    "disabled"
+   ],
+   "import": "./components/color-field.js"
+  }
+ },
+ "data": {
+  "settings-data": {
+   "summary": "Token-adjacent DATA module for the Settings hub + Design dashboard: the sealed 7-swatch brand/accent catalog (CONFIG_SWATCHES, hex values + their --ui-sys-config-swatch-* render tokens), BRAND_DEFAULT, the sealed THEME_PRESETS (ids/labels/subs + theme-preview token refs), the ACCENT_CANDIDATES for the open accent-hue decision, and WRAPPER_THEMES (Cream default vs Modern). Sealed hex catalogs are DATA (option values stored in appConfig), not styling — they live here because the app-code guard bans literal hex in src/app.",
+   "import": "./settings-data.js"
   }
  }
 }

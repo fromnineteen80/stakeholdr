@@ -24,10 +24,12 @@ import {
   SEED_STAKEHOLDERS, SEED_SCORES, SEED_TEAM, SEED_USERS, SEED_COMMUNITY,
   SEED_WORKSPACES, SEED_STAKEHOLDER_WORKSPACES, SEED_MESSAGES,
 } from '../data/seed.js';
-import {
-  CATEGORIES, MARKETS, GEOGRAPHIES, US_STATES, SITES, siteLabel,
-  ISSUES, TAGS,
-} from '../data/catalogs.js';
+import { GEOGRAPHIES, US_STATES, siteLabel } from '../data/catalogs.js';
+/* REAL as of Phase 11: the editable company sets (categories/markets/sites/
+ * issues/tags) read the LIVE appConfig-with-seed-fallback seam (sealed
+ * present-AND-non-empty contract) — Settings edits propagate to every select
+ * here with no reload. GEOGRAPHIES/US_STATES stay fixed enums (sealed). */
+import { useCompanyCatalogs } from '../data/company.js';
 // displayName is single-sourced with the design-system's pure Lists logic
 // (the sealed Shared-primitives formula lives beside the table that renders it).
 import { displayName } from '../../../design-system/components/stakeholder-table.js';
@@ -61,6 +63,8 @@ export function SheetPage({
   const [stakeholderWorkspaces, setStakeholderWorkspaces] =
     usePersistentState('stakeholderWorkspaces', SEED_STAKEHOLDER_WORKSPACES);
   const [, setMessages] = usePersistentState('messages', SEED_MESSAGES);
+  const { companyCategories, companyMarkets, companySites, companyIssues,
+          companyTags } = useCompanyCatalogs();
 
   const tableRef = useRef(null);
   const dialogRef = useRef(null);
@@ -116,7 +120,10 @@ export function SheetPage({
   useEffect(() => {
     const el = tableRef.current;
     if (!el) return;
-    el.catalogs = { CATEGORIES, MARKETS, GEOGRAPHIES, US_STATES, SITES, siteLabel };
+    el.catalogs = {
+      CATEGORIES: companyCategories, MARKETS: companyMarkets,
+      GEOGRAPHIES, US_STATES, SITES: companySites, siteLabel,
+    };
     el.users = users;
     // Sealed CSV filename base = the workspace name; Master keeps the sealed
     // "stakeholders.csv" fallback (empty label → csvFilename fallback).
@@ -124,7 +131,8 @@ export function SheetPage({
       ? ''
       : (workspaces.find((w) => w.id === activeWorkspaceId)?.name || '');
     el.data = rows;
-  }, [rows, users, workspaces, activeWorkspaceId]);
+  }, [rows, users, workspaces, activeWorkspaceId,
+    companyCategories, companyMarkets, companySites]);
 
   /* THE ONE PERSISTENCE SEAM — every table edit flows out as row-change
    * {id, patch} and lands here: updateStakeholder + updatedAt stamp.         */
@@ -401,18 +409,17 @@ export function SheetPage({
       {/* CREATE / EDIT STAKEHOLDER MODAL (sealed StakeholderModal). The
           sealed MAKE-REAL wiring: companyTags IS passed (Tags usable from
           Lists) and onDelete IS passed (the Delete section is reachable) —
-          the oracle's unflagged omissions are not replicated. Until the
-          Settings phase lands appConfig, the company sets are the seeded
-          catalogs (the sealed present-AND-non-empty fallback resolves to
-          exactly these when nothing is configured). */}
+          the oracle's unflagged omissions are not replicated. REAL as of
+          Phase 11: the company sets are the LIVE Settings-fed catalogs
+          (appConfig with the sealed present-AND-non-empty seed fallback). */}
       <StakeholderModal
         open={!!shModal}
         existing={shExisting}
         initialView={!!(shModal && shModal.view)}
         users={users}
         currentUser={currentUser}
-        companyIssues={ISSUES}
-        companyTags={TAGS}
+        companyIssues={companyIssues}
+        companyTags={companyTags}
         community={community}
         scores={scores}
         team={team}

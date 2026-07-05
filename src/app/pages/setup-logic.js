@@ -7,9 +7,9 @@
  *
  * SEALED SEGMAP CONTRACT (load-bearing — DO NOT hardcode D.SEGMENTS at a use
  * site): the effective segment → business-unit map is appConfig.segments when
- * present AND non-empty, else the seed catalog. The Settings phase lands the
- * appConfig editor; every consumer already reads through this ONE derivation
- * so re-pointing needs no page change.
+ * present AND non-empty, else the seed catalog. REAL as of Phase 11: Settings
+ * edits appConfig.segments and every consumer reads through this ONE
+ * derivation live — no page change was needed, as designed.
  */
 import { SEGMENTS, MARKETS } from '../data/catalogs.js';
 

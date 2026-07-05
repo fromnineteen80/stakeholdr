@@ -41,6 +41,7 @@
   --ui-ref-radius-xs: 4px;
   --ui-ref-radius-sm: 8px;
   --ui-ref-radius-md: 12px;
+  --ui-ref-radius-lg: 16px;
   --ui-ref-radius-full: 9999px;
 
   /* Motion primitives. */
@@ -403,6 +404,48 @@
   --ui-sys-kind-sustainability-ink:           #2f5a26;
   --ui-sys-kind-social-impact-surface:        #DCD3E0;
   --ui-sys-kind-social-impact-ink:            #4F3F69;
+
+  /* ── Settings hub tokens (Phase 11) ─────────────────────────────────── */
+
+  /* Brand start-state (census group F CAPTURED→TOKEN: the sealed appConfig
+     brand default #000000 — the colored circle behind the app icon in the
+     header/login. appConfig.brand overrides this at runtime (live theming
+     effect); the token is the fallback surface. */
+  --ui-sys-brand: #000000;
+
+  /* Manager amber (census group J CAPTURED→TOKEN — the ManagerStar filled
+     star in the Roles table + manager badges; its badge pair is above). */
+  --ui-sys-manager-amber: #E0A21A;
+
+  /* The 7 config swatches (census group F CAPTURED→TOKEN — the sealed
+     Settings brand/accent swatch catalog, verbatim order; the DATA values
+     live in settings-data.js, these are the render surfaces). */
+  --ui-sys-config-swatch-1: #000000;
+  --ui-sys-config-swatch-2: #1976D2;
+  --ui-sys-config-swatch-3: #E64A19;
+  --ui-sys-config-swatch-4: #AD1457;
+  --ui-sys-config-swatch-5: #388E3C;
+  --ui-sys-config-swatch-6: #00897B;
+  --ui-sys-config-swatch-7: #BF360C;
+
+  /* Theme-preset preview values (sealed ui-swatch-card contract: "the three
+     themes' preview bg/dot/border values become theme-preview tokens in
+     tokens.css — never inline hex in screen markup"; sealed Theme section
+     values verbatim; soapbox border = the oracle var(--ink-3) → ink-strong).
+     The modern trio previews the Modern wrapper set below (its neutral-3
+     rail / near-white dot / slate ink anchors). */
+  --ui-sys-theme-preview-soapbox-bg:        #ECE8DD;
+  --ui-sys-theme-preview-soapbox-dot:       #FAF8F2;
+  --ui-sys-theme-preview-soapbox-border:    var(--ui-ref-ink-strong);
+  --ui-sys-theme-preview-undecideds-bg:     #E6E6E8;
+  --ui-sys-theme-preview-undecideds-dot:    #F1F1F3;
+  --ui-sys-theme-preview-undecideds-border: #7A787E;
+  --ui-sys-theme-preview-nightshift-bg:     #262624;
+  --ui-sys-theme-preview-nightshift-dot:    #52504A;
+  --ui-sys-theme-preview-nightshift-border: #C2C0B6;
+  --ui-sys-theme-preview-modern-bg:         #EEF1F3;
+  --ui-sys-theme-preview-modern-dot:        #FBFCFD;
+  --ui-sys-theme-preview-modern-border:     #708090;
 
   /* Avatar identity palette (census group F CAPTURED→TOKEN — the seed users'
      stable per-user avatar colors + the Shared-primitives Avatar palette;

@@ -10,7 +10,9 @@ import { PlanPage } from './pages/plan.jsx';
 import { CommunityPage } from './pages/community.jsx';
 import { SetupPage } from './pages/setup.jsx';
 import { HelpPage } from './pages/help.jsx';
+import { SettingsPage } from './pages/settings.jsx';
 import { usePersistentState, uid, nowStamp } from './data/store.js';
+import { APP_CONFIG_SEED, applyAppConfigLive } from './data/company.js';
 import {
   SEED_WORKSPACES, SEED_STAKEHOLDERS, SEED_STAKEHOLDER_WORKSPACES,
   SEED_TEAM, SEED_SCORES, SEED_USERS, SEED_PLANS,
@@ -64,9 +66,16 @@ export function AppShell() {
   const [plans, setPlans] = usePersistentState('plans', SEED_PLANS);
   /* Sealed Settings-override contract: appConfig.segments (present AND
    * non-empty) overrides the seed SEGMENTS catalog everywhere segments are
-   * grouped — the Settings phase lands the editor; the seam is live now. */
-  const [appConfig] = usePersistentState('appConfig', {});
+   * grouped — REAL as of Phase 11 (Settings edits it; this read is live). */
+  const [appConfig] = usePersistentState('appConfig', APP_CONFIG_SEED);
   const companySegments = companySegmentsFrom(appConfig);
+
+  /* Sealed LIVE THEMING + DOCUMENT TITLE (App-shell box) + the Phase-11
+   * design-dashboard overrides: BOOT RE-APPLIES the persisted appConfig into
+   * the live document (accent/brand token roles, wrapper theme, dashboard
+   * token overrides, tab title) and re-applies on every config change — no
+   * reload, sealed. */
+  useEffect(() => { applyAppConfigLive(appConfig); }, [appConfig]);
 
   // currentUser = the seeded first user until the login phase (sealed order;
   // the pages derive the same identity).
@@ -299,10 +308,18 @@ export function AppShell() {
         <ui-sidebar-item slot="footer" onClick={() => setView('help')} active={view === 'help' ? '' : undefined}>
           <ui-icon slot="icon">help</ui-icon>Help
         </ui-sidebar-item>
-        <div slot="footer" className="me">
-          <ui-avatar name={currentUser?.name || ''} size="sm"></ui-avatar>
-          <span className="me-name">{currentUser?.name || ''}</span>
-        </div>
+        {/* IDENTITY FOOTER (RULED #3) — the ONE signed-in identity, now a REAL
+            control: it anchors the sealed ProfileMenu (exact oracle items +
+            order: View profile · Messages · Settings [manager-only] · divider
+            · Log out). Settings is the sealed manager-gated entry route
+            (census A9); the other three arrive with their phases and render
+            honestly inert (make-real law). */}
+        <ui-sidebar-item slot="footer" id="me-anchor"
+                         title="Account menu"
+                         active={view === 'settings' ? '' : undefined}>
+          <ui-avatar slot="icon" name={currentUser?.name || ''} size="sm"></ui-avatar>
+          {currentUser?.name || ''}
+        </ui-sidebar-item>
       </ui-sidebar>
 
       <div className="work">
@@ -372,13 +389,45 @@ export function AppShell() {
              the map · zone key/strategy reference — engine-single-sourced).
              Zero handlers, zero props (sealed UX census). */
           <HelpPage />
+        ) : view === 'settings' && currentUser?.role === 'manager' ? (
+          /* Sealed: SettingsView, gated by currentUser.role === "manager"
+             (census A9; the ProfileMenu item is the only entry). The page
+             owns its stores (appConfig + users) per the page pattern. */
+          <SettingsPage />
         ) : null /* transient only: scoring-on-Master before the redirect effect lands */}
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Build: Phase 10 — Help (framework funnel · map guide · zone key)</span>
+        <span>Phase 11 — Settings (9 panes · design dashboard · live inheritance)</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
+
+      {/* PROFILE MENU (sealed exact labels/order/icons, App-shell box) —
+          anchored at the RULED identity footer. "Settings" is the sealed
+          manager-only entry (A9, live); View profile / Messages / Log out
+          arrive with the Profiles / Messaging / Login phases and are
+          honestly inert (disabled + phase note, make-real law). */}
+      <ui-menu anchor="me-anchor" class="profile-menu">
+        <ui-menu-item disabled title="Arrives with the Profiles phase">
+          <ui-icon slot="icon" size="sm">person</ui-icon>
+          View profile
+        </ui-menu-item>
+        <ui-menu-item disabled title="Arrives with the Messaging phase">
+          <ui-icon slot="icon" size="sm">chat</ui-icon>
+          Messages
+        </ui-menu-item>
+        {currentUser?.role === 'manager' && (
+          <ui-menu-item onClick={() => setView('settings')}>
+            <ui-icon slot="icon" size="sm">build</ui-icon>
+            Settings
+          </ui-menu-item>
+        )}
+        <ui-divider></ui-divider>
+        <ui-menu-item disabled title="Arrives with the Login phase">
+          <ui-icon slot="icon" size="sm">logout</ui-icon>
+          Log out
+        </ui-menu-item>
+      </ui-menu>
 
       {/* The selector menu lives OUTSIDE the shell grid so its page-coord
           positioning holds (ui-menu anchors to #ws-select-anchor and owns
