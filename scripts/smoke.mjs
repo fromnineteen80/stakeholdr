@@ -825,6 +825,89 @@ for (const path of pages) {
     if (preset.searchVal !== '') errs.push(`P15PRESETSLATE: the preset must clear the orthogonal search, saw "${preset.searchVal}"`);
     if (preset.shown !== preset.high) errs.push(`P15PRESET: expected the ${preset.high} High-priority rows, saw ${preset.shown}`);
     if (!preset.firstName.includes(p15fx.hi)) errs.push(`P15PRESETSORT: expected the stalest High row first ("${p15fx.hi}"), saw "${preset.firstName}"`);
+    // Phase 16: Command palette — the sealed ⌘K chord opens the blurred-veil
+    // palette (empty query = NO results block); a query groups results across
+    // the 5 entity types; Enter routes the active row to the stakeholder READ
+    // view (census A20); Escape closes; the top-bar Search button is the
+    // second live trigger; a community / plan / workspace / person row each
+    // routes through its guarded first-class seam.
+    await page.keyboard.press('ControlOrMeta+k');
+    await page.waitForTimeout(500);
+    if (await page.locator('ui-dialog.cmdk-dialog[open]').count() !== 1) errs.push('P16OPEN: the ⌘K chord did not open the palette');
+    if (await page.locator('.cmdk-results').count() !== 0) errs.push('P16INITIAL: an empty query must render NO results block (sealed)');
+    // sealed empty state + the disabled Enter commit on a no-hit query
+    await page.keyboard.type('zzzqqq-no-hit');
+    await page.waitForTimeout(400);
+    const p16Empty = (await page.locator('.cmdk-empty').textContent().catch(() => '') || '').trim();
+    if (p16Empty !== 'No matches.') errs.push(`P16EMPTY: expected the sealed "No matches.", saw "${p16Empty}"`);
+    if (await page.locator('ui-button.cmdk-go[disabled]').count() !== 1) errs.push('P16GODISABLED: the Enter commit must be DISABLED with no results');
+    // Escape closes (sealed input handler + the dialog's native dismissal)
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(400);
+    if (await page.locator('ui-dialog.cmdk-dialog[open]').count() !== 0) errs.push('P16ESC: Escape did not close the palette');
+    // stakeholder route: reopen, type, Enter on the active (first) row →
+    // Master Lists + the record's READ view (A20/I4 — never straight to edit)
+    await page.keyboard.press('ControlOrMeta+k');
+    await page.waitForTimeout(500);
+    await page.keyboard.type('Maria Chen');
+    await page.waitForTimeout(400);
+    const p16FirstType = (await page.locator('.cmdk-row ui-chip.cmdk-type').first().textContent().catch(() => '') || '').trim();
+    if (p16FirstType !== 'Stakeholder') errs.push(`P16TYPE: expected the first group Stakeholder, saw "${p16FirstType}"`);
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(600);
+    if (await page.locator('ui-dialog.cmdk-dialog[open]').count() !== 0) errs.push('P16GOCLOSE: navigating must close the palette (sealed go → onClose)');
+    if (await page.locator('ui-dialog.sh-dialog[open] .prof-header').count() !== 1) errs.push('P16SHROUTE: Enter did not land on the stakeholder READ view (A20)');
+    await page.evaluate(() => document.querySelectorAll('ui-dialog').forEach(d => d.close && d.close()));
+    await page.waitForTimeout(300);
+    // top-bar Search button (the second sealed trigger, now live)
+    await page.locator('ui-app-bar ui-icon-button[aria-label="Search"]').click({ timeout: 3000 }).catch(e => errs.push('P16BTN: ' + e.message));
+    await page.waitForTimeout(400);
+    if (await page.locator('ui-dialog.cmdk-dialog[open]').count() !== 1) errs.push('P16BTNOPEN: the top-bar Search button did not open the palette');
+    // community route (click a row; label = c.name even on a recipient hit)
+    await page.keyboard.type('STEM Classroom');
+    await page.waitForTimeout(400);
+    await page.locator('.cmdk-row', { hasText: 'Cedarville STEM Classroom Grant' }).click({ timeout: 3000 }).catch(e => errs.push('P16CMY: ' + e.message));
+    await page.waitForTimeout(600);
+    const p16CommTitle = (await page.locator('.comm-profile .plan-review-toolbar-title').textContent().catch(() => '') || '').trim();
+    if (p16CommTitle !== 'Cedarville STEM Classroom Grant') errs.push(`P16CMYROUTE: expected that entry's Community read view, saw "${p16CommTitle}"`);
+    // plan route → Plans with the plan open in REVIEW (A21, real router state)
+    await page.keyboard.press('ControlOrMeta+k');
+    await page.waitForTimeout(500);
+    await page.keyboard.type('Engagement Plan');
+    await page.waitForTimeout(400);
+    await page.locator('.cmdk-row', { has: page.locator('ui-chip.cmdk-type', { hasText: 'Plan' }) }).first().click({ timeout: 3000 }).catch(e => errs.push('P16PLN: ' + e.message));
+    await page.waitForTimeout(600);
+    const p16PlanTitle = (await page.locator('.plan-review-toolbar-title').textContent().catch(() => '') || '').trim();
+    if (!p16PlanTitle.includes('Engagement Plan')) errs.push(`P16PLNROUTE: expected the plan open in REVIEW, saw "${p16PlanTitle}"`);
+    // workspace route → that workspace's Lists tab (guarded A23)
+    await page.keyboard.press('ControlOrMeta+k');
+    await page.waitForTimeout(500);
+    await page.keyboard.type('Google Beam');
+    await page.waitForTimeout(400);
+    await page.locator('.cmdk-row', { hasText: 'Google Beam Tour' }).click({ timeout: 3000 }).catch(e => errs.push('P16WSP: ' + e.message));
+    await page.waitForTimeout(600);
+    const p16WsName = (await page.locator('.ws-select-name').textContent().catch(() => '') || '').trim();
+    if (p16WsName !== 'Google Beam Tour') errs.push(`P16WSPROUTE: expected the workspace active on Lists, saw "${p16WsName}"`);
+    // person route (match by TITLE; the system user must never surface) →
+    // that user's profile page (A24)
+    await page.keyboard.press('ControlOrMeta+k');
+    await page.waitForTimeout(500);
+    await page.keyboard.type('Public Policy Lead');
+    await page.waitForTimeout(400);
+    const p16PersonRows = await page.locator('.cmdk-row').count();
+    if (p16PersonRows !== 1) errs.push(`P16PERSON: expected the one title match, saw ${p16PersonRows} rows`);
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(600);
+    const p16ProfName = (await page.locator('.profile-name').textContent().catch(() => '') || '').trim();
+    if (p16ProfName !== 'Jordan Kim') errs.push(`P16USRROUTE: expected Jordan Kim's profile page, saw "${p16ProfName}"`);
+    // the system user is EXCLUDED from People (sealed filter)
+    await page.keyboard.press('ControlOrMeta+k');
+    await page.waitForTimeout(500);
+    await page.keyboard.type('Automated reminders');
+    await page.waitForTimeout(400);
+    if (await page.locator('.cmdk-row').count() !== 0) errs.push('P16SYSTEM: the system user leaked into People results');
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
   }
   if (path === '/record.html') {
     // Phase 14: SampleRecord — the sealed neutral tuning preview (standalone

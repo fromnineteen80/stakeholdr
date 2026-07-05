@@ -130,6 +130,10 @@
 
   /* Scrim (dialog/sheet backdrop) */
   --ui-sys-scrim: rgba(31,29,27,.32);
+  /* Blurred-veil scrim variant (the sealed cmdk-backdrop carried its
+     backdrop-blur 5px to the palette build box; the blur amount is a token —
+     ui-dialog[scrim-blur] reads it) */
+  --ui-sys-scrim-blur: 5px;
 
   /* Additional type roles */
   --ui-sys-font-body-lg:  400 14px/1.5  var(--ui-ref-typeface-body);

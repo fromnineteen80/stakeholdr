@@ -808,6 +808,12 @@
      "default": false
     },
     {
+     "name": "scrim-blur",
+     "type": "boolean",
+     "default": false,
+     "note": "blurred-veil variant (the sealed command-palette cmdk-backdrop): the scrim adds backdrop-filter blur(--ui-sys-scrim-blur)"
+    },
+    {
      "name": "--ui-dialog-layer",
      "type": "css-custom-property",
      "default": 0,

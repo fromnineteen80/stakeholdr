@@ -14,7 +14,8 @@ import { SettingsPage } from './pages/settings.jsx';
 import { MessagesPage, MessagingSidebar } from './pages/messages.jsx';
 import { ProfilePage, UserStack, UserListPopup } from './pages/profile.jsx';
 import { startConversationRecord } from './pages/messages-logic.js';
-import { usePersistentState, uid, nowStamp } from './data/store.js';
+import { usePersistentState, uid, nowStamp, cmdKeyLabel } from './data/store.js';
+import { CommandPalette } from './palette.jsx';
 import { APP_CONFIG_SEED, applyAppConfigLive, appNameFrom } from './data/company.js';
 import {
   SEED_WORKSPACES, SEED_STAKEHOLDERS, SEED_STAKEHOLDER_WORKSPACES,
@@ -324,6 +325,42 @@ export function AppShell() {
     else snackRef.current?.show(MENTION_MISSING[type] || 'That record no longer exists');
   };
 
+  /* ── COMMAND PALETTE (Phase 16, sealed A19 + paletteGo) ──────────────────
+   * The sealed global keydown: (metaKey || ctrlKey) + "k"/"K" → preventDefault
+   * → open (Cmd-K on mac, Ctrl-K elsewhere — "anywhere"; the sealed handler
+   * carries NO focus guard: the chord is preventDefaulted, so it never types
+   * into a field, and opening over an editor is the sealed behavior). The
+   * palette UI is its own module (palette.jsx); this shell owns only the
+   * open-trigger and the routing.                                            */
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        setPaletteOpen(true);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
+
+  /* paletteGo — the sealed universal router, poured through the EXISTING
+   * guarded first-class seams (no new routes, census A20–A24):
+   *  · stakeholder → Master Lists + the record's READ view (openMention stk —
+   *    the sealed A20/I4 read-not-edit ruling);
+   *  · plan → Plans with that plan open in REVIEW (A21, real router state);
+   *  · community → that entry read-only (A22, the openCommunityId seam);
+   *  · workspace → open/activate that workspace tab (A23 — WITH the
+   *    make-real existence guard the census demanded; toast + stay put);
+   *  · user → that user's profile page (A24, the one user seam).            */
+  const paletteGo = (kind, id) => {
+    if (kind === 'stakeholder') openMention('stk', id);
+    else if (kind === 'plan') openMention('pln', id);
+    else if (kind === 'community') openMention('cmy', id);
+    else if (kind === 'workspace') openMention('wsp', id);
+    else if (kind === 'user') openUserProfile(id);
+  };
+
   /* Census J8 make-real action route: Scoring in the reminder subject's
    * workspace; an unassigned/stale subject falls back to the record itself. */
   const openScoringFor = (stakeholderId, workspaceId) => {
@@ -421,8 +458,11 @@ export function AppShell() {
             <ui-icon>chat</ui-icon>
           </ui-icon-button>
         </ui-badge>
-        <ui-icon-button slot="trailing" variant="standard" disabled aria-label="Search"
-                        title="Search (⌘K) arrives with the command-palette phase">
+        {/* Phase 16 (sealed A19 surface, REAL): the top-bar search opens the
+            command palette — same target as the global ⌘K/Ctrl-K chord. */}
+        <ui-icon-button slot="trailing" variant="standard" aria-label="Search"
+                        title={`Search (${cmdKeyLabel})`}
+                        onClick={() => setPaletteOpen(true)}>
           <ui-icon>search</ui-icon>
         </ui-icon-button>
       </ui-app-bar>
@@ -644,7 +684,7 @@ export function AppShell() {
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Phase 15 — workHQ (intelligence band on Lists · 4 cards · per-user ignore/snooze · summary mix/plans routes · pre-filtered drill-throughs)</span>
+        <span>Phase 16 — Command palette (⌘K global search · 5 entity types · sealed 24-row cap · guarded deep-link routes)</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
 
@@ -661,6 +701,20 @@ export function AppShell() {
         onOpenMention={openMention}
         onOpenScoringFor={openScoringFor}
         onOpenUserProfile={openUserProfile}
+      />
+
+      {/* COMMAND PALETTE (Phase 16) — mounted at the shell so ⌘K works over
+          ANY view; results route through the guarded first-class seams via
+          paletteGo (sealed onGo contract). */}
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        stakeholders={stakeholders}
+        plans={plans}
+        community={community}
+        workspaces={workspaces}
+        users={users}
+        onGo={paletteGo}
       />
 
       {/* Shell snackbar — the census-A23 graceful fallback for stale mention

@@ -37,6 +37,14 @@ template.innerHTML = `
       visibility: visible;
     }
 
+    /* Blurred-veil variant (the sealed command-palette cmdk-backdrop): the
+       scrim additionally blurs the page behind it. Amount = the
+       --ui-sys-scrim-blur token — never a literal in a host stylesheet. */
+    :host([scrim-blur]) .scrim {
+      -webkit-backdrop-filter: blur(var(--ui-sys-scrim-blur));
+      backdrop-filter: blur(var(--ui-sys-scrim-blur));
+    }
+
     /* Dialog card */
     .dialog {
       position: fixed;

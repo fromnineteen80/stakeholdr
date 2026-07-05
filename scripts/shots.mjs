@@ -700,5 +700,28 @@ await page.waitForTimeout(400);
 await page.screenshot({ path: `${OUT}/p15-workhq-table.png` });
 await page.screenshot({ path: `${OUT}/p15-workhq-table-head.png`, clip: { x: 0, y: 0, width: 1440, height: 260 } });
 
+// ── PHASE-16 COMMAND PALETTE CAPTURES ──────────────────────────────────────
+// 1 · initial state: the ⌘K blurred veil + the thin centered bar, no results
+await page.keyboard.press('ControlOrMeta+k');
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p16-palette-initial.png` });
+// 2 · grouped results across entity types ("cedarville" hits stakeholders +
+//     community; first row active by default)
+await page.keyboard.type('cedarville');
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p16-palette-results.png` });
+// 3 · keyboard-highlighted row: two ArrowDowns move the active token wash
+await page.keyboard.press('ArrowDown');
+await page.keyboard.press('ArrowDown');
+await page.waitForTimeout(200);
+await page.screenshot({ path: `${OUT}/p16-palette-active-row.png` });
+// 4 · the sealed "No matches." empty state with the Enter commit disabled
+await page.keyboard.press('ControlOrMeta+a');
+await page.keyboard.type('zzz-no-hit');
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p16-palette-empty.png`, clip: { x: 380, y: 340, width: 680, height: 240 } });
+await page.keyboard.press('Escape');
+await page.waitForTimeout(300);
+
 await browser.close(); srv.close();
 console.log('shots written to', OUT);

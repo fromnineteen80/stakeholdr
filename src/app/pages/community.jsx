@@ -492,7 +492,7 @@ function CommunityLanding({
           <TF label="Search applications" placeholder="Search…" value={query} onValue={setQuery} />
           <span
             className="plan-kbd muted"
-            title="Command palette — arrives with its build phase"
+            title="Command palette"
           >{cmdKeyLabel}</span>
         </span>
         <ui-button
