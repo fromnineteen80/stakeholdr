@@ -12,6 +12,8 @@ import { SetupPage } from './pages/setup.jsx';
 import { HelpPage } from './pages/help.jsx';
 import { SettingsPage } from './pages/settings.jsx';
 import { MessagesPage, MessagingSidebar } from './pages/messages.jsx';
+import { ProfilePage, UserStack, UserListPopup } from './pages/profile.jsx';
+import { startConversationRecord } from './pages/messages-logic.js';
 import { usePersistentState, uid, nowStamp } from './data/store.js';
 import { APP_CONFIG_SEED, applyAppConfigLive, appNameFrom } from './data/company.js';
 import {
@@ -71,9 +73,10 @@ export function AppShell() {
   const [community] = usePersistentState('community', SEED_COMMUNITY);
   /* Messaging stores (Phase 12): read here for the unread badge + the
    * deep-link guards; the messaging surfaces own their mutations (same-tab
-   * fan-out keeps every instance in step — store.js).                       */
-  const [conversations] = usePersistentState('conversations', SEED_CONVERSATIONS);
-  const [messages] = usePersistentState('messages', SEED_MESSAGES);
+   * fan-out keeps every instance in step — store.js). Phase 13 adds the ONE
+   * shell writer, messageUser (census J5), which needs the setters.         */
+  const [conversations, setConversations] = usePersistentState('conversations', SEED_CONVERSATIONS);
+  const [messages, setMessages] = usePersistentState('messages', SEED_MESSAGES);
   const [reads] = usePersistentState('reads', SEED_READS);
   /* Sealed Settings-override contract: appConfig.segments (present AND
    * non-empty) overrides the seed SEGMENTS catalog everywhere segments are
@@ -129,6 +132,40 @@ export function AppShell() {
    * conversation over — census J2).                                          */
   const [msgSidebarOpen, setMsgSidebarOpen] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState(null);
+
+  /* USER-PROFILE SHELL-STATE (Phase 13 — sealed census A7/A24/I6 routes):
+   * profileUserId + the people panel flag. openUserProfile is the ONE
+   * user-profile seam (mirrors the plan/community deep-link seams), with the
+   * census-A23 existence guard (toast + stay put, never a crash).           */
+  const [usersPopupOpen, setUsersPopupOpen] = useState(false);
+  const [profileUserId, setProfileUserId] = useState(null);
+  const openUserProfile = (userId) => {
+    if (!users.some((u) => u.id === userId)) {
+      snackRef.current?.show('That person no longer exists');
+      return;
+    }
+    setProfileUserId(userId);
+    setView('profile');
+    setUsersPopupOpen(false);
+    setMsgSidebarOpen(false);
+  };
+
+  /* messageUser (sealed store writer, census J5 — deferred from Phase 12 to
+   * this phase): startConversation with THAT user (the sealed DM dedupe by
+   * participant pair — messages-logic.startConversationRecord, the ONE
+   * formula) → activate the thread → close the people panel → open the
+   * messaging sidebar.                                                       */
+  const messageUser = (userId) => {
+    const r = startConversationRecord(
+      conversations, currentUser?.id, [userId], null, () => uid('c'));
+    if (r.conversation) {
+      setConversations((prev) => [...prev, r.conversation]);
+      setMessages((prev) => ({ ...prev, [r.id]: prev[r.id] || [] }));
+    }
+    setActiveConversationId(r.id);
+    setUsersPopupOpen(false);
+    setMsgSidebarOpen(true);
+  };
 
   /* Sealed openWorkspaceTab: add to the open set if absent → activate →
    * view "sheet". activateWorkspaceTab: same without the add.               */
@@ -331,6 +368,11 @@ export function AppShell() {
             <ui-icon>add</ui-icon>
           </ui-icon-button>
         )}
+        {/* Sealed A5 (Phase 13, REAL): the UserStack people control — the
+            first 3 non-self, non-system users as an overlapping avatar row
+            with "+N" overflow; pressing it opens the UserListPopup. */}
+        <UserStack slot="trailing" users={users} currentUserId={currentUser?.id}
+                   onOpen={() => setUsersPopupOpen(true)} />
         {/* Sealed A14 (Phase 12, REAL): the Messages toggle with the REAL
             unread badge (ui-badge anchored over the icon button; count =
             per-conversation unread + live unscoredCount — never the oracle's
@@ -428,6 +470,7 @@ export function AppShell() {
             onConsumeOpen={() => setPendingShId(null)}
             onOpenCommunityEntry={openCommunityEntry}
             onOpenWorkspace={openWorkspaceTab}
+            onOpenUserProfile={openUserProfile}
           />
         ) : view === 'map' ? (
           /* Sealed: the Map IS available on Master (the org-wide overview). */
@@ -435,6 +478,7 @@ export function AppShell() {
             activeWorkspaceId={activeWorkspaceId}
             onOpenCommunityEntry={openCommunityEntry}
             onOpenWorkspace={openWorkspaceTab}
+            onOpenUserProfile={openUserProfile}
           />
         ) : view === 'scoring' && !isMaster ? (
           /* Sealed: ScoringView gets workspaceOwners + onDeleteWorkspace only
@@ -446,6 +490,7 @@ export function AppShell() {
             onDeleteWorkspace={() => removeWorkspace(activeWorkspaceId)}
             onOpenCommunityEntry={openCommunityEntry}
             onOpenWorkspace={openWorkspaceTab}
+            onOpenUserProfile={openUserProfile}
           />
         ) : view === 'plan' ? (
           /* Sealed: Plans render on Master (all plans) and per workspace
@@ -457,6 +502,7 @@ export function AppShell() {
             onConsumeOpen={() => setPendingPlanId(null)}
             onOpenCommunityEntry={openCommunityEntry}
             onOpenWorkspace={openWorkspaceTab}
+            onOpenUserProfile={openUserProfile}
           />
         ) : view === 'community' ? (
           /* Sealed: Community aggregates org-wide (never workspace-scoped);
@@ -468,6 +514,7 @@ export function AppShell() {
             openCommunityId={pendingCommunityId}
             onConsumeOpen={() => setPendingCommunityId(null)}
             onOpenWorkspace={openWorkspaceTab}
+            onOpenUserProfile={openUserProfile}
           />
         ) : view === 'setup' ? (
           /* Sealed: the Workspaces (Setup) page — segment-grouped cards,
@@ -506,11 +553,24 @@ export function AppShell() {
              (census A9; the ProfileMenu item is the only entry). The page
              owns its stores (appConfig + users) per the page pattern. */
           <SettingsPage />
+        ) : view === 'profile' ? (
+          /* Sealed record.user (Phase 13): the user profile page. Row routes
+             ride the SAME first-class seams every deep link uses — I1
+             workspace tab, I2 plan review, I3 community read, I4+A20
+             stakeholder READ view; owner stacks re-target the page (I6). */
+          <ProfilePage
+            userId={profileUserId}
+            onOpenWorkspace={openWorkspaceTab}
+            onOpenPlan={(id) => { setPendingPlanId(id); setView('plan'); }}
+            onOpenCommunity={openCommunityEntry}
+            onOpenStakeholder={(id) => openMention('stk', id)}
+            onOpenUser={openUserProfile}
+          />
         ) : null /* transient only: scoring-on-Master before the redirect effect lands */}
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Phase 12 — Messaging (conversations · threads · @/#/$ mention links · real unread)</span>
+        <span>Phase 13 — Profiles (user profile page · people panel · owner-avatar routes · edit profile)</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
 
@@ -532,14 +592,26 @@ export function AppShell() {
           links (toast + stay put; never the oracle's render crash). */}
       <ui-snackbar ref={snackRef}></ui-snackbar>
 
+      {/* PEOPLE PANEL (sealed UserListPopup, Phase 13) — mounted at the shell
+          so it opens over ANY view; rows open the user profile (census I6
+          make-real) with "Send message" as the secondary action (J5). */}
+      <UserListPopup
+        open={usersPopupOpen}
+        onClose={() => setUsersPopupOpen(false)}
+        users={users}
+        currentUserId={currentUser?.id}
+        onMessage={messageUser}
+        onOpenProfile={openUserProfile}
+      />
+
       {/* PROFILE MENU (sealed exact labels/order/icons, App-shell box) —
           anchored at the RULED identity footer. "Settings" is the sealed
           manager-only entry (A9, live); "Messages" is live as of Phase 12
-          (census A8); View profile / Log out arrive with the Profiles /
-          Login phases and are honestly inert (disabled + phase note,
-          make-real law). */}
+          (census A8); "View profile" is live as of Phase 13 (census A7 —
+          the CURRENT user's own profile page); Log out arrives with the
+          Login phase and stays honestly inert (make-real law). */}
       <ui-menu anchor="me-anchor" class="profile-menu">
-        <ui-menu-item disabled title="Arrives with the Profiles phase">
+        <ui-menu-item onClick={() => currentUser && openUserProfile(currentUser.id)}>
           <ui-icon slot="icon" size="sm">person</ui-icon>
           View profile
         </ui-menu-item>

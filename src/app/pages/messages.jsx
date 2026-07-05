@@ -53,9 +53,11 @@
  *  · The sealed form.composer (onSubmit) is recomposed as div.composer +
  *    Send onClick + Enter-in-keydown — identical submit semantics (trim
  *    guard, clear text+popover, Shift+Enter newline), no raw form element.
- *  · messageUser(userId) (sealed store writer, census J5) is DEFERRED: its
- *    only sealed surface (UserListPopup) belongs to the Profiles/Users
- *    phase; the DM-dedupe core it needs ships here (startConversation).
+ *  · messageUser(userId) (sealed store writer, census J5) — RESOLVED at
+ *    Phase 13: the shell composes it from this module's DM-dedupe core
+ *    (messages-logic.startConversationRecord) and wires it to the
+ *    UserListPopup's "Send message" action (people panel → DM thread →
+ *    messaging sidebar opens).
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePersistentState, uid, nowStamp } from '../data/store.js';

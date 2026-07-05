@@ -20,9 +20,13 @@
  *   size       sm | md → --ui-sys-avatar-size-sm/-md (default md)
  *   max        readonly overflow cap (default 5): show up to `max` avatars,
  *              then one "+N" circle for the rest.
+ *   interactive (readonly only) each visible circle becomes a REAL button
+ *              that emits `open` {userId} — the census-I6 make-real route
+ *              (owner avatars open that user's profile).
  *
  * Events (composed: true):
  *   change → detail { value } (the new id array) on every add / remove.
+ *   open   → detail { userId } (readonly + interactive) on avatar press.
  *
  * Interactions (editable mode — oracle handler census #40–43 + UA #33–39):
  *   • Overlapping avatar stack, NO names; each avatar tooltip = the name.
@@ -110,6 +114,12 @@ template.innerHTML = `
     /* Read-only stack (no pointer affordances) */
     :host([readonly]) .owner { cursor: default; }
     :host([readonly]) .owner:hover ui-avatar { transform: none; }
+
+    /* Read-only + interactive: each circle is a REAL button that opens the
+       person's profile (census I6 make-real) — motion-only hover (ruling:
+       never a hover background). */
+    :host([readonly][interactive]) .owner { cursor: pointer; }
+    :host([readonly][interactive]) .owner:hover ui-avatar { transform: translateY(-1px); }
 
     /* "+N" overflow circle (readonly) */
     .more {
@@ -263,7 +273,7 @@ template.innerHTML = `
 `;
 
 class UiOwnerPicker extends HTMLElement {
-  static observedAttributes = ['readonly', 'size', 'max'];
+  static observedAttributes = ['readonly', 'size', 'max', 'interactive'];
 
   #users = [];
   #value = [];
@@ -436,7 +446,11 @@ class UiOwnerPicker extends HTMLElement {
   #avatarFor(u) {
     const av = document.createElement('ui-avatar');
     av.setAttribute('name', u.name || '');
-    if (u.src) av.setAttribute('src', u.src);
+    const src = u.src || u.avatarUrl;
+    if (src) av.setAttribute('src', src);
+    // Per-identity color: a TOKEN REFERENCE from the user record (the same
+    // --ui-avatar-bg contract ui-avatar documents; data, not styling).
+    if (u.avatarColor) av.style.setProperty('--ui-avatar-bg', u.avatarColor);
     av.setAttribute('size', this.#avatarSize);
     return av;
   }
@@ -457,10 +471,20 @@ class UiOwnerPicker extends HTMLElement {
         this.#stackEl.appendChild(dash);
       } else {
         const max = this.#max;
+        const interactive = this.hasAttribute('interactive');
         owners.slice(0, max).forEach(u => {
-          const cell = document.createElement('span');
+          // `interactive` (census I6 make-real): each readonly circle is a
+          // REAL button emitting `open` {userId} — the host routes it to
+          // that user's profile. Without the attribute: the inert stack.
+          const cell = document.createElement(interactive ? 'button' : 'span');
           cell.className = 'owner';
           cell.title = u.name || '';
+          if (interactive) {
+            cell.type = 'button';
+            cell.setAttribute('aria-label', `Open ${u.name || 'user'}'s profile`);
+            cell.addEventListener('click', () => this.dispatchEvent(
+              new CustomEvent('open', { detail: { userId: u.id }, bubbles: true, composed: true })));
+          }
           cell.appendChild(this.#avatarFor(u));
           this.#stackEl.appendChild(cell);
         });

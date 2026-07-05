@@ -471,6 +471,20 @@
   --ui-sys-avatar-palette-7: #5A8F8F;  /* Avatar-box palette slot 8 (regenerated: Marisol Aguilar) */
   --ui-sys-avatar-system:    #1F1A14;  /* the Reminders bot (u-system) — sealed seed value */
   --ui-sys-avatar-ink:       #FAF8F2;  /* avatar initials ink (Shared-primitives Avatar text) */
+
+  /* Avatar 8-PALETTE (census group F CAPTURED→TOKEN --ui-sys-avatar-1..8 —
+     the Login + EditProfileModal swatch choices, sealed Users box verbatim;
+     slot 1 #B5552C is the sealed DEFAULT). Fixed identity literals on
+     purpose: a person's chosen color is DATA, like the seed palette above —
+     never re-derived by an accent/theme swap. */
+  --ui-sys-avatar-1: #B5552C;
+  --ui-sys-avatar-2: #D26A6A;
+  --ui-sys-avatar-3: #3E7A2E;
+  --ui-sys-avatar-4: #4F3F69;
+  --ui-sys-avatar-5: #2A6FDB;
+  --ui-sys-avatar-6: #B07E1F;
+  --ui-sys-avatar-7: #682E45;
+  --ui-sys-avatar-8: #5A8F8F;
 }
 
 /* ============================================================================

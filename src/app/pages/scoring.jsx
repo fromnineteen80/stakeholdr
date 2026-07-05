@@ -44,11 +44,11 @@ import {
 } from './scoring-logic.js';
 import { displayName } from '../../../design-system/components/stakeholder-table.js';
 import { scoringNeededBody } from '../modals/stakeholder-logic.js';
-import { StakeholderModal } from '../modals/stakeholder-modal.jsx';
+import { StakeholderModal, UAv } from '../modals/stakeholder-modal.jsx';
 
 export function ScoringPage({
   activeWorkspaceId, workspaceOwners = [], createNonce = 0, onDeleteWorkspace,
-  onOpenCommunityEntry, onOpenWorkspace,
+  onOpenCommunityEntry, onOpenWorkspace, onOpenUserProfile,
 }) {
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
   const { companyIssues, companyTags } = useCompanyCatalogs();
@@ -322,7 +322,13 @@ export function ScoringPage({
           return (
             <ui-card variant="filled" class="team-card" key={m.id}>
               <div className="team-card-head">
-                <ui-avatar size="sm" name={u?.name || 'Teammate'}></ui-avatar>
+                {/* Census I6 make-real (Phase 13): the teammate avatar opens
+                    that user's profile (ui-avatar interactive mode). */}
+                <UAv user={u || { name: 'Teammate' }} size="sm"
+                     title={u ? `${u.name} · ${u.title}` : 'Teammate'}
+                     onOpen={onOpenUserProfile && u
+                       ? () => onOpenUserProfile(u.id)
+                       : undefined} />
                 <div className="team-card-id">
                   <span className="team-card-name">{u?.name || 'Teammate'}</span>
                   <span className="team-card-title">{u?.title || ''}</span>
@@ -634,6 +640,7 @@ export function ScoringPage({
         }}
         onOpenCommunity={openCommunityFromModal}
         onOpenWorkspace={onOpenWorkspace}
+        onOpenUser={onOpenUserProfile}
       />
     </div>
   );

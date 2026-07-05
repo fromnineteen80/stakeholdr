@@ -127,7 +127,7 @@ export function DateField({ label, value, onChange }) {
   return <ui-date-picker ref={ref} label={label} value={value || ''}></ui-date-picker>;
 }
 
-export function Owners({ users, value, onChange, readonly, size }) {
+export function Owners({ users, value, onChange, readonly, size, max, onOpen }) {
   const ref = useRef(null);
   useEffect(() => {
     const el = ref.current;
@@ -136,8 +136,13 @@ export function Owners({ users, value, onChange, readonly, size }) {
     el.value = value || [];
   }, [users, value]);
   useUiEvent(ref, 'change', (e) => onChange && onChange(e.detail.value));
+  // Census I6 make-real: a readonly stack with an onOpen route renders real
+  // avatar buttons emitting `open` {userId} → the user-profile route.
+  useUiEvent(ref, 'open', onOpen ? (e) => onOpen(e.detail.userId) : undefined);
   return (
     <ui-owner-picker ref={ref} size={size || 'sm'}
+                     max={max ?? undefined}
+                     interactive={readonly && onOpen ? '' : undefined}
                      readonly={readonly ? '' : undefined}></ui-owner-picker>
   );
 }
@@ -146,7 +151,7 @@ export function Owners({ users, value, onChange, readonly, size }) {
  * the per-identity color is DATA (a token reference string from the seed /
  * user record) flowing in as the --ui-avatar-bg custom property via ref
  * (inline style= is banned; this is the established imperative bridge). */
-export function UAv({ user, size, ring, presence, slot }) {
+export function UAv({ user, size, ring, presence, slot, onOpen, title }) {
   const ref = useRef(null);
   useEffect(() => {
     const el = ref.current;
@@ -154,6 +159,9 @@ export function UAv({ user, size, ring, presence, slot }) {
     if (user?.avatarColor) el.style.setProperty('--ui-avatar-bg', user.avatarColor);
     else el.style.removeProperty('--ui-avatar-bg');
   }, [user]);
+  // Census I6 make-real: an avatar given onOpen becomes the component's real
+  // interactive mode (role=button + `open` event) → the user-profile route.
+  useUiEvent(ref, 'open', onOpen || undefined);
   return (
     <ui-avatar
       ref={ref}
@@ -163,6 +171,8 @@ export function UAv({ user, size, ring, presence, slot }) {
       size={size || 'sm'}
       ring={ring ? '' : undefined}
       presence={presence || undefined}
+      interactive={onOpen ? '' : undefined}
+      title={title || undefined}
     ></ui-avatar>
   );
 }
@@ -353,8 +363,12 @@ export function PRow({ k, children, full }) {
  * Community page wires it to its own read view; every other shell host
  * (Lists / Map / Scoring / Plans) routes through the shell's community
  * deep-link seam. A host without the route renders the inert variant —
- * never a live-looking dead affordance. The sealed C11 in-place subject
- * swap belongs to the Profiles phase. */
+ * never a live-looking dead affordance. Census C11 (Profiles phase, RESOLVED):
+ * the oracle's in-place subject swap lived inside its NESTED CommunityModal;
+ * the rebuild's engagement rows route to the Community read page (the
+ * declared C9 recomposition), whose stakeholder pills re-open the shared
+ * profile (census F4) — the same record-to-record hop, via first-class
+ * routes instead of a stacked modal. */
 function EngagementRow({ a, onOpen }) {
   return (
     <div
@@ -395,6 +409,7 @@ export function StakeholderModal({
   onCancel, onSubmit, onDelete,
   onOpenCommunity, // optional: opens a community entry read-only (census C9)
   onOpenWorkspace, // optional: opens that workspace's Lists tab (census C8)
+  onOpenUser,      // optional: opens that user's profile page (census I6 make-real)
 }) {
   const isEdit = !!existing;
   const { companyCategories, companyMarkets, companySites } = useCompanyCatalogs();
@@ -538,9 +553,15 @@ export function StakeholderModal({
 
               <div className="cm-section-label">Ownership &amp; reach</div>
               {/* Sealed: the profile's Owners is the READ-ONLY stack
-                  (OwnersDisplay) — editing owners happens in the form. */}
+                  (OwnersDisplay) — editing owners happens in the form.
+                  Census I6 make-real: where the host wires the user-profile
+                  route, each owner avatar opens that user's profile (the
+                  modal closes, mirroring the C8 workspace-chip order). */}
               <PRow k="Owners" full>
-                <Owners users={users} value={s.owners || []} readonly />
+                <Owners users={users} value={s.owners || []} readonly
+                        onOpen={onOpenUser
+                          ? (uid) => { onOpenUser(uid); onCancel(); }
+                          : undefined} />
               </PRow>
               {/* Census C8 (REAL as of the Workspaces phase): workspace chips
                   navigate to that workspace's Lists tab, then the profile

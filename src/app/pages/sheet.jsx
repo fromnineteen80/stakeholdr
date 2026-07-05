@@ -52,7 +52,7 @@ function noteDate(at) {
 
 export function SheetPage({
   createNonce = 0, activeWorkspaceId = MASTER_WORKSPACE_ID, onOpenCommunityEntry,
-  onOpenWorkspace, openStakeholderId = null, onConsumeOpen,
+  onOpenWorkspace, onOpenUserProfile, openStakeholderId = null, onConsumeOpen,
 }) {
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
   const [scores, setScores] = usePersistentState('scores', SEED_SCORES);
@@ -258,8 +258,9 @@ export function SheetPage({
   }, [createNonce]);
 
   /* DEEP-LINK OPEN (Phase 12; census C6 mechanics, A20/I4 READ-VIEW ruling):
-   * a shell-routed stakeholder request (mention chip, later palette/profile
-   * rows) opens THAT record in the read-only profile view — Edit stays one
+   * a shell-routed stakeholder request (mention chip, and — Phase 13 — the
+   * user profile page's Relationships rows) opens THAT record in the
+   * read-only profile view — Edit stays one
    * click away — then consumes the seam. The shell's resolver already
    * guarded existence (census A23); the some() here keeps the page honest
    * against a mid-flight delete. */
@@ -450,6 +451,7 @@ export function SheetPage({
         }}
         onOpenCommunity={openCommunityFromModal}
         onOpenWorkspace={onOpenWorkspace}
+        onOpenUser={onOpenUserProfile}
       />
 
       {/* Fallback surface for unresolvable community-pill opens (C5 guard). */}

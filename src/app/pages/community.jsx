@@ -21,8 +21,10 @@
  *    sealed worklist wires this; the oracle's plain text is not replicated.
  *  · Census F7 (one-profile-contract): the bridge target is the shared
  *    StakeholderModal in view mode with Edit live and the C9 engagement rows
- *    wired back to this page's read view (onOpenCommunity); full profile
- *    overlay + workspace-chip navigation retarget at the Profiles phase.
+ *    wired back to this page's read view (onOpenCommunity); RESOLVED at the
+ *    Profiles phase — workspace chips navigate (onOpenWorkspace) and owner
+ *    avatars open the user profile (onOpenUser): the one-profile-contract
+ *    holds at this call site.
  *  · Orphaned-regions quirk: market deselection CASCADE-PRUNES its regions as
  *    the INTERIM default — the sealed make-real decision is RESERVED FOR THE
  *    USER and still open (see the OPEN RULING marker on toggleMarket in
@@ -63,9 +65,11 @@
  *    "Save application"/"Create application" with the foot missing readout —
  *    community-logic.missingFootReadout already carries its sealed string):
  *    this page always opens both surfaces asPage (sealed), so that chrome is
- *    NOT mounted anywhere this phase. It arrives as a ui-dialog composition
- *    with the first phase that opens the editor/profile as an overlay (the
- *    Profiles-phase stakeholder-profile drill).
+ *    NOT mounted anywhere. RESOLVED at the Profiles phase: the
+ *    stakeholder-profile drill routes to this page's asPage read view (the
+ *    C9 recomposition), so no overlay mount exists and the modal chrome
+ *    stays unbuilt — a recorded drop unless a later phase opens the
+ *    editor/profile as an overlay.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePersistentState, uid, nowStamp, cmdKeyLabel } from '../data/store.js';
@@ -185,6 +189,7 @@ function StakeholderPills({ ids, stakeholders, onOpen }) {
 /* ══ COMMUNITY CARD (sealed TREE 2, node by node) ═══════════════════════════ */
 function CommunityCard({
   app, users, stakeholders, currentUser, onOpen, onEdit, onVote, onOpenStakeholder,
+  onOpenUser,
 }) {
   const { companySites } = useCompanyCatalogs();
   const vs = valueScore(app);
@@ -212,7 +217,9 @@ function CommunityCard({
           <div className="plan-card-recipient muted">{app.recipient}</div>
         </div>
         <div className="plan-card-avatars" aria-label="owners">
-          <Owners users={users} value={app.owners || []} readonly />
+          {/* Census I6 make-real: owner avatars open that user's profile. */}
+          <Owners users={users} value={app.owners || []} readonly
+                  onOpen={onOpenUser} />
         </div>
       </div>
       <div className="plan-card-badges">
@@ -283,6 +290,7 @@ function CommunityCard({
 /* ══ THE PAGE ══════════════════════════════════════════════════════════════ */
 export function CommunityPage({
   createNonce = 0, openCommunityId = null, onConsumeOpen, onOpenWorkspace,
+  onOpenUserProfile,
 }) {
   const [community, setCommunity] = usePersistentState('community', SEED_COMMUNITY);
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
@@ -384,6 +392,7 @@ export function CommunityPage({
           onApprove={canApprove(currentUser) && !isDecided(viewApp.stage)
             ? () => approve(viewApp)
             : null}
+          onOpenUserProfile={onOpenUserProfile}
         />
       ) : (
         <CommunityLanding
@@ -395,14 +404,16 @@ export function CommunityPage({
           onEdit={setEditId}
           onVote={vote}
           onOpenStakeholder={(id) => setViewStakeholderId(id)}
+          onOpenUserProfile={onOpenUserProfile}
         />
       )}
 
-      {/* The bridge target — census F7 one-profile-contract: the shared
-          record in VIEW mode with Edit live; its C9 engagement rows route
-          back to this page's read view. Closing returns to the LANDING
-          (sealed return-path). INTERIM: retargets to the full profile
-          overlay when the Profiles phase lands (Plans precedent). */}
+      {/* The bridge target — census F7 one-profile-contract (RESOLVED,
+          Phase 13): the shared record in VIEW mode **is** the sealed
+          StakeholderProfile — Edit live, workspace chips navigate
+          (onOpenWorkspace), C9 engagement rows route back to this page's
+          read view, owner avatars open the user profile (onOpenUser).
+          Closing returns to the LANDING (sealed return-path). */}
       <StakeholderModal
         open={!!viewStakeholder}
         existing={viewStakeholder}
@@ -424,6 +435,7 @@ export function CommunityPage({
         }}
         onOpenCommunity={(id) => { setViewStakeholderId(null); setViewId(id); }}
         onOpenWorkspace={onOpenWorkspace}
+        onOpenUser={onOpenUserProfile}
       />
     </div>
   );
@@ -432,6 +444,7 @@ export function CommunityPage({
 /* ══ LANDING (sealed CommunityView via the shared landing composition) ═════ */
 function CommunityLanding({
   community, users, stakeholders, currentUser, onOpen, onEdit, onVote, onOpenStakeholder,
+  onOpenUserProfile,
 }) {
   const { companySites, fiscal } = useCompanyCatalogs();
   const [query, setQuery] = useState('');
@@ -622,6 +635,7 @@ function CommunityLanding({
                 onEdit={() => onEdit(a.id)}
                 onVote={onVote}
                 onOpenStakeholder={onOpenStakeholder}
+                onOpenUser={onOpenUserProfile}
               />
             ))}
           </div>
@@ -644,6 +658,7 @@ function CommunityLanding({
 /* ══ READ-ONLY PROFILE (sealed TREE 4, asPage shell + CONTENT order) ═══════ */
 function CommunityProfile({
   app, users, stakeholders, onBack, onEdit, onOpenStakeholder, onApprove,
+  onOpenUserProfile,
 }) {
   const vs = valueScore(app);
   const appr = approvedLabel(app);
@@ -782,7 +797,9 @@ function CommunityProfile({
           </div>
 
           <div className="cm-section-label">Owners</div>
-          <Owners users={users} value={app.owners || []} readonly />
+          {/* Census I6 make-real: owner avatars open that user's profile. */}
+          <Owners users={users} value={app.owners || []} readonly
+                  onOpen={onOpenUserProfile} />
         </div>
       </div>
     </div>
