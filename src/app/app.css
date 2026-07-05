@@ -1390,7 +1390,9 @@ ui-sidebar[collapsed] .brand { margin-left: 0; }
 .conv-list { flex: 1; min-height: 0; overflow-y: auto; display: block; }
 .conv-list ui-list-item { --ui-sys-list-item-pad-block: var(--ui-sys-space-2); }
 .conv-list.compact ui-list-item { --ui-sys-list-item-min-height: 44px; }
-.conv-row.conv-active { background: var(--ui-sys-surface-hover); }
+/* Census group I: conv-row.active shares the ONE accent tint scale with
+ * user-picker-row.picked (the sealed rgba(181,85,44,.06) siblings). */
+.conv-row.conv-active { background: var(--ui-sys-accent-tint-faint); }
 /* Sealed system-row wash pair (rest / hover). */
 .conv-row.conv-system { background: var(--ui-sys-system-row-wash); }
 .conv-row.conv-system:hover { background: var(--ui-sys-system-row-wash-hover); }
@@ -1464,7 +1466,12 @@ ui-sidebar[collapsed] .brand { margin-left: 0; }
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
-.msg.mine .msg-bubble { background: var(--ui-sys-accent-tint-soft); }
+/* Census group F: the captured mine-bubble = ACCENT fill with the sealed
+ * near-paper on-accent ink (#FAF8F2 → --ui-sys-on-accent). */
+.msg.mine .msg-bubble {
+  background: var(--ui-sys-accent);
+  color: var(--ui-sys-on-accent);
+}
 .msg-action { align-self: flex-start; }
 .msg.mine .msg-action { align-self: flex-end; }
 
@@ -1502,6 +1509,11 @@ ui-sidebar[collapsed] .brand { margin-left: 0; }
 .mention-opt.on { background: var(--ui-sys-surface-hover); }
 
 /* ── TREE 7: the new-conversation dialog. */
+/* Sealed head row: h2 text + the ghost close on one line. */
+.msg-new-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--ui-sys-space-2);
+}
 .picked-wrap { display: flex; flex-wrap: wrap; gap: var(--ui-sys-space-2); margin-top: var(--ui-sys-space-2); }
 .picked-chip { --ui-sys-avatar-size-sm: 20px; }
 .user-picker { display: block; max-height: 240px; overflow-y: auto; }

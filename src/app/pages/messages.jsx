@@ -42,13 +42,20 @@
  *    never blurring the field).
  *  · "← All conversations" renders the arrow as a leading chevron ui-icon +
  *    the sealed words (the sealed tree's own mapping).
- *  · Avatar sizes map onto the ui-avatar token scale (lg=head-large, md=list
- *    rows, sm=thread authors/stack members/picker chips) — the sealed raw px
- *    (36/28/26/20) live in --ui-sys-avatar-size-*, never in app code.
+ *  · Avatar sizes QUANTIZE onto the ui-avatar token scale (sealed raw px
+ *    36/28/26 → the lg/md/sm tokens 40/32/24); the sealed 20px picker chip
+ *    is a local token re-point (.picked-chip re-points avatar-size-sm) —
+ *    a re-point, not a literal.
  *  · Conversation-list previews show mention labels, not raw {{…}} tokens
  *    (mentionPlain — ledgered in messages-logic.js).
  *  · The user-picker checkbox stops click propagation so row-click and
  *    checkbox-click each toggle exactly once (sealed handlers 16/17).
+ *  · The sealed form.composer (onSubmit) is recomposed as div.composer +
+ *    Send onClick + Enter-in-keydown — identical submit semantics (trim
+ *    guard, clear text+popover, Shift+Enter newline), no raw form element.
+ *  · messageUser(userId) (sealed store writer, census J5) is DEFERRED: its
+ *    only sealed surface (UserListPopup) belongs to the Profiles/Users
+ *    phase; the DM-dedupe core it needs ships here (startConversation).
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePersistentState, uid, nowStamp } from '../data/store.js';
@@ -321,7 +328,14 @@ function Composer({ placeholder, sources, onSend }) {
       if (e.key === 'ArrowDown') { e.preventDefault(); setHi((h) => (h + 1) % matches.length); return; }
       if (e.key === 'ArrowUp') { e.preventDefault(); setHi((h) => (h - 1 + matches.length) % matches.length); return; }
       if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); pick(matches[hi]); return; }
-      if (e.key === 'Escape') { setMq(null); return; }
+      if (e.key === 'Escape') {
+        // Sealed handler 4/1: Escape closes ONLY the popover — it must never
+        // bubble to ui-sheet's document Escape and take the sidebar with it.
+        e.preventDefault();
+        e.stopPropagation();
+        setMq(null);
+        return;
+      }
     }
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); go(); }
   });
@@ -399,7 +413,14 @@ function NewConversationModal({ open, users, currentUserId, onClose, onCreate })
 
   return (
     <ui-dialog ref={dlgRef} open={open ? '' : undefined} class="msg-new-modal">
-      <span slot="headline">{STR.newConversation}</span>
+      {/* Sealed TREE 7 head: h2 + ghost close (handler 14 — the third
+          dismissal path beside scrim and Cancel). */}
+      <span slot="headline" className="msg-new-head">
+        {STR.newConversation}
+        <ui-icon-button variant="standard" aria-label="Close" onClick={onClose}>
+          <ui-icon>close</ui-icon>
+        </ui-icon-button>
+      </span>
       <Field label={isGroup ? STR.groupNameLabel : STR.titleLabel}>
         <TF placeholder={isGroup ? STR.groupPlaceholder : ''} value={title} onValue={setTitle} />
       </Field>
@@ -486,13 +507,20 @@ export function MessagingSidebar({
           <strong>{conv ? STR.conversation : STR.messages}</strong>
         </span>
         <span className="msgs-head-actions">
-          <ui-icon-button variant="standard" title={STR.openFullPage}
-                          aria-label={STR.openFullPage} onClick={onOpenPage}>
-            <ui-icon>open_in_full</ui-icon>
-          </ui-icon-button>
-          <ui-icon-button variant="standard" aria-label={STR.close} onClick={onClose}>
-            <ui-icon>close</ui-icon>
-          </ui-icon-button>
+          {/* Sealed TREE 1: each head icon-button rides a ui-tooltip. */}
+          <ui-tooltip>
+            <ui-icon-button variant="standard" aria-label={STR.openFullPage}
+                            onClick={onOpenPage}>
+              <ui-icon>open_in_full</ui-icon>
+            </ui-icon-button>
+            <span slot="content">{STR.openFullPage}</span>
+          </ui-tooltip>
+          <ui-tooltip>
+            <ui-icon-button variant="standard" aria-label={STR.close} onClick={onClose}>
+              <ui-icon>close</ui-icon>
+            </ui-icon-button>
+            <span slot="content">{STR.close}</span>
+          </ui-tooltip>
         </span>
       </div>
       {!conv ? (

@@ -197,6 +197,9 @@ class UiSheet extends HTMLElement {
   #onScrimClick = () => this.close();
 
   #onKeydown = (e) => {
+    // An inner surface (e.g. a slotted composer's mention popover) that has
+    // already consumed this Escape must not also dismiss the sheet.
+    if (e.defaultPrevented) return;
     if (e.key === 'Escape' && this.hasAttribute('open')) {
       e.preventDefault();
       this.close();

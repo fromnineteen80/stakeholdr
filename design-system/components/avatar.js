@@ -55,8 +55,8 @@ tpl.innerHTML = `
     :host([presence="online"]) [part="presence"] {
       display: block;
       position: absolute;
-      right: calc(var(--_sz, var(--ui-sys-avatar-size-md, 32px)) * 0.02);
-      bottom: calc(var(--_sz, var(--ui-sys-avatar-size-md, 32px)) * 0.02);
+      right: max(1px, calc(var(--_sz, var(--ui-sys-avatar-size-md, 32px)) * 0.06));
+      bottom: max(1px, calc(var(--_sz, var(--ui-sys-avatar-size-md, 32px)) * 0.06));
       width: max(6px, calc(var(--_sz, var(--ui-sys-avatar-size-md, 32px)) * 0.28));
       height: max(6px, calc(var(--_sz, var(--ui-sys-avatar-size-md, 32px)) * 0.28));
       border-radius: var(--ui-sys-shape-pill);
