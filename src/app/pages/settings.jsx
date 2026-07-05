@@ -21,9 +21,13 @@
  *    flag). Soapbox is the live default token set; the Undecideds and Night
  *    Shift cards render DISABLED with a phase note — their named token sets
  *    are part of the OPEN wrapper-theme ruling (CLAUDE.md), and a
- *    live-looking dead write is forbidden. The auto-switch Yes/No + time
- *    selects render disabled with the same note (the sealed clock-check
- *    make-real needs the Night Shift set to exist first).
+ *    live-looking dead write is forbidden. The auto-switch Yes/No renders
+ *    disabled with the same note; the sealed nightShiftAt TIME SELECTS are
+ *    NOT rendered until the Night Shift set exists (their split/compose
+ *    logic is built + tested in settings-logic, awaiting that ruling).
+ *    Clicking Soapbox WRITES THROUGH to design.theme='cream' so the Identity
+ *    picker and the Design pane's wrapper control can never disagree; the
+ *    Soapbox card shows selected only when the effective wrapper is cream.
  *  · TIME ZONE select persists appConfig.timeZone (real org config); the
  *    sealed helper copy ships verbatim. Timestamp DISPLAY through this zone
  *    is the sealed Enterprise-state-model make-real (backend phase) —
@@ -48,6 +52,20 @@
  *    component); the beaker custom-color field = ui-color-field; the theme /
  *    color swatches = ui-swatch-card (both registered in manifest.json this
  *    phase, per the GAP law).
+ *  · BRAND COLOR / BRAND ICON scope (declared resolution of the sealed
+ *    Settings control vs SHELL DESIGN RULING #4): the ruled Sr mark reads
+ *    --ui-sys-on-surface (mark color == title color, by law) and is EXEMPT
+ *    from appConfig.brand; the brand color/icon apply to the pane preview
+ *    now and to the LOGIN SCREEN + future surfaces when those phases land.
+ *    Surfaced to the user as an open note, not silently absorbed.
+ *  · ACCENT/BRAND HEX VALIDATION: applyAppConfigLive applies only strict
+ *    #rrggbb values (the sealed oracle applied raw input); a malformed value
+ *    persists but never styles — safe-direction departure.
+ *  · INTEGRATIONS sub-labels/intro are PLACEHOLDER copy (the sealed roster
+ *    names only the five connectors; the box rules the pane is designed
+ *    from scratch WITH the user — pending that session).
+ *  · "Make manager" title on the role toggle is an a11y addition beyond the
+ *    sealed titles (the box titles only the User button).
  */
 import { useEffect, useRef, useState } from 'react';
 import { usePersistentState, uid, nowStamp } from '../data/store.js';
@@ -72,7 +90,7 @@ import {
   SELF_DEMOTE_TITLE, MAKE_USER_TITLE, ROLE_MEMBER, ROLE_MANAGER,
   rolesFiltered, rolesHeadCount,
   INTEGRATIONS_CONNECTORS, INTEGRATIONS_CHIP, INTEGRATIONS_INTRO,
-  DESIGN_DEFAULTS, DESIGN_SUBTEXT,
+  DESIGN_DEFAULTS, DESIGN_SUBTEXT, themeAttribute,
 } from './settings-logic.js';
 import {
   CONFIG_SWATCHES, BRAND_DEFAULT, THEME_PRESETS, ACCENT_CANDIDATES,
@@ -499,7 +517,12 @@ function IdentityPane({ cfg, update }) {
         <div className="settings-grid">
           <Field label="Choose One">
             <SwatchRow ariaLabel="Theme" className="theme-choices"
-                       onPick={(id) => update({ theme: id })}>
+                       onPick={(id) =>
+                         /* Soapbox IS the cream wrapper — the click writes
+                            through to design.theme so this picker and the
+                            Design pane's wrapper control can never disagree
+                            (the sealed cfg.theme key is kept for parity). */
+                         update({ theme: id, design: { ...(cfg.design || {}), theme: 'cream' } })}>
               {THEME_PRESETS.map((t) => (
                 <ui-swatch-card
                   key={t.id}
@@ -509,7 +532,8 @@ function IdentityPane({ cfg, update }) {
                   swatch-bg={t.bg}
                   swatch-dot={t.dot}
                   swatch-border={t.border}
-                  selected={(cfg.theme || 'soapbox') === t.id ? '' : undefined}
+                  selected={themeAttribute(cfg.design) === null
+                    && (cfg.theme || 'soapbox') === t.id ? '' : undefined}
                   disabled={t.live ? undefined : ''}
                   title={t.live ? undefined
                     : `${t.label} arrives as a named token set with the wrapper-theme ruling (Design pane)`}

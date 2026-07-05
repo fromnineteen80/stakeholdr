@@ -12,7 +12,7 @@ import { SetupPage } from './pages/setup.jsx';
 import { HelpPage } from './pages/help.jsx';
 import { SettingsPage } from './pages/settings.jsx';
 import { usePersistentState, uid, nowStamp } from './data/store.js';
-import { APP_CONFIG_SEED, applyAppConfigLive } from './data/company.js';
+import { APP_CONFIG_SEED, applyAppConfigLive, appNameFrom } from './data/company.js';
 import {
   SEED_WORKSPACES, SEED_STAKEHOLDERS, SEED_STAKEHOLDER_WORKSPACES,
   SEED_TEAM, SEED_SCORES, SEED_USERS, SEED_PLANS,
@@ -69,6 +69,9 @@ export function AppShell() {
    * grouped — REAL as of Phase 11 (Settings edits it; this read is live). */
   const [appConfig] = usePersistentState('appConfig', APP_CONFIG_SEED);
   const companySegments = companySegmentsFrom(appConfig);
+  /* Sealed brand text: cfg.appName || "Stakeholdr" (App-shell box; the
+   * Identity pane's helper promises header + tab title — both live). */
+  const appName = appNameFrom(appConfig);
 
   /* Sealed LIVE THEMING + DOCUMENT TITLE (App-shell box) + the Phase-11
    * design-dashboard overrides: BOOT RE-APPLIES the persisted appConfig into
@@ -254,7 +257,7 @@ export function AppShell() {
       <ui-sidebar slot="nav">
         <span slot="brand" className="brand">
           <span className="mark">S<i>r</i></span>
-          <span className="brand-text">Stakeholdr</span>
+          <span className="brand-text">{appName}</span>
         </span>
         {visibleTabs.map((t) => (
           <ui-sidebar-item

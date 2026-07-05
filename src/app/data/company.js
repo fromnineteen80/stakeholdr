@@ -45,6 +45,13 @@ export function useCompanyConfig() {
   return [appConfig || {}, updateAppConfig];
 }
 
+/* Sealed app-name fallback (App-shell box: "cfg.appName || 'Stakeholdr'") —
+ * the ONE derivation feeding the shell brand text, the tab title, and the
+ * catalogs hook. */
+export function appNameFrom(cfg) {
+  return (cfg || {}).appName || 'Stakeholdr';
+}
+
 /* useCompanyCatalogs() — the eight company* catalogs with the sealed
  * fallback, plus the fiscal anchor. Any component that renders an editable
  * catalog calls THIS (cheap: one shared store table + a memo). */
@@ -53,7 +60,7 @@ export function useCompanyCatalogs() {
   return useMemo(() => ({
     ...deriveCompanyCatalogs(cfg),
     fiscal: fiscalFrom(cfg),
-    appName: cfg.appName || 'Stakeholdr',
+    appName: appNameFrom(cfg),
   }), [cfg]);
 }
 
@@ -88,5 +95,5 @@ export function applyAppConfigLive(cfg) {
   if (c.brand && /^#[0-9a-fA-F]{6}$/.test(c.brand)) {
     root.style.setProperty('--ui-sys-brand', c.brand);
   }
-  document.title = c.appName || 'Stakeholdr';
+  document.title = appNameFrom(c);
 }
