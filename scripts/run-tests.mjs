@@ -24,6 +24,7 @@ const SUITES = [
   'workhq-test.mjs',
   'palette-test.mjs',
   'scale-test.mjs',
+  'import-test.mjs',
 ];
 
 let failed = 0;

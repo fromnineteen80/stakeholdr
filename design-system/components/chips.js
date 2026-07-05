@@ -1,7 +1,7 @@
 /* ============================================================================
  * <ui-chip-set> + <ui-chip> — chip variants: assist|filter|input|suggestion
  * plus the sealed PRESENTATIONAL pill variants:
- * priority|zone|tag|segment|goal|kind —
+ * priority|zone|tag|segment|goal|kind|error —
  * and the companion <ui-status-dot> element (sealed Shared-UI-primitives box;
  * segment = the sealed SegmentBadge, Workspaces box, value attr = the segment
  * name, unknown → the Corporate Functions pair; kind = the sealed community
@@ -214,7 +214,8 @@ chipTpl.innerHTML = `
     :host([variant="tag"]) .chip,
     :host([variant="segment"]) .chip,
     :host([variant="goal"]) .chip,
-    :host([variant="kind"]) .chip {
+    :host([variant="kind"]) .chip,
+    :host([variant="error"]) .chip {
       height: auto;
       padding: 1px var(--ui-sys-space-2);
       font: var(--ui-sys-font-caption);
@@ -226,7 +227,8 @@ chipTpl.innerHTML = `
     :host([variant="tag"]) .chip::before,
     :host([variant="segment"]) .chip::before,
     :host([variant="goal"]) .chip::before,
-    :host([variant="kind"]) .chip::before { content: none; } /* no state layer */
+    :host([variant="kind"]) .chip::before,
+    :host([variant="error"]) .chip::before { content: none; } /* no state layer */
 
     /* segment — the sealed SegmentBadge (Workspaces box): uppercase caption
        pill reading the --ui-sys-segment-* pairs via the value attr; UNKNOWN
@@ -299,6 +301,15 @@ chipTpl.innerHTML = `
       --_bg:     var(--ui-sys-surface-container);
       --_border: transparent;
       --_fg:     var(--ui-sys-on-surface);
+    }
+
+    /* error — the sealed import-wizard validation pill (Demo-features
+       BUILD-MAP: "ui-chip (error variant) naming the failure"). Display-only,
+       reading the system error pair. */
+    :host([variant="error"]) {
+      --_bg:     var(--ui-sys-error-container);
+      --_border: transparent;
+      --_fg:     var(--ui-sys-error);
     }
 
     /* priority — sealed PriorityPill pairs; unknown/absent value falls back
@@ -410,7 +421,7 @@ class UiChip extends HTMLElement {
   /* priority/zone/tag/segment/goal/kind are display-only pills — no widget
    * role, no tabstop. */
   #isPresentation() {
-    return ['priority', 'zone', 'tag', 'segment', 'goal', 'kind']
+    return ['priority', 'zone', 'tag', 'segment', 'goal', 'kind', 'error']
       .includes(this.getAttribute('variant'));
   }
 

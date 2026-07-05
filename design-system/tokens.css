@@ -91,6 +91,10 @@
   /* Dialog card width — the ONE constant ui-dialog's card and any fixed-width
    * dialog content (the ⌘K bar) both read; they can never desync. */
   --ui-sys-dialog-card-width: min(560px, calc(100vw - var(--ui-sys-space-6) * 2));
+  /* Wide-dialog step (Phase 18): table-hosting dialogs (the import wizard's
+   * column-map + validation preview) re-point --ui-sys-dialog-card-width at
+   * this — the literal lives HERE, never in app CSS. */
+  --ui-sys-dialog-card-width-wide: min(920px, calc(100vw - var(--ui-sys-space-6) * 2));
 
   /* Spacing roles (the only spacing vocabulary components may use) */
   --ui-sys-space-1: calc(var(--ui-ref-unit) * 1);  /* 4 */

@@ -618,7 +618,7 @@
    "tag": "ui-chip",
    "status": "built",
    "category": "native",
-   "summary": "Chip variants assist/filter/input/suggestion (interactive: pill shape; filter toggles primary-container; input removable; paired with ui-chip-set) PLUS the sealed presentational pill variants priority/zone/tag/segment/goal/kind (Shared-UI-primitives): non-interactive caption-type pills with no state layer/tabstop/role. priority reads --ui-sys-priority-{high|medium|low}-surface/-ink via the value attr (case-insensitive; unknown falls back to the Low pair). zone reads the 14 single-sourced --ui-sys-zone-* fills + band inks via data-zone = the exact zone name, with the SEALED NULL-GUARD: an uncatalogued zone renders NOTHING. tag is the quiet surface-container tag pill. These variants are the ONE source of pill visuals — screens compose them, never hand-rolled spans. segment = the sealed SegmentBadge pill (Workspaces box): uppercase caption pill reading --ui-sys-segment-* pairs via the value attr, Corporate Functions fallback. goal = the sealed PLAN_GOAL_COLORS \"type of plan\" pill (Plan-page box): caption pill reading --ui-sys-goal-* pairs via the value attr (goal-model id general|shared-value|crisis|activist|dei|community|union); unknown/absent falls back to the container/muted pair (the sealed var(--bg-2)/var(--ink-2) rule). kind = the sealed community KindBadge (Community box): caption pill reading --ui-sys-kind-* pairs via the value attr (the exact kind name: Philanthropy | Volunteering | Corporate Giving | Political Action (PAC) | Sustainability | Social Impact); unknown/absent falls back to the container/muted pair (the sealed var(--bg-2)/var(--ink-2) rule).",
+   "summary": "Chip variants assist/filter/input/suggestion (interactive: pill shape; filter toggles primary-container; input removable; paired with ui-chip-set) PLUS the sealed presentational pill variants priority/zone/tag/segment/goal/kind (Shared-UI-primitives): non-interactive caption-type pills with no state layer/tabstop/role. priority reads --ui-sys-priority-{high|medium|low}-surface/-ink via the value attr (case-insensitive; unknown falls back to the Low pair). zone reads the 14 single-sourced --ui-sys-zone-* fills + band inks via data-zone = the exact zone name, with the SEALED NULL-GUARD: an uncatalogued zone renders NOTHING. tag is the quiet surface-container tag pill. These variants are the ONE source of pill visuals — screens compose them, never hand-rolled spans. segment = the sealed SegmentBadge pill (Workspaces box): uppercase caption pill reading --ui-sys-segment-* pairs via the value attr, Corporate Functions fallback. goal = the sealed PLAN_GOAL_COLORS \"type of plan\" pill (Plan-page box): caption pill reading --ui-sys-goal-* pairs via the value attr (goal-model id general|shared-value|crisis|activist|dei|community|union); unknown/absent falls back to the container/muted pair (the sealed var(--bg-2)/var(--ink-2) rule). kind = the sealed community KindBadge (Community box): caption pill reading --ui-sys-kind-* pairs via the value attr (the exact kind name: Philanthropy | Volunteering | Corporate Giving | Political Action (PAC) | Sustainability | Social Impact); unknown/absent falls back to the container/muted pair (the sealed var(--bg-2)/var(--ink-2) rule). error (Phase 18) = the sealed import-wizard validation pill (Demo-features BUILD-MAP \"ui-chip (error variant) naming the failure\"): non-interactive caption pill reading --ui-sys-error-container / --ui-sys-error.",
    "props": [
     {
      "name": "variant",
@@ -633,7 +633,8 @@
       "tag",
       "segment",
       "goal",
-      "kind"
+      "kind",
+      "error"
      ],
      "default": "assist"
     },
@@ -951,13 +952,13 @@
    "tag": "ui-data-table",
    "status": "built",
    "category": "gapFill",
-   "summary": "Tokened semantic data grid (MD3 has none); sticky header, sortable columns, optional checkbox selection, comfortable/compact density. columns+data set via properties.",
+   "summary": "Tokened semantic data grid (MD3 has none); sticky header, sortable columns, optional checkbox selection, comfortable/compact density. columns+data set via properties. Phase 18: a column may carry a render(row) cell-template function returning a DOM node (e.g. a real ui-select / ui-chip) — composed controls live INSIDE the real component, never a hand-rolled lookalike grid.",
    "props": [
     {
      "name": "columns",
      "type": "array",
      "default": "sample",
-     "note": "set via JS property"
+     "note": "set via JS property; each column {key, label, type, sortable, align, render?} — render(row) returns a Node appended in place of the text value (Phase 18 cell-template hook)"
     },
     {
      "name": "data",
@@ -1230,6 +1231,12 @@
      "note": "attribute (DECLARED Phase 17): opts into the leading frozen selection column — per-row ui-checkbox + a header select-all over the FILTERED set (indeterminate on a partial selection) with shift-click range extension. Opt-in so hosts without a bulk-action surface never render a dead affordance (make-real law); only the Lists page sets it"
     },
     {
+     "name": "importable",
+     "type": "boolean",
+     "default": false,
+     "note": "attribute (DECLARED Phase 18): opts into the footer Import affordance — a quiet ui-button variant=text with a leading upload_file ui-icon NEXT TO Export CSV (the sealed import spec's 'wherever import is offered' entry point on Lists). The button only emits import-open; the wizard is host-owned. Opt-in so embeds without an import flow never render a dead affordance (make-real law)"
+    },
+    {
      "name": "selection",
      "type": "array",
      "default": "[]",
@@ -1266,6 +1273,11 @@
      "name": "export-csv",
      "detail": "{ csv, filename }",
      "note": "fired alongside the browser download — the current filtered/sorted set (sealed), or the selection when exportSelected() drove it (Phase 17)"
+    },
+    {
+     "name": "import-open",
+     "detail": "{}",
+     "note": "DECLARED Phase 18: the footer Import button (visible only with the importable attribute) — the host opens the import wizard"
     },
     {
      "name": "bulk-selection-change",
@@ -1768,6 +1780,58 @@
     "disabled"
    ],
    "import": "./components/upload.js"
+  },
+  "dropzone": {
+   "tag": "ui-dropzone",
+   "status": "built",
+   "category": "gapFill",
+   "summary": "File drop target (GAP component, Phase 18 — the sealed Demo-features BUILD-MAP: a dropzone needing real drag-over/error states is built INTO the design system, never a div-with-styles in app code). Dashed token-bordered target hosting a large ui-icon (default upload_file), the host copy (default slot), a composed ui-button 'Browse files' and a HIDDEN native file input inside the shadow root (the ui-upload precedent). Drag-over lights the accent border + tint; a rejected file type sets the error state with an inline reason; a status line reflects the picked file. The component only surfaces the File object — the host owns all reading/parsing. Keyboard: the zone is a focusable button (Enter/Space opens the picker). reset() clears status/error for a reopened flow.",
+   "props": [
+    {
+     "name": "accept",
+     "type": "string",
+     "default": "",
+     "note": "comma-separated extension list (e.g. '.xlsx,.csv'), matched case-insensitively on picker AND drop; forwarded to the native input"
+    },
+    {
+     "name": "icon",
+     "type": "string",
+     "default": "upload_file",
+     "note": "the ui-icon ligature shown in the zone"
+    },
+    {
+     "name": "browse-label",
+     "type": "string",
+     "default": "Browse files",
+     "note": "the composed ui-button's label"
+    },
+    {
+     "name": "disabled",
+     "type": "boolean",
+     "default": false
+    }
+   ],
+   "events": [
+    {
+     "name": "file",
+     "detail": "{ file, name }",
+     "note": "composed: true; ONE accepted File object (first of a multi-drop) — the host reads/parses it"
+    },
+    {
+     "name": "reject",
+     "detail": "{ name, reason }",
+     "note": "composed: true; a file failed the accept filter (the error state is set)"
+    }
+   ],
+   "states": [
+    "enabled",
+    "hover",
+    "focus-visible",
+    "dragover",
+    "error",
+    "disabled"
+   ],
+   "import": "./components/dropzone.js"
   },
   "swatch-card": {
    "tag": "ui-swatch-card",

@@ -3,7 +3,13 @@
  *
  * Properties (set via JS, not attr, for array/object data):
  *   .data     array of row objects — each key matches a column key
- *   .columns  array of {key, label, type, sortable, align}
+ *   .columns  array of {key, label, type, sortable, align, render?}
+ *             render (added Phase 18, registered in manifest.json): an
+ *             optional per-column cell template — render(row) returns a DOM
+ *             Node (e.g. a real ui-select / ui-chip) appended to the cell in
+ *             place of the text value. This is how composed controls live
+ *             INSIDE the real component (composition law) instead of a
+ *             hand-rolled lookalike grid in app code.
  *
  * Attributes:
  *   density   "comfortable" (default) | "compact"
@@ -102,22 +108,17 @@ template.innerHTML = `
     th[aria-sort="ascending"]  .sort-icon,
     th[aria-sort="descending"] .sort-icon { opacity: 1; }
 
-    tbody tr {
-      position: relative;
-      isolation: isolate;
-    }
+    /* Row hover = a translucent ink wash on the CELLS (Phase-18 alignment
+       fix): the previous absolutely-positioned ::before on the TR was wrapped
+       in an ANONYMOUS TABLE CELL by the browser (rows may only contain
+       cells), silently shifting every body row one column right of the
+       header. A tr may never carry non-cell boxes. */
     tbody tr:nth-child(even) { background: var(--_row-bg-alt); }
-    tbody tr::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: var(--ui-sys-on-surface);
-      opacity: 0;
-      transition: opacity var(--ui-sys-motion-control);
-      pointer-events: none;
-      z-index: -1;
+    tbody td { transition: background-color var(--ui-sys-motion-control); }
+    tbody tr:hover td {
+      background-color: color-mix(in srgb, var(--ui-sys-on-surface)
+        calc(var(--ui-sys-state-hover-opacity) * 100%), transparent);
     }
-    tbody tr:hover::before { opacity: var(--ui-sys-state-hover-opacity); }
 
     td {
       padding: 0 var(--ui-sys-space-4);
@@ -340,8 +341,13 @@ class UiDataTable extends HTMLElement {
         const td = document.createElement('td');
         td.setAttribute('role', 'cell');
         td.dataset.align = col.align || 'left';
-        const val = row[col.key];
-        td.textContent = val === null || val === undefined ? '' : String(val);
+        if (typeof col.render === 'function') {
+          const node = col.render(row);
+          if (node) td.appendChild(node);
+        } else {
+          const val = row[col.key];
+          td.textContent = val === null || val === undefined ? '' : String(val);
+        }
         tr.appendChild(td);
       }
 

@@ -1,11 +1,11 @@
 /* Self-hosted fonts (industry practice: no runtime Google dependency,
    no icon-ligature text flash). Downloaded 2026-07-03 from Google Fonts.
-   Icon font re-subset 2026-07-05 (Phase 14) via the same icon_names pipeline:
-   the prior vocabulary (verified by GSUB ligature diff — all 117 prior names
-   still covered, nothing dropped) + notes + view_column (the sealed
-   SampleRecord section icons, Record-scaffold box). Extend the subset again
-   BEFORE using any new ligature - an out-of-subset name renders as raw
-   text. */
+   Icon font re-subset 2026-07-05 (Phase 18) via the same icon_names pipeline:
+   the prior vocabulary (verified by GSUB ligature diff — all 119 prior names
+   still covered, nothing dropped) + upload_file + error (the sealed import
+   wizard's dropzone + validation-preview icons, Demo-features box). Extend
+   the subset again BEFORE using any new ligature - an out-of-subset name
+   renders as raw text. */
 @font-face {
   font-family: 'Inter';
   font-style: normal;

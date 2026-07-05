@@ -1013,6 +1013,95 @@ for (const path of pages) {
     await page.locator('ui-stakeholder-table .search-field input').fill('', { timeout: 3000 }).catch(e => errs.push('P17PRUNEC: ' + e.message));
     await page.waitForTimeout(400);
     if (await page.locator('.bulk-bar').count() !== 0) errs.push('P17PRUNE2: clearing the search must not resurrect the pruned selection');
+    // Phase 18: IMPORT WIZARD — the footer Import affordance opens the sealed
+    // 4-step ui-dialog flow; a synthetic CSV (2 valid rows + 1 deliberate
+    // Unknown-Category row) drives upload → auto-map → validation preview →
+    // skip-invalid commit → snackbar → the rows land in the table.
+    const p18CountBefore = await page.evaluate(() => JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]').length);
+    await page.locator('ui-stakeholder-table .import-btn').click({ timeout: 3000 }).catch(e => errs.push('P18BTN: ' + e.message));
+    await page.waitForTimeout(400);
+    if (await page.locator('ui-dialog.import-dialog[open]').count() !== 1) errs.push('P18OPEN: the import wizard did not open');
+    const p18csv = [
+      'Stakeholder,Organization,Category,Type,Market,Region,Geography,Priority,Status,x,Relationship',
+      '"Import Probe One","Acme Imports",Government,Mayor,Americas,United States,Local,High,Active,3.4,Collaborate',
+      '"Import Probe Two","Beta Imports",Communities,Church,Americas,Canada,Local,Medium,Watch,,',
+      '"Import Probe Bad","Gamma Imports",Aliens,Mayor,Americas,United States,Local,High,Active,,',
+    ].join('\n');
+    await page.locator('ui-dropzone input[type="file"]').setInputFiles({
+      name: 'probe.csv', mimeType: 'text/csv', buffer: Buffer.from(p18csv),
+    }, { timeout: 3000 }).catch(e => errs.push('P18FILE: ' + e.message));
+    await page.waitForTimeout(600);
+    // step 2: auto-map — 9 input columns auto-matched, x/Relationship computed
+    const p18MapRows = await page.locator('.import-map-table tbody tr').count();
+    if (p18MapRows !== 11) errs.push(`P18MAP: expected 11 header rows in the column map, saw ${p18MapRows}`);
+    const p18Auto = await page.locator('.import-map-table ui-chip', { hasText: 'auto-matched' }).count();
+    if (p18Auto !== 9) errs.push(`P18AUTO: expected 9 auto-matched chips, saw ${p18Auto}`);
+    const p18Comp = await page.locator('.import-map-table ui-chip', { hasText: 'computed — ignored' }).count();
+    if (p18Comp !== 2) errs.push(`P18COMP: expected 2 computed-ignored chips (x, Relationship), saw ${p18Comp}`);
+    await page.locator('.import-actions ui-button', { hasText: 'Next' }).click({ timeout: 3000 }).catch(e => errs.push('P18NEXT2: ' + e.message));
+    await page.waitForTimeout(500);
+    // step 3: the sealed summary + error chip + skip-invalid default ON
+    const p18Summary = (await page.locator('.import-summary').textContent().catch(() => '') || '').trim();
+    if (p18Summary !== '2 rows ready · 1 row with errors') errs.push(`P18SUMMARY: expected "2 rows ready · 1 row with errors", saw "${p18Summary}"`);
+    if (await page.locator('.import-preview-table ui-chip[variant="error"]', { hasText: 'Unknown Category value' }).count() !== 1) {
+      errs.push('P18ERRCHIP: the Unknown-Category error chip did not render');
+    }
+    const p18Switch = await page.locator('.import-validate-head ui-switch').getAttribute('selected').catch(() => null);
+    if (p18Switch === null) errs.push('P18SKIP: "Skip invalid rows" must default ON');
+    await page.locator('.import-actions ui-button', { hasText: 'Next' }).click({ timeout: 3000 }).catch(e => errs.push('P18NEXT3: ' + e.message));
+    await page.waitForTimeout(400);
+    // step 4: skip-invalid commit — "Import 2 stakeholders"
+    const p18CommitLabel = (await page.locator('.import-commit-btn').textContent().catch(() => '') || '').trim();
+    if (p18CommitLabel !== 'Import 2 stakeholders') errs.push(`P18COMMITLBL: expected "Import 2 stakeholders", saw "${p18CommitLabel}"`);
+    await page.locator('.import-commit-btn').click({ timeout: 3000 }).catch(e => errs.push('P18COMMIT: ' + e.message));
+    await page.waitForTimeout(600);
+    if (await page.locator('ui-dialog.import-dialog[open]').count() !== 0) errs.push('P18CLOSE: the wizard must close on commit');
+    const p18Snack = (await page.locator('.sheet-wrap ui-snackbar').getAttribute('message').catch(() => '') || '').trim();
+    if (p18Snack !== 'Imported 2 stakeholders') errs.push(`P18SNACK: expected "Imported 2 stakeholders", saw "${p18Snack}"`);
+    const p18After = await page.evaluate(() => {
+      const shs = JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]');
+      const a = shs.find(s => s.org === 'Acme Imports');
+      return { count: shs.length, acme: a ? { owners: a.owners, createdAt: !!a.createdAt, category: a.category } : null };
+    });
+    if (p18After.count !== p18CountBefore + 2) errs.push(`P18LAND: expected ${p18CountBefore + 2} stakeholders after import, saw ${p18After.count}`);
+    if (!p18After.acme) errs.push('P18ROW: the imported Acme Imports row did not land');
+    else {
+      if (!p18After.acme.owners || !p18After.acme.owners.length) errs.push('P18OWNER: imported rows must default owners to the importer');
+      if (!p18After.acme.createdAt) errs.push('P18STAMP: imported rows must carry audit stamps');
+      if (p18After.acme.category !== 'Government') errs.push(`P18CAT: expected Government, saw "${p18After.acme.category}"`);
+    }
+    if (await page.locator('ui-stakeholder-table .sheet-row', { hasText: 'Import Probe One' }).count() !== 1) {
+      errs.push('P18TABLE: the imported stakeholder is not visible in the Lists table');
+    }
+    // ROUND-TRIP PROBE (gate 3, in the real browser): export the CURRENT set
+    // via the sealed export path, re-import the file — zero errors, computed
+    // columns skipped, every row lands.
+    const p18Export = await page.evaluate(() => new Promise((resolve) => {
+      const t = document.querySelector('ui-stakeholder-table');
+      t.addEventListener('export-csv', (e) => resolve(e.detail.csv), { once: true });
+      t.shadowRoot.querySelector('.export-btn').click();
+    }));
+    const p18RtRows = p18Export.trim().split('\n').length - 1; // minus header (no embedded newlines in seed data)
+    await page.locator('ui-stakeholder-table .import-btn').click({ timeout: 3000 }).catch(e => errs.push('P18RTBTN: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('ui-dropzone input[type="file"]').setInputFiles({
+      name: 'export.csv', mimeType: 'text/csv', buffer: Buffer.from(p18Export),
+    }, { timeout: 3000 }).catch(e => errs.push('P18RTFILE: ' + e.message));
+    await page.waitForTimeout(600);
+    await page.locator('.import-actions ui-button', { hasText: 'Next' }).click({ timeout: 3000 }).catch(e => errs.push('P18RTNEXT: ' + e.message));
+    await page.waitForTimeout(600);
+    const p18RtSummary = (await page.locator('.import-summary').textContent().catch(() => '') || '').trim();
+    if (p18RtSummary !== `${p18RtRows} rows ready · 0 rows with errors`) {
+      errs.push(`P18RT: round-trip expected "${p18RtRows} rows ready · 0 rows with errors", saw "${p18RtSummary}"`);
+    }
+    await page.locator('.import-actions ui-button', { hasText: 'Next' }).click({ timeout: 3000 }).catch(e => errs.push('P18RTNEXT2: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('.import-commit-btn').click({ timeout: 3000 }).catch(e => errs.push('P18RTCOMMIT: ' + e.message));
+    await page.waitForTimeout(700);
+    const p18RtCount = await page.evaluate(() => JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]').length);
+    if (p18RtCount !== p18CountBefore + 2 + p18RtRows) errs.push(`P18RTLAND: expected ${p18CountBefore + 2 + p18RtRows} after the round-trip import, saw ${p18RtCount}`);
+    const p18RtSnack = (await page.locator('.sheet-wrap ui-snackbar').getAttribute('message').catch(() => '') || '').trim();
+    if (p18RtSnack !== `Imported ${p18RtRows} stakeholders`) errs.push(`P18RTSNACK: expected "Imported ${p18RtRows} stakeholders", saw "${p18RtSnack}"`);
   }
   if (path === '/record.html') {
     // Phase 14: SampleRecord — the sealed neutral tuning preview (standalone
