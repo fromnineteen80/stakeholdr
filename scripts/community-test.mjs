@@ -306,6 +306,9 @@ ok('filterDefs: sealed key/label set; stage defaults "Idea"; yearOf guards', () 
   const stageDef = COMMUNITY_FILTER_DEFS.find((d) => d.key === 'stage');
   assert.equal(stageDef.get({}), 'Idea');
   assert.equal(yearOf('2026-05-28T21:05:00.000Z'), '2026');
+  // Bare-date guard: parsed at LOCAL midnight (the module's shared parseLocal)
+  // so Jan-1 never shifts into the prior year in a negative-offset timezone.
+  assert.equal(yearOf('2026-01-01'), '2026');
   assert.equal(yearOf(''), '');
   assert.equal(yearOf('junk'), '');
 });

@@ -497,7 +497,9 @@ function PlanSection({ n, title, children }) {
 }
 
 /* ══ THE PAGE ══════════════════════════════════════════════════════════════ */
-export function PlanPage({ createNonce = 0, activeWorkspaceId = MASTER_WORKSPACE_ID }) {
+export function PlanPage({
+  createNonce = 0, activeWorkspaceId = MASTER_WORKSPACE_ID, onOpenCommunityEntry,
+}) {
   const [plansRaw, setPlans] = usePersistentState('plans', SEED_PLANS);
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
   const [scores] = usePersistentState('scores', SEED_SCORES);
@@ -631,6 +633,7 @@ export function PlanPage({ createNonce = 0, activeWorkspaceId = MASTER_WORKSPACE
           }}
           getWorkspacesForStakeholder={(id) =>
             workspaces.filter((w) => (stakeholderWorkspaces[id] || []).includes(w.id))}
+          onOpenCommunityEntry={onOpenCommunityEntry}
         />
       ) : open && mode === 'review' ? (
         <PlanReview
@@ -958,7 +961,7 @@ function PlanEditor({
   plan, users, workspaces, community, scores, team, stakeholders, roster,
   currentUser, onChange, onBack, onReview, onDelete,
   addStakeholderToPlan, createStakeholder, updateStakeholder,
-  getWorkspacesForStakeholder,
+  getWorkspacesForStakeholder, onOpenCommunityEntry,
 }) {
   const p = plan;
   const set = (patch) => onChange({ ...p, ...patch });
@@ -999,6 +1002,14 @@ function PlanEditor({
   const shView = shModal && shModal.id
     ? stakeholders.find((s) => s.id === shModal.id) || null
     : null;
+
+  /* Census C9 (sealed REAL): the profile's engagement rows open that
+   * community entry's read view — the modal closes and the shell routes
+   * through its community deep-link seam (onOpenCommunityEntry). Rows stay
+   * honestly inert (no handler) on a host without the route. */
+  const openCommunityFromModal = onOpenCommunityEntry
+    ? (id) => { setShModal(null); onOpenCommunityEntry(id); }
+    : undefined;
 
   return (
     <div className="plan-editor">
@@ -1351,7 +1362,8 @@ function PlanEditor({
 
       {/* Create-new / row-click view (the shared sealed StakeholderModal).
           INTERIM for row-click: the sealed target is the stakeholder PROFILE
-          overlay — retarget when the Profiles phase lands. */}
+          overlay — retarget when the Profiles phase lands. Its C9 engagement
+          rows are LIVE here (openCommunityFromModal above). */}
       <StakeholderModal
         open={!!shModal}
         existing={shView}
@@ -1376,6 +1388,7 @@ function PlanEditor({
           }
           setShModal(null);
         }}
+        onOpenCommunity={openCommunityFromModal}
       />
 
       {/* Delete confirm (sibling dialog; closes only itself). */}

@@ -44,7 +44,10 @@ import { displayName } from '../../../design-system/components/stakeholder-table
 import { scoringNeededBody } from '../modals/stakeholder-logic.js';
 import { StakeholderModal } from '../modals/stakeholder-modal.jsx';
 
-export function ScoringPage({ activeWorkspaceId, workspaceOwners = [], createNonce = 0, onDeleteWorkspace }) {
+export function ScoringPage({
+  activeWorkspaceId, workspaceOwners = [], createNonce = 0, onDeleteWorkspace,
+  onOpenCommunityEntry,
+}) {
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
   const [scores, setScores] = usePersistentState('scores', SEED_SCORES);
   const [team, setTeam] = usePersistentState('team', SEED_TEAM);
@@ -293,6 +296,14 @@ export function ScoringPage({ activeWorkspaceId, workspaceOwners = [], createNon
   const shExisting = shModal && shModal.id
     ? stakeholders.find((s) => s.id === shModal.id) || null
     : null;
+
+  /* Census C9 (sealed REAL): the profile's engagement rows open that
+   * community entry's read view — the modal closes and the shell routes
+   * through its community deep-link seam (onOpenCommunityEntry). Rows stay
+   * honestly inert (no handler) on a host without the route. */
+  const openCommunityFromModal = onOpenCommunityEntry
+    ? (id) => { setShModal(null); onOpenCommunityEntry(id); }
+    : undefined;
 
   /* Scoring is a per-workspace act (sealed SCOPING): the shell redirects
    * Master→Map; this guard keeps the page honest if mounted out of order.   */
@@ -618,6 +629,7 @@ export function ScoringPage({ activeWorkspaceId, workspaceOwners = [], createNon
           deleteStakeholder(id);
           setShModal(null);
         }}
+        onOpenCommunity={openCommunityFromModal}
       />
     </div>
   );

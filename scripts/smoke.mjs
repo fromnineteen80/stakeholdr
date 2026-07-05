@@ -143,6 +143,22 @@ for (const path of pages) {
     if (commTextareas < 2) errs.push(`COMMFORM: expected the two counted textareas, saw ${commTextareas}`);
     await page.locator('.comm-editor ui-button', { hasText: 'All community' }).click({ timeout: 3000 }).catch(e => errs.push('COMMEDBACK: ' + e.message));
     await page.waitForTimeout(300);
+    // Census C9 (Phase-8 audit fix): engagement rows are LIVE from a
+    // non-Community host — Lists (Master) opens a stakeholder record, the
+    // profile's engagement row routes through the shell's community
+    // deep-link seam to that entry's read view, and the modal closes.
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Master' }).click({ timeout: 3000 }).catch(e => errs.push('C9NAV: ' + e.message));
+    await page.waitForTimeout(500);
+    await page.locator('ui-stakeholder-table [data-key="name"]', { hasText: 'Mayor Maria Chen' }).dblclick({ timeout: 3000 }).catch(e => errs.push('C9OPEN: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('ui-dialog.sh-dialog ui-button', { hasText: 'View Stakeholder' }).click({ timeout: 3000 }).catch(e => errs.push('C9FLIP: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('ui-dialog.sh-dialog .profile-entry', { hasText: 'Cedarville STEM Classroom Grant' }).click({ timeout: 3000 }).catch(e => errs.push('C9ROW: ' + e.message));
+    await page.waitForTimeout(600);
+    const c9Title = (await page.locator('.comm-profile .plan-review-toolbar-title').textContent().catch(() => '') || '').trim();
+    if (c9Title !== 'Cedarville STEM Classroom Grant') errs.push(`C9ROUTE: expected the clicked engagement's Community read view, saw "${c9Title}"`);
+    const c9ModalOpen = await page.locator('ui-dialog.sh-dialog[open]').count();
+    if (c9ModalOpen !== 0) errs.push(`C9CLOSE: the stakeholder modal should close when routing, saw ${c9ModalOpen} open`);
   }
   if (path.includes('wireframes')) {
     await page.locator('#theme-modern').click({ timeout: 3000 }).catch(e => errs.push('TOGGLE: ' + e.message));

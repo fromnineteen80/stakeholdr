@@ -62,8 +62,13 @@ export function Field({ label, help, children, className }) {
 }
 
 /* ui-text-field variant=plain: visible caption comes from Field; the label
- * attr stays for the component's aria-label; placeholder = the sealed copy. */
-export function TF({ label, placeholder, value, onValue, onBlurValue, supporting, fieldRef, type }) {
+ * attr stays for the component's aria-label; placeholder = the sealed copy.
+ * min/max/step forward to the component (it relays them to its inner input —
+ * the sealed number-field constraints, e.g. years min="1"). */
+export function TF({
+  label, placeholder, value, onValue, onBlurValue, supporting, fieldRef, type,
+  min, max, step,
+}) {
   const localRef = useRef(null);
   const ref = fieldRef || localRef;
   useEffect(() => {
@@ -78,6 +83,9 @@ export function TF({ label, placeholder, value, onValue, onBlurValue, supporting
       variant="plain"
       label={label}
       type={type || undefined}
+      min={min ?? undefined}
+      max={max ?? undefined}
+      step={step ?? undefined}
       placeholder={placeholder}
       supporting-text={supporting}
     ></ui-text-field>
@@ -310,16 +318,19 @@ export function PRow({ k, children, full }) {
 }
 
 /* One community-engagement row (sealed census C9: clicking opens that
- * community entry read-only). REAL as of the Community phase WHEN the host
- * passes onOpen (the Community page's bridge modal wires it to its own read
- * view); call sites without the route yet (Plans' interim view modal) render
- * the inert phase-note variant — never a live-looking dead affordance. The
- * sealed C11 in-place subject swap belongs to the Profiles phase. */
+ * community entry read-only). REAL wherever the host supplies onOpen — the
+ * Community page wires it to its own read view; every other shell host
+ * (Lists / Map / Scoring / Plans) routes through the shell's community
+ * deep-link seam. A host without the route renders the inert variant —
+ * never a live-looking dead affordance. The sealed C11 in-place subject
+ * swap belongs to the Profiles phase. */
 function EngagementRow({ a, onOpen }) {
   return (
     <div
       className={'profile-entry' + (onOpen ? ' profile-entry-link' : '')}
-      title={onOpen ? 'Open application' : 'Opens with the Profiles build phase'}
+      title={onOpen
+        ? 'Open application'
+        : 'Opens when this surface wires the community route'}
       role={onOpen ? 'button' : undefined}
       tabIndex={onOpen ? 0 : undefined}
       onClick={onOpen || undefined}

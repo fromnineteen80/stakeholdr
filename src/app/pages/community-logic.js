@@ -139,7 +139,11 @@ export function askSuffix(a) {
 /* ── BLANK DEFAULTS (sealed MODAL BLANK verbatim; id minted by the caller via
  * uid("ca")). DECLARED: the oracle stamps createdAt/updatedAt with the bare
  * day; the rebuild stamps full ISO through nowStamp (the sealed
- * timestamp-precision rule the PAGE-UPSERT make-real cites). ─────────────── */
+ * timestamp-precision rule the PAGE-UPSERT make-real cites).
+ * REBUILD EXTENSIONS (additive — the sealed MODAL BLANK omits these): site ''
+ * · state '' · geography '' are initialized so the editor's sealed Site/State/
+ * Geography selects never flip undefined→value (the plan-logic newPlan
+ * precedent). ─────────────────────────────────────────────────────────────── */
 export function blankApp(currentUser, { id, now, today } = {}) {
   const day = today || new Date().toISOString().slice(0, 10);
   const stamp = now || new Date().toISOString();
@@ -166,7 +170,7 @@ export function blankApp(currentUser, { id, now, today } = {}) {
     owners: currentUser ? [currentUser.id] : [],
     createdBy: currentUser ? currentUser.id : '',
     createdAt: stamp, updatedAt: stamp,
-    site: '', state: '', geography: '',
+    site: '', state: '', geography: '', // REBUILD EXTENSIONS (see above)
   };
 }
 
@@ -246,10 +250,14 @@ export function approveApplication(app, { approverId, now, today }) {
 }
 
 /* ── MARKETS → REGIONS (sealed ChipMultiSelect): region options derive from
- * the CHOSEN markets; empty options → "Pick a market first". DECLARED
- * (sealed ORPHANED-REGIONS make-real decision): deselecting a market
- * CASCADE-PRUNES its now-orphaned regions — the cleaner behavior the box
- * names; the oracle's silent invisible stranding is NOT replicated. ───────── */
+ * the CHOSEN markets; empty options → "Pick a market first".
+ * OPEN RULING (sealed ORPHANED-REGIONS make-real decision — RESERVED FOR THE
+ * USER, not yet ruled): the box says "decide with the user whether market
+ * deselection cascade-prunes the now-orphaned regions (the cleaner behavior)
+ * or keeps them visible and removable". CASCADE-PRUNE ships below as the
+ * INTERIM DEFAULT only — the one behavior sealed either way is that the
+ * oracle's silent invisible stranding is NOT replicated. If the user rules
+ * visible-and-removable, only toggleMarket changes. ───────────────────────── */
 export function regionOptionsFor(markets) {
   return (markets || []).flatMap((m) => MARKETS[m] || []);
 }
@@ -267,9 +275,15 @@ export function toggleValue(list, v) {
 
 /* ── LANDING defs (sealed CommunityView filterDefs / sortFields / searchKeys /
  * copy, verbatim; the oracle's dead local filter pipeline is NOT carried). ── */
+
+/* yearOf (sealed "Year created" getter: String(getFullYear()) for a parseable
+ * date, else ""). Parses through the SAME bare-date local-midnight guard as
+ * the FY math above (parseLocal) — identical for full-ISO stamps; a bare
+ * YYYY-MM-DD no longer shifts into the prior year in negative-offset
+ * timezones (the DECLARED repo-wide timezone rule). */
 export function yearOf(iso) {
-  const d = new Date(iso || '');
-  return isNaN(d.getTime()) ? '' : String(d.getFullYear());
+  const d = parseLocal(iso);
+  return d ? String(d.getFullYear()) : '';
 }
 
 export const COMMUNITY_FILTER_DEFS = [

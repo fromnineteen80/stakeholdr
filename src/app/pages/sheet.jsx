@@ -8,9 +8,10 @@
  * The page owns: row computation (live _x/_y/_status/_unscored + community
  * affiliations), persistence through the ONE Store seam (row-change →
  * updateStakeholder with an updatedAt stamp), the NOTES MODAL (ui-dialog +
- * ui-textarea composition per the sealed NotesModal spec), and the honest
- * pending affordances for open-record / community-open (those surfaces land
- * in their own build phases — no silent dead clicks, per the make-real law).
+ * ui-textarea composition per the sealed NotesModal spec), and the C5
+ * community-pill route (REAL as of Phase 8: name -> id resolve, then the
+ * shell's community deep-link seam; unresolvable names get an honest
+ * snackbar). The modal's C9 engagement rows ride the same seam.
  *
  * Scoping (sealed Ecosystem box, REAL as of Phase 6): Lists filters to the
  * active workspace via the stakeholderWorkspaces join (Master = the union of
@@ -47,7 +48,9 @@ function noteDate(at) {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export function SheetPage({ createNonce = 0, activeWorkspaceId = MASTER_WORKSPACE_ID }) {
+export function SheetPage({
+  createNonce = 0, activeWorkspaceId = MASTER_WORKSPACE_ID, onOpenCommunityEntry,
+}) {
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
   const [scores, setScores] = usePersistentState('scores', SEED_SCORES);
   const [team] = usePersistentState('team', SEED_TEAM);
@@ -62,6 +65,12 @@ export function SheetPage({ createNonce = 0, activeWorkspaceId = MASTER_WORKSPAC
   const dialogRef = useRef(null);
   const composerRef = useRef(null);
   const snackRef = useRef(null);
+  // The table listeners bind once (mount-effect); these refs keep the C5
+  // community-open route reading the LIVE list + seam, never a stale closure.
+  const communityRef = useRef(community);
+  communityRef.current = community;
+  const openCommunityRef = useRef(onOpenCommunityEntry);
+  openCommunityRef.current = onOpenCommunityEntry;
 
   // Selection lifts to the page (sealed: shared with Map/Scoring when those
   // phases land). Held; no consumer yet.
@@ -143,8 +152,17 @@ export function SheetPage({ createNonce = 0, activeWorkspaceId = MASTER_WORKSPAC
     // land (e.g. the Scoring drill / Plan row click in later phases) and via
     // the form's "View Stakeholder" flip.
     const onOpenRecord = (e) => setShModal({ mode: 'edit', id: e.detail.id });
-    const onCommunityOpen = (e) =>
-      snackRef.current?.show(`"${e.detail.name}" — the community entry view opens in the Community build phase`);
+    // SEALED C5 ROUTE (make-real; replaces the Phase-3..8 pending snackbar):
+    // a community pill opens THAT entry's read view through the shell's
+    // deep-link seam. The pill event carries the entry NAME (the column
+    // renders names), so resolve name -> id against the live list; an
+    // unresolvable name gets an honest snackbar, never a dead route.
+    const onCommunityOpen = (e) => {
+      const entry = (communityRef.current || []).find((c) => c.name === e.detail.name);
+      const route = openCommunityRef.current;
+      if (entry && route) route(entry.id);
+      else snackRef.current?.show(`"${e.detail.name}" — no matching community entry`);
+    };
     el.addEventListener('row-change', onRowChange);
     el.addEventListener('notes-open', onNotesOpen);
     el.addEventListener('selection-change', onSelect);
@@ -302,6 +320,14 @@ export function SheetPage({ createNonce = 0, activeWorkspaceId = MASTER_WORKSPAC
     ? stakeholders.find((s) => s.id === shModal.id) || null
     : null;
 
+  /* Census C9 (sealed REAL): the profile's engagement rows open that
+   * community entry's read view — the modal closes and the shell routes
+   * through its community deep-link seam (onOpenCommunityEntry). Rows stay
+   * honestly inert (no handler) on a host without the route. */
+  const openCommunityFromModal = onOpenCommunityEntry
+    ? (id) => { setShModal(null); onOpenCommunityEntry(id); }
+    : undefined;
+
   return (
     <div className="sheet-wrap">
       {/* kbd-label: the cmd-key hint is single-sourced in the store
@@ -400,9 +426,10 @@ export function SheetPage({ createNonce = 0, activeWorkspaceId = MASTER_WORKSPAC
           deleteStakeholder(id);
           setShModal(null);
         }}
+        onOpenCommunity={openCommunityFromModal}
       />
 
-      {/* Pending-affordance surface for community opens (make-real law). */}
+      {/* Fallback surface for unresolvable community-pill opens (C5 guard). */}
       <ui-snackbar ref={snackRef}></ui-snackbar>
     </div>
   );

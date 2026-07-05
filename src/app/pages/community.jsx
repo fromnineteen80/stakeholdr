@@ -23,9 +23,10 @@
  *    StakeholderModal in view mode with Edit live and the C9 engagement rows
  *    wired back to this page's read view (onOpenCommunity); full profile
  *    overlay + workspace-chip navigation retarget at the Profiles phase.
- *  · Orphaned-regions quirk: market deselection CASCADE-PRUNES its regions
- *    (the cleaner behavior the sealed make-real decision names) — the silent
- *    invisible stranding is not replicated.
+ *  · Orphaned-regions quirk: market deselection CASCADE-PRUNES its regions as
+ *    the INTERIM default — the sealed make-real decision is RESERVED FOR THE
+ *    USER and still open (see the OPEN RULING marker on toggleMarket in
+ *    community-logic.js); the silent invisible stranding is not replicated.
  *  · Deep links are first-class props (openCommunityId + onConsumeOpen), with
  *    the census A23 existence guard — no window.__pendingCommunityId bridge.
  *  · Attachments: the sealed stub is NOT replicated silently — a REAL minimal
@@ -41,6 +42,12 @@
  *    portals + token-styled table + footer) — the sealed shared-LandingView
  *    shell, one pattern for both pages; sealed grid column widths map to the
  *    token-styled table (the scoring-matrix precedent).
+ *  · TOOLBAR PLACEMENT DEPARTURE (the Plans-landing precedent): sealed TREE 1
+ *    PORTALS div.community-toolbar into the app header's explainerSlot region;
+ *    the rebuilt shell has no explainer region, so the toolbar renders
+ *    PAGE-LEVEL as the first row of comm-wrap — the same ui-app-bar content
+ *    row, one surface lower. Retarget only if a shell explainer region is
+ *    ever ruled in.
  *  · StakeholderPicker = removable ui-chip (input variant) chips + the shared
  *    Picker (ui-autocomplete, picker mode, max-results 8, two-line rows,
  *    name-or-org match, selected excluded, empty-placeholder-when-chosen) —
@@ -50,9 +57,15 @@
  *    a token re-point, never a component override.
  *  · ui-textarea's live counter renders "N / MAX" (the registered gap
  *    component's contract) for the sealed "{len}/1500"-style counters.
- *  · The editor/profile chrome mounts asPage only (how this page always opens
- *    them, sealed); the ui-dialog modal shell variant arrives with the phase
- *    that needs it (stakeholder-profile drill).
+ *  · DEFERRED CHROME — the sealed MODAL-variant shell of the editor/profile
+ *    (veil + head h2 "New application"/"Edit application" beside the
+ *    "View application" flip and a ghost close × + foot Cancel /
+ *    "Save application"/"Create application" with the foot missing readout —
+ *    community-logic.missingFootReadout already carries its sealed string):
+ *    this page always opens both surfaces asPage (sealed), so that chrome is
+ *    NOT mounted anywhere this phase. It arrives as a ui-dialog composition
+ *    with the first phase that opens the editor/profile as an overlay (the
+ *    Profiles-phase stakeholder-profile drill).
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePersistentState, uid, nowStamp, cmdKeyLabel } from '../data/store.js';
@@ -235,11 +248,16 @@ function CommunityCard({
             />
           ))}
       </div>
-      {((app.markets || []).length > 0 || (app.regions || []).length > 0 || (site && SITES.length)) && (
+      {((app.markets || []).length > 0 || (app.regions || []).length > 0 || (app.site && SITES.length > 0)) && (
         <div className="plan-card-meta">
           {(app.markets || []).length > 0 && metaRow('Markets', app.markets.join(', '))}
           {(app.regions || []).length > 0 && metaRow('Regions', app.regions.join(', '))}
-          {site && metaRow('Site', siteLabel(site) || '-')}
+          {/* Sealed: the Site row renders whenever app.site is SET (and the
+              SITES catalog exists); "-" when the id doesn't resolve — the
+              landing table column's exact fallback. */}
+          {app.site && SITES.length > 0
+            ? metaRow('Site', site ? (siteLabel(site) || '-') : '-')
+            : null}
         </div>
       )}
       <div className="plan-card-foot">
@@ -1023,7 +1041,8 @@ function CommunityEditor({
                    onChange={(v) => set({ recurrence: v })} />
             </Field>
             <Field label="Years">
-              <TF label="Years" type="number" value={String(d.years)}
+              {/* Sealed FIELD CONSTRAINTS: years is a number input, min="1". */}
+              <TF label="Years" type="number" min="1" value={String(d.years)}
                   onValue={(v) => set({ years: Number(v) })} />
             </Field>
             <div className="sh-field comm-date-cell">
@@ -1084,8 +1103,9 @@ function CommunityEditor({
               <ChipMulti
                 options={Object.keys(MARKETS)}
                 selected={d.markets}
-                /* DECLARED cascade (sealed make-real decision): deselecting a
-                   market prunes its orphaned regions. */
+                /* INTERIM cascade — deselecting a market prunes its orphaned
+                   regions; the sealed decision is an OPEN USER RULING (see
+                   toggleMarket in community-logic.js). */
                 onToggle={(m) => set(toggleMarket(d, m))}
                 emptyText=""
               />
