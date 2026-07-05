@@ -345,6 +345,36 @@
   --ui-sys-scrollbar-thumb:       #DCD3BF;  /* webkit thumb + Firefox .is-scrolling scrollbar-color */
   --ui-sys-scrollbar-thumb-hover: #C5BBA3;  /* thumb hover */
 
+  /* Plan goal-model pill pairs (sealed PLAN_GOAL_COLORS, Plan-page box
+     CAPTURED→TOKEN — one warm pill per "type of plan"; pill-semantic: never
+     touched by any theme swap. Unknown/absent goal models fall back to the
+     surface-container-high / on-surface-muted pair — the sealed var(--bg-2)/
+     var(--ink-2) fallback — implemented in the ui-chip goal variant.) */
+  --ui-sys-goal-general-surface:      #E1E1DA;
+  --ui-sys-goal-general-ink:          #54524A;
+  --ui-sys-goal-shared-value-surface: #DDE7C2;
+  --ui-sys-goal-shared-value-ink:     #2f5a26;
+  --ui-sys-goal-crisis-surface:       #E5D0D0;
+  --ui-sys-goal-crisis-ink:           #7a2424;
+  --ui-sys-goal-activist-surface:     #E8DEC2;
+  --ui-sys-goal-activist-ink:         #6e5419;
+  --ui-sys-goal-dei-surface:          #DCD3E0;
+  --ui-sys-goal-dei-ink:              #4F3F69;
+  --ui-sys-goal-community-surface:    #C2D9E8;
+  --ui-sys-goal-community-ink:        #23496e;
+  --ui-sys-goal-union-surface:        #C9E3CC;
+  --ui-sys-goal-union-ink:            #2f5a26;
+
+  /* Plan stage text colors (sealed PLAN_STAGE_FG, Plan-page box CAPTURED→
+     TOKEN — status renders as colored TEXT only, no badge bg; unknown stages
+     fall back to --ui-sys-on-surface-muted, the sealed var(--ink-2) rule.
+     Status-semantic: never touched by any theme swap.) */
+  --ui-sys-stage-idea:         #54524A;
+  --ui-sys-stage-proposed:     #6E5419;
+  --ui-sys-stage-under-review: #6e5419;
+  --ui-sys-stage-active:       #2f5a26;
+  --ui-sys-stage-complete:     #2E3F66;
+
   /* Avatar identity palette (census group F CAPTURED→TOKEN — the seed users'
      stable per-user avatar colors + the Shared-primitives Avatar palette;
      identity-semantic: never touched by any theme swap. Seed data references

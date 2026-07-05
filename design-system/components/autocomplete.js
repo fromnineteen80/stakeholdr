@@ -2,12 +2,21 @@
  * <ui-autocomplete> — typeahead / combobox (gap-fill: MD3 ships none).
  *
  * Properties (set via JS):
- *   .options  array of strings OR array of {label, value}
+ *   .options  array of strings OR array of {label, value, sub?} — sub renders
+ *             a muted second line (two-line option rows) and joins the filter:
+ *             a query matches when the label OR the sub contains it
+ *             (the sealed PLANAUTOCOMPLETE mechanics).
  *
  * Attributes:
  *   label        visible label above the input
  *   placeholder  input placeholder text
  *   value        current selected value (reflects after selection)
+ *   max-results  cap on visible filtered options (the plan pickers pass 8);
+ *                absent = unlimited
+ *   clear-on-select  picker mode: a confirmed selection emits change, then
+ *                CLEARS the input and closes (never writes the label back) —
+ *                sealed PLANAUTOCOMPLETE: "selection clears the input and
+ *                closes"
  *
  * Events (composed:true):
  *   input   → detail { value, label }   on every keystroke filter change
@@ -103,10 +112,14 @@ template.innerHTML = `
     }
     .popup[open] { display: block; }
 
-    /* Individual option */
+    /* Individual option (two-line when the option carries a sub line —
+       sealed PLANAUTOCOMPLETE: primary + supporting text rows) */
     .option {
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 1px;
       padding: var(--ui-sys-space-2) var(--ui-sys-space-3);
       font: var(--ui-sys-font-body);
       color: var(--ui-sys-on-surface);
@@ -134,6 +147,13 @@ template.innerHTML = `
       background: var(--ui-sys-primary-container);
       color: var(--ui-sys-on-primary-container);
     }
+
+    /* Option sub line (muted supporting text) */
+    .opt-sub {
+      font: var(--ui-sys-font-caption);
+      color: var(--ui-sys-on-surface-muted);
+    }
+    .option[aria-selected="true"] .opt-sub { color: inherit; }
 
     /* Highlighted match text */
     mark {
@@ -233,7 +253,13 @@ class UiAutocomplete extends HTMLElement {
   get options() { return this.#options; }
   set options(val) {
     this.#options = (Array.isArray(val) ? val : []).map(o =>
-      typeof o === 'string' ? { label: o, value: o } : { label: String(o.label ?? o.value ?? ''), value: String(o.value ?? o.label ?? '') }
+      typeof o === 'string'
+        ? { label: o, value: o, sub: '' }
+        : {
+            label: String(o.label ?? o.value ?? ''),
+            value: String(o.value ?? o.label ?? ''),
+            sub: String(o.sub ?? ''),
+          }
     );
     if (this.isConnected) this.#closePopup();
   }
@@ -261,9 +287,15 @@ class UiAutocomplete extends HTMLElement {
   #openPopup(query) {
     const opts = this.#options || [];
     const q = (query || '').toLowerCase();
+    // Sealed PLANAUTOCOMPLETE filter: case-insensitive substring against the
+    // label OR the sub line; an empty query lists ALL options (capped below).
     this.#filtered = q
-      ? opts.filter(o => o.label.toLowerCase().includes(q))
+      ? opts.filter(o =>
+          o.label.toLowerCase().includes(q) ||
+          (o.sub || '').toLowerCase().includes(q))
       : [...opts];
+    const cap = parseInt(this.getAttribute('max-results') || '', 10);
+    if (cap > 0) this.#filtered = this.#filtered.slice(0, cap);
     this.#activeIdx = -1;
     this.#renderPopup(q);
     this.#popupEl.setAttribute('open', '');
@@ -300,20 +332,31 @@ class UiAutocomplete extends HTMLElement {
       item.id = `opt-${i}`;
       item.setAttribute('aria-selected', String(i === this.#activeIdx));
 
-      // Highlight matching substring
+      // Label line (highlight the matching substring)
+      const labelEl = document.createElement('div');
+      labelEl.className = 'opt-label';
       if (q) {
         const idx = opt.label.toLowerCase().indexOf(q.toLowerCase());
         if (idx >= 0) {
-          item.appendChild(document.createTextNode(opt.label.slice(0, idx)));
+          labelEl.appendChild(document.createTextNode(opt.label.slice(0, idx)));
           const mark = document.createElement('mark');
           mark.textContent = opt.label.slice(idx, idx + q.length);
-          item.appendChild(mark);
-          item.appendChild(document.createTextNode(opt.label.slice(idx + q.length)));
+          labelEl.appendChild(mark);
+          labelEl.appendChild(document.createTextNode(opt.label.slice(idx + q.length)));
         } else {
-          item.textContent = opt.label;
+          labelEl.textContent = opt.label;
         }
       } else {
-        item.textContent = opt.label;
+        labelEl.textContent = opt.label;
+      }
+      item.appendChild(labelEl);
+
+      // Muted sub line (two-line row — sealed PLANAUTOCOMPLETE anatomy)
+      if (opt.sub) {
+        const subEl = document.createElement('div');
+        subEl.className = 'opt-sub';
+        subEl.textContent = opt.sub;
+        item.appendChild(subEl);
       }
 
       // mousedown (not click) so blur doesn't fire first
@@ -331,8 +374,15 @@ class UiAutocomplete extends HTMLElement {
   #select(idx) {
     const opt = this.#filtered[idx];
     if (!opt) return;
-    this.#setValue(opt.value, false);
-    this.#inputEl.value = opt.label;
+    if (this.hasAttribute('clear-on-select')) {
+      // Picker mode (sealed PLANAUTOCOMPLETE): the pick fires change, then the
+      // query CLEARS and the popup closes — the label never writes back.
+      this.#value = '';
+      this.#inputEl.value = '';
+    } else {
+      this.#setValue(opt.value, false);
+      this.#inputEl.value = opt.label;
+    }
     this.#closePopup();
     this.dispatchEvent(new CustomEvent('change', {
       bubbles: true, composed: true,

@@ -600,7 +600,7 @@
    "tag": "ui-chip",
    "status": "built",
    "category": "native",
-   "summary": "Chip variants assist/filter/input/suggestion (interactive: pill shape; filter toggles primary-container; input removable; paired with ui-chip-set) PLUS the sealed presentational pill variants priority/zone/tag (Shared-UI-primitives): non-interactive caption-type pills with no state layer/tabstop/role. priority reads --ui-sys-priority-{high|medium|low}-surface/-ink via the value attr (case-insensitive; unknown falls back to the Low pair). zone reads the 14 single-sourced --ui-sys-zone-* fills + band inks via data-zone = the exact zone name, with the SEALED NULL-GUARD: an uncatalogued zone renders NOTHING. tag is the quiet surface-container tag pill. These variants are the ONE source of pill visuals \u2014 screens compose them, never hand-rolled spans. segment = the sealed SegmentBadge pill (Workspaces box): uppercase caption pill reading --ui-sys-segment-* pairs via the value attr, Corporate Functions fallback.",
+   "summary": "Chip variants assist/filter/input/suggestion (interactive: pill shape; filter toggles primary-container; input removable; paired with ui-chip-set) PLUS the sealed presentational pill variants priority/zone/tag (Shared-UI-primitives): non-interactive caption-type pills with no state layer/tabstop/role. priority reads --ui-sys-priority-{high|medium|low}-surface/-ink via the value attr (case-insensitive; unknown falls back to the Low pair). zone reads the 14 single-sourced --ui-sys-zone-* fills + band inks via data-zone = the exact zone name, with the SEALED NULL-GUARD: an uncatalogued zone renders NOTHING. tag is the quiet surface-container tag pill. These variants are the ONE source of pill visuals \u2014 screens compose them, never hand-rolled spans. segment = the sealed SegmentBadge pill (Workspaces box): uppercase caption pill reading --ui-sys-segment-* pairs via the value attr, Corporate Functions fallback. goal = the sealed PLAN_GOAL_COLORS \"type of plan\" pill (Plan-page box): caption pill reading --ui-sys-goal-* pairs via the value attr (goal-model id general|shared-value|crisis|activist|dei|community|union); unknown/absent falls back to the container/muted pair (the sealed var(--bg-2)/var(--ink-2) rule).",
    "props": [
     {
      "name": "variant",
@@ -613,7 +613,8 @@
       "priority",
       "zone",
       "tag",
-      "segment"
+      "segment",
+      "goal"
      ],
      "default": "assist"
     },
@@ -636,7 +637,7 @@
       "Low"
      ],
      "default": "",
-     "note": "priority variant only; matched case-insensitively; unknown/absent falls back to the Low pair (sealed PriorityPill rule); segment variant: the exact segment name (Personal Systems | Printing | Corporate Investments | Corporate Functions) \u2014 unknown/absent falls back to the Corporate Functions pair (sealed SegmentBadge fallback), colors from --ui-sys-segment-*-surface/-ink"
+     "note": "priority variant only; matched case-insensitively; unknown/absent falls back to the Low pair (sealed PriorityPill rule); segment variant: the exact segment name (Personal Systems | Printing | Corporate Investments | Corporate Functions) \u2014 unknown/absent falls back to the Corporate Functions pair (sealed SegmentBadge fallback), colors from --ui-sys-segment-*-surface/-ink; goal variant: the goal-model id (general | shared-value | crisis | activist | dei | community | union) \u2014 unknown/absent falls back to the container/muted pair (sealed PLAN_GOAL_COLORS fallback), colors from --ui-sys-goal-*-surface/-ink"
     },
     {
      "name": "data-zone",
@@ -868,13 +869,13 @@
    "tag": "ui-autocomplete",
    "status": "built",
    "category": "gapFill",
-   "summary": "Typeahead combobox; outlined field + filtered popup listbox; substring highlight; full keyboard nav. options set via property.",
+   "summary": "Typeahead combobox; outlined field + filtered popup listbox; substring highlight; full keyboard nav. options set via property. Options may carry a sub line ({label, value, sub}) \u2014 two-line rows, filter matches label OR sub (the sealed PLANAUTOCOMPLETE mechanics). max-results caps the visible list (the plan pickers pass 8); clear-on-select makes a pick CLEAR the input and close (picker mode) instead of writing the label back.",
    "props": [
     {
      "name": "options",
      "type": "array",
      "default": "sample",
-     "note": "set via JS property"
+     "note": "set via JS property; strings or {label, value, sub?} \u2014 sub renders a muted second line and joins the substring filter (label OR sub)"
     },
     {
      "name": "label",
@@ -890,6 +891,18 @@
      "name": "value",
      "type": "string",
      "default": ""
+    },
+    {
+     "name": "max-results",
+     "type": "number",
+     "default": "",
+     "note": "cap on visible filtered options; empty = unlimited (the sealed plan pickers pass 8)"
+    },
+    {
+     "name": "clear-on-select",
+     "type": "boolean",
+     "default": false,
+     "note": "picker mode: a confirmed selection emits change then clears the input and closes, instead of writing the picked label into the field (sealed PLANAUTOCOMPLETE: 'selection clears the input and closes')"
     }
    ],
    "states": [

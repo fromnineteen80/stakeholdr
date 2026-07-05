@@ -40,7 +40,7 @@ import {
 /* ── web-component bridges (custom events don't reach React's synthetic
  * system; every ui-* change/input/close subscribes through refs) ─────────── */
 
-function useUiEvent(ref, type, handler) {
+export function useUiEvent(ref, type, handler) {
   useEffect(() => {
     const el = ref.current;
     if (!el || !handler) return undefined;
@@ -50,7 +50,7 @@ function useUiEvent(ref, type, handler) {
 }
 
 /* Caption-labelled field shell — the sealed span.lbl + control anatomy. */
-function Field({ label, help, children, className }) {
+export function Field({ label, help, children, className }) {
   return (
     <div className={'sh-field' + (className ? ' ' + className : '')}>
       <span className="sh-lbl">{label}</span>
@@ -62,7 +62,7 @@ function Field({ label, help, children, className }) {
 
 /* ui-text-field variant=plain: visible caption comes from Field; the label
  * attr stays for the component's aria-label; placeholder = the sealed copy. */
-function TF({ label, placeholder, value, onValue, onBlurValue, supporting, fieldRef }) {
+export function TF({ label, placeholder, value, onValue, onBlurValue, supporting, fieldRef }) {
   const localRef = useRef(null);
   const ref = fieldRef || localRef;
   useEffect(() => {
@@ -82,7 +82,7 @@ function TF({ label, placeholder, value, onValue, onBlurValue, supporting, field
   );
 }
 
-function Sel({ value, options, onChange, ariaLabel }) {
+export function Sel({ value, options, onChange, ariaLabel }) {
   const ref = useRef(null);
   useUiEvent(ref, 'change', (e) => {
     if (e.target === ref.current) onChange(e.detail.value);
@@ -112,7 +112,7 @@ function DateField({ label, value, onChange }) {
   return <ui-date-picker ref={ref} label={label} value={value || ''}></ui-date-picker>;
 }
 
-function Owners({ users, value, onChange, readonly }) {
+export function Owners({ users, value, onChange, readonly }) {
   const ref = useRef(null);
   useEffect(() => {
     const el = ref.current;
@@ -126,7 +126,7 @@ function Owners({ users, value, onChange, readonly }) {
   );
 }
 
-function TA({ value, onValue, placeholder, rows }) {
+export function TA({ value, onValue, placeholder, rows }) {
   const ref = useRef(null);
   useEffect(() => {
     const el = ref.current;
@@ -161,7 +161,7 @@ function SelChip({ value, onRemove }) {
 }
 
 /* ── IssueSelector (sealed sub-control; used for BOTH Issues and Tags) ───── */
-function IssueSelector({ selected, company, restrict, onChange }) {
+export function IssueSelector({ selected, company, restrict, onChange }) {
   const model = issueSelectorModel({ selected, company, restrict });
   const inRef = useRef(null);
 
@@ -244,7 +244,7 @@ function StatusDot({ value }) {
   return <ui-status-dot value={value}></ui-status-dot>;
 }
 
-function PriorityPill({ value }) {
+export function PriorityPill({ value }) {
   // value matched case-insensitively; unknown falls back to the Low pair
   // (sealed rule, implemented inside the variant).
   return <ui-chip variant="priority" value={value || ''}>{value || ''}</ui-chip>;
