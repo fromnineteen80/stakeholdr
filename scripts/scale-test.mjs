@@ -118,7 +118,9 @@ ok('SELECT_COL is the declared addition, NOT folded into the sealed frozen four'
   assert.ok(!FROZEN_COLS.some((c) => c.key === 'sel'));
 });
 
-/* ── BULK PATCH BUILDERS (single setState per action) ───────────────────── */
+/* ── BULK PATCH BUILDERS (single setState per action; audit-F5 contract:
+ * every builder returns { next, landed } — landed = rows ACTUALLY changed,
+ * already-satisfied rows no-op by reference) ─────────────────────────────── */
 const STAMP = '2026-07-05T12:00:00.000Z';
 const shs = [
   { id: 's1', name: 'One', priority: 'Low', tags: ['ally'], updatedAt: 'old' },
@@ -126,45 +128,58 @@ const shs = [
   { id: 's3', name: 'Three', priority: 'High', updatedAt: 'old' },
 ];
 
-ok('bulkPatchStakeholders: one pass — selected rows patched + stamped, others by reference', () => {
-  const next = bulkPatchStakeholders(shs, ['s1', 's3'], { priority: 'High' }, STAMP);
+ok('bulkPatchStakeholders: one pass — selected rows patched + stamped, others by reference; landed honest', () => {
+  const { next, landed } = bulkPatchStakeholders(shs, ['s1', 's3'], { priority: 'High' }, STAMP);
   assert.notEqual(next, shs);
+  assert.equal(landed, 1);                           // s3 is ALREADY High → honest no-op
   assert.equal(next[0].priority, 'High');
   assert.equal(next[0].updatedAt, STAMP);
-  assert.equal(next[2].updatedAt, STAMP);
+  assert.equal(next[2], shs[2]);                     // already-satisfied row keeps its reference (no phantom stamp)
   assert.equal(next[1], shs[1]);                     // untouched row keeps its reference
   assert.equal(shs[0].priority, 'Low');              // never mutates the input
 });
-ok('bulkPatchStakeholders: empty selection / empty patch → the input reference', () => {
-  assert.equal(bulkPatchStakeholders(shs, [], { priority: 'High' }, STAMP), shs);
-  assert.equal(bulkPatchStakeholders(shs, ['s1'], {}, STAMP), shs);
+ok('bulkPatchStakeholders: empty selection / empty patch / all-satisfied → the input reference, landed 0', () => {
+  assert.equal(bulkPatchStakeholders(shs, [], { priority: 'High' }, STAMP).next, shs);
+  assert.equal(bulkPatchStakeholders(shs, ['s1'], {}, STAMP).next, shs);
+  const r = bulkPatchStakeholders(shs, ['s3'], { priority: 'High' }, STAMP);
+  assert.equal(r.next, shs);
+  assert.equal(r.landed, 0);
 });
 ok('bulkAddTag: unions the tag, stamps changed rows, honest no-op on rows already tagged', () => {
-  const next = bulkAddTag(shs, ['s1', 's2', 's3'], 'ally', STAMP);
+  const { next, landed } = bulkAddTag(shs, ['s1', 's2', 's3'], 'ally', STAMP);
+  assert.equal(landed, 2);                           // s1 already carries the tag
   assert.equal(next[0], shs[0]);                     // already tagged → reference-equal, no stamp churn
   assert.deepEqual(next[1].tags, ['ally']);
   assert.equal(next[1].updatedAt, STAMP);
   assert.deepEqual(next[2].tags, ['ally']);          // rows without a tags array grow one
 });
 ok('bulkAddTag: blank tag rejected whole', () => {
-  assert.equal(bulkAddTag(shs, ['s1'], '   ', STAMP), shs);
+  const r = bulkAddTag(shs, ['s1'], '   ', STAMP);
+  assert.equal(r.next, shs);
+  assert.equal(r.landed, 0);
 });
 ok('bulkAssignWorkspace: unions membership; missing entries take the sealed createJoinFor join', () => {
   const joins = { s1: ['ws-a'], s2: [] };
-  const next = bulkAssignWorkspace(joins, ['s1', 's2', 's3'], 'ws-b');
+  const { next, landed } = bulkAssignWorkspace(joins, ['s1', 's2', 's3'], 'ws-b');
+  assert.equal(landed, 3);
   assert.deepEqual(next.s1, ['ws-a', 'ws-b']);
   assert.deepEqual(next.s2, ['ws-b']);               // empty join → the sealed create-time join
   assert.deepEqual(next.s3, ['ws-b']);               // no entry → minted via createJoinFor
   assert.deepEqual(joins.s1, ['ws-a']);              // input untouched
 });
-ok('bulkAssignWorkspace: already-member rows keep their join reference; all-member → input reference', () => {
+ok('bulkAssignWorkspace: already-member rows keep their join reference; all-member → input reference, landed 0', () => {
   const joins = { s1: ['ws-b'], s2: ['ws-a', 'ws-b'] };
-  assert.equal(bulkAssignWorkspace(joins, ['s1', 's2'], 'ws-b'), joins);
-  assert.equal(bulkAssignWorkspace(joins, ['s1'], null), joins);
+  const r = bulkAssignWorkspace(joins, ['s1', 's2'], 'ws-b');
+  assert.equal(r.next, joins);
+  assert.equal(r.landed, 0);
+  assert.equal(bulkAssignWorkspace(joins, ['s1'], null).next, joins);
 });
-ok('bulkActionSummary singularizes at 1 (the sealed count-copy rule)', () => {
-  assert.equal(bulkActionSummary(1, 'Priority set to High'), 'Priority set to High for 1 stakeholder');
-  assert.equal(bulkActionSummary(3, 'Tag "ally" added'), 'Tag "ally" added for 3 stakeholders');
+ok('bulkActionSummary: honest landed counts — full, partial, and zero forms; singularizes at 1', () => {
+  assert.equal(bulkActionSummary(1, 1, 'Priority set to High'), 'Priority set to High for 1 stakeholder');
+  assert.equal(bulkActionSummary(3, 3, 'Tag "ally" added'), 'Tag "ally" added for 3 stakeholders');
+  assert.equal(bulkActionSummary(3, 12, 'Tag "ally" added'), 'Tag "ally" added for 3 stakeholders · 9 already had it');
+  assert.equal(bulkActionSummary(2, 3, 'Priority set to Low'), 'Priority set to Low for 2 stakeholders · 1 already had it');
+  assert.equal(bulkActionSummary(0, 4, 'Tag "ally" added'), 'No change — 4 stakeholders already had it');
 });
 
 /* ── EXPORT SELECTED — the sealed CSV path over a selection ─────────────── */

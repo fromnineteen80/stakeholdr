@@ -54,6 +54,13 @@
  *  · SCALE LAW: every bulk write is ONE setState via the pure builders in
  *    sheet-logic.js (updatedAt-stamped patches; honest per-row no-ops) —
  *    never N sequential writes.
+ *  · SELECTION SCOPE (RULED 2026-07-05, scale-audit F2): the table PRUNES
+ *    the selection on every pipeline change (search/filter/sort-preset/data
+ *    swap) so it is always ⊆ the filtered rows — the bar count, Export
+ *    selected and every bulk write act on exactly what the filters show.
+ *  · HONEST COUNTS (audit F5): the builders return { next, landed }; the
+ *    snackbar reports the landed count (already-satisfied rows are named,
+ *    never absorbed) and Export selected guards the zero-row case.
  *  · NO BULK DELETE here (deferred, declared): destructive-at-scale waits on
  *    the Enterprise box's soft-delete/archive semantics.
  */
@@ -499,27 +506,39 @@ export function SheetPage({
     setIntelIgnores((prev) => withoutIgnore(prev, currentUser?.id, cardKey, entryKey));
 
   /* ── PHASE 17: bulk-action handlers (each write = ONE setState through a
-   * pure builder; the snackbar reports what landed — honest feedback at a
-   * scale where the changed rows may sit off-screen). ─────────────────── */
+   * pure builder). HONEST COUNTS (2026-07-05 audit F5): the builders return
+   * { next, landed } and the snackbar reports what ACTUALLY landed — the
+   * builders no-op already-satisfied rows, so the selection size would lie
+   * at a scale where the changed rows may sit off-screen. The value-form
+   * setState is deliberate: landed must be known at dispatch time for the
+   * snackbar (React defers functional updaters), and the handlers fire from
+   * user events over current state — still ONE setState per action. ───── */
   const bulkSetPriority = (level) => {
-    const n = bulkIds.length;
-    setStakeholders((prev) => bulkPatchStakeholders(prev, bulkIds, { priority: level }, nowStamp()));
-    snackRef.current?.show(bulkActionSummary(n, `Priority set to ${level}`));
+    const { next, landed } = bulkPatchStakeholders(stakeholders, bulkIds, { priority: level }, nowStamp());
+    if (next !== stakeholders) setStakeholders(next);
+    snackRef.current?.show(bulkActionSummary(landed, bulkIds.length, `Priority set to ${level}`));
   };
   const bulkTag = (tag) => {
-    const n = bulkIds.length;
-    setStakeholders((prev) => bulkAddTag(prev, bulkIds, tag, nowStamp()));
-    snackRef.current?.show(bulkActionSummary(n, `Tag "${tag}" added`));
+    const { next, landed } = bulkAddTag(stakeholders, bulkIds, tag, nowStamp());
+    if (next !== stakeholders) setStakeholders(next);
+    snackRef.current?.show(bulkActionSummary(landed, bulkIds.length, `Tag "${tag}" added`));
   };
   const bulkAssign = (wsId) => {
-    const n = bulkIds.length;
     const wsName = workspaces.find((w) => w.id === wsId)?.name || wsId;
-    setStakeholderWorkspaces((prev) => bulkAssignWorkspace(prev, bulkIds, wsId));
-    snackRef.current?.show(bulkActionSummary(n, `Added to "${wsName}"`));
+    const { next, landed } = bulkAssignWorkspace(stakeholderWorkspaces, bulkIds, wsId);
+    if (next !== stakeholderWorkspaces) setStakeholderWorkspaces(next);
+    snackRef.current?.show(bulkActionSummary(landed, bulkIds.length, `Added to "${wsName}"`));
   };
   // Export selected rides the table's sealed CSV path over the selection
-  // (filtered order) — replace-don't-duplicate.
-  const bulkExport = () => tableRef.current?.exportSelected();
+  // (filtered order) — replace-don't-duplicate. Zero-row guard (audit F2):
+  // the bar retires when the selection prunes empty, but if export ever
+  // fires with nothing selected it says so — never a silent no-op.
+  const bulkExport = () => {
+    const el = tableRef.current;
+    if (!el) return;
+    if (!el.selection.length) { snackRef.current?.show('No rows selected to export'); return; }
+    el.exportSelected();
+  };
   const bulkClear = () => tableRef.current?.clearSelection();
 
   const shExisting = shModal && shModal.id

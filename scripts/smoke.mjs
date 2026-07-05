@@ -953,8 +953,22 @@ for (const path of pages) {
     for (const b of p17before) {
       const a = p17after.find(x => x.id === b.id) || {};
       if (a.priority !== 'Low') errs.push(`P17WRITE: ${b.id} priority expected Low, saw "${a.priority}"`);
-      if (!a.updatedAt || a.updatedAt === b.updatedAt) errs.push(`P17STAMP: ${b.id} updatedAt was not freshly stamped`);
+      // honest per-row no-op (audit F5): an already-Low row keeps its stamp;
+      // a changed row must be freshly stamped
+      if (b.priority !== 'Low' && (!a.updatedAt || a.updatedAt === b.updatedAt)) errs.push(`P17STAMP: ${b.id} updatedAt was not freshly stamped`);
+      if (b.priority === 'Low' && a.updatedAt !== b.updatedAt) errs.push(`P17NOOP: already-Low ${b.id} took a phantom updatedAt stamp`);
     }
+    // honest snackbar count (audit F5): reports rows the write ACTUALLY
+    // changed, naming already-satisfied rows instead of absorbing them
+    const p17landed = p17before.filter(b => b.priority !== 'Low').length;
+    const p17noun = (n) => `${n} stakeholder${n === 1 ? '' : 's'}`;
+    const p17expectSnack = p17landed === 0
+      ? `No change — ${p17noun(3)} already had it`
+      : p17landed === 3
+        ? `Priority set to Low for ${p17noun(3)}`
+        : `Priority set to Low for ${p17noun(p17landed)} · ${3 - p17landed} already had it`;
+    const p17snack = (await page.locator('.sheet-wrap ui-snackbar').getAttribute('message').catch(() => '') || '').trim();
+    if (p17snack !== p17expectSnack) errs.push(`P17SNACK: expected "${p17expectSnack}", saw "${p17snack}"`);
     const p17countAfter = (await page.locator('.bulk-bar .bulk-count').textContent().catch(() => '') || '').trim();
     if (p17countAfter !== '3 selected') errs.push(`P17KEEP: the selection must survive the bulk write, saw "${p17countAfter}"`);
     // select-all-FILTERED via the header checkbox (from 'some' → all)
@@ -987,6 +1001,18 @@ for (const path of pages) {
     if (p17range !== '4 selected') errs.push(`P17RANGE: shift-click expected "4 selected", saw "${p17range}"`);
     await page.locator('.bulk-bar ui-button', { hasText: 'Clear selection' }).click({ timeout: 3000 }).catch(e => errs.push('P17CLEAR2: ' + e.message));
     await page.waitForTimeout(300);
+    // PRUNE CONTRACT (RULED 2026-07-05, audit F2): a pipeline change PRUNES
+    // the selection — filter the picked rows away and the selection (and the
+    // bar) is GONE, and clearing the filter must NOT resurrect it.
+    await p17cbs.nth(0).click({ timeout: 3000 }).catch(e => errs.push('P17PRUNE0: ' + e.message));
+    await page.waitForTimeout(300);
+    if (await page.locator('.bulk-bar').count() !== 1) errs.push('P17PRUNE1: expected the bar before the prune drive');
+    await page.locator('ui-stakeholder-table .search-field input').fill('zzz-prune-probe', { timeout: 3000 }).catch(e => errs.push('P17PRUNEQ: ' + e.message));
+    await page.waitForTimeout(400);
+    if (await page.locator('.bulk-bar').count() !== 0) errs.push('P17PRUNE: a search excluding the picked row must prune the selection (bar still up)');
+    await page.locator('ui-stakeholder-table .search-field input').fill('', { timeout: 3000 }).catch(e => errs.push('P17PRUNEC: ' + e.message));
+    await page.waitForTimeout(400);
+    if (await page.locator('.bulk-bar').count() !== 0) errs.push('P17PRUNE2: clearing the search must not resurrect the pruned selection');
   }
   if (path === '/record.html') {
     // Phase 14: SampleRecord — the sealed neutral tuning preview (standalone
