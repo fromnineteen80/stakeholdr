@@ -9,13 +9,20 @@
  *      the composed Browse-files ui-button; the "Download template"
  *      ui-button (outlined, download icon) lives here (sealed trigger).
  *   2. COLUMN MAP — ui-data-table, one row per detected file header: header
- *      text → target ui-select (the data columns + "Ignore this column") →
- *      match ui-chip ("auto-matched" / "unmapped" / "computed — ignored").
+ *      text → target ui-select (the data columns + "Ignore this column";
+ *      computed-named headers additionally carry the default
+ *      "Computed — skipped" option and stay REMAPPABLE — see the
+ *      import-logic ledger) → match ui-chip ("auto-matched" / "unmapped" /
+ *      "mapped by hand" / "Computed — skipped" — the last two are declared
+ *      honest extensions of the sealed pair, ledger'd in import-logic).
  *      Auto-match = case-insensitive header equality (+ the declared aliases
  *      the sealed export itself requires — see import-logic's ledger).
  *   3. VALIDATION PREVIEW — ui-data-table of the parsed rows: valid rows
  *      plain; invalid rows carry a leading ui-icon "error" + ui-chip (error
- *      variant) naming the failure. Header summary "N rows ready · M rows
+ *      variant) naming the failure, and the offending CELLS light via the
+ *      table's cell-state hook (sealed ~3909 "cell-level errors highlighted
+ *      via the table's error state tokens" — the state lives IN
+ *      ui-data-table, token-only). Header summary "N rows ready · M rows
  *      with errors" + the ui-switch "Skip invalid rows" (default ON).
  *      SCALE (standing ruling): validation runs over ALL rows; the preview
  *      RENDER is capped with an honest "showing first N of M" note
@@ -39,6 +46,9 @@ import { readXlsxRows } from './xlsx-read.js';
 const PREVIEW_CAP = 200; // ui-data-table mounts every row — cap the RENDER only
 
 const STEP_LABELS = ['Upload', 'Match columns', 'Validate', 'Import'];
+
+/* ONE spelling for the computed disposition (option + match chip). */
+const COMPUTED_LABEL = 'Computed — skipped';
 
 function downloadBlob(bytes, filename, mime) {
   try {
@@ -135,10 +145,14 @@ export function ImportWizard({
         label: 'Maps to',
         render: (row) => {
           if (!row.m) return null; // defensive: never render over foreign rows
-          if (row.m.target === COMPUTED) return chip('computed — skipped');
           const sel = document.createElement('ui-select');
           sel.setAttribute('aria-label', `Map "${row.m.header}"`);
           const opts = [
+            // a computed-named header defaults to skipped but stays LIVE —
+            // a file whose own data uses a header literally named "x" or
+            // "Relationship" can be remapped to Ignore or any input target
+            // (declared: import-logic ledger, COMPUTED HEADERS ARE REMAPPABLE)
+            ...(row.m.computed ? [{ value: COMPUTED, label: COMPUTED_LABEL }] : []),
             { value: IGNORE, label: 'Ignore this column' },
             ...IMPORT_TARGETS.map((t) => ({ value: t.key, label: t.label })),
           ];
@@ -153,8 +167,12 @@ export function ImportWizard({
             const v = e.detail.value;
             setMapping((prev) => prev.map((m) => {
               if (m.index === row.m.index) return { ...m, target: v, auto: false };
-              // a target claimed here is released anywhere else (one column per target)
-              if (v !== IGNORE && m.target === v) return { ...m, target: IGNORE, auto: false };
+              // an INPUT target claimed here is released anywhere else (one
+              // column per target); IGNORE/COMPUTED are dispositions, not
+              // exclusive targets — never stolen from other rows
+              if (v !== IGNORE && v !== COMPUTED && m.target === v) {
+                return { ...m, target: IGNORE, auto: false };
+              }
               return m;
             }));
           });
@@ -166,8 +184,9 @@ export function ImportWizard({
         label: 'Match',
         render: (row) => {
           if (!row.m) return null;
-          if (row.m.target === COMPUTED) return chip('computed — ignored');
+          if (row.m.target === COMPUTED) return chip(COMPUTED_LABEL);
           if (row.m.target === IGNORE) return chip('unmapped');
+          // "mapped by hand" = the declared third state (import-logic ledger)
           return chip(row.m.auto ? 'auto-matched' : 'mapped by hand');
         },
       },
@@ -217,7 +236,16 @@ export function ImportWizard({
         },
       },
       { key: '_line', label: 'Row' },
-      ...targetsInOrder.map((t) => ({ key: t.key, label: t.label })),
+      ...targetsInOrder.map((t) => ({
+        key: t.key,
+        label: t.label,
+        // CELL-LEVEL error highlight (sealed ~3909): errors carry
+        // { field, message } where field = the column LABEL (import-logic's
+        // err() vocabulary matches IMPORT_TARGETS labels 1:1); the table's
+        // sanctioned state hook lights the cell from its error state tokens.
+        state: (row) => (row._errors && row._errors.some((e) => e.field === t.label)
+          ? 'error' : null),
+      })),
     ];
   }, [step, validation, mapping]);
 

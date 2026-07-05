@@ -29,8 +29,11 @@
  *    the defined name can never diverge. A live catalog value whose
  *    sanitized name collides with another gets a numeric suffix — its
  *    dependent dropdown degrades for that value only (declared edge).
- *  · Site-by-State: states with no operating site resolve to the BlankOne
- *    range (an empty dropdown), matching "no sites in that state".
+ *  · Site-by-State: EVERY state gets its own St_* named range on the Lookups
+ *    sheet (empty for states with no operating site — an empty dropdown,
+ *    "no sites in that state"); BlankOne is only the NO-PARENT fallback in
+ *    the Type/Region IF()s (a blank State falls back to SiteListAll, the
+ *    full site list, instead).
  *  · MULTI-VALUE columns (Issues/Tags/Owner — sealed "; " delimiter): Excel
  *    data validation cannot multi-select, so their dropdowns are ADVISORY
  *    (showErrorMessage=0): the dropdown offers the catalog vocabulary, and

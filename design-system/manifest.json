@@ -952,13 +952,13 @@
    "tag": "ui-data-table",
    "status": "built",
    "category": "gapFill",
-   "summary": "Tokened semantic data grid (MD3 has none); sticky header, sortable columns, optional checkbox selection, comfortable/compact density. columns+data set via properties. Phase 18: a column may carry a render(row) cell-template function returning a DOM node (e.g. a real ui-select / ui-chip) — composed controls live INSIDE the real component, never a hand-rolled lookalike grid.",
+   "summary": "Tokened semantic data grid (MD3 has none); sticky header, sortable columns, optional checkbox selection, comfortable/compact density. columns+data set via properties. Phase 18: a column may carry a render(row) cell-template function returning a DOM node (e.g. a real ui-select / ui-chip) — composed controls live INSIDE the real component, never a hand-rolled lookalike grid. Phase-18 fix: a column may also carry a state(row) cell-state hook — returning 'error' lights THAT cell from the table's error state tokens (--ui-sys-error-container bg, --ui-sys-error ink; part=\"cell-error\"), the sealed cell-level error highlight.",
    "props": [
     {
      "name": "columns",
      "type": "array",
      "default": "sample",
-     "note": "set via JS property; each column {key, label, type, sortable, align, render?} — render(row) returns a Node appended in place of the text value (Phase 18 cell-template hook)"
+     "note": "set via JS property; each column {key, label, type, sortable, align, render?, state?} — render(row) returns a Node appended in place of the text value (Phase 18 cell-template hook); state(row) → 'error' marks the cell with the component-owned error state (Phase-18 fix cell-state hook)"
     },
     {
      "name": "data",
@@ -985,6 +985,7 @@
     "sortable-header",
     "row-hover",
     "selected-row",
+    "cell-error",
     "empty"
    ],
    "import": "./components/data-table.js"
@@ -1785,7 +1786,7 @@
    "tag": "ui-dropzone",
    "status": "built",
    "category": "gapFill",
-   "summary": "File drop target (GAP component, Phase 18 — the sealed Demo-features BUILD-MAP: a dropzone needing real drag-over/error states is built INTO the design system, never a div-with-styles in app code). Dashed token-bordered target hosting a large ui-icon (default upload_file), the host copy (default slot), a composed ui-button 'Browse files' and a HIDDEN native file input inside the shadow root (the ui-upload precedent). Drag-over lights the accent border + tint; a rejected file type sets the error state with an inline reason; a status line reflects the picked file. The component only surfaces the File object — the host owns all reading/parsing. Keyboard: the zone is a focusable button (Enter/Space opens the picker). reset() clears status/error for a reopened flow.",
+   "summary": "File drop target (GAP component, Phase 18 — the sealed Demo-features BUILD-MAP: a dropzone needing real drag-over/error states is built INTO the design system, never a div-with-styles in app code). Dashed token-bordered target hosting a large ui-icon (default upload_file), the host copy (default slot), a composed ui-button 'Browse files' and a HIDDEN native file input inside the shadow root (the ui-upload precedent). Drag-over lights the accent border + tint; a rejected file type sets the error state with an inline reason; a status line reflects the picked file. The component only surfaces the File object — the host owns all reading/parsing. A11y (Phase-18 fix): the zone is a labelled GROUP (role=group + aria-label), never role=button — it contains a real interactive descendant; the keyboard affordance (and focus-visible state) is the inner Browse ui-button, which opens the picker directly; the zone keeps pointer click-to-browse + the drag events. reset() clears status/error for a reopened flow.",
    "props": [
     {
      "name": "accept",

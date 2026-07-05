@@ -46,7 +46,23 @@
  *  · TEMPLATE HINT ROW — the downloadable template carries a row-2 hint line
  *    ("LEAVE BLANK — computed in the app" + format hints); rows matching it
  *    (or entirely empty rows) are skipped, never flagged as errors, so the
- *    template itself re-imports clean.
+ *    template itself re-imports clean. A row only counts as the hint row if
+ *    the LEAVE-BLANK note is among its matched cells — a real data row whose
+ *    cells coincidentally equal short hints ("Required", "Free text") is
+ *    never silently skipped (it surfaces in the preview instead).
+ *  · COMPUTED HEADERS ARE REMAPPABLE — a header matching a computed/audit
+ *    name defaults to the "Computed — skipped" disposition (sealed: a
+ *    re-imported export never aborts) but stays a LIVE mapping row: a file
+ *    whose own data uses a header literally named "x" or "Relationship" can
+ *    be remapped to "Ignore this column" or any input target. Remapped to a
+ *    real target it becomes INPUT (validated + committed like any mapped
+ *    column); left at the default it stays skipped. autoMapHeaders marks
+ *    such rows computed:true so the wizard can keep offering the
+ *    "Computed — skipped" option after a remap.
+ *  · MATCH CHIP STATES — the sealed step-2 chip names "auto-matched" vs
+ *    "unmapped"; two honest extensions: "mapped by hand" (a target the user
+ *    set or changed — auto:false) and "Computed — skipped" (the computed
+ *    disposition above; ONE spelling everywhere).
  */
 
 /* ── CSV (the sealed escaping rules: wrap on quote/comma/newline, quotes
@@ -62,8 +78,9 @@ export function parseCsv(text) {
   let row = [];
   let field = '';
   let inQuotes = false;
+  let sawQuote = false; // the CURRENT field passed through a quoted section
   let i = 0;
-  const pushField = () => { row.push(field); field = ''; };
+  const pushField = () => { row.push(field); field = ''; sawQuote = false; };
   const pushRow = () => { pushField(); rows.push(row); row = []; };
   while (i < s.length) {
     const c = s[i];
@@ -74,14 +91,18 @@ export function parseCsv(text) {
       }
       field += c; i += 1; continue;
     }
-    if (c === '"') { inQuotes = true; i += 1; continue; }
+    // NOTE: a bare quote MID-field (a"b) re-enters quoted mode — undefined
+    // input per the sealed escaping rules (quotes only open a field or are
+    // doubled inside one); behavior deliberately left as-is.
+    if (c === '"') { inQuotes = true; sawQuote = true; i += 1; continue; }
     if (c === ',') { pushField(); i += 1; continue; }
     if (c === '\r') { pushRow(); i += s[i + 1] === '\n' ? 2 : 1; continue; }
     if (c === '\n') { pushRow(); i += 1; continue; }
     field += c; i += 1;
   }
-  // final field/row (unless the text ended exactly on a row break)
-  if (field !== '' || row.length) pushRow();
+  // final field/row (unless the text ended exactly on a row break) —
+  // sawQuote keeps a final row that is solely a quoted-empty cell ('""').
+  if (field !== '' || row.length || sawQuote) pushRow();
   return rows;
 }
 
@@ -136,15 +157,17 @@ function matchesTarget(header, target) {
   return (target.aliases || []).some((a) => norm(a) === h);
 }
 
-/* autoMapHeaders(headers) → [{ header, index, target, auto }] — the sealed
- * auto-map: case-insensitive header equality (plus the declared aliases);
- * computed headers → COMPUTED; unmapped → IGNORE ("Ignore this column").
+/* autoMapHeaders(headers) → [{ header, index, target, auto, computed? }] —
+ * the sealed auto-map: case-insensitive header equality (plus the declared
+ * aliases); computed headers → COMPUTED (computed:true, so the wizard keeps
+ * offering the "Computed — skipped" option — the row stays REMAPPABLE, see
+ * the ledger); unmapped → IGNORE ("Ignore this column").
  * A target already claimed by an earlier header is not claimed twice. */
 export function autoMapHeaders(headers) {
   const claimed = new Set();
   return (headers || []).map((header, index) => {
     const computed = COMPUTED_HEADERS.find((t) => matchesTarget(header, t));
-    if (computed) return { header, index, target: COMPUTED, auto: true };
+    if (computed) return { header, index, target: COMPUTED, auto: true, computed: true };
     const t = IMPORT_TARGETS.find(
       (tt) => !claimed.has(tt.key) && matchesTarget(header, tt),
     );
@@ -219,10 +242,16 @@ export const FORMAT_HINTS = {
 };
 
 /* isHintRow — the template's row 2 (hints + LEAVE BLANK notes) re-imports
- * silently: every non-empty cell is a known hint/note string. */
+ * silently: every non-empty cell is a known hint/note string AND the
+ * LEAVE-BLANK note is among them (the note is on every template hint row —
+ * requiring it means a real data row whose cells coincidentally equal short
+ * hints like "Required"/"Free text" is never silently skipped; a hint row
+ * hand-stripped of its computed columns surfaces in the preview instead,
+ * visibly, which beats silent data loss). */
 export function isHintRow(cells) {
   const nonEmpty = (cells || []).map((c) => String(c ?? '').trim()).filter(Boolean);
   if (!nonEmpty.length) return false; // an empty row is handled separately
+  if (!nonEmpty.includes(LEAVE_BLANK_NOTE)) return false;
   const known = new Set([LEAVE_BLANK_NOTE, CHOICE_HINT, ...Object.values(FORMAT_HINTS)]);
   return nonEmpty.every((c) => known.has(c));
 }

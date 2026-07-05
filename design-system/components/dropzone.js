@@ -36,8 +36,13 @@
  *            multi-drop). The host owns all reading/parsing.
  *   reject → detail { name, reason } — a file failed the accept filter.
  *
- * A11y: the target is focusable (tabindex 0), role="button",
- * aria-label from the accept list; Enter/Space opens the picker.
+ * A11y (Phase-18 fix): the zone is a LABELLED GROUP (role="group",
+ * aria-label from the accept list) — never role="button", because it
+ * CONTAINS a real interactive descendant (the composed Browse ui-button),
+ * and a button role may not nest interactive content. The keyboard
+ * affordance is the inner Browse button itself (it opens the picker
+ * DIRECTLY, not via bubbling); the zone keeps click-to-browse for pointer
+ * users plus the drag events.
  * ==========================================================================*/
 
 import './button.js';
@@ -68,10 +73,6 @@ template.innerHTML = `
                   background var(--ui-sys-motion-control);
     }
     .zone:hover { border-color: var(--ui-sys-on-surface-muted); }
-    .zone:focus-visible {
-      border-color: var(--ui-sys-accent);
-      box-shadow: 0 0 0 3px var(--ui-sys-focus-wash);
-    }
     :host([dragover]) .zone {
       border-color: var(--ui-sys-accent);
       background: var(--ui-sys-accent-tint-faint);
@@ -97,7 +98,7 @@ template.innerHTML = `
 
     input[type="file"] { display: none; }
   </style>
-  <div class="zone" part="zone" role="button" tabindex="0">
+  <div class="zone" part="zone" role="group">
     <span class="icon-wrap" aria-hidden="true"><ui-icon size="xl">upload_file</ui-icon></span>
     <span class="copy"><slot>Drop a file here, or</slot></span>
     <ui-button variant="outlined" part="browse">Browse files</ui-button>
@@ -128,7 +129,7 @@ class UiDropzone extends HTMLElement {
 
   connectedCallback() {
     this.#zone.addEventListener('click', this.#onZoneClick);
-    this.#zone.addEventListener('keydown', this.#onKeydown);
+    this.#button.addEventListener('click', this.#onBrowseClick);
     this.#zone.addEventListener('dragenter', this.#onDragEnter);
     this.#zone.addEventListener('dragover', this.#onDragOver);
     this.#zone.addEventListener('dragleave', this.#onDragLeave);
@@ -139,7 +140,7 @@ class UiDropzone extends HTMLElement {
 
   disconnectedCallback() {
     this.#zone.removeEventListener('click', this.#onZoneClick);
-    this.#zone.removeEventListener('keydown', this.#onKeydown);
+    this.#button.removeEventListener('click', this.#onBrowseClick);
     this.#zone.removeEventListener('dragenter', this.#onDragEnter);
     this.#zone.removeEventListener('dragover', this.#onDragOver);
     this.#zone.removeEventListener('dragleave', this.#onDragLeave);
@@ -153,13 +154,13 @@ class UiDropzone extends HTMLElement {
     this.#input.accept = this.getAttribute('accept') || '';
     this.#iconEl.textContent = this.getAttribute('icon') || 'upload_file';
     this.#button.textContent = this.getAttribute('browse-label') || 'Browse files';
+    // The zone itself is NOT focusable — the inner Browse ui-button is the
+    // one tab stop and keyboard affordance (interactive-descendant law).
     if (this.hasAttribute('disabled')) {
       this.#button.setAttribute('disabled', '');
-      this.#zone.setAttribute('tabindex', '-1');
       this.#zone.setAttribute('aria-disabled', 'true');
     } else {
       this.#button.removeAttribute('disabled');
-      this.#zone.setAttribute('tabindex', '0');
       this.#zone.removeAttribute('aria-disabled');
     }
     const accept = this.getAttribute('accept');
@@ -206,16 +207,18 @@ class UiDropzone extends HTMLElement {
     this.#input.value = '';
   }
 
+  /* Pointer affordance only — the zone has no button role/tab stop. */
   #onZoneClick = () => {
     if (this.hasAttribute('disabled')) return;
     this.#input.click();
   };
 
-  #onKeydown = (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      this.#onZoneClick();
-    }
+  /* The Browse button opens the picker DIRECTLY (never via bubbling to the
+   * zone) and stops propagation so the zone handler cannot double-open. */
+  #onBrowseClick = (e) => {
+    e.stopPropagation();
+    if (this.hasAttribute('disabled')) return;
+    this.#input.click();
   };
 
   #onPick = () => {

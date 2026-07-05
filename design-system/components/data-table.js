@@ -3,13 +3,21 @@
  *
  * Properties (set via JS, not attr, for array/object data):
  *   .data     array of row objects — each key matches a column key
- *   .columns  array of {key, label, type, sortable, align, render?}
+ *   .columns  array of {key, label, type, sortable, align, render?, state?}
  *             render (added Phase 18, registered in manifest.json): an
  *             optional per-column cell template — render(row) returns a DOM
  *             Node (e.g. a real ui-select / ui-chip) appended to the cell in
  *             place of the text value. This is how composed controls live
  *             INSIDE the real component (composition law) instead of a
  *             hand-rolled lookalike grid in app code.
+ *             state (added Phase 18 fix, registered in manifest.json): an
+ *             optional per-column CELL-STATE hook — state(row) returning
+ *             'error' marks THAT cell with the table's error state (sealed
+ *             guide ~3909: "cell-level errors highlighted via the table's
+ *             error state tokens"): background --ui-sys-error-container, ink
+ *             --ui-sys-error, exposed as part="cell-error" for hosts. The
+ *             styling lives HERE (the component owns its states; one styling
+ *             surface) — hosts only supply the predicate.
  *
  * Attributes:
  *   density   "comfortable" (default) | "compact"
@@ -132,6 +140,15 @@ template.innerHTML = `
     td[data-align="center"] { text-align: center; }
 
     tbody tr:last-child td { border-bottom: none; }
+
+    /* cell-level ERROR state (Phase-18 fix; sealed guide ~3909) — set by a
+       column's state(row) hook; token-only, and specific enough to hold
+       under the row-hover wash above. */
+    tbody td.cell-error {
+      background-color: var(--ui-sys-error-container);
+      color: var(--ui-sys-error);
+    }
+    tbody tr:hover td.cell-error { background-color: var(--ui-sys-error-container); }
 
     /* checkbox col */
     th.col-check,
@@ -347,6 +364,12 @@ class UiDataTable extends HTMLElement {
         } else {
           const val = row[col.key];
           td.textContent = val === null || val === undefined ? '' : String(val);
+        }
+        // sanctioned cell-state hook (Phase-18 fix): 'error' lights the cell
+        // via the component's own error-state tokens + part for host CSS.
+        if (typeof col.state === 'function' && col.state(row) === 'error') {
+          td.classList.add('cell-error');
+          td.setAttribute('part', 'cell-error');
         }
         tr.appendChild(td);
       }

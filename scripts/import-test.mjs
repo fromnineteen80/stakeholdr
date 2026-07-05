@@ -84,6 +84,12 @@ await ok('UTF-8 BOM stripped', () => {
 await ok('empty trailing field preserved', () => {
   assert.deepEqual(parseCsv('a,b,\n1,,3'), [['a', 'b', ''], ['1', '', '3']]);
 });
+await ok('a quoted-empty FINAL field still yields its row (F6)', () => {
+  assert.deepEqual(parseCsv('a,b\n""'), [['a', 'b'], ['']]);
+  assert.deepEqual(parseCsv('""'), [['']]);
+  assert.deepEqual(parseCsv('a,b\n"",'), [['a', 'b'], ['', '']]);
+  assert.deepEqual(parseCsv('a,b\n""\n'), [['a', 'b'], ['']]);
+});
 await ok('escape → parse round trip on hostile values', () => {
   const evil = ['He said "no"', 'a,b', 'x\ny', 'plain'];
   const esc = (v) => (/[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v);
@@ -113,6 +119,29 @@ await ok('a target is claimed once (duplicate headers)', () => {
   const m = autoMapHeaders(['Notes', 'notes']);
   assert.deepEqual(m.map((x) => x.target), ['notes', IGNORE]);
 });
+await ok('computed-named header: skipped by default, REMAPPABLE to input (F2)', () => {
+  const m = autoMapHeaders(['Organization', 'x']);
+  assert.equal(m[1].target, COMPUTED);
+  assert.equal(m[1].computed, true);   // the wizard keeps the option alive
+  assert.equal(m[0].computed, undefined);
+  // left at the default the column stays skipped
+  let res = validateRows([['Acme', '3.4']], m, CTX);
+  assert.equal(res.rows[0].values.notes, undefined);
+  assert.equal(res.rows[0].errors.length, 0);
+  // remapped to a real target it becomes INPUT — validated and committed
+  const remapped = [m[0], { ...m[1], target: 'notes', auto: false }];
+  res = validateRows([['Acme', '3.4']], remapped, CTX);
+  assert.equal(res.rows[0].values.notes, '3.4');
+  assert.equal(res.errored, 0);
+  const recs = buildImportRecords(res.rows, {
+    uid: () => 'sh-f2', stamp: 'T2', currentUserId: 'u-me', normalizeUrl,
+  });
+  assert.equal(recs[0].notes, '3.4');
+  // remapped to a choice target the value is validated, never coerced
+  const asCat = [m[0], { ...m[1], target: 'category', auto: false }];
+  res = validateRows([['Acme', 'Aliens']], asCat, CTX);
+  assert.ok(res.rows[0].errors.some((e) => e.message === 'Unknown Category value'));
+});
 
 /* ── VALUE HELPERS ──────────────────────────────────────────────────────── */
 
@@ -133,6 +162,13 @@ await ok('hint/empty row detection', () => {
   assert.ok(isEmptyRow(['', ' ', '']));
   assert.ok(isHintRow([FORMAT_HINTS.name, CHOICE_HINT, LEAVE_BLANK_NOTE]));
   assert.ok(!isHintRow(['Acme Corp', CHOICE_HINT]));
+});
+await ok('hint row REQUIRES the LEAVE-BLANK note (F7): coincidental hints never skip', () => {
+  // a real row whose cells happen to equal short hint strings must NOT be
+  // silently skipped as a template hint
+  assert.ok(!isHintRow([FORMAT_HINTS.org, FORMAT_HINTS.notes])); // "Required","Free text"
+  assert.ok(!isHintRow([CHOICE_HINT, CHOICE_HINT]));
+  assert.ok(isHintRow([LEAVE_BLANK_NOTE]));
 });
 
 /* ── VALIDATION + CASCADES ──────────────────────────────────────────────── */

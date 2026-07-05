@@ -1036,8 +1036,22 @@ for (const path of pages) {
     if (p18MapRows !== 11) errs.push(`P18MAP: expected 11 header rows in the column map, saw ${p18MapRows}`);
     const p18Auto = await page.locator('.import-map-table ui-chip', { hasText: 'auto-matched' }).count();
     if (p18Auto !== 9) errs.push(`P18AUTO: expected 9 auto-matched chips, saw ${p18Auto}`);
-    const p18Comp = await page.locator('.import-map-table ui-chip', { hasText: 'computed — ignored' }).count();
-    if (p18Comp !== 2) errs.push(`P18COMP: expected 2 computed-ignored chips (x, Relationship), saw ${p18Comp}`);
+    const p18Comp = await page.locator('.import-map-table ui-chip', { hasText: 'Computed — skipped' }).count();
+    if (p18Comp !== 2) errs.push(`P18COMP: expected 2 "Computed — skipped" chips (x, Relationship), saw ${p18Comp}`);
+    // FIX F2: computed-named headers render a LIVE ui-select too (11 of 11
+    // rows) — a file whose own data uses a header literally named
+    // "Relationship" can be remapped to any input target; drive the remap
+    // (Relationship → Notes) and verify the pipeline honors it end-to-end.
+    const p18Selects = await page.locator('.import-map-table ui-select').count();
+    if (p18Selects !== 11) errs.push(`P18SEL: expected a mapping ui-select on all 11 header rows (computed included), saw ${p18Selects}`);
+    const p18RelRow = page.locator('.import-map-table tbody tr', { hasText: 'Relationship' });
+    await p18RelRow.locator('ui-select').click({ timeout: 3000 }).catch(e => errs.push('P18REMAPOPEN: ' + e.message));
+    await page.waitForTimeout(300);
+    await p18RelRow.locator('ui-option', { hasText: 'Notes' }).click({ timeout: 3000 }).catch(e => errs.push('P18REMAPPICK: ' + e.message));
+    await page.waitForTimeout(400);
+    if (await page.locator('.import-map-table tbody tr', { hasText: 'Relationship' }).locator('ui-chip', { hasText: 'mapped by hand' }).count() !== 1) {
+      errs.push('P18REMAPCHIP: the remapped computed header must show the "mapped by hand" chip');
+    }
     await page.locator('.import-actions ui-button', { hasText: 'Next' }).click({ timeout: 3000 }).catch(e => errs.push('P18NEXT2: ' + e.message));
     await page.waitForTimeout(500);
     // step 3: the sealed summary + error chip + skip-invalid default ON
@@ -1045,6 +1059,21 @@ for (const path of pages) {
     if (p18Summary !== '2 rows ready · 1 row with errors') errs.push(`P18SUMMARY: expected "2 rows ready · 1 row with errors", saw "${p18Summary}"`);
     if (await page.locator('.import-preview-table ui-chip[variant="error"]', { hasText: 'Unknown Category value' }).count() !== 1) {
       errs.push('P18ERRCHIP: the Unknown-Category error chip did not render');
+    }
+    // FIX F1 (sealed ~3909): the offending CELL itself carries the table's
+    // error state — exactly one lit cell (the bad row's Category), lit via
+    // the ui-data-table cell-state hook (class cell-error / part cell-error).
+    // NOTE: the lit cell renders EMPTY — a rejected value never lands in
+    // values (sealed: never coerced), so the highlight + chip carry the story.
+    const p18ErrCells = page.locator('.import-preview-table td.cell-error');
+    if (await p18ErrCells.count() !== 1) {
+      errs.push(`P18ERRCELL: expected exactly 1 error-highlighted cell, saw ${await p18ErrCells.count()}`);
+    }
+    if (await page.locator('.import-preview-table tbody tr', { hasText: 'Gamma Imports' }).locator('td.cell-error').count() !== 1) {
+      errs.push('P18ERRCELLROW: the lit cell must sit in the invalid (Gamma Imports) row');
+    }
+    if (await page.locator('.import-preview-table tbody tr', { hasText: 'Acme Imports' }).locator('td.cell-error').count() !== 0) {
+      errs.push('P18ERRCELLVALID: valid rows must carry no lit cells');
     }
     const p18Switch = await page.locator('.import-validate-head ui-switch').getAttribute('selected').catch(() => null);
     if (p18Switch === null) errs.push('P18SKIP: "Skip invalid rows" must default ON');
@@ -1061,7 +1090,7 @@ for (const path of pages) {
     const p18After = await page.evaluate(() => {
       const shs = JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]');
       const a = shs.find(s => s.org === 'Acme Imports');
-      return { count: shs.length, acme: a ? { owners: a.owners, createdAt: !!a.createdAt, category: a.category } : null };
+      return { count: shs.length, acme: a ? { owners: a.owners, createdAt: !!a.createdAt, category: a.category, notes: a.notes } : null };
     });
     if (p18After.count !== p18CountBefore + 2) errs.push(`P18LAND: expected ${p18CountBefore + 2} stakeholders after import, saw ${p18After.count}`);
     if (!p18After.acme) errs.push('P18ROW: the imported Acme Imports row did not land');
@@ -1069,6 +1098,9 @@ for (const path of pages) {
       if (!p18After.acme.owners || !p18After.acme.owners.length) errs.push('P18OWNER: imported rows must default owners to the importer');
       if (!p18After.acme.createdAt) errs.push('P18STAMP: imported rows must carry audit stamps');
       if (p18After.acme.category !== 'Government') errs.push(`P18CAT: expected Government, saw "${p18After.acme.category}"`);
+      // FIX F2 landing proof: the remapped computed-named column ("Relationship"
+      // → Notes) committed as INPUT — Acme's Relationship cell was "Collaborate"
+      if (p18After.acme.notes !== 'Collaborate') errs.push(`P18REMAPLAND: expected the remapped column to land in notes ("Collaborate"), saw "${p18After.acme.notes}"`);
     }
     if (await page.locator('ui-stakeholder-table .sheet-row', { hasText: 'Import Probe One' }).count() !== 1) {
       errs.push('P18TABLE: the imported stakeholder is not visible in the Lists table');
