@@ -32,7 +32,9 @@ import { ISSUES, TAGS } from '../data/catalogs.js';
 import { StakeholderModal } from '../modals/stakeholder-modal.jsx';
 import { MASTER_WORKSPACE_ID, visibleStakeholders } from '../data/workspace.js';
 
-export function MapPage({ activeWorkspaceId = MASTER_WORKSPACE_ID, onOpenCommunityEntry }) {
+export function MapPage({
+  activeWorkspaceId = MASTER_WORKSPACE_ID, onOpenCommunityEntry, onOpenWorkspace,
+}) {
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
   const [scores, setScores] = usePersistentState('scores', SEED_SCORES);
   const [team] = usePersistentState('team', SEED_TEAM);
@@ -171,6 +173,7 @@ export function MapPage({ activeWorkspaceId = MASTER_WORKSPACE_ID, onOpenCommuni
           setShModal(null);
         }}
         onOpenCommunity={openCommunityFromModal}
+        onOpenWorkspace={onOpenWorkspace}
       />
     </div>
   );

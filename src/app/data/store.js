@@ -172,10 +172,21 @@ export const Store = {
 export function usePersistentState(table, seed) {
   const [value, setValue] = useState(() => Store.load(table, seed));
   const skipPersist = useRef(false);
+  const mounted = useRef(false);
   const latest = useRef(value);
   latest.current = value;
 
   useEffect(() => {
+    /* MOUNT-RUN GUARD (Phase 9): never re-save the value Store.load just
+     * returned. Store.load already persists the seed on a miss, and a mount
+     * that lands in the SAME COMMIT as another instance's write (the shell
+     * appends a workspace → view switches → the new page mounts) would
+     * otherwise fan out its STALE load first — child effects run before
+     * parent effects — silently clobbering the fresh write.               */
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
     if (skipPersist.current) {
       skipPersist.current = false;
       return;

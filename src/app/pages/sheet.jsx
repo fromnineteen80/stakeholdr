@@ -50,6 +50,7 @@ function noteDate(at) {
 
 export function SheetPage({
   createNonce = 0, activeWorkspaceId = MASTER_WORKSPACE_ID, onOpenCommunityEntry,
+  onOpenWorkspace,
 }) {
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
   const [scores, setScores] = usePersistentState('scores', SEED_SCORES);
@@ -427,6 +428,7 @@ export function SheetPage({
           setShModal(null);
         }}
         onOpenCommunity={openCommunityFromModal}
+        onOpenWorkspace={onOpenWorkspace}
       />
 
       {/* Fallback surface for unresolvable community-pill opens (C5 guard). */}

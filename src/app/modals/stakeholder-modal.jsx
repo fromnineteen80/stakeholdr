@@ -122,7 +122,7 @@ export function DateField({ label, value, onChange }) {
   return <ui-date-picker ref={ref} label={label} value={value || ''}></ui-date-picker>;
 }
 
-export function Owners({ users, value, onChange, readonly }) {
+export function Owners({ users, value, onChange, readonly, size }) {
   const ref = useRef(null);
   useEffect(() => {
     const el = ref.current;
@@ -132,7 +132,8 @@ export function Owners({ users, value, onChange, readonly }) {
   }, [users, value]);
   useUiEvent(ref, 'change', (e) => onChange && onChange(e.detail.value));
   return (
-    <ui-owner-picker ref={ref} size="sm" readonly={readonly ? '' : undefined}></ui-owner-picker>
+    <ui-owner-picker ref={ref} size={size || 'sm'}
+                     readonly={readonly ? '' : undefined}></ui-owner-picker>
   );
 }
 
@@ -363,6 +364,7 @@ export function StakeholderModal({
   getWorkspacesForStakeholder,
   onCancel, onSubmit, onDelete,
   onOpenCommunity, // optional: opens a community entry read-only (census C9)
+  onOpenWorkspace, // optional: opens that workspace's Lists tab (census C8)
 }) {
   const isEdit = !!existing;
   const dlgRef = useRef(null);
@@ -509,15 +511,27 @@ export function StakeholderModal({
               <PRow k="Owners" full>
                 <Owners users={users} value={s.owners || []} readonly />
               </PRow>
-              {/* PHASE-PENDING (Workspaces phase): sealed rule — workspace
-                  chips are clickable ONLY when an onOpenWorkspace route
-                  exists. The Workspaces page (Setup) build phase lands that
-                  route and upgrades these to clickable chips; until then they
-                  are the sealed plain non-clickable tag pills (declared
-                  inert, not a dead affordance). */}
+              {/* Census C8 (REAL as of the Workspaces phase): workspace chips
+                  navigate to that workspace's Lists tab, then the profile
+                  closes (sealed order: onOpenWorkspace(w.id), then onClose).
+                  Chips are clickable ONLY where the host wires the route —
+                  a host without it renders the sealed plain tag pills
+                  (declared inert, never a live-looking dead affordance). */}
               <PRow k="Workspaces" full>
                 {wsList.length
-                  ? <span className="pills-inline">{wsList.map((w) => <ui-chip variant="tag" key={w.id}>{w.name}</ui-chip>)}</span>
+                  ? (
+                    <span className="pills-inline">
+                      {wsList.map((w) => onOpenWorkspace ? (
+                        <ui-chip
+                          key={w.id}
+                          variant="assist"
+                          onClick={() => { onOpenWorkspace(w.id); onCancel(); }}
+                        >{w.name}</ui-chip>
+                      ) : (
+                        <ui-chip variant="tag" key={w.id}>{w.name}</ui-chip>
+                      ))}
+                    </span>
+                  )
                   : '-'}
               </PRow>
 

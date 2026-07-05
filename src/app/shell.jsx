@@ -8,17 +8,18 @@ import { MapPage } from './pages/map.jsx';
 import { ScoringPage } from './pages/scoring.jsx';
 import { PlanPage } from './pages/plan.jsx';
 import { CommunityPage } from './pages/community.jsx';
-import { usePersistentState } from './data/store.js';
+import { SetupPage } from './pages/setup.jsx';
+import { usePersistentState, uid, nowStamp } from './data/store.js';
 import {
   SEED_WORKSPACES, SEED_STAKEHOLDERS, SEED_STAKEHOLDER_WORKSPACES,
-  SEED_TEAM, SEED_SCORES, SEED_USERS,
+  SEED_TEAM, SEED_SCORES, SEED_USERS, SEED_PLANS,
 } from './data/seed.js';
-import { SEGMENTS } from './data/catalogs.js';
 import {
   MASTER_WORKSPACE_ID, isMasterWorkspace, countForWorkspace,
-  stakeholderCountLabel, workspaceLabel,
+  stakeholderCountLabel, workspaceLabel, stripWorkspaceFromJoins,
 } from './data/workspace.js';
 import { unscoredCountFor } from './pages/scoring-logic.js';
+import { companySegmentsFrom } from './pages/setup-logic.js';
 
 // NAV_TABS per the sealed App-shell box (icons = the captured semantic→ligature
 // map). Scoring carries hideWhenMaster (sealed rule — REAL as of Phase 6:
@@ -36,7 +37,7 @@ const NAV_TABS = [
 // exactly these views. Live views open their create flow via createNonce;
 // the rest stay honestly inert until their phases land.
 const CREATE_VIEWS = ['sheet', 'scoring', 'plan', 'community', 'setup'];
-const CREATE_LIVE = ['sheet', 'scoring', 'plan', 'community'];
+const CREATE_LIVE = ['sheet', 'scoring', 'plan', 'community', 'setup'];
 
 export function AppShell() {
   const [view, setView] = useState('sheet');
@@ -59,6 +60,12 @@ export function AppShell() {
   const [team] = usePersistentState('team', SEED_TEAM);
   const [scores] = usePersistentState('scores', SEED_SCORES);
   const [users] = usePersistentState('users', SEED_USERS);
+  const [plans, setPlans] = usePersistentState('plans', SEED_PLANS);
+  /* Sealed Settings-override contract: appConfig.segments (present AND
+   * non-empty) overrides the seed SEGMENTS catalog everywhere segments are
+   * grouped — the Settings phase lands the editor; the seam is live now. */
+  const [appConfig] = usePersistentState('appConfig', {});
+  const companySegments = companySegmentsFrom(appConfig);
 
   // currentUser = the seeded first user until the login phase (sealed order;
   // the pages derive the same identity).
@@ -89,29 +96,39 @@ export function AppShell() {
     setActiveWorkspaceId(wsId);
     setView('sheet');
   };
+
+  /* Sealed addWorkspace (App-shell box): mint the id, stamp updatedAt,
+   * append, then AUTO-OPEN the new workspace as a tab (census H4: "addWorkspace
+   * calls openWorkspaceTab(id)"). Lives in the SHELL, as sealed — the write
+   * must commit in the same owner that switches the view (a page-local write
+   * would be discarded when the H4 view switch unmounts the page before its
+   * persist effect runs). data carries the sealed blank/create fields incl.
+   * createdBy/createdAt. */
+  const addWorkspace = (data) => {
+    const id = uid('ws');
+    setWorkspaces((prev) => [...prev, { id, ...data, updatedAt: nowStamp() }]);
+    openWorkspaceTab(id);
+    return id;
+  };
   const activateWorkspaceTab = (wsId) => {
     setActiveWorkspaceId(wsId);
     setView('sheet');
   };
 
-  /* Sealed removeWorkspace cascade (App-shell + Connectivity boxes): drop the
-   * record; strip the wsId from EVERY stakeholder's join list; close its
-   * open-set entry; if it was active, the active workspace falls back to
-   * MASTER ("closes tab, active -> Master" — the left-tab fallback is sealed
-   * ONLY for closeWorkspaceTab, the tab-close path, which arrives with its
-   * phase). The plans leg of the cascade lands with the Plans phase. Used by
-   * Scoring's sole-member closure ("returns to Master").
-   * NOTE: `remaining` is computed OUTSIDE the updater and the three states
-   * set sequentially — an updater must stay pure (StrictMode double-invokes). */
+  /* Sealed removeWorkspace cascade (App-shell + Connectivity boxes, census
+   * H3/D2 — COMPLETE as of Phase 9): drop the record; strip the wsId from
+   * EVERY stakeholder's join list (stripWorkspaceFromJoins — single-sourced,
+   * stakeholders stay in the Master pool); DELETE the plans scoped to the
+   * workspace ("cascades to stakeholderWorkspaces + plans + open tabs +
+   * active fallback" — the Setup confirm dialog discloses this leg); close
+   * its open-set entry; if it was active, the active workspace falls back to
+   * MASTER. Used by Scoring's sole-member closure and the Setup delete.
+   * NOTE: `remaining` is computed OUTSIDE the updater and the states set
+   * sequentially — an updater must stay pure (StrictMode double-invokes). */
   const removeWorkspace = (wsId) => {
     setWorkspaces((prev) => prev.filter((w) => w.id !== wsId));
-    setStakeholderWorkspaces((prev) => {
-      const next = {};
-      for (const [sid, list] of Object.entries(prev)) {
-        next[sid] = (list || []).filter((id) => id !== wsId);
-      }
-      return next;
-    });
+    setStakeholderWorkspaces((prev) => stripWorkspaceFromJoins(prev, wsId));
+    setPlans((prev) => prev.filter((p) => p.workspaceId !== wsId));
     const remaining = openWorkspaceIds.filter((id) => id !== wsId);
     setOpenWorkspaceIds(remaining);
     if (wsId === activeWorkspaceId) {
@@ -135,10 +152,18 @@ export function AppShell() {
   const visibleTabs = NAV_TABS.filter((t) => !(isMaster && t.hideWhenMaster));
 
   /* Selector rows: every workspace grouped by segment (sealed
-   * OpenWorkspaceModal grouping; segment list = the catalog — the sealed
-   * Settings-override contract re-points this at appConfig.segments when the
-   * Settings phase lands).                                                  */
-  const segments = Object.keys(SEGMENTS);
+   * OpenWorkspaceModal grouping; segment list = the Settings-fed
+   * companySegments map — REAL as of Phase 9, seed-catalog fallback).       */
+  const segments = Object.keys(companySegments);
+
+  /* SETUP CREATE SEAM (sealed census A3/A18: the selector's "New workspace…"
+   * lands on Setup WITH the create modal open) — a first-class prop channel
+   * like the community deep-link seam; the Setup page consumes it.          */
+  const [pendingSetupCreate, setPendingSetupCreate] = useState(false);
+  const openSetupCreate = () => {
+    setPendingSetupCreate(true);
+    setView('setup');
+  };
 
   const wsCount = (wsId) => countForWorkspace(stakeholderWorkspaces, wsId);
 
@@ -267,12 +292,14 @@ export function AppShell() {
             createNonce={createNonce}
             activeWorkspaceId={activeWorkspaceId}
             onOpenCommunityEntry={openCommunityEntry}
+            onOpenWorkspace={openWorkspaceTab}
           />
         ) : view === 'map' ? (
           /* Sealed: the Map IS available on Master (the org-wide overview). */
           <MapPage
             activeWorkspaceId={activeWorkspaceId}
             onOpenCommunityEntry={openCommunityEntry}
+            onOpenWorkspace={openWorkspaceTab}
           />
         ) : view === 'scoring' && !isMaster ? (
           /* Sealed: ScoringView gets workspaceOwners + onDeleteWorkspace only
@@ -283,6 +310,7 @@ export function AppShell() {
             createNonce={createNonce}
             onDeleteWorkspace={() => removeWorkspace(activeWorkspaceId)}
             onOpenCommunityEntry={openCommunityEntry}
+            onOpenWorkspace={openWorkspaceTab}
           />
         ) : view === 'plan' ? (
           /* Sealed: Plans render on Master (all plans) and per workspace
@@ -291,6 +319,7 @@ export function AppShell() {
             createNonce={createNonce}
             activeWorkspaceId={activeWorkspaceId}
             onOpenCommunityEntry={openCommunityEntry}
+            onOpenWorkspace={openWorkspaceTab}
           />
         ) : view === 'community' ? (
           /* Sealed: Community aggregates org-wide (never workspace-scoped);
@@ -301,6 +330,23 @@ export function AppShell() {
             createNonce={createNonce}
             openCommunityId={pendingCommunityId}
             onConsumeOpen={() => setPendingCommunityId(null)}
+            onOpenWorkspace={openWorkspaceTab}
+          />
+        ) : view === 'setup' ? (
+          /* Sealed: the Workspaces (Setup) page — segment-grouped cards,
+             create/edit modals, delete-confirm; SEGMAP flows down as the
+             companySegments prop (sealed load-bearing chain); activate/create
+             reuse openWorkspaceTab (census H1/H4); delete reuses the ONE
+             removeWorkspace cascade. */
+          <SetupPage
+            createNonce={createNonce}
+            openCreate={pendingSetupCreate}
+            onConsumeCreate={() => setPendingSetupCreate(false)}
+            companySegments={companySegments}
+            activeWorkspaceId={activeWorkspaceId}
+            onOpenWorkspace={openWorkspaceTab}
+            onAddWorkspace={addWorkspace}
+            onRemoveWorkspace={removeWorkspace}
           />
         ) : (
           <ui-card variant="outlined">
@@ -317,7 +363,7 @@ export function AppShell() {
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Build: Phase 8 — Community (applications · votes · approval · FY rollups)</span>
+        <span>Build: Phase 9 — Workspaces (segment groups · create/edit · delete cascade)</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
 
@@ -372,8 +418,9 @@ export function AppShell() {
             )),
           ];
         })}
-        {/* Sealed foot CTA — honestly inert until the Workspaces page phase. */}
-        <ui-menu-item disabled title="New workspace — arrives with the Workspaces build phase">
+        {/* Sealed foot CTA (census A3/A18, REAL as of Phase 9): Setup page
+            WITH the create modal open, via the first-class create seam. */}
+        <ui-menu-item onClick={openSetupCreate}>
           <ui-icon slot="icon" size="sm">add</ui-icon>
           New workspace…
         </ui-menu-item>
