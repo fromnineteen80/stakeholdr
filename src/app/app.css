@@ -2443,7 +2443,8 @@ ui-app-shell[data-mobile] .user-stack { display: none; }
  * room) so create · messages · search all stay inside the viewport. */
 ui-app-shell[data-mobile] .ws-select-sub { display: none; }
 ui-app-shell[data-mobile] .ws-select-name {
-  max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  max-width: var(--ui-sys-ws-name-max-mobile);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
 /* Messaging at mobile widths: the right-edge overlay goes full-width (a

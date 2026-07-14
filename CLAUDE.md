@@ -132,6 +132,23 @@ The Settings → Design page tunes tokens later; the start-state is already in t
   toggle enforce this in the components); and per the make-real law, **a control that is
   not wired yet must LOOK inert** (disabled + phase note) — never a live-looking dead
   affordance.
+- **CARD-ANATOMY RULING (user, 2026-07-14 — binds every card grid; SUPERSEDES the sealed
+  card foot/head compositions in the Community/Workspaces/Plan boxes):** the user reviewed
+  the live cards and ruled the sealed-as-captured presentation sloppy ("different size of
+  pills all over the cards, the massive and vague voting sections, different height for
+  cards that need to be uniform, titles that don't feel like card titles… should be left
+  justified"). Every entity card (Workspace/Community/Plan + future families) follows the
+  ONE `--ui-sys-card-*` contract in tokens.css + the shared `.entity-card` block:
+  uniform height per grid (content truncates, never stretches), a left-flush single-line
+  `ui-button variant="title"` title + one muted subtitle, ONE pill scale for every chip
+  on a card (`--ui-sys-card-pill-*`), keyed meta rows that always render (em-dash when
+  empty, so heights are deterministic), a fixed clamped body region, one thin foot row
+  (owners left · quiet actions right), and the vote group as ONE labeled compact row
+  ("Your vote" · small segmented For/Against · caption tally · sm voter avatars) — all
+  sealed BEHAVIOR (handlers, vote math, strings) unchanged. The visual gate MEASURES
+  this (shots.mjs card-consistency check: same card height per grid, same chip height,
+  title flush ±1px) — a cold rebuild session must never "repair" cards back to the
+  sealed foot/head compositions.
 
 ## HANDSHAKE / submit control
 The guide (`src/guide.jsx`, the `.io`) carries a confirm control so the user can signal
