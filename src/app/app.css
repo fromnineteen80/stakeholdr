@@ -2341,6 +2341,19 @@ ui-sidebar.record-nav[collapsed] .record-nav-title { display: none; }
   margin: 0 0 var(--ui-sys-space-3); max-width: 340px;
 }
 
+/* The app-bar at mobile widths: the people stack YIELDS (visual gate,
+ * 2026-07-14 — five trailing controls overflow a 390px header and clipped
+ * off the right edge; the people panel is a desktop surface anyway, per the
+ * sealed "everything else is desktop-web"). Declared responsive
+ * prioritization: selector · create · messages · search remain. */
+ui-app-shell[data-mobile] .user-stack { display: none; }
+/* …and the selector compacts to its name (the sub-line is desktop breathing
+ * room) so create · messages · search all stay inside the viewport. */
+ui-app-shell[data-mobile] .ws-select-sub { display: none; }
+ui-app-shell[data-mobile] .ws-select-name {
+  max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
 /* Messaging at mobile widths: the right-edge overlay goes full-width (a
  * token re-point on the host — the established vote-button pattern), and
  * the full page stacks to ONE column — the list when no thread is open,
