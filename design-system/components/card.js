@@ -77,11 +77,13 @@ template.innerHTML = `
       max-width: 100%;
     }
 
-    /* Body — the default slot, sane padding */
+    /* Body — the default slot, sane padding. Padding reads the ONE card-pad
+       token (Phase 21 card contract, --ui-sys-card-pad = space-4 by default)
+       so every card's content box lives on one padding scale. */
     .body {
       flex: 1;
       min-width: 0;
-      padding: var(--ui-sys-space-4);
+      padding: var(--ui-sys-card-pad, var(--ui-sys-space-4));
     }
 
     /* Actions — footer row, right-aligned */

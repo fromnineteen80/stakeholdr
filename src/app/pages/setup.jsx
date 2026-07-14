@@ -131,28 +131,27 @@ function WorkspaceCard({
     <ui-card
       variant="outlined"
       interactive=""
-      class={'plan-card comm-card ws-card' + (isActive ? ' ws-card-active' : '')}
+      class={'entity-card plan-card ws-card' + (isActive ? ' ws-card-active' : '')}
       onClick={onActivate}
     >
+      {/* Phase 21 CARD CONTRACT (declared visual recomposition on the sealed
+          anatomy): title row left-flush (ui-button variant=title, full-text
+          tooltip, single-line ellipsis); the inline owners picker moves from
+          the head to the FOOT-LEFT (contract: owners left, quiet actions
+          right) — same component, same handlers, same click containment. */}
       <div className="plan-card-head">
         <div className="plan-card-titlewrap">
           {/* Sealed: clicking the NAME (stopPropagation) opens the edit
               modal; the card body activates. */}
           <ui-tooltip>
-            <ui-button variant="text" class="plan-card-title"
+            <ui-button variant="title" class="plan-card-title"
                        onClick={(e) => { e.stopPropagation(); onEdit(); }}>
               {ws.name}
             </ui-button>
-            <span slot="content">Open / edit workspace</span>
+            <span slot="content">{ws.name} — open / edit</span>
           </ui-tooltip>
           <div className="plan-card-recipient muted">{ws.businessUnit}</div>
         </div>
-        {/* Inline owner editing directly on the card (sealed) — clicks are
-            contained so picker interaction never activates (declared). */}
-        <span className="ws-card-owners" onClick={(e) => e.stopPropagation()}>
-          <Owners users={users} value={ws.owners || []}
-                  onChange={(v) => onUpdate({ owners: v })} />
-        </span>
       </div>
       <div className="plan-card-badges">
         <ui-chip variant="segment" value={ws.segment}>{ws.segment}</ui-chip>
@@ -170,6 +169,13 @@ function WorkspaceCard({
         </div>
       </div>
       <div className="plan-card-foot">
+        {/* Inline owner editing directly on the card (sealed) — clicks are
+            contained so picker interaction never activates (declared). */}
+        <span className="ws-card-owners plan-card-avatars"
+              onClick={(e) => e.stopPropagation()}>
+          <Owners users={users} value={ws.owners || []}
+                  onChange={(v) => onUpdate({ owners: v })} />
+        </span>
         {/* Sealed count: strong ink numeral (mono in the oracle → tnum per
             the type law) + " stakeholders". */}
         <span className="muted ws-foot-count">
