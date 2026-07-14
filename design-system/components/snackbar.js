@@ -35,7 +35,10 @@ template.innerHTML = `
       box-shadow: var(--ui-sys-elevation-3);
       min-width: 240px;
       max-width: min(560px, calc(100vw - var(--ui-sys-space-6) * 2));
-      pointer-events: auto;
+      /* Closed = fully inert: the invisible bar must never eat clicks meant
+         for content underneath (surfaced by the Phase-20 bottom sheet, whose
+         actions sit exactly in the toast strip). */
+      pointer-events: none;
 
       opacity: 0;
       transform: translateY(12px);
@@ -47,6 +50,7 @@ template.innerHTML = `
     :host([open]) .bar {
       opacity: 1;
       transform: translateY(0);
+      pointer-events: auto;
     }
 
     .message {

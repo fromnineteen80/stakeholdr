@@ -41,6 +41,18 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 
 await page.goto('http://127.0.0.1:4174/app.html', { waitUntil: 'networkidle' });
 await page.waitForTimeout(1500);
+
+// ── PHASE-20 TOUR CAPTURE ──────────────────────────────────────────────────
+// A fresh profile auto-opens the first-run tour (600ms settle — already
+// elapsed). Advance to step 2 so the capture shows the full sealed bar
+// (counter "2 of 7" + Skip + Back + Next), then Esc-skip so every capture
+// below runs unobstructed.
+await page.evaluate(() => document.querySelector('ui-coachmark.app-tour')?.shadowRoot.querySelector('.next').click());
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p20-coachmark.png` });
+await page.keyboard.press('Escape');
+await page.waitForTimeout(300);
+
 await page.screenshot({ path: `${OUT}/app-expanded.png` });
 
 // ── PHASE-3 LISTS CAPTURES (playwright CSS pierces open shadow roots) ──────
@@ -807,10 +819,30 @@ await page.screenshot({ path: `${OUT}/p19-reset-dialog.png` });
 // it wipes the store; the browser closes right after)
 await page.locator('.reset-blank-btn').click();
 await page.waitForTimeout(2000);
+// Phase 20: the wipe re-armed the first-run tour — skip it before capturing.
+await page.keyboard.press('Escape');
+await page.waitForTimeout(300);
 await page.screenshot({ path: `${OUT}/p19-empty-state-lists.png` });
 await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Plans' }).click();
 await page.waitForTimeout(500);
 await page.screenshot({ path: `${OUT}/p19-empty-state-plans.png` });
+
+// ── PHASE-20 MOBILE-COMPANION CAPTURES (fresh context = fresh seed, so the
+// blank wipe above never bleeds in; 390×844) ───────────────────────────────
+const mp = await browser.newPage({ viewport: { width: 390, height: 844 } });
+await mp.goto('http://127.0.0.1:4174/app.html', { waitUntil: 'networkidle' });
+await mp.waitForTimeout(1500);
+// the compact stakeholder list (collapsed rail + name/org/zone rows)
+await mp.screenshot({ path: `${OUT}/p20-mobile-list.png` });
+// quick-view bottom sheet (read summary + Add-note/Message actions)
+await mp.locator('.mobile-sh-list ui-list-item').first().click();
+await mp.waitForTimeout(500);
+await mp.screenshot({ path: `${OUT}/p20-quickview.png` });
+// add-note (the ONE NotesModal composition on the small viewport)
+await mp.locator('.qv-actions ui-button', { hasText: 'Add note' }).click();
+await mp.waitForTimeout(500);
+await mp.screenshot({ path: `${OUT}/p20-add-note.png` });
+await mp.close();
 
 await browser.close(); srv.close();
 console.log('shots written to', OUT);

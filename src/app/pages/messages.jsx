@@ -565,9 +565,15 @@ export function MessagingSidebar({
 }
 
 /* ── TREE 2 — the full MessagesPage ──────────────────────────────────────── */
+/* Phase 20 (sealed MOBILE COMPANION: "messages = the Messaging box's
+ * ui-list/ui-text-field composition" in its responsive layout — no parallel
+ * kit): isMobile stacks the two panes into ONE column (the has-conv class +
+ * the shell's data-mobile stamp drive it in app.css — list when no thread is
+ * open, thread when one is), and the thread gains the sidebar's own
+ * "← All conversations" back control so the list stays reachable. */
 export function MessagesPage({
   activeConversationId, onSetActiveConversation, onOpenMention, onOpenScoringFor,
-  onOpenUserProfile,
+  onOpenUserProfile, isMobile = false,
 }) {
   const S = useMessaging();
   const [newOpen, setNewOpen] = useState(false);
@@ -581,7 +587,7 @@ export function MessagesPage({
   };
 
   return (
-    <div className="messaging-page">
+    <div className={'messaging-page' + (conv ? ' has-conv' : '')}>
       <aside className="messaging-list-pane">
         <div className="messaging-list-head">
           <h2>{STR.messages}</h2>
@@ -606,6 +612,15 @@ export function MessagesPage({
           </div>
         ) : (
           <>
+            {/* Phase 20: single-column mobile — back to the list without
+                losing the page (the sidebar's own control + copy). */}
+            {isMobile && (
+              <ui-button variant="text" class="messaging-back"
+                         onClick={() => onSetActiveConversation(null)}>
+                <ui-icon slot="leading">chevron_left</ui-icon>
+                {STR.backAll}
+              </ui-button>
+            )}
             <ConvHead S={S} conv={conv} large />
             <MessageThread S={S} conv={conv}
                            onOpenMention={onOpenMention}

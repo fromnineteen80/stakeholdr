@@ -3,13 +3,17 @@
  *
  * Attrs  for      — id of the target element to spotlight (same root/document)
  *        step     — 1-based current tour step (Back hidden on step 1)
- *        steps    — total tour steps (Next becomes Done on the last step)
+ *        steps    — total tour steps (Next becomes Done on the last step;
+ *                   Skip hidden on the last step — Done is the only exit)
  *        heading  — card title text
  *        open     — visible when present
  * Slot   default  — body text of the step.
- * Methods: show(), close().
+ * Methods: show(), close(), reposition().
  * Events : next / back / dismiss (bubbles, composed, detail {step, steps}).
- *          Escape and the × button dismiss (close + emit dismiss).
+ *          Escape, the Skip button, and the × button all dismiss (close +
+ *          emit dismiss — the host treats dismiss as "skip for good").
+ *          ArrowRight advances (emits next), ArrowLeft goes back (emits
+ *          back, step > 1 only); Enter activates the focused Next/Done.
  *
  * The page scrim is drawn with the box-shadow cutout technique: one fixed
  * element sits over the anchor and casts --ui-sys-scrim outward, leaving the
@@ -156,7 +160,10 @@ template.innerHTML = `
       color: var(--ui-sys-on-primary);
     }
 
-    .back.hidden { display: none; }
+    .skip { color: var(--ui-sys-on-surface-muted); }
+
+    .back.hidden,
+    .skip.hidden { display: none; }
 
     .dismiss {
       position: absolute;
@@ -183,6 +190,7 @@ template.innerHTML = `
     <div class="body" part="body" id="body"><slot></slot></div>
     <div class="footer" part="footer">
       <span class="counter" part="counter"></span>
+      <button class="skip" part="skip">Skip</button>
       <button class="back" part="back">Back</button>
       <button class="next" part="next">Next</button>
     </div>
@@ -197,6 +205,7 @@ class UiCoachmark extends HTMLElement {
   #caret;
   #headingEl;
   #counterEl;
+  #skipBtn;
   #backBtn;
   #nextBtn;
   #dismissBtn;
@@ -211,12 +220,14 @@ class UiCoachmark extends HTMLElement {
     this.#caret      = this.shadowRoot.querySelector('.caret');
     this.#headingEl  = this.shadowRoot.querySelector('.heading');
     this.#counterEl  = this.shadowRoot.querySelector('.counter');
+    this.#skipBtn    = this.shadowRoot.querySelector('.skip');
     this.#backBtn    = this.shadowRoot.querySelector('.back');
     this.#nextBtn    = this.shadowRoot.querySelector('.next');
     this.#dismissBtn = this.shadowRoot.querySelector('.dismiss');
   }
 
   connectedCallback() {
+    this.#skipBtn.addEventListener('click', this.#onDismiss);
     this.#backBtn.addEventListener('click', this.#onBack);
     this.#nextBtn.addEventListener('click', this.#onNext);
     this.#dismissBtn.addEventListener('click', this.#onDismiss);
@@ -225,6 +236,7 @@ class UiCoachmark extends HTMLElement {
   }
 
   disconnectedCallback() {
+    this.#skipBtn.removeEventListener('click', this.#onDismiss);
     this.#backBtn.removeEventListener('click', this.#onBack);
     this.#nextBtn.removeEventListener('click', this.#onNext);
     this.#dismissBtn.removeEventListener('click', this.#onDismiss);
@@ -247,6 +259,10 @@ class UiCoachmark extends HTMLElement {
 
   show()  { this.setAttribute('open', ''); }
   close() { this.removeAttribute('open'); }
+  /* Public re-measure hook: hosts call this after they mutate the card's
+   * slotted body/heading (attribute changes reposition automatically, but a
+   * slot-text change resizes the card without an attribute changing). */
+  reposition() { this.#position(); }
 
   get step()  { return Math.max(1, parseInt(this.getAttribute('step'), 10) || 1); }
   get steps() { return Math.max(1, parseInt(this.getAttribute('steps'), 10) || 1); }
@@ -304,6 +320,20 @@ class UiCoachmark extends HTMLElement {
       e.preventDefault();
       e.stopPropagation();
       this.#onDismiss();
+      return;
+    }
+    /* Arrow keys steer the tour (Enter already activates the focused
+     * Next/Done natively — focus moves into the card on open). */
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      e.stopPropagation();
+      this.#onNext();
+      return;
+    }
+    if (e.key === 'ArrowLeft' && this.step > 1) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.#onBack();
     }
   };
 
@@ -315,6 +345,7 @@ class UiCoachmark extends HTMLElement {
     this.#headingEl.textContent = this.getAttribute('heading') || '';
     this.#counterEl.textContent = steps > 1 ? `${step} of ${steps}` : '';
     this.#backBtn.classList.toggle('hidden', step <= 1);
+    this.#skipBtn.classList.toggle('hidden', step >= steps); // Done is the last-step exit
     this.#nextBtn.textContent = step >= steps ? 'Done' : 'Next';
     const heading = this.getAttribute('heading');
     if (heading) this.#card.setAttribute('aria-label', heading);
@@ -340,16 +371,19 @@ class UiCoachmark extends HTMLElement {
     const cw = this.#card.offsetWidth;
     const ch = this.#card.offsetHeight;
 
-    if (!this.#anchor || !this.#anchor.isConnected) {
-      // No anchor: center the card, no spotlight hole, no caret.
+    const r = (this.#anchor && this.#anchor.isConnected)
+      ? this.#anchor.getBoundingClientRect()
+      : null;
+
+    if (!r || (r.width === 0 && r.height === 0)) {
+      // No anchor (missing, disconnected, or display:none → zero rect):
+      // center the card, no spotlight hole, no caret.
       this.#spotlight.classList.add('no-anchor');
       this.#caret.classList.add('hidden');
       this.#card.style.top  = `${Math.max(margin, (vh - ch) / 2)}px`;
       this.#card.style.left = `${Math.max(margin, (vw - cw) / 2)}px`;
       return;
     }
-
-    const r = this.#anchor.getBoundingClientRect();
 
     // Spotlight hugs the anchor; its box-shadow paints the scrim everywhere else.
     this.#spotlight.classList.remove('no-anchor');

@@ -37,6 +37,27 @@ for (const path of pages) {
     await page.locator('md-list-item, li, [role="listitem"]').first().click({ timeout: 3000 }).catch(() => {});
   }
   if (path === '/app.html') {
+    // Phase 20: FIRST-RUN ONBOARDING TOUR — a fresh profile (each smoke page
+    // is a fresh context) opens the coachmark once (600ms settle < the 1200ms
+    // wait above); Next advances; Skip is present mid-tour (sealed bar); Esc
+    // skips FOR GOOD (hpsm:__tourSeen stamped); a reload must NOT re-show it.
+    if (await page.locator('ui-coachmark.app-tour[open]').count() !== 1) errs.push('P20TOUR: the first-run coachmark did not appear on a fresh profile');
+    const p20C1 = await page.evaluate(() => document.querySelector('ui-coachmark.app-tour')?.shadowRoot.querySelector('.counter').textContent || '');
+    if (p20C1 !== '1 of 7') errs.push(`P20TOURCOUNT: expected the step counter "1 of 7", saw "${p20C1}"`);
+    await page.evaluate(() => document.querySelector('ui-coachmark.app-tour')?.shadowRoot.querySelector('.next').click());
+    await page.waitForTimeout(300);
+    const p20C2 = await page.evaluate(() => document.querySelector('ui-coachmark.app-tour')?.shadowRoot.querySelector('.counter').textContent || '');
+    if (p20C2 !== '2 of 7') errs.push(`P20TOURNEXT: Next must advance to "2 of 7", saw "${p20C2}"`);
+    const p20Skip = await page.evaluate(() => { const s = document.querySelector('ui-coachmark.app-tour')?.shadowRoot.querySelector('.skip'); return !!s && !s.classList.contains('hidden'); });
+    if (!p20Skip) errs.push('P20TOURSKIP: the sealed-bar Skip button is missing mid-tour');
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    if (await page.locator('ui-coachmark.app-tour[open]').count() !== 0) errs.push('P20TOURESC: Escape did not skip the tour');
+    const p20Seen = await page.evaluate(() => localStorage.getItem('hpsm:__tourSeen'));
+    if (p20Seen !== '1') errs.push(`P20TOURFLAG: skip must stamp hpsm:__tourSeen=1, saw ${JSON.stringify(p20Seen)}`);
+    await page.reload({ waitUntil: 'networkidle', timeout: 30000 }).catch(e => errs.push('P20TOURRELOAD: ' + e.message));
+    await page.waitForTimeout(1200);
+    if (await page.locator('ui-coachmark.app-tour[open]').count() !== 0) errs.push('P20TOURONCE: the skipped tour re-appeared after a reload');
     // Phase 5 (selectors recomposed at Phase 14 — the PAGE hosts the sealed
     // scorecard rail now): drive the Map view — select a dot, enter history
     // (assert the trail renders), close + reopen the scorecard rail.
@@ -1137,6 +1158,18 @@ for (const path of pages) {
     if (p18RtCount !== p18CountBefore + 2 + p18RtRows) errs.push(`P18RTLAND: expected ${p18CountBefore + 2 + p18RtRows} after the round-trip import, saw ${p18RtCount}`);
     const p18RtSnack = (await page.locator('.sheet-wrap ui-snackbar').getAttribute('message').catch(() => '') || '').trim();
     if (p18RtSnack !== `Imported ${p18RtRows} stakeholders`) errs.push(`P18RTSNACK: expected "Imported ${p18RtRows} stakeholders", saw "${p18RtSnack}"`);
+    // Phase 20: REPLAY from the profile menu (sealed "replayable from the
+    // profile menu") — the tour returns to Lists and restarts at step 1.
+    await page.locator('#me-anchor').click({ timeout: 3000 }).catch(e => errs.push('P20RMENU: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('ui-menu.profile-menu ui-menu-item', { hasText: 'Replay tour' }).click({ timeout: 3000 }).catch(e => errs.push('P20RITEM: ' + e.message));
+    await page.waitForTimeout(400);
+    if (await page.locator('ui-coachmark.app-tour[open]').count() !== 1) errs.push('P20REPLAY: the profile-menu replay did not reopen the tour');
+    const p20R = await page.evaluate(() => document.querySelector('ui-coachmark.app-tour')?.shadowRoot.querySelector('.counter').textContent || '');
+    if (p20R !== '1 of 7') errs.push(`P20REPLAY: replay must restart at "1 of 7", saw "${p20R}"`);
+    if (await page.locator('.sheet-wrap').count() !== 1) errs.push('P20REPLAY: replay must land on Lists (the tour home)');
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
     // Phase 19 — DEMO POLISH: (a) plan → Word export (capture the download,
     // assert the blob MIME, unzip-validate the bytes node-side with the
     // Phase-18 reader); (b) reset-demo-data → the seed restores; (c) blank
@@ -1208,6 +1241,10 @@ for (const path of pages) {
     }
     await page.locator('.reset-demo-go').click({ timeout: 3000 }).catch(e => errs.push('P19RGO: ' + e.message));
     await page.waitForTimeout(2000); // location.reload()
+    // Phase 20: the reset swept hpsm:__tourSeen — the re-armed first-run tour
+    // re-opens (by design); skip it so the P19 checks run unobstructed.
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
     const p19AfterReset = await page.evaluate(() => ({
       blank: localStorage.getItem('hpsm:__blank'),
       shs: JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]').length,
@@ -1226,6 +1263,9 @@ for (const path of pages) {
     await page.waitForTimeout(300);
     await page.locator('.reset-blank-btn').click({ timeout: 3000 }).catch(e => errs.push('P19BGO: ' + e.message));
     await page.waitForTimeout(2000); // location.reload()
+    // Phase 20: blank start also swept the tour flag — skip the re-armed tour.
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
     const p19Blank = await page.evaluate(() => ({
       marker: localStorage.getItem('hpsm:__blank'),
       users: JSON.parse(localStorage.getItem('hpsm:users') || '[]').map(u => u.id),
@@ -1353,5 +1393,92 @@ for (const path of pages) {
   console.log(`${path}: ${real.length} real console/page errors` + (real.length ? '\n  - ' + real.slice(0, 5).join('\n  - ') : ''));
   await page.close();
 }
+// ── PHASE 20 — MOBILE COMPANION drive (390×844; browser.newPage() = a fresh
+// context, so this profile boots the demo seed untouched by the runs above).
+// Sealed scope: quick-view (ui-sheet bottom) · add-note (the ONE notes seam)
+// · messages; everything else shows the honest desktop-surface note.
+{
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const errs = [];
+  page.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+  page.on('pageerror', e => errs.push('PAGEERROR: ' + e.message));
+  await page.goto('http://127.0.0.1:4173/app.html', { waitUntil: 'networkidle', timeout: 30000 }).catch(e => errs.push('NAV: ' + e.message));
+  await page.waitForTimeout(1500);
+  // the desktop tour never auto-starts at mobile widths (declared)
+  if (await page.locator('ui-coachmark.app-tour[open]').count() !== 0) errs.push('P20M: the desktop tour auto-started on mobile');
+  // the shell collapses: data-mobile stamped; the rail folds to its icon
+  // column via ui-sidebar's existing manifest state
+  if (await page.locator('ui-app-shell[data-mobile]').count() !== 1) errs.push('P20M: ui-app-shell is missing the data-mobile stamp');
+  if (await page.locator('ui-sidebar[collapsed]').count() !== 1) errs.push('P20M: the sidebar did not collapse at the mobile breakpoint');
+  // Lists presents the compact stakeholder list (name + org + zone chip)
+  const p20Rows = await page.locator('.mobile-sh-list ui-list-item').count();
+  if (p20Rows !== 20) errs.push(`P20MLIST: expected the 20 seed stakeholders in the compact list, saw ${p20Rows}`);
+  if (await page.locator('.mobile-sh-list ui-chip[variant="zone"]').count() !== p20Rows) errs.push('P20MZONE: every compact row must carry its zone chip');
+  if (await page.locator('ui-stakeholder-table').count() !== 0) errs.push('P20MGRID: the desktop grid must not mount at mobile widths');
+  // QUICK-VIEW: tapping a row opens the bottom sheet with the read summary
+  const p20FirstName = (await page.locator('.mobile-sh-list .m-row-name').first().textContent().catch(() => '') || '').trim();
+  await page.locator('.mobile-sh-list ui-list-item').first().click({ timeout: 3000 }).catch(e => errs.push('P20MROW: ' + e.message));
+  await page.waitForTimeout(500);
+  if (await page.locator('ui-sheet.sh-quickview[open]').count() !== 1) errs.push('P20MQV: the quick-view sheet did not open');
+  const p20QvName = (await page.locator('.qv-name').textContent().catch(() => '') || '').trim();
+  if (!p20QvName || p20QvName !== p20FirstName) errs.push(`P20MQV: the sheet must show the tapped stakeholder ("${p20FirstName}"), saw "${p20QvName}"`);
+  if (await page.locator('.qv-grid .qv-field').count() !== 6) errs.push('P20MQV: the read summary must carry its six fields');
+  // ADD NOTE: the quick-view action opens the ONE NotesModal composition
+  // (ui-dialog + ui-textarea) and the note lands through the ONE seam
+  await page.locator('.qv-actions ui-button', { hasText: 'Add note' }).click({ timeout: 3000 }).catch(e => errs.push('P20MNOTEBTN: ' + e.message));
+  await page.waitForTimeout(500);
+  if (await page.locator('ui-dialog[open] .notes-composer').count() !== 1) errs.push('P20MNOTE: the notes dialog did not open from the quick-view');
+  await page.locator('.notes-composer ui-textarea textarea').click({ timeout: 3000 }).catch(e => errs.push('P20MNOTETA: ' + e.message));
+  await page.keyboard.type('Mobile probe note - met at the site visit.');
+  await page.waitForTimeout(300);
+  await page.locator('.notes-foot ui-button', { hasText: 'Add note' }).click({ timeout: 3000 }).catch(e => errs.push('P20MNOTEGO: ' + e.message));
+  await page.waitForTimeout(400);
+  const p20Note = await page.evaluate(() => {
+    const shs = JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]');
+    const s = shs[0] || {};
+    const h = s.notesHistory || [];
+    const last = h[h.length - 1] || {};
+    return { body: last.body, by: last.by, mirrored: s.notes };
+  });
+  if (p20Note.body !== 'Mobile probe note - met at the site visit.') errs.push('P20MNOTE: the note did not land in notesHistory through the one seam');
+  if (p20Note.mirrored !== p20Note.body) errs.push('P20MNOTE: notes must mirror the newest entry (sealed add rule)');
+  if (p20Note.by !== 'u-alex') errs.push(`P20MNOTE: the entry must stamp the current user, saw ${JSON.stringify(p20Note.by)}`);
+  await page.evaluate(() => document.querySelectorAll('ui-dialog').forEach(d => d.close && d.close()));
+  await page.waitForTimeout(300);
+  // MESSAGES: quick-view → Message opens the messaging overlay (full-width
+  // at mobile); open a human thread; send; the message persists
+  await page.locator('.mobile-sh-list ui-list-item').first().click({ timeout: 3000 }).catch(e => errs.push('P20MROW2: ' + e.message));
+  await page.waitForTimeout(400);
+  await page.locator('.qv-actions ui-button', { hasText: 'Message' }).click({ timeout: 3000 }).catch(e => errs.push('P20MMSGBTN: ' + e.message));
+  await page.waitForTimeout(500);
+  if (await page.locator('ui-sheet.messaging-sidebar[open]').count() !== 1) errs.push('P20MMSG: the messaging surface did not open from the quick-view');
+  await page.locator('.messaging-sidebar .conv-row:not(.conv-system)').first().click({ timeout: 3000 }).catch(e => errs.push('P20MCONV: ' + e.message));
+  await page.waitForTimeout(400);
+  await page.locator('.messaging-sidebar .composer ui-textarea textarea').click({ timeout: 3000 }).catch(e => errs.push('P20MCOMP: ' + e.message));
+  await page.keyboard.type('Mobile probe message');
+  await page.waitForTimeout(200);
+  await page.locator('.messaging-sidebar .composer ui-button', { hasText: 'Send' }).click({ timeout: 3000 }).catch(e => errs.push('P20MSEND: ' + e.message));
+  await page.waitForTimeout(400);
+  const p20Sent = await page.evaluate(() => {
+    const msgs = JSON.parse(localStorage.getItem('hpsm:messages') || '{}');
+    return Object.values(msgs).some(list => (list || []).some(m => m.body === 'Mobile probe message' && m.from === 'u-alex'));
+  });
+  if (!p20Sent) errs.push('P20MSEND: the mobile-sent message did not persist to the store');
+  await page.evaluate(() => document.querySelectorAll('ui-sheet').forEach(s => s.close && s.close()));
+  await page.waitForTimeout(400);
+  // EVERYTHING ELSE IS DESKTOP-WEB: a non-companion view shows the honest note
+  await page.locator('#nav-map').click({ timeout: 3000 }).catch(e => errs.push('P20MNAV: ' + e.message));
+  await page.waitForTimeout(500);
+  if (await page.locator('.desktop-note').count() !== 1) errs.push('P20MDESK: the Map view must show the desktop-surface note on mobile');
+  if (await page.locator('ui-stakeholder-map').count() !== 0) errs.push('P20MDESK: the desktop Map must not mount at mobile widths');
+  await page.locator('.desktop-note ui-button', { hasText: 'Open the stakeholder list' }).click({ timeout: 3000 }).catch(e => errs.push('P20MDESKGO: ' + e.message));
+  await page.waitForTimeout(400);
+  if (await page.locator('.mobile-sh-list').count() !== 1) errs.push('P20MDESKGO: the note action must route back to the compact list');
+  const real = errs.filter(e => !/fonts\.g(oogleapis|static)\.com|net::ERR_|Failed to load resource/.test(e));
+  totalErrors += real.length;
+  console.log(`/app.html [mobile 390x844]: ${real.length} real console/page errors` + (real.length ? '\n  - ' + real.slice(0, 8).join('\n  - ') : ''));
+  await page.close();
+}
+
 await browser.close(); srv.close();
 console.log(totalErrors === 0 ? 'SMOKE: ALL PAGES CLEAN' : `SMOKE: ${totalErrors} REAL ERRORS`);

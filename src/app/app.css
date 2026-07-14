@@ -2282,3 +2282,84 @@ ui-sidebar.record-nav[collapsed] .record-nav-title { display: none; }
 .empty-state-actions {
   display: flex; align-items: center; gap: var(--ui-sys-space-2);
 }
+
+/* ══ PHASE 20 — MOBILE COMPANION (sealed Demo-features box: stakeholder
+ * quick-view · add-note · messages; "everything else is desktop-web").
+ * The shell stamps data-mobile on ui-app-shell when the viewport sits
+ * at/under the ONE --ui-sys-breakpoint-mobile token (read by useIsMobile,
+ * mobile.jsx); app CSS keys ONLY off that stamp — no @media literal ever
+ * duplicates the token. ══ */
+
+/* The compact stakeholder list (Lists at mobile widths): name + org +
+ * zone chip per row, on the white content card. */
+.mobile-sh-list {
+  display: block;
+  height: 100%;
+  overflow-y: auto;
+  background: var(--ui-sys-surface-card);
+  border: 1px solid var(--ui-sys-outline-subtle);
+  border-radius: var(--ui-sys-shape-card);
+}
+.m-row-name { font: var(--ui-sys-font-label); }
+
+/* Quick-view bottom sheet (ui-sheet bottom variant, sealed BUILD-MAP). */
+.qv-body {
+  display: flex; flex-direction: column;
+  gap: var(--ui-sys-space-4);
+  padding: var(--ui-sys-space-2) var(--ui-sys-space-4) var(--ui-sys-space-5);
+}
+.qv-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: var(--ui-sys-space-3);
+}
+.qv-titles { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.qv-name { font: var(--ui-sys-font-title); overflow-wrap: anywhere; }
+.qv-org { font: var(--ui-sys-font-body); color: var(--ui-sys-on-surface-muted); }
+.qv-grid {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ui-sys-space-3) var(--ui-sys-space-4);
+}
+.qv-field { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.qv-field-label { font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted); }
+.qv-field-value { font: var(--ui-sys-font-body); overflow-wrap: anywhere; }
+.qv-actions { display: flex; gap: var(--ui-sys-space-2); }
+.qv-actions ui-button { flex: 1; }
+
+/* The honest desktop-surface note — every non-companion view at mobile
+ * widths (make-real law: never a pretend-responsive screen). */
+.desktop-note {
+  height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--ui-sys-space-2);
+  text-align: center;
+  padding: var(--ui-sys-space-6);
+}
+.desktop-note-icon { color: var(--ui-sys-on-surface-faint); }
+.desktop-note-title { font: var(--ui-sys-font-title); margin: 0; }
+.desktop-note-body {
+  font: var(--ui-sys-font-body); color: var(--ui-sys-on-surface-muted);
+  margin: 0 0 var(--ui-sys-space-3); max-width: 340px;
+}
+
+/* The app-bar at mobile widths: the people stack YIELDS (visual gate,
+ * 2026-07-14 — five trailing controls overflow a 390px header and clipped
+ * off the right edge; the people panel is a desktop surface anyway, per the
+ * sealed "everything else is desktop-web"). Declared responsive
+ * prioritization: selector · create · messages · search remain. */
+ui-app-shell[data-mobile] .user-stack { display: none; }
+/* …and the selector compacts to its name (the sub-line is desktop breathing
+ * room) so create · messages · search all stay inside the viewport. */
+ui-app-shell[data-mobile] .ws-select-sub { display: none; }
+ui-app-shell[data-mobile] .ws-select-name {
+  max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Messaging at mobile widths: the right-edge overlay goes full-width (a
+ * token re-point on the host — the established vote-button pattern), and
+ * the full page stacks to ONE column — the list when no thread is open,
+ * the thread (with its back control) when one is. */
+ui-app-shell[data-mobile] .messaging-sidebar { --ui-sys-sheet-side-width: 100vw; }
+ui-app-shell[data-mobile] .messaging-page { display: flex; flex-direction: column; }
+ui-app-shell[data-mobile] .messaging-page.has-conv .messaging-list-pane { display: none; }
+ui-app-shell[data-mobile] .messaging-page:not(.has-conv) .messaging-thread-pane { display: none; }
+ui-app-shell[data-mobile] .messaging-list-pane { border-right: none; flex: 1; min-height: 0; }

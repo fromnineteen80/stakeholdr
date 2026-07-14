@@ -31,6 +31,15 @@ import { unscoredCountFor } from './pages/scoring-logic.js';
 import { companySegmentsFrom } from './pages/setup-logic.js';
 import { StakeholderRecordPage } from './record/stakeholder-record.jsx';
 import { WorkspaceRecordPage } from './record/workspace-record.jsx';
+/* Phase 20: the onboarding tour (sealed "Coachmarks on first run; replayable
+ * from the profile menu") — ui-coachmark host + the pure step/flag core. */
+import { OnboardingTour } from './tour.jsx';
+import { TOUR_STEPS, hasSeenTour, markTourSeen } from './tour-logic.js';
+/* Phase 20: the mobile companion (sealed: "stakeholder quick-view · add-note
+ * · messages. (Earmarked mobile; everything else is desktop-web.)") — the
+ * token-driven viewport probe + the honest desktop-surface note. */
+import { useIsMobile, DesktopOnlyNote } from './mobile.jsx';
+import { MOBILE_VIEWS } from './mobile-logic.js';
 
 // NAV_TABS per the sealed App-shell box (icons = the captured semantic→ligature
 // map). Scoring carries hideWhenMaster (sealed rule — REAL as of Phase 6:
@@ -53,6 +62,15 @@ const CREATE_LIVE = ['sheet', 'scoring', 'plan', 'community', 'setup'];
 export function AppShell() {
   const [view, setView] = useState('sheet');
   const snackRef = useRef(null);
+
+  /* ── MOBILE COMPANION (Phase 20, sealed Demo-features box) ───────────────
+   * ONE probe: matchMedia built from --ui-sys-breakpoint-mobile (mobile.jsx
+   * reads the token — tokens.css stays the single source). The shell stamps
+   * data-mobile on ui-app-shell (the only selector app CSS keys on) and
+   * collapses the rail via ui-sidebar's EXISTING `collapsed` manifest state.
+   * Sealed scope: Lists (compact list + quick-view + add-note) and Messages
+   * are the companion; every other view renders the honest desktop note. */
+  const isMobile = useIsMobile();
 
   /* ── WORKSPACE SHELL-STATE (sealed TAB-STRIP STATE MACHINE, adapted to the
    * ruled shell: the bottom strip is RETIRED; its open-set/active data lives
@@ -392,8 +410,35 @@ export function AppShell() {
 
   const wsCount = (wsId) => countForWorkspace(stakeholderWorkspaces, wsId);
 
+  /* ── ONBOARDING TOUR (Phase 20, sealed Demo-features box) ────────────────
+   * tourStep: null = idle; 0..N-1 = the running step. FIRST RUN: when the
+   * "hpsm:__tourSeen" flag is absent (fresh profile, or a demo reset swept
+   * the namespace — tour-logic.js), the tour opens on the Lists landing after
+   * a short settle so the chrome it anchors has painted. Skip/Esc/× dismiss
+   * FOR GOOD (flag stamped); Done on the last step stamps the same flag.
+   * REPLAY: the profile menu's "Replay tour" returns to Lists (the tour's
+   * home — steps 3/4 anchor the workHQ band + table) and restarts at step 1. */
+  const [tourStep, setTourStep] = useState(null);
+  /* MOBILE GUARD (Phase 20.2): the tour anchors desktop chrome, so it never
+   * auto-starts at mobile widths (isMobile in the deps: the probe settles in
+   * its own first effect — a pending timer is cleared if the width reads
+   * mobile before the 600ms settle elapses). */
+  useEffect(() => {
+    if (isMobile || hasSeenTour(localStorage)) return undefined;
+    const t = setTimeout(() => setTourStep(0), 600);
+    return () => clearTimeout(t);
+  }, [isMobile]);
+  const endTour = () => { markTourSeen(localStorage); setTourStep(null); };
+  const tourNext = () => {
+    if (tourStep == null) return;
+    if (tourStep + 1 >= TOUR_STEPS.length) endTour();
+    else setTourStep(tourStep + 1);
+  };
+  const tourBack = () => { if (tourStep > 0) setTourStep(tourStep - 1); };
+  const replayTour = () => { setView('sheet'); setTourStep(0); };
+
   return (
-    <ui-app-shell>
+    <ui-app-shell data-mobile={isMobile ? '' : undefined}>
       {/* RULED chrome — identical on every screen: mark + name in the rail,
           workspace selector + actions in the content header. */}
       <ui-app-bar slot="header" variant="flat">
@@ -432,6 +477,7 @@ export function AppShell() {
           <ui-icon-button
             slot="trailing"
             variant="standard"
+            id="create-anchor"
             aria-label="Create new"
             title={CREATE_LIVE.includes(view)
               ? 'Create new'
@@ -461,13 +507,16 @@ export function AppShell() {
         {/* Phase 16 (sealed A19 surface, REAL): the top-bar search opens the
             command palette — same target as the global ⌘K/Ctrl-K chord. */}
         <ui-icon-button slot="trailing" variant="standard" aria-label="Search"
+                        id="search-anchor"
                         title={`Search (${cmdKeyLabel})`}
                         onClick={() => setPaletteOpen(true)}>
           <ui-icon>search</ui-icon>
         </ui-icon-button>
       </ui-app-bar>
 
-      <ui-sidebar slot="nav">
+      {/* Phase 20: at mobile widths the rail collapses to its icon column —
+          ui-sidebar's own manifest state; the user can still re-expand. */}
+      <ui-sidebar slot="nav" id="app-nav" collapsed={isMobile ? '' : undefined}>
         <span slot="brand" className="brand">
           <span className="mark">S<i>r</i></span>
           <span className="brand-text">{appName}</span>
@@ -475,6 +524,7 @@ export function AppShell() {
         {visibleTabs.map((t) => (
           <ui-sidebar-item
             key={t.id}
+            id={`nav-${t.id}`}
             active={view === t.id ? '' : undefined}
             onClick={() => setView(t.id)}
           >
@@ -539,8 +589,17 @@ export function AppShell() {
       </ui-sidebar>
 
       <div className="work">
-        {view === 'sheet' ? (
+        {isMobile && !MOBILE_VIEWS.includes(view) ? (
+          /* Phase 20 (sealed: "everything else is desktop-web") — the honest
+             desktop-surface note; never a pretend-responsive screen. */
+          <DesktopOnlyNote
+            label={RECORD_BACK_LABELS[view] || 'This view'}
+            onGoLists={() => setView('sheet')}
+          />
+        ) : view === 'sheet' ? (
           <SheetPage
+            isMobile={isMobile}
+            onOpenMessages={() => setMsgSidebarOpen(true)}
             createNonce={createNonce}
             activeWorkspaceId={activeWorkspaceId}
             openStakeholderId={pendingShId}
@@ -630,6 +689,7 @@ export function AppShell() {
              links + the J8 scoring action route through the shell's guarded
              first-class resolvers. */
           <MessagesPage
+            isMobile={isMobile}
             activeConversationId={activeConversationId}
             onSetActiveConversation={setActiveConversationId}
             onOpenMention={openMention}
@@ -684,7 +744,7 @@ export function AppShell() {
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Phase 19 — Demo polish (plan Word export · reset / blank start · empty states)</span>
+        <span>Phase 20 — Tour + mobile (onboarding coachmarks · mobile companion)</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
 
@@ -716,6 +776,11 @@ export function AppShell() {
         users={users}
         onGo={paletteGo}
       />
+
+      {/* ONBOARDING TOUR (Phase 20) — mounted at the shell (its anchors are
+          shell + Lists chrome); state above owns first-run/replay/flag. */}
+      <OnboardingTour step={tourStep} onNext={tourNext} onBack={tourBack}
+                      onDismiss={endTour} />
 
       {/* Shell snackbar — the census-A23 graceful fallback for stale mention
           links (toast + stay put; never the oracle's render crash). */}
@@ -756,6 +821,18 @@ export function AppShell() {
             Settings
           </ui-menu-item>
         )}
+        {/* Phase 20 (sealed: "replayable from the profile menu"): Replay tour
+            returns to Lists — the tour's home — and restarts at step 1.
+            PLACEMENT DECLARED: the sealed order covers the four oracle items;
+            this forward-design entry slots after them, before the divider. */}
+        <ui-menu-item
+          onClick={isMobile ? undefined : replayTour}
+          disabled={isMobile ? '' : undefined}
+          title={isMobile ? 'The tour walks the desktop chrome — open Stakeholdr on a desktop to replay it' : undefined}
+        >
+          <ui-icon slot="icon" size="sm">restart_alt</ui-icon>
+          Replay tour
+        </ui-menu-item>
         <ui-divider></ui-divider>
         <ui-menu-item disabled title="Arrives with the Login phase">
           <ui-icon slot="icon" size="sm">logout</ui-icon>

@@ -26,6 +26,8 @@ const SUITES = [
   'scale-test.mjs',
   'import-test.mjs',
   'demo-test.mjs',
+  'tour-test.mjs',
+  'mobile-test.mjs',
 ];
 
 let failed = 0;
