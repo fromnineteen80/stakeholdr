@@ -24,9 +24,12 @@ import {
 import { weightedCoord, statusFor, STATUSES } from '../src/app/data/engine.js';
 import {
   SEED_PLANS, SEED_STAKEHOLDERS, SEED_STAKEHOLDER_WORKSPACES, SEED_SCORES,
-  SEED_TEAM, SEED_USERS, SEED_WORKSPACES, SEED_COMMUNITY,
+  SEED_TEAM, SEED_USERS, SEED_WORKSPACES, SEED_COMMUNITY, SEED_MESSAGES,
+  blankSeedFor, BLANK_SOLO_USER,
 } from '../src/app/data/seed.js';
 import { ORG_GOALS, SITES } from '../src/app/data/catalogs.js';
+import { Store, sweepKeys, BLANK_KEY } from '../src/app/data/store.js';
+import { APP_CONFIG_SEED } from '../src/app/data/company.js';
 
 let passed = 0;
 const ok = async (name, fn) => { await fn(); passed++; console.log('  ✓ ' + name); };
@@ -222,5 +225,55 @@ await ok('zip core is truly shared (template re-exports THIS zipStore/crc32)', a
   assert.equal(t.xmlEscape, xmlEscape);
 });
 
+/* ── RESET DEMO DATA + BLANK START (sealed ~3882 Store.reset key sweep +
+ * schema re-stamp, WIRED; sealed ~3899 blank-org vs demo-data choice) ────── */
+
+await ok('key sweep: exactly the "hpsm:" namespace, nothing else', () => {
+  const keys = [
+    'hpsm:stakeholders', 'hpsm:__schema', 'hpsm:appConfig', BLANK_KEY,
+    'other:thing', 'hpsm', 'HPSM:upper', 'unrelated',
+  ];
+  assert.deepEqual(sweepKeys(keys),
+    ['hpsm:stakeholders', 'hpsm:__schema', 'hpsm:appConfig', BLANK_KEY]);
+  // the blank marker LIVES in the namespace so the sealed sweep clears it —
+  // "Reset to demo data" also exits blank mode by construction
+  assert.equal(BLANK_KEY, 'hpsm:__blank');
+  assert.ok(sweepKeys([BLANK_KEY]).includes(BLANK_KEY));
+});
+
+await ok('blank seeds: collections empty, appConfig kept, solo manager user', () => {
+  // every seeded collection resolves to its EMPTY shape
+  assert.deepEqual(blankSeedFor('stakeholders', SEED_STAKEHOLDERS), []);
+  assert.deepEqual(blankSeedFor('workspaces', SEED_WORKSPACES), []);
+  assert.deepEqual(blankSeedFor('team', SEED_TEAM), []);
+  assert.deepEqual(blankSeedFor('plans', SEED_PLANS), []);
+  assert.deepEqual(blankSeedFor('community', SEED_COMMUNITY), []);
+  assert.deepEqual(blankSeedFor('scores', SEED_SCORES), {});
+  assert.deepEqual(blankSeedFor('messages', SEED_MESSAGES), {});
+  assert.deepEqual(blankSeedFor('stakeholderWorkspaces', SEED_STAKEHOLDER_WORKSPACES), {});
+  // org defaults survive a blank start (declared: config, not demo rows)
+  assert.equal(blankSeedFor('appConfig', APP_CONFIG_SEED), APP_CONFIG_SEED);
+  // scalars pass through untouched (per-device flags etc.)
+  assert.equal(blankSeedFor('anything', 'scalar'), 'scalar');
+  // the declared minimal solo MANAGER (currentUser = users[0] must exist,
+  // and a manager is required to reach Settings — incl. the reset itself)
+  assert.deepEqual(blankSeedFor('users', SEED_USERS), [BLANK_SOLO_USER]);
+  assert.equal(BLANK_SOLO_USER.role, 'manager');
+  assert.ok(BLANK_SOLO_USER.id && BLANK_SOLO_USER.name);
+  assert.ok(String(BLANK_SOLO_USER.avatarColor).startsWith('var(--ui-sys-avatar-'),
+    'token-referenced avatar color, never a literal hex');
+});
+
+await ok('Store surface: reset + startBlank exist; node (no localStorage) is safe', () => {
+  assert.equal(typeof Store.reset, 'function');
+  assert.equal(typeof Store.startBlank, 'function');
+  // node has no localStorage — load returns the seed; reset/startBlank no-op
+  assert.equal(Store.load('probe', 'seed-value'), 'seed-value');
+  Store.reset();
+  Store.startBlank();
+});
+
 console.log(`\ndemo-test: all ${passed} checks passed`);
+/* store.js opens a BroadcastChannel at module load (node ≥18 ships the
+ * global), which keeps the event loop referenced — exit explicitly. */
 process.exit(0);

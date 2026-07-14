@@ -338,6 +338,29 @@ export const CONTACT_COPY =
   'Need help with Stakeholdr? Our team can assist with setup, training, ' +
   'onboarding new users, troubleshooting, and feature requests. We typically ' +
   'respond within one business day.';
+
+/* ── DEMO DATA (Phase 19 — the sealed ~3882 "reset demo data" action made
+ * real: the captured Store.reset() key sweep had ZERO call sites in the
+ * oracle; the sealed forward-design is "a manager-only Settings affordance
+ * calling Store.reset() then reloading the seed", plus the sealed ~3899
+ * "blank-org vs demo-data seed choice". Copy is forward-design (nothing
+ * sealed); the confirm body names EXACTLY what the key sweep clears. */
+export const DEMO_DATA_INTRO =
+  'This demo stores everything in this browser. Resetting clears it and ' +
+  'starts over — either with the sample organization again, or blank.';
+export const RESET_BUTTON_LABEL = 'Reset demo data…';
+export const RESET_MODAL_TITLE = 'Reset demo data?';
+export const RESET_MODAL_BODY =
+  'This permanently clears everything stored on this device: stakeholders, ' +
+  'workspaces, scoring & team weights, plans, community investments, ' +
+  'messages, people & roles, and every Settings change (catalogs, identity, ' +
+  'design). The app then restarts. This cannot be undone.';
+export const RESET_DEMO_LABEL = 'Reset to demo data';
+export const RESET_BLANK_LABEL = 'Start blank';
+export const RESET_DEMO_HELP =
+  'Reset to demo data reloads the sample organization. Start blank opens an ' +
+  'empty org — no stakeholders, workspaces, or plans; default settings; you ' +
+  'continue as the sole manager.';
 export const CONTACT_EMAIL = 'contact@stakeholdr.com';
 export const ISSUE_ADD_PLACEHOLDER = 'Type and add with a comma or pressing Enter';
 

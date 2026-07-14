@@ -15,8 +15,28 @@
  * become a row-scoped upsert/delete when Supabase lands.
  */
 import { useEffect, useRef, useState } from 'react';
+import { blankSeedFor } from './seed.js';
 
 const PREFIX = 'hpsm:';
+
+/* sweepKeys(allKeys) — the sealed reset predicate: exactly OUR "hpsm:"
+ * namespace, nothing else (exported for the node suite; reset() and the
+ * schema migration both sweep through THIS one predicate).                   */
+export function sweepKeys(allKeys) {
+  return (allKeys || []).filter((k) => k.startsWith(PREFIX));
+}
+
+/* BLANK-START MARKER (Phase 19, sealed "blank-org vs demo-data seed choice"):
+ * when this key is set, Store.load resolves every seed through blankSeedFor
+ * (seed.js) so the app boots EMPTY. Inside the namespace ON PURPOSE — the
+ * sealed reset sweep clears it, so "Reset to demo data" also exits blank
+ * mode. The storage-event fallback ignores it naturally (no subscribers).   */
+export const BLANK_KEY = PREFIX + '__blank';
+
+function blankMode() {
+  if (!hasLS) return false;
+  try { return localStorage.getItem(BLANK_KEY) === '1'; } catch { return false; }
+}
 
 /* DELIBERATE DEPARTURE (documented per the build order): the sealed oracle
  * shipped SCHEMA_VERSION "v9". The rebuild stamps "v10-rebuild" so the rebuilt
@@ -61,8 +81,8 @@ const subs = {};
 if (hasLS) {
   try {
     if (localStorage.getItem(verKey) !== SCHEMA_VERSION) {
-      for (const key of Object.keys(localStorage)) {
-        if (key.startsWith(PREFIX)) localStorage.removeItem(key);
+      for (const key of sweepKeys(Object.keys(localStorage))) {
+        localStorage.removeItem(key);
       }
       localStorage.setItem(verKey, SCHEMA_VERSION);
     }
@@ -111,17 +131,21 @@ function fire(table, value) {
  * consumers import it).                                                      */
 export const Store = {
   /* load(table, seed): read persisted JSON or fall back to seed (persisting
-   * the seed so the table exists for other tabs).                            */
+   * the seed so the table exists for other tabs). BLANK MODE (Phase 19): the
+   * fallback resolves through blankSeedFor — a blank-started org boots empty
+   * (appConfig + the solo manager per the seed.js ledger) instead of the
+   * SEED_* fixtures; persisted values are untouched either way.              */
   load(table, seed) {
-    if (!hasLS) return seed;
+    const eff = blankMode() ? blankSeedFor(table, seed) : seed;
+    if (!hasLS) return eff;
     try {
       const raw = localStorage.getItem(PREFIX + table);
       if (raw != null) return JSON.parse(raw);
     } catch { /* fall through to seed */ }
     try {
-      localStorage.setItem(PREFIX + table, JSON.stringify(seed));
+      localStorage.setItem(PREFIX + table, JSON.stringify(eff));
     } catch { /* ignore */ }
-    return seed;
+    return eff;
   },
 
   /* save(table, value, silent): write JSON + broadcast { table, value };
@@ -150,15 +174,27 @@ export const Store = {
     return () => { subs[table]?.delete(cb); };
   },
 
-  /* reset(): clear the namespace (hard "reset demo data") + re-stamp.        */
+  /* reset(): clear the namespace (hard "reset demo data") + re-stamp — the
+   * sealed Store.reset API (~3882: key sweep over the "hpsm:" prefix, then
+   * the schema stamp), WIRED as of Phase 19 (the sealed capture had zero
+   * call sites; the Settings Demo-Data affordance is the forward-design
+   * action). Sweeping the namespace also clears the blank marker.           */
   reset() {
     if (!hasLS) return;
     try {
-      for (const key of Object.keys(localStorage)) {
-        if (key.startsWith(PREFIX)) localStorage.removeItem(key);
+      for (const key of sweepKeys(Object.keys(localStorage))) {
+        localStorage.removeItem(key);
       }
       localStorage.setItem(verKey, SCHEMA_VERSION);
     } catch { /* ignore */ }
+  },
+
+  /* startBlank(): the sealed seed choice's OTHER arm — reset, then set the
+   * blank marker so the next boot resolves every seed through blankSeedFor. */
+  startBlank() {
+    this.reset();
+    if (!hasLS) return;
+    try { localStorage.setItem(BLANK_KEY, '1'); } catch { /* ignore */ }
   },
 };
 
