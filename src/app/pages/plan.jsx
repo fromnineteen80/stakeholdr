@@ -91,6 +91,8 @@ import {
   buildPlanDocModel, buildPlanDocx, planDocxFilename, PLAN_DOCX_MIME,
 } from '../export/docx.js';
 import { downloadBlob } from '../export/download.js';
+// Phase 19: the shared zero-data empty state (sealed "empty states per page").
+import { EmptyState } from '../empty-state.jsx';
 import {
   affiliatedCommunity, communityEntryAmount, scoringNeededBody,
 } from '../modals/stakeholder-logic.js';
@@ -557,18 +559,23 @@ export function PlanPage({
 
   /* CREATE via the shell's context-aware (+) — sealed addNonceFor route
    * (LandingView's onNew/newLabel were DEAD in the oracle; the shell control
-   * is the real affordance). Stale-nonce guard per the established pattern. */
+   * is the real affordance). Stale-nonce guard per the established pattern.
+   * Phase 19: the SAME create factored so the zero-data empty state's
+   * "New plan" action is this one flow, never a duplicate. */
+  const createPlan = () => {
+    const p = newPlan({
+      workspaces, activeWorkspaceId, isMaster,
+      id: uid('plan'), now: nowStamp(),
+    });
+    setPlans((prev) => [p, ...prev]);
+    setOpenId(p.id);
+    setMode('edit');
+  };
   const seenNonce = useRef(createNonce);
   useEffect(() => {
     if (createNonce > seenNonce.current) {
       seenNonce.current = createNonce;
-      const p = newPlan({
-        workspaces, activeWorkspaceId, isMaster,
-        id: uid('plan'), now: nowStamp(),
-      });
-      setPlans((prev) => [p, ...prev]);
-      setOpenId(p.id);
-      setMode('edit');
+      createPlan();
     }
   }, [createNonce]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -690,6 +697,7 @@ export function PlanPage({
           wsCount={(wsId) => wsRoster(wsId).length}
           onReview={(id) => { setOpenId(id); setMode('review'); }}
           onOpen={(id) => { setOpenId(id); setMode('edit'); }}
+          onNew={createPlan}
           onOpenUserProfile={onOpenUserProfile}
         />
       )}
@@ -698,7 +706,7 @@ export function PlanPage({
 }
 
 /* ══ LANDING (sealed PlanHome through the shared LandingView shell) ═══════ */
-function PlanLanding({ plans, users, workspaces, wsCount, onReview, onOpen, onOpenUserProfile }) {
+function PlanLanding({ plans, users, workspaces, wsCount, onReview, onOpen, onNew, onOpenUserProfile }) {
   const { companySites } = useCompanyCatalogs();
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState({});
@@ -826,7 +834,18 @@ function PlanLanding({ plans, users, workspaces, wsCount, onReview, onOpen, onOp
       )}
 
       <div className="plan-body-scroll">
-        {shown.length === 0 ? (
+        {/* Phase 19 (sealed "empty states per page"): a ZERO-DATA landing
+            renders the shared actionable empty state carrying the SEALED
+            emptyText verbatim; a filter/search that excludes everything
+            keeps the sealed muted line (plans exist — nothing to create). */}
+        {plans.length === 0 ? (
+          <EmptyState
+            icon="description"
+            line={PLAN_EMPTY_TEXT}
+            actionLabel="New plan"
+            onAction={onNew}
+          />
+        ) : shown.length === 0 ? (
           <div className="plan-empty muted">{PLAN_EMPTY_TEXT}</div>
         ) : tableMode ? (
           <table className="plan-table">

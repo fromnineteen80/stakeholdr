@@ -365,10 +365,10 @@ await page.waitForTimeout(200);
 await page.locator('.plan-editor-bar ui-button', { hasText: 'Review' }).click();
 await page.waitForTimeout(600);
 await page.screenshot({ path: `${OUT}/p7-plan-review-top.png` });
-await page.locator('.plan-review-section', { hasText: 'Stakeholders In This Plan' }).scrollIntoViewIfNeeded();
+await page.locator('.plan-review-doc .plan-review-section', { hasText: 'Stakeholders In This Plan' }).scrollIntoViewIfNeeded(); // Phase 19: scoped — the print-sheet portal carries a second copy
 await page.waitForTimeout(300);
 await page.screenshot({ path: `${OUT}/p7-plan-review-stakeholders.png` });
-await page.locator('.plan-review-section', { hasText: 'Community Investment' }).scrollIntoViewIfNeeded();
+await page.locator('.plan-review-doc .plan-review-section', { hasText: 'Community Investment' }).scrollIntoViewIfNeeded();
 await page.waitForTimeout(300);
 await page.screenshot({ path: `${OUT}/p7-plan-review-tail.png` });
 
@@ -784,6 +784,33 @@ await page.screenshot({ path: `${OUT}/p18-import-commit.png` });
 // close without committing (the captures must not mutate the store)
 await page.locator('.import-actions ui-button', { hasText: 'Cancel' }).click();
 await page.waitForTimeout(300);
+
+// ── PHASE-19 DEMO-POLISH CAPTURES ──────────────────────────────────────────
+// plan REVIEW toolbar with the Export + Print/Save-as-PDF controls
+await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Plans' }).click();
+await page.waitForTimeout(500);
+await page.locator('.plan-card-actions ui-button', { hasText: 'Review' }).first().click();
+await page.waitForTimeout(600);
+await page.screenshot({ path: `${OUT}/p19-plan-review-export.png`, clip: { x: 0, y: 0, width: 1440, height: 320 } });
+// the reset-demo-data confirm dialog (Settings → Team Management)
+await page.locator('#me-anchor').click();
+await page.waitForTimeout(300);
+await page.locator('ui-menu.profile-menu ui-menu-item', { hasText: 'Settings' }).click();
+await page.waitForTimeout(400);
+await page.locator('.settings-nav ui-list-item', { hasText: 'Team Management' }).click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${OUT}/p19-demo-data-section.png` });
+await page.locator('.reset-demo-btn').click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p19-reset-dialog.png` });
+// blank start → the Lists zero-data empty state (this is the LAST capture:
+// it wipes the store; the browser closes right after)
+await page.locator('.reset-blank-btn').click();
+await page.waitForTimeout(2000);
+await page.screenshot({ path: `${OUT}/p19-empty-state-lists.png` });
+await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Plans' }).click();
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${OUT}/p19-empty-state-plans.png` });
 
 await browser.close(); srv.close();
 console.log('shots written to', OUT);

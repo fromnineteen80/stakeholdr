@@ -220,3 +220,10 @@ export const WS_FOOTER_EXPLAINER =
 export function workspaceCountLabel(n) {
   return `${n} workspace${n === 1 ? '' : 's'}`;
 }
+
+/* ── PHASE 19 — WORKSPACES zero-data empty state (sealed ~3899 "empty states
+ * per page", forward-design copy). Renders only when the user can see NO
+ * workspaces at all; the sealed filtered-empty "No workspaces match." muted
+ * line stays for a filter/search that excludes everything. */
+export const WS_ZERO_LINE =
+  'No workspaces yet. Create one to scope stakeholders into a focused list.';

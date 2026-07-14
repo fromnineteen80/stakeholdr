@@ -99,3 +99,10 @@ export function bulkActionSummary(landed, total, what) {
   if (landed >= total) return `${what} for ${noun(landed)}`;
   return `${what} for ${noun(landed)} · ${total - landed} already had it`;
 }
+
+/* ── PHASE 19 — LISTS zero-data empty state (sealed ~3899 "empty states per
+ * page", forward-design; nothing sealed prescribes this copy). Renders in
+ * place of the table when the workspace-visible set is EMPTY; both actions
+ * are the page's existing real flows (create modal / import wizard). */
+export const LISTS_EMPTY_LINE =
+  'No stakeholders yet. Add your first stakeholder or import a spreadsheet.';

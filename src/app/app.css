@@ -2264,3 +2264,21 @@ ui-sidebar.record-nav[collapsed] .record-nav-title { display: none; }
 }
 .reset-demo-warning { margin: 0; font: var(--ui-sys-font-body); color: var(--ui-sys-on-surface); }
 .reset-demo-choices { margin: 0; font: var(--ui-sys-font-caption); }
+
+/* ══ PHASE 19 — SHARED EMPTY STATE (src/app/empty-state.jsx): icon +
+ * one-liner + primary action; modest, token-only, centered in the page's
+ * body region. ══ */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; text-align: center;
+  gap: var(--ui-sys-space-3);
+  padding: calc(var(--ui-sys-space-6) * 2) var(--ui-sys-space-6);
+  margin: auto;
+}
+.empty-state-icon { color: var(--ui-sys-on-surface-faint); }
+.empty-state-line {
+  margin: 0; font: var(--ui-sys-font-body); max-width: 380px;
+}
+.empty-state-actions {
+  display: flex; align-items: center; gap: var(--ui-sys-space-2);
+}

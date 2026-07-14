@@ -86,7 +86,10 @@ import { displayName, normalizeUrl, PRIORITY_OPTIONS } from '../../../design-sys
 // Phase 17: the pure single-setState bulk patch builders (see their header).
 import {
   bulkPatchStakeholders, bulkAddTag, bulkAssignWorkspace, bulkActionSummary,
+  LISTS_EMPTY_LINE,
 } from './sheet-logic.js';
+// Phase 19: the shared zero-data empty state (sealed "empty states per page").
+import { EmptyState } from '../empty-state.jsx';
 // affiliatedCommunity + the create-side-effect copy are single-sourced in the
 // modal's pure-logic module (sealed cross-link formulas).
 import { affiliatedCommunity, scoringNeededBody } from '../modals/stakeholder-logic.js';
@@ -321,7 +324,10 @@ export function SheetPage({
       el.removeEventListener('user-open', onUserOpen);
       el.removeEventListener('bulk-selection-change', onBulkSelection);
     };
-  }, [setStakeholders]);
+    /* Phase 19: rows.length === 0 in the deps — the table conditionally
+     * yields to the empty state, so the bindings must re-attach when it
+     * remounts (el is null while empty; the guard above returns). */
+  }, [setStakeholders, rows.length === 0]);
 
   /* ── NOTES MODAL (sealed NotesModal spec) ─────────────────────────────── */
   const subject = notesFor ? stakeholders.find((s) => s.id === notesFor) : null;
@@ -698,10 +704,26 @@ export function SheetPage({
         {/* kbd-label: the cmd-key hint is single-sourced in the store
             (cmdKeyLabel) and PASSED to the table — never re-derived inside.
             selectable (Phase 17): THIS host carries the bulk-action bar, so
-            it opts into the table's selection column. */}
-        <ui-stakeholder-table ref={tableRef} class="sheet-table" selectable=""
-                              importable=""
-                              kbd-label={cmdKeyLabel}></ui-stakeholder-table>
+            it opts into the table's selection column.
+            PHASE 19 (sealed "empty states per page", declared): a truly
+            EMPTY workspace-visible set substitutes the shared empty state
+            for the table node — both actions are the page's existing real
+            flows. The table's listener effect keys on this emptiness so its
+            bindings re-attach when the table remounts. */}
+        {rows.length === 0 ? (
+          <EmptyState
+            icon="table_rows"
+            line={LISTS_EMPTY_LINE}
+            actionLabel="Add stakeholder"
+            onAction={() => setShModal({ mode: 'create' })}
+            secondaryLabel="Import"
+            onSecondary={() => setImportOpen(true)}
+          />
+        ) : (
+          <ui-stakeholder-table ref={tableRef} class="sheet-table" selectable=""
+                                importable=""
+                                kbd-label={cmdKeyLabel}></ui-stakeholder-table>
+        )}
       </div>
 
       {/* PHASE 18 — IMPORT WIZARD (sealed 4-step ui-dialog flow; the table's

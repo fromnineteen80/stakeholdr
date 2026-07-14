@@ -97,6 +97,8 @@ import {
   COMMUNITY_FOOTER_EXPLAINER, filterCommunity, sortCommunity,
 } from './community-logic.js';
 import { stageSlug } from './plan-logic.js';
+// Phase 19: the shared zero-data empty state (sealed "empty states per page").
+import { EmptyState } from '../empty-state.jsx';
 import { displayName } from '../../../design-system/components/stakeholder-table.js';
 import {
   StakeholderModal, useUiEvent, Field, TF, Sel, TA, Owners, IssueSelector,
@@ -403,6 +405,7 @@ export function CommunityPage({
           onOpen={setViewId}
           onEdit={setEditId}
           onVote={vote}
+          onNew={() => { setViewId(null); setEditId(null); setNewOpen(true); }}
           onOpenStakeholder={(id) => setViewStakeholderId(id)}
           onOpenUserProfile={onOpenUserProfile}
         />
@@ -443,8 +446,8 @@ export function CommunityPage({
 
 /* ══ LANDING (sealed CommunityView via the shared landing composition) ═════ */
 function CommunityLanding({
-  community, users, stakeholders, currentUser, onOpen, onEdit, onVote, onOpenStakeholder,
-  onOpenUserProfile,
+  community, users, stakeholders, currentUser, onOpen, onEdit, onVote, onNew,
+  onOpenStakeholder, onOpenUserProfile,
 }) {
   const { companySites, fiscal } = useCompanyCatalogs();
   const [query, setQuery] = useState('');
@@ -583,7 +586,17 @@ function CommunityLanding({
       )}
 
       <div className="plan-body-scroll">
-        {shown.length === 0 ? (
+        {/* Phase 19 (sealed "empty states per page"): zero-data landing →
+            the shared actionable empty state carrying the SEALED emptyText
+            verbatim; filtered-empty keeps the sealed muted line. */}
+        {community.length === 0 ? (
+          <EmptyState
+            icon="favorite"
+            line={COMMUNITY_EMPTY_TEXT}
+            actionLabel="New application"
+            onAction={onNew}
+          />
+        ) : shown.length === 0 ? (
           <div className="plan-empty muted">{COMMUNITY_EMPTY_TEXT}</div>
         ) : tableMode ? (
           /* Sealed landing table cols: Engagement · Type · Recipient · Amount ·

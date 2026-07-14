@@ -74,8 +74,10 @@ import {
   marketsByWs, countByWs, marketFilterOptions, regionFilterOptions,
   filterWorkspaces, visibleWorkspacesFor, canDeleteWorkspace,
   DELETE_BLOCKED_TEXT, deleteImpact, WS_EMPTY_TEXT, WS_FOOTER_EXPLAINER,
-  workspaceCountLabel,
+  workspaceCountLabel, WS_ZERO_LINE,
 } from './setup-logic.js';
+// Phase 19: the shared zero-data empty state (sealed "empty states per page").
+import { EmptyState } from '../empty-state.jsx';
 import {
   useUiEvent, Field, TF, Sel, Owners, PopMenu,
 } from '../modals/stakeholder-modal.jsx';
@@ -469,7 +471,17 @@ export function SetupPage({
       {/* ── BODY: segment-grouped cards (sealed setup-scroll → setup-section;
           groups iterate Object.keys(SEGMAP) order; empty groups skipped) ── */}
       <div className="plan-body-scroll setup-scroll">
-        {shown.length === 0 ? (
+        {/* Phase 19 (sealed "empty states per page"): NO visible workspaces
+            at all → the shared actionable empty state (create modal); a
+            filter that excludes everything keeps the sealed muted line. */}
+        {visible.length === 0 ? (
+          <EmptyState
+            icon="work"
+            line={WS_ZERO_LINE}
+            actionLabel="New workspace"
+            onAction={() => setCreateOpen(true)}
+          />
+        ) : shown.length === 0 ? (
           <div className="plan-empty muted">{WS_EMPTY_TEXT}</div>
         ) : (
           Object.keys(SEGMAP).map((seg) => {
