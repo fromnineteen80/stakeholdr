@@ -42,6 +42,7 @@ import {
   TEMPLATE_XLSX_FILENAME, TEMPLATE_CSV_FILENAME,
 } from './template.js';
 import { readXlsxRows } from './xlsx-read.js';
+import { downloadBlob } from '../export/download.js';
 
 const PREVIEW_CAP = 200; // ui-data-table mounts every row — cap the RENDER only
 
@@ -50,17 +51,9 @@ const STEP_LABELS = ['Upload', 'Match columns', 'Validate', 'Import'];
 /* ONE spelling for the computed disposition (option + match chip). */
 const COMPUTED_LABEL = 'Computed — skipped';
 
-function downloadBlob(bytes, filename, mime) {
-  try {
-    const blob = new Blob([bytes], { type: mime });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  } catch { /* headless/test contexts */ }
-}
+/* Phase 19 refactor: the Blob + anchor delivery moved to the shared
+ * src/app/export/download.js (the plan Word export delivers through the
+ * SAME helper — replace-don't-duplicate). */
 
 export function ImportWizard({
   open, onClose, onCommit, catalogsCtx, workspaceName,

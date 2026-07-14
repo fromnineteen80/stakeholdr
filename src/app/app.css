@@ -2237,3 +2237,22 @@ ui-sidebar.record-nav[collapsed] .record-nav-title { display: none; }
   gap: var(--ui-sys-space-2);
   width: 100%;
 }
+
+/* ══ PHASE 19 — PLAN EXPORT: the PRINT / SAVE-AS-PDF sheet (declared print
+ * path; see the plan.jsx header ledger). The sheet is a body-level portal
+ * copy of the ONE PlanReviewDocument; hidden on screen. In print, ONLY the
+ * sheet renders (scoped with :has so printing any other screen is untouched)
+ * — the app-shell shadow grid overflow-clips an in-place print. Token-only:
+ * structural properties plus the surface/ink roles the doc already uses. ══ */
+.plan-print-sheet { display: none; }
+@media print {
+  body:has(.plan-print-sheet) > :not(.plan-print-sheet) { display: none; }
+  .plan-print-sheet {
+    display: flex; flex-direction: column; gap: var(--ui-sys-space-6);
+    font: var(--ui-sys-font-body);
+    color: var(--ui-sys-on-surface);
+    background: var(--ui-sys-surface-card);
+  }
+  /* Paper never scrolls: the element-6 table prints in full. */
+  .plan-print-sheet .plan-sh-scroll { overflow: visible; }
+}

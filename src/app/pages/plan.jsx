@@ -40,6 +40,20 @@
  *    the only route from the editor into the sealed read-only review mode.
  *  · All ui-menus PORTAL to document.body (the component positions in page
  *    coordinates — the shell set this precedent for the workspace menu).
+ *  · PHASE 19 — PLAN → WORD/PDF EXPORT (sealed ~3895 "plan → single Word/PDF
+ *    — contents specified in the Plan box"; the Plan box: "the completed plan
+ *    exports to a SINGLE Word file … the element/section structure becomes
+ *    the document's outline"). DECLARED PLACEMENT: the REVIEW toolbar (the
+ *    review IS the sealed read-only document) carries two ui-buttons
+ *    (variant text) between the title and "Edit plan" — "Export" (ui-icon
+ *    download; builds the .docx via export/docx.js + the shared Phase-18 zip
+ *    core and delivers through the shared downloadBlob) and "Print / Save as
+ *    PDF" (ui-icon print; window.print() — PDF is the DECLARED print path:
+ *    the browser's Save-as-PDF over the print stylesheet). The print sheet is
+ *    a body-level PORTAL copy of the ONE PlanReviewDocument component
+ *    (hidden on screen, the only thing visible in @media print) because the
+ *    ui-app-shell shadow grid overflow-clips — an in-place print would cut
+ *    at one viewport. Declared, not sealed: the oracle had no export code.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -66,13 +80,17 @@ import {
   goalName, modelFormula, PLAN_STAGES, stageSlug,
   planFit, effectiveBand, overridePick, applyOverride, comparePlanRows,
   planMissing, missingReadout, newPlan, planStakeholderIds, scrubPlanRecord,
-  availableCommunity, planDate,
+  availableCommunity, planDate, planMetaLine, reviewScenario,
   PLAN_FILTER_DEFS, PLAN_SORT_FIELDS, PLAN_EMPTY_TEXT, PLAN_FOOTER_EXPLAINER,
   PRIORITIZE_EXPLAINER_PRE, PRIORITIZE_EXPLAINER_BOLD,
   PRIORITIZE_EXPLAINER_POST, PRIORITIZE_EXPLAINER_END, PERSONAS_ADDON_NOTE,
   POLLING_ADDON_NOTE, filterPlans, sortPlans,
 } from './plan-logic.js';
 import { displayName } from '../../../design-system/components/stakeholder-table.js';
+import {
+  buildPlanDocModel, buildPlanDocx, planDocxFilename, PLAN_DOCX_MIME,
+} from '../export/docx.js';
+import { downloadBlob } from '../export/download.js';
 import {
   affiliatedCommunity, communityEntryAmount, scoringNeededBody,
 } from '../modals/stakeholder-logic.js';
@@ -1478,31 +1496,19 @@ function PlanReview({ onOpenUserProfile,
   });
   const ws = workspaces.find((w) => w.id === p.workspaceId);
   const site = companySites.find((s) => s.id === p.site);
-  const linked = (p.communityIds || [])
-    .map((id) => community.find((c) => c.id === id))
-    .filter(Boolean);
 
-  const meta = [
-    ws ? ws.name : null,
-    p.market && p.region ? `${p.market} / ${p.region}` : (p.market || p.region || null),
-    site ? siteLabel(site) : null,
-    p.state ? (STATE_ABBR[p.state] || p.state) : null,
-    p.geography || null,
-    `Updated ${planDate(p.updatedAt || p.createdAt)}`,
-  ].filter(Boolean).join(' · ');
+  /* PHASE 19 EXPORT (see the header ledger): the .docx is the SAME sealed
+   * review document — the model maps this surface's own derivations. */
+  const exportDocx = () => {
+    const model = buildPlanDocModel({
+      plan: p, rows, users, ws, site, companyGoals, community, sector, goal,
+    });
+    downloadBlob(buildPlanDocx(model), planDocxFilename(p.title), PLAN_DOCX_MIME);
+  };
 
-  const scenario = [
-    ['What this plan solves & its impact', p.scenarioSolves],
-    ['Our phased approach', p.scenarioApproach],
-    ['The outcome we expect', p.scenarioOutcome],
-  ].filter(([, v]) => String(v || '').trim());
-
-  const RS = ({ title, children }) => (
-    <section className="plan-review-section">
-      <h2>{title}</h2>
-      {children}
-    </section>
-  );
+  const docProps = {
+    p, rows, users, ws, site, community, companyGoals, sector, goal,
+  };
 
   return (
     <div className="plan-editor">
@@ -1512,6 +1518,19 @@ function PlanReview({ onOpenUserProfile,
           Plans
         </ui-button>
         <span className="plan-review-toolbar-title">{p.title}</span>
+        {/* PHASE 19 (declared placement, header ledger): Export + the print
+            path live on the REVIEW toolbar — the review IS the document. */}
+        <ui-button slot="trailing" variant="text" class="plan-export-btn"
+                   title="Export this plan as a Word document" onClick={exportDocx}>
+          <ui-icon slot="leading">download</ui-icon>
+          Export
+        </ui-button>
+        <ui-button slot="trailing" variant="text" class="plan-print-btn"
+                   title="Print, or choose Save as PDF in the print dialog"
+                   onClick={() => window.print()}>
+          <ui-icon slot="leading">print</ui-icon>
+          Print / Save as PDF
+        </ui-button>
         <ui-button slot="trailing" variant="filled" onClick={onEdit}>
           <ui-icon slot="leading">edit</ui-icon>
           Edit plan
@@ -1520,6 +1539,47 @@ function PlanReview({ onOpenUserProfile,
 
       <div className="plan-review-body">
         <div className="plan-review-doc">
+          <PlanReviewDocument {...docProps} onOpenUserProfile={onOpenUserProfile} />
+        </div>
+      </div>
+
+      {/* PRINT SHEET (header ledger): a body-level portal copy of the ONE
+          document component — hidden on screen; @media print shows ONLY this,
+          in normal flow, so multi-page printing works (the app-shell shadow
+          grid overflow-clips an in-place print to one viewport). */}
+      {createPortal(
+        <div className="plan-print-sheet" aria-hidden="true">
+          <PlanReviewDocument {...docProps} />
+        </div>,
+        document.body,
+      )}
+    </div>
+  );
+}
+
+/* The ONE review document (screen column + print sheet render THIS). */
+function PlanReviewDocument({
+  p, rows, users, ws, site, community, companyGoals, sector, goal,
+  onOpenUserProfile,
+}) {
+  const linked = (p.communityIds || [])
+    .map((id) => community.find((c) => c.id === id))
+    .filter(Boolean);
+
+  /* Sealed meta + scenario assemblies — the shared plan-logic derivations
+   * (the Word export reads the SAME functions; replace-don't-duplicate). */
+  const meta = planMetaLine(p, ws, site);
+  const scenario = reviewScenario(p);
+
+  const RS = ({ title, children }) => (
+    <section className="plan-review-section">
+      <h2>{title}</h2>
+      {children}
+    </section>
+  );
+
+  return (
+    <>
           <header className="plan-review-head">
             <h1>{p.title}</h1>
             <div className="muted">{meta}</div>
@@ -1651,8 +1711,6 @@ function PlanReview({ onOpenUserProfile,
               ? <p className="plan-review-prose">{p.measurement}</p>
               : <p className="muted">Not written yet.</p>}
           </RS>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }
