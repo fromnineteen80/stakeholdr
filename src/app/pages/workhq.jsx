@@ -237,8 +237,9 @@ export function WorkHQBand({
     cards.cold.visible.length, cards.needs.visible.length,
     cards.votes.visible.length);
 
+  // id="workhq-band": the Phase-20 onboarding tour's step-3 anchor.
   return (
-    <section className="intel-band" aria-label={`WorkHQ — ${workspaceLabel || 'workspace intelligence'}`}>
+    <section className="intel-band" id="workhq-band" aria-label={`WorkHQ — ${workspaceLabel || 'workspace intelligence'}`}>
       <div className="intel-head">
         <span className="intel-title">WorkHQ</span>
         {mode === 'table' && (

@@ -1641,7 +1641,7 @@
    "tag": "ui-coachmark",
    "status": "built",
    "category": "gapFill",
-   "summary": "Anchored spotlight callout for first-run product tours; scrim with box-shadow cutout leaving the anchor prominent; card with heading, body slot, step counter, Back/Next-Done, dismiss ×; Esc dismisses; focus moves in on open and restores on close; emits next/back/dismiss.",
+   "summary": "Anchored spotlight callout for first-run product tours; scrim with box-shadow cutout leaving the anchor prominent; card with heading, body slot, step counter, Skip/Back/Next-Done, dismiss ×; Esc and Skip dismiss (skip-for-good semantics live in the host); ArrowRight/ArrowLeft advance/back, Enter activates the focused Next; zero-rect (hidden) anchors fall back to the centered no-anchor card; reposition() re-measures after slotted-content changes; focus moves in on open and restores on close; emits next/back/dismiss.",
    "props": [
     {
      "name": "for",
@@ -1686,17 +1686,17 @@
     {
      "name": "dismiss",
      "detail": "{ step, steps }",
-     "note": "× button or Escape; component also closes itself"
+     "note": "Skip button, × button, or Escape; component also closes itself — the host records skip-for-good"
     }
    ],
    "states": [
     "open",
     "closed",
     "first-step (Back hidden)",
-    "last-step (Next reads Done)",
+    "last-step (Next reads Done, Skip hidden)",
     "placed-below",
     "placed-above",
-    "no-anchor (centered, no spotlight)"
+    "no-anchor (centered, no spotlight; includes zero-rect hidden anchors)"
    ],
    "import": "./components/coachmark.js"
   },

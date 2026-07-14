@@ -720,8 +720,11 @@ export function SheetPage({
             onSecondary={() => setImportOpen(true)}
           />
         ) : (
-          <ui-stakeholder-table ref={tableRef} class="sheet-table" selectable=""
-                                importable=""
+          /* id="lists-table": the Phase-20 onboarding tour's step-4 anchor
+             (absent on a zero-data profile — the coachmark's no-anchor
+             fallback centers the card, by design). */
+          <ui-stakeholder-table ref={tableRef} id="lists-table" class="sheet-table"
+                                selectable="" importable=""
                                 kbd-label={cmdKeyLabel}></ui-stakeholder-table>
         )}
       </div>

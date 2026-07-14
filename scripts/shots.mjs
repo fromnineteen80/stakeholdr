@@ -41,6 +41,18 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 
 await page.goto('http://127.0.0.1:4174/app.html', { waitUntil: 'networkidle' });
 await page.waitForTimeout(1500);
+
+// ── PHASE-20 TOUR CAPTURE ──────────────────────────────────────────────────
+// A fresh profile auto-opens the first-run tour (600ms settle — already
+// elapsed). Advance to step 2 so the capture shows the full sealed bar
+// (counter "2 of 7" + Skip + Back + Next), then Esc-skip so every capture
+// below runs unobstructed.
+await page.evaluate(() => document.querySelector('ui-coachmark.app-tour')?.shadowRoot.querySelector('.next').click());
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/p20-coachmark.png` });
+await page.keyboard.press('Escape');
+await page.waitForTimeout(300);
+
 await page.screenshot({ path: `${OUT}/app-expanded.png` });
 
 // ── PHASE-3 LISTS CAPTURES (playwright CSS pierces open shadow roots) ──────
@@ -807,6 +819,9 @@ await page.screenshot({ path: `${OUT}/p19-reset-dialog.png` });
 // it wipes the store; the browser closes right after)
 await page.locator('.reset-blank-btn').click();
 await page.waitForTimeout(2000);
+// Phase 20: the wipe re-armed the first-run tour — skip it before capturing.
+await page.keyboard.press('Escape');
+await page.waitForTimeout(300);
 await page.screenshot({ path: `${OUT}/p19-empty-state-lists.png` });
 await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Plans' }).click();
 await page.waitForTimeout(500);

@@ -37,6 +37,27 @@ for (const path of pages) {
     await page.locator('md-list-item, li, [role="listitem"]').first().click({ timeout: 3000 }).catch(() => {});
   }
   if (path === '/app.html') {
+    // Phase 20: FIRST-RUN ONBOARDING TOUR — a fresh profile (each smoke page
+    // is a fresh context) opens the coachmark once (600ms settle < the 1200ms
+    // wait above); Next advances; Skip is present mid-tour (sealed bar); Esc
+    // skips FOR GOOD (hpsm:__tourSeen stamped); a reload must NOT re-show it.
+    if (await page.locator('ui-coachmark.app-tour[open]').count() !== 1) errs.push('P20TOUR: the first-run coachmark did not appear on a fresh profile');
+    const p20C1 = await page.evaluate(() => document.querySelector('ui-coachmark.app-tour')?.shadowRoot.querySelector('.counter').textContent || '');
+    if (p20C1 !== '1 of 7') errs.push(`P20TOURCOUNT: expected the step counter "1 of 7", saw "${p20C1}"`);
+    await page.evaluate(() => document.querySelector('ui-coachmark.app-tour')?.shadowRoot.querySelector('.next').click());
+    await page.waitForTimeout(300);
+    const p20C2 = await page.evaluate(() => document.querySelector('ui-coachmark.app-tour')?.shadowRoot.querySelector('.counter').textContent || '');
+    if (p20C2 !== '2 of 7') errs.push(`P20TOURNEXT: Next must advance to "2 of 7", saw "${p20C2}"`);
+    const p20Skip = await page.evaluate(() => { const s = document.querySelector('ui-coachmark.app-tour')?.shadowRoot.querySelector('.skip'); return !!s && !s.classList.contains('hidden'); });
+    if (!p20Skip) errs.push('P20TOURSKIP: the sealed-bar Skip button is missing mid-tour');
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    if (await page.locator('ui-coachmark.app-tour[open]').count() !== 0) errs.push('P20TOURESC: Escape did not skip the tour');
+    const p20Seen = await page.evaluate(() => localStorage.getItem('hpsm:__tourSeen'));
+    if (p20Seen !== '1') errs.push(`P20TOURFLAG: skip must stamp hpsm:__tourSeen=1, saw ${JSON.stringify(p20Seen)}`);
+    await page.reload({ waitUntil: 'networkidle', timeout: 30000 }).catch(e => errs.push('P20TOURRELOAD: ' + e.message));
+    await page.waitForTimeout(1200);
+    if (await page.locator('ui-coachmark.app-tour[open]').count() !== 0) errs.push('P20TOURONCE: the skipped tour re-appeared after a reload');
     // Phase 5 (selectors recomposed at Phase 14 — the PAGE hosts the sealed
     // scorecard rail now): drive the Map view — select a dot, enter history
     // (assert the trail renders), close + reopen the scorecard rail.
@@ -1137,6 +1158,18 @@ for (const path of pages) {
     if (p18RtCount !== p18CountBefore + 2 + p18RtRows) errs.push(`P18RTLAND: expected ${p18CountBefore + 2 + p18RtRows} after the round-trip import, saw ${p18RtCount}`);
     const p18RtSnack = (await page.locator('.sheet-wrap ui-snackbar').getAttribute('message').catch(() => '') || '').trim();
     if (p18RtSnack !== `Imported ${p18RtRows} stakeholders`) errs.push(`P18RTSNACK: expected "Imported ${p18RtRows} stakeholders", saw "${p18RtSnack}"`);
+    // Phase 20: REPLAY from the profile menu (sealed "replayable from the
+    // profile menu") — the tour returns to Lists and restarts at step 1.
+    await page.locator('#me-anchor').click({ timeout: 3000 }).catch(e => errs.push('P20RMENU: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('ui-menu.profile-menu ui-menu-item', { hasText: 'Replay tour' }).click({ timeout: 3000 }).catch(e => errs.push('P20RITEM: ' + e.message));
+    await page.waitForTimeout(400);
+    if (await page.locator('ui-coachmark.app-tour[open]').count() !== 1) errs.push('P20REPLAY: the profile-menu replay did not reopen the tour');
+    const p20R = await page.evaluate(() => document.querySelector('ui-coachmark.app-tour')?.shadowRoot.querySelector('.counter').textContent || '');
+    if (p20R !== '1 of 7') errs.push(`P20REPLAY: replay must restart at "1 of 7", saw "${p20R}"`);
+    if (await page.locator('.sheet-wrap').count() !== 1) errs.push('P20REPLAY: replay must land on Lists (the tour home)');
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
     // Phase 19 — DEMO POLISH: (a) plan → Word export (capture the download,
     // assert the blob MIME, unzip-validate the bytes node-side with the
     // Phase-18 reader); (b) reset-demo-data → the seed restores; (c) blank
@@ -1208,6 +1241,10 @@ for (const path of pages) {
     }
     await page.locator('.reset-demo-go').click({ timeout: 3000 }).catch(e => errs.push('P19RGO: ' + e.message));
     await page.waitForTimeout(2000); // location.reload()
+    // Phase 20: the reset swept hpsm:__tourSeen — the re-armed first-run tour
+    // re-opens (by design); skip it so the P19 checks run unobstructed.
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
     const p19AfterReset = await page.evaluate(() => ({
       blank: localStorage.getItem('hpsm:__blank'),
       shs: JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]').length,
@@ -1226,6 +1263,9 @@ for (const path of pages) {
     await page.waitForTimeout(300);
     await page.locator('.reset-blank-btn').click({ timeout: 3000 }).catch(e => errs.push('P19BGO: ' + e.message));
     await page.waitForTimeout(2000); // location.reload()
+    // Phase 20: blank start also swept the tour flag — skip the re-armed tour.
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
     const p19Blank = await page.evaluate(() => ({
       marker: localStorage.getItem('hpsm:__blank'),
       users: JSON.parse(localStorage.getItem('hpsm:users') || '[]').map(u => u.id),
