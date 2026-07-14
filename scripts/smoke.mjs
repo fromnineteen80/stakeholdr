@@ -1242,7 +1242,11 @@ for (const path of pages) {
     await page.locator('.reset-demo-go').click({ timeout: 3000 }).catch(e => errs.push('P19RGO: ' + e.message));
     await page.waitForTimeout(2000); // location.reload()
     // Phase 20: the reset swept hpsm:__tourSeen — the re-armed first-run tour
-    // re-opens (by design); skip it so the P19 checks run unobstructed.
+    // re-opens (by design). ASSERT the re-arm (audit: an unasserted skip
+    // would keep smoke green if re-arm regressed), then skip it.
+    if (await page.locator('ui-coachmark.app-tour[open]').count() !== 1) {
+      errs.push('P20REARM: the demo reset must re-arm the first-run tour');
+    }
     await page.keyboard.press('Escape');
     await page.waitForTimeout(300);
     const p19AfterReset = await page.evaluate(() => ({
@@ -1263,7 +1267,10 @@ for (const path of pages) {
     await page.waitForTimeout(300);
     await page.locator('.reset-blank-btn').click({ timeout: 3000 }).catch(e => errs.push('P19BGO: ' + e.message));
     await page.waitForTimeout(2000); // location.reload()
-    // Phase 20: blank start also swept the tour flag — skip the re-armed tour.
+    // Phase 20: blank start also swept the tour flag — assert + skip.
+    if (await page.locator('ui-coachmark.app-tour[open]').count() !== 1) {
+      errs.push('P20REARM2: a blank start must re-arm the first-run tour');
+    }
     await page.keyboard.press('Escape');
     await page.waitForTimeout(300);
     const p19Blank = await page.evaluate(() => ({

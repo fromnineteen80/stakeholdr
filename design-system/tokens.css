@@ -167,6 +167,9 @@
      builds its matchMedia from it, then stamps data-mobile on the shell —
      the token stays the single source; no @media literal duplicates it. */
   --ui-sys-breakpoint-mobile: 720px;
+  /* Mobile app-bar workspace-name cap (the responsive-prioritization
+     geometry decision lives HERE, not as an app.css literal). */
+  --ui-sys-ws-name-max-mobile: 96px;
 
   /* Avatar sizing scale (identity circles; the ONE place avatar px live) */
   --ui-sys-avatar-size-sm: 24px;

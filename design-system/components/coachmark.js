@@ -29,6 +29,21 @@ template.innerHTML = `
       display: contents;
     }
 
+    /* Backdrop — TRUE modality (audit 2026-07-14: the shadow-scrim alone was
+     * fully click-through; the tour READ as modal but the page underneath
+     * stayed live). Transparent, swallows every pointer event while open —
+     * the visible dimming still comes from the spotlight's shadow above it. */
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 889;
+      pointer-events: none;
+    }
+
+    :host([open]) .backdrop {
+      pointer-events: auto;
+    }
+
     /* Spotlight — the scrim IS this element's shadow; the hole is the anchor. */
     .spotlight {
       position: fixed;
@@ -178,8 +193,9 @@ template.innerHTML = `
     }
   </style>
 
+  <div class="backdrop" part="backdrop" aria-hidden="true"></div>
   <div class="spotlight" part="spotlight"></div>
-  <div class="card" part="card" role="dialog" aria-labelledby="heading" aria-describedby="body" tabindex="-1">
+  <div class="card" part="card" role="dialog" aria-modal="true" aria-labelledby="heading" aria-describedby="body" tabindex="-1">
     <div class="caret" part="caret"></div>
     <button class="dismiss" part="dismiss" aria-label="Dismiss tour">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -320,6 +336,25 @@ class UiCoachmark extends HTMLElement {
       e.preventDefault();
       e.stopPropagation();
       this.#onDismiss();
+      return;
+    }
+    /* Focus trap (pairs with aria-modal + the backdrop: the page is inert
+     * while the tour is open, so focus must cycle inside the card). */
+    if (e.key === 'Tab') {
+      const focusables = [...this.shadowRoot.querySelectorAll('button')]
+        .filter((b) => !b.hidden && b.offsetParent !== null);
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = this.shadowRoot.activeElement;
+      e.preventDefault();
+      e.stopPropagation();
+      if (!active) { first.focus(); return; }
+      const idx = focusables.indexOf(active);
+      const next = e.shiftKey
+        ? focusables[(idx - 1 + focusables.length) % focusables.length]
+        : focusables[(idx + 1) % focusables.length];
+      next.focus();
       return;
     }
     /* Arrow keys steer the tour (Enter already activates the focused
