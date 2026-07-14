@@ -1393,5 +1393,92 @@ for (const path of pages) {
   console.log(`${path}: ${real.length} real console/page errors` + (real.length ? '\n  - ' + real.slice(0, 5).join('\n  - ') : ''));
   await page.close();
 }
+// ── PHASE 20 — MOBILE COMPANION drive (390×844; browser.newPage() = a fresh
+// context, so this profile boots the demo seed untouched by the runs above).
+// Sealed scope: quick-view (ui-sheet bottom) · add-note (the ONE notes seam)
+// · messages; everything else shows the honest desktop-surface note.
+{
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const errs = [];
+  page.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+  page.on('pageerror', e => errs.push('PAGEERROR: ' + e.message));
+  await page.goto('http://127.0.0.1:4173/app.html', { waitUntil: 'networkidle', timeout: 30000 }).catch(e => errs.push('NAV: ' + e.message));
+  await page.waitForTimeout(1500);
+  // the desktop tour never auto-starts at mobile widths (declared)
+  if (await page.locator('ui-coachmark.app-tour[open]').count() !== 0) errs.push('P20M: the desktop tour auto-started on mobile');
+  // the shell collapses: data-mobile stamped; the rail folds to its icon
+  // column via ui-sidebar's existing manifest state
+  if (await page.locator('ui-app-shell[data-mobile]').count() !== 1) errs.push('P20M: ui-app-shell is missing the data-mobile stamp');
+  if (await page.locator('ui-sidebar[collapsed]').count() !== 1) errs.push('P20M: the sidebar did not collapse at the mobile breakpoint');
+  // Lists presents the compact stakeholder list (name + org + zone chip)
+  const p20Rows = await page.locator('.mobile-sh-list ui-list-item').count();
+  if (p20Rows !== 20) errs.push(`P20MLIST: expected the 20 seed stakeholders in the compact list, saw ${p20Rows}`);
+  if (await page.locator('.mobile-sh-list ui-chip[variant="zone"]').count() !== p20Rows) errs.push('P20MZONE: every compact row must carry its zone chip');
+  if (await page.locator('ui-stakeholder-table').count() !== 0) errs.push('P20MGRID: the desktop grid must not mount at mobile widths');
+  // QUICK-VIEW: tapping a row opens the bottom sheet with the read summary
+  const p20FirstName = (await page.locator('.mobile-sh-list .m-row-name').first().textContent().catch(() => '') || '').trim();
+  await page.locator('.mobile-sh-list ui-list-item').first().click({ timeout: 3000 }).catch(e => errs.push('P20MROW: ' + e.message));
+  await page.waitForTimeout(500);
+  if (await page.locator('ui-sheet.sh-quickview[open]').count() !== 1) errs.push('P20MQV: the quick-view sheet did not open');
+  const p20QvName = (await page.locator('.qv-name').textContent().catch(() => '') || '').trim();
+  if (!p20QvName || p20QvName !== p20FirstName) errs.push(`P20MQV: the sheet must show the tapped stakeholder ("${p20FirstName}"), saw "${p20QvName}"`);
+  if (await page.locator('.qv-grid .qv-field').count() !== 6) errs.push('P20MQV: the read summary must carry its six fields');
+  // ADD NOTE: the quick-view action opens the ONE NotesModal composition
+  // (ui-dialog + ui-textarea) and the note lands through the ONE seam
+  await page.locator('.qv-actions ui-button', { hasText: 'Add note' }).click({ timeout: 3000 }).catch(e => errs.push('P20MNOTEBTN: ' + e.message));
+  await page.waitForTimeout(500);
+  if (await page.locator('ui-dialog[open] .notes-composer').count() !== 1) errs.push('P20MNOTE: the notes dialog did not open from the quick-view');
+  await page.locator('.notes-composer ui-textarea textarea').click({ timeout: 3000 }).catch(e => errs.push('P20MNOTETA: ' + e.message));
+  await page.keyboard.type('Mobile probe note - met at the site visit.');
+  await page.waitForTimeout(300);
+  await page.locator('.notes-foot ui-button', { hasText: 'Add note' }).click({ timeout: 3000 }).catch(e => errs.push('P20MNOTEGO: ' + e.message));
+  await page.waitForTimeout(400);
+  const p20Note = await page.evaluate(() => {
+    const shs = JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]');
+    const s = shs[0] || {};
+    const h = s.notesHistory || [];
+    const last = h[h.length - 1] || {};
+    return { body: last.body, by: last.by, mirrored: s.notes };
+  });
+  if (p20Note.body !== 'Mobile probe note - met at the site visit.') errs.push('P20MNOTE: the note did not land in notesHistory through the one seam');
+  if (p20Note.mirrored !== p20Note.body) errs.push('P20MNOTE: notes must mirror the newest entry (sealed add rule)');
+  if (p20Note.by !== 'u-alex') errs.push(`P20MNOTE: the entry must stamp the current user, saw ${JSON.stringify(p20Note.by)}`);
+  await page.evaluate(() => document.querySelectorAll('ui-dialog').forEach(d => d.close && d.close()));
+  await page.waitForTimeout(300);
+  // MESSAGES: quick-view → Message opens the messaging overlay (full-width
+  // at mobile); open a human thread; send; the message persists
+  await page.locator('.mobile-sh-list ui-list-item').first().click({ timeout: 3000 }).catch(e => errs.push('P20MROW2: ' + e.message));
+  await page.waitForTimeout(400);
+  await page.locator('.qv-actions ui-button', { hasText: 'Message' }).click({ timeout: 3000 }).catch(e => errs.push('P20MMSGBTN: ' + e.message));
+  await page.waitForTimeout(500);
+  if (await page.locator('ui-sheet.messaging-sidebar[open]').count() !== 1) errs.push('P20MMSG: the messaging surface did not open from the quick-view');
+  await page.locator('.messaging-sidebar .conv-row:not(.conv-system)').first().click({ timeout: 3000 }).catch(e => errs.push('P20MCONV: ' + e.message));
+  await page.waitForTimeout(400);
+  await page.locator('.messaging-sidebar .composer ui-textarea textarea').click({ timeout: 3000 }).catch(e => errs.push('P20MCOMP: ' + e.message));
+  await page.keyboard.type('Mobile probe message');
+  await page.waitForTimeout(200);
+  await page.locator('.messaging-sidebar .composer ui-button', { hasText: 'Send' }).click({ timeout: 3000 }).catch(e => errs.push('P20MSEND: ' + e.message));
+  await page.waitForTimeout(400);
+  const p20Sent = await page.evaluate(() => {
+    const msgs = JSON.parse(localStorage.getItem('hpsm:messages') || '{}');
+    return Object.values(msgs).some(list => (list || []).some(m => m.body === 'Mobile probe message' && m.from === 'u-alex'));
+  });
+  if (!p20Sent) errs.push('P20MSEND: the mobile-sent message did not persist to the store');
+  await page.evaluate(() => document.querySelectorAll('ui-sheet').forEach(s => s.close && s.close()));
+  await page.waitForTimeout(400);
+  // EVERYTHING ELSE IS DESKTOP-WEB: a non-companion view shows the honest note
+  await page.locator('#nav-map').click({ timeout: 3000 }).catch(e => errs.push('P20MNAV: ' + e.message));
+  await page.waitForTimeout(500);
+  if (await page.locator('.desktop-note').count() !== 1) errs.push('P20MDESK: the Map view must show the desktop-surface note on mobile');
+  if (await page.locator('ui-stakeholder-map').count() !== 0) errs.push('P20MDESK: the desktop Map must not mount at mobile widths');
+  await page.locator('.desktop-note ui-button', { hasText: 'Open the stakeholder list' }).click({ timeout: 3000 }).catch(e => errs.push('P20MDESKGO: ' + e.message));
+  await page.waitForTimeout(400);
+  if (await page.locator('.mobile-sh-list').count() !== 1) errs.push('P20MDESKGO: the note action must route back to the compact list');
+  const real = errs.filter(e => !/fonts\.g(oogleapis|static)\.com|net::ERR_|Failed to load resource/.test(e));
+  totalErrors += real.length;
+  console.log(`/app.html [mobile 390x844]: ${real.length} real console/page errors` + (real.length ? '\n  - ' + real.slice(0, 8).join('\n  - ') : ''));
+  await page.close();
+}
+
 await browser.close(); srv.close();
 console.log(totalErrors === 0 ? 'SMOKE: ALL PAGES CLEAN' : `SMOKE: ${totalErrors} REAL ERRORS`);

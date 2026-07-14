@@ -35,6 +35,11 @@ import { WorkspaceRecordPage } from './record/workspace-record.jsx';
  * from the profile menu") — ui-coachmark host + the pure step/flag core. */
 import { OnboardingTour } from './tour.jsx';
 import { TOUR_STEPS, hasSeenTour, markTourSeen } from './tour-logic.js';
+/* Phase 20: the mobile companion (sealed: "stakeholder quick-view · add-note
+ * · messages. (Earmarked mobile; everything else is desktop-web.)") — the
+ * token-driven viewport probe + the honest desktop-surface note. */
+import { useIsMobile, DesktopOnlyNote } from './mobile.jsx';
+import { MOBILE_VIEWS } from './mobile-logic.js';
 
 // NAV_TABS per the sealed App-shell box (icons = the captured semantic→ligature
 // map). Scoring carries hideWhenMaster (sealed rule — REAL as of Phase 6:
@@ -57,6 +62,15 @@ const CREATE_LIVE = ['sheet', 'scoring', 'plan', 'community', 'setup'];
 export function AppShell() {
   const [view, setView] = useState('sheet');
   const snackRef = useRef(null);
+
+  /* ── MOBILE COMPANION (Phase 20, sealed Demo-features box) ───────────────
+   * ONE probe: matchMedia built from --ui-sys-breakpoint-mobile (mobile.jsx
+   * reads the token — tokens.css stays the single source). The shell stamps
+   * data-mobile on ui-app-shell (the only selector app CSS keys on) and
+   * collapses the rail via ui-sidebar's EXISTING `collapsed` manifest state.
+   * Sealed scope: Lists (compact list + quick-view + add-note) and Messages
+   * are the companion; every other view renders the honest desktop note. */
+  const isMobile = useIsMobile();
 
   /* ── WORKSPACE SHELL-STATE (sealed TAB-STRIP STATE MACHINE, adapted to the
    * ruled shell: the bottom strip is RETIRED; its open-set/active data lives
@@ -405,11 +419,15 @@ export function AppShell() {
    * REPLAY: the profile menu's "Replay tour" returns to Lists (the tour's
    * home — steps 3/4 anchor the workHQ band + table) and restarts at step 1. */
   const [tourStep, setTourStep] = useState(null);
+  /* MOBILE GUARD (Phase 20.2): the tour anchors desktop chrome, so it never
+   * auto-starts at mobile widths (isMobile in the deps: the probe settles in
+   * its own first effect — a pending timer is cleared if the width reads
+   * mobile before the 600ms settle elapses). */
   useEffect(() => {
-    if (hasSeenTour(localStorage)) return undefined;
+    if (isMobile || hasSeenTour(localStorage)) return undefined;
     const t = setTimeout(() => setTourStep(0), 600);
     return () => clearTimeout(t);
-  }, []);
+  }, [isMobile]);
   const endTour = () => { markTourSeen(localStorage); setTourStep(null); };
   const tourNext = () => {
     if (tourStep == null) return;
@@ -420,7 +438,7 @@ export function AppShell() {
   const replayTour = () => { setView('sheet'); setTourStep(0); };
 
   return (
-    <ui-app-shell>
+    <ui-app-shell data-mobile={isMobile ? '' : undefined}>
       {/* RULED chrome — identical on every screen: mark + name in the rail,
           workspace selector + actions in the content header. */}
       <ui-app-bar slot="header" variant="flat">
@@ -496,7 +514,9 @@ export function AppShell() {
         </ui-icon-button>
       </ui-app-bar>
 
-      <ui-sidebar slot="nav" id="app-nav">
+      {/* Phase 20: at mobile widths the rail collapses to its icon column —
+          ui-sidebar's own manifest state; the user can still re-expand. */}
+      <ui-sidebar slot="nav" id="app-nav" collapsed={isMobile ? '' : undefined}>
         <span slot="brand" className="brand">
           <span className="mark">S<i>r</i></span>
           <span className="brand-text">{appName}</span>
@@ -569,8 +589,17 @@ export function AppShell() {
       </ui-sidebar>
 
       <div className="work">
-        {view === 'sheet' ? (
+        {isMobile && !MOBILE_VIEWS.includes(view) ? (
+          /* Phase 20 (sealed: "everything else is desktop-web") — the honest
+             desktop-surface note; never a pretend-responsive screen. */
+          <DesktopOnlyNote
+            label={RECORD_BACK_LABELS[view] || 'This view'}
+            onGoLists={() => setView('sheet')}
+          />
+        ) : view === 'sheet' ? (
           <SheetPage
+            isMobile={isMobile}
+            onOpenMessages={() => setMsgSidebarOpen(true)}
             createNonce={createNonce}
             activeWorkspaceId={activeWorkspaceId}
             openStakeholderId={pendingShId}
@@ -660,6 +689,7 @@ export function AppShell() {
              links + the J8 scoring action route through the shell's guarded
              first-class resolvers. */
           <MessagesPage
+            isMobile={isMobile}
             activeConversationId={activeConversationId}
             onSetActiveConversation={setActiveConversationId}
             onOpenMention={openMention}
@@ -795,7 +825,11 @@ export function AppShell() {
             returns to Lists — the tour's home — and restarts at step 1.
             PLACEMENT DECLARED: the sealed order covers the four oracle items;
             this forward-design entry slots after them, before the divider. */}
-        <ui-menu-item onClick={replayTour}>
+        <ui-menu-item
+          onClick={isMobile ? undefined : replayTour}
+          disabled={isMobile ? '' : undefined}
+          title={isMobile ? 'The tour walks the desktop chrome — open Stakeholdr on a desktop to replay it' : undefined}
+        >
           <ui-icon slot="icon" size="sm">restart_alt</ui-icon>
           Replay tour
         </ui-menu-item>

@@ -849,7 +849,7 @@
    "tag": "ui-snackbar",
    "status": "built",
    "category": "native",
-   "summary": "Transient bottom-center message; optional action slot; auto-dismiss timeout; role=status live region; show().",
+   "summary": "Transient bottom-center message; optional action slot; auto-dismiss timeout; role=status live region; show(). Closed = fully inert (pointer-events none) — the hidden bar never intercepts clicks on content beneath the toast strip.",
    "props": [
     {
      "name": "open",

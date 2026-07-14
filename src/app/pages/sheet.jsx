@@ -93,7 +93,10 @@ import { EmptyState } from '../empty-state.jsx';
 // affiliatedCommunity + the create-side-effect copy are single-sourced in the
 // modal's pure-logic module (sealed cross-link formulas).
 import { affiliatedCommunity, scoringNeededBody } from '../modals/stakeholder-logic.js';
-import { StakeholderModal } from '../modals/stakeholder-modal.jsx';
+import { StakeholderModal, useUiEvent } from '../modals/stakeholder-modal.jsx';
+/* Phase 20: the mobile companion's quick-view field mapping (pure,
+ * node-tested — mobile-logic.js header carries the declarations). */
+import { quickViewFields } from '../mobile-logic.js';
 import {
   MASTER_WORKSPACE_ID, isMasterWorkspace, visibleStakeholders, createJoinFor,
   workspaceLabel as workspaceLabelOf,
@@ -157,6 +160,10 @@ export function SheetPage({
   /* Phase 15 (ruled workHQ seams, mirroring the onOpen* pattern): plain view
    * switches for the summary's mix/plans segments and the card View-alls. */
   onOpenMap, onOpenPlans, onOpenScoring, onOpenCommunity,
+  /* Phase 20 (sealed MOBILE COMPANION): at mobile widths this page presents
+   * the compact stakeholder list + the quick-view bottom sheet; the Message
+   * action opens the shell's messaging overlay (full-width on mobile). */
+  isMobile = false, onOpenMessages,
 }) {
   const [stakeholders, setStakeholders] = usePersistentState('stakeholders', SEED_STAKEHOLDERS);
   const [scores, setScores] = usePersistentState('scores', SEED_SCORES);
@@ -207,6 +214,11 @@ export function SheetPage({
   const [noteDraft, setNoteDraft] = useState('');
   // Phase 18: the import wizard (opened by the table's footer import-open).
   const [importOpen, setImportOpen] = useState(false);
+  // Phase 20: the mobile quick-view subject (null = closed sheet).
+  const [quickViewId, setQuickViewId] = useState(null);
+  const qvRef = useRef(null);
+  // The component's own scrim-tap/swipe/Esc dismiss → sync the page state.
+  useUiEvent(qvRef, 'close', () => setQuickViewId(null));
 
   // StakeholderModal routing state: null | { mode:'create' } |
   // { mode:'edit', id, view? }. The Lists edit routes (frozen edit icon +
@@ -616,6 +628,26 @@ export function SheetPage({
     snackRef.current?.show(importedSnack(records.length));
   };
 
+  /* ── PHASE 20: MOBILE QUICK-VIEW actions (sealed: "stakeholder quick-view
+   * · add-note · messages"). Add note = the SAME NotesModal composition + the
+   * ONE addNote seam below (ui-dialog + ui-textarea — exactly the sealed
+   * BUILD-MAP); the sheet closes first so the dialog stands alone on the
+   * small viewport. Message = the shell's messaging overlay (full-width at
+   * mobile widths), the sealed third surface. ─────────────────────────────── */
+  const qvRow = quickViewId ? rows.find((r) => r.id === quickViewId) || null : null;
+  const qvAddNote = () => {
+    const id = quickViewId;
+    setQuickViewId(null);
+    // Mirror the table's notes-open route: the composer always starts blank.
+    setNoteDraft('');
+    if (composerRef.current) composerRef.current.value = '';
+    setNotesFor(id);
+  };
+  const qvMessage = () => {
+    setQuickViewId(null);
+    if (onOpenMessages) onOpenMessages();
+  };
+
   const shExisting = shModal && shModal.id
     ? stakeholders.find((s) => s.id === shModal.id) || null
     : null;
@@ -630,9 +662,45 @@ export function SheetPage({
 
   return (
     <div className="sheet-wrap">
-      {/* SEALED HOST TREE (workHQ box): .intel-split carries data-mode HERE
+      {isMobile ? (
+        /* ── PHASE 20: MOBILE COMPANION (sealed Demo-features box) ─────────
+           The compact stakeholder list — name + org + zone chip (ui-list
+           rows; the zone chip reads the same single-sourced --ui-sys-zone-*
+           tokens as everywhere). Tapping opens the quick-view bottom sheet.
+           workHQ, bulk actions and the full grid are DESKTOP surfaces
+           (sealed: "everything else is desktop-web"); the zero-data empty
+           state keeps its real create/import routes. */
+        rows.length === 0 ? (
+          <EmptyState
+            icon="table_rows"
+            line={LISTS_EMPTY_LINE}
+            actionLabel="Add stakeholder"
+            onAction={() => setShModal({ mode: 'create' })}
+            secondaryLabel="Import"
+            onSecondary={() => setImportOpen(true)}
+          />
+        ) : (
+          <ui-list interactive="" class="mobile-sh-list" aria-label="Stakeholders">
+            {rows.map((r) => (
+              <ui-list-item
+                key={r.id}
+                interactive=""
+                class="m-sh-row"
+                onClick={() => setQuickViewId(r.id)}
+              >
+                <span className="m-row-name">{displayName(r) || r.name}</span>
+                <span slot="supporting">{r.org || '—'}</span>
+                <ui-chip slot="trailing" variant="zone" data-zone={r._status}>
+                  {r._status}
+                </ui-chip>
+              </ui-list-item>
+            ))}
+          </ui-list>
+        )
+      ) : (
+      /* SEALED HOST TREE (workHQ box): .intel-split carries data-mode HERE
           in the host; the band renders ABOVE the table, divider between,
-          table untouched below. */}
+          table untouched below. */
       <div className="intel-split" data-mode={intelMode}>
         <WorkHQBand
           mode={intelMode}
@@ -728,6 +796,46 @@ export function SheetPage({
                                 kbd-label={cmdKeyLabel}></ui-stakeholder-table>
         )}
       </div>
+      )}
+
+      {/* PHASE 20 — QUICK-VIEW (sealed: ui-sheet BOTTOM variant hosting the
+          read profile summary, with Add-note + Message actions). Mounted on
+          mobile only; the component's scrim/swipe/Esc dismiss syncs back via
+          its close event. */}
+      {isMobile && (
+        <ui-sheet ref={qvRef} open={quickViewId && qvRow ? '' : undefined}
+                  class="sh-quickview" aria-label="Stakeholder quick view">
+          {qvRow && (
+            <div className="qv-body">
+              <div className="qv-head">
+                <div className="qv-titles">
+                  <span className="qv-name">{displayName(qvRow) || qvRow.name}</span>
+                  <span className="qv-org">{qvRow.org || '—'}</span>
+                </div>
+                <ui-chip variant="zone" data-zone={qvRow._status}>{qvRow._status}</ui-chip>
+              </div>
+              <div className="qv-grid">
+                {quickViewFields(qvRow, users).map((f) => (
+                  <div className="qv-field" key={f.label}>
+                    <span className="qv-field-label">{f.label}</span>
+                    <span className="qv-field-value">{f.value}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="qv-actions">
+                <ui-button variant="filled" onClick={qvAddNote}>
+                  <ui-icon slot="leading" size="sm">notes</ui-icon>
+                  Add note
+                </ui-button>
+                <ui-button variant="outlined" onClick={qvMessage}>
+                  <ui-icon slot="leading" size="sm">chat</ui-icon>
+                  Message
+                </ui-button>
+              </div>
+            </div>
+          )}
+        </ui-sheet>
+      )}
 
       {/* PHASE 18 — IMPORT WIZARD (sealed 4-step ui-dialog flow; the table's
           footer Import button opens it; commit lands above as ONE setState). */}

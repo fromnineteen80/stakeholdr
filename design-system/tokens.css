@@ -161,6 +161,13 @@
   --ui-sys-sidebar-width: clamp(208px, 18vw, 288px);
   --ui-sys-sidebar-width-collapsed: 64px;
 
+  /* Mobile-companion breakpoint (Phase 20, sealed Demo-features box: the ONE
+     mobile surface — quick-view · add-note · messages). Custom properties
+     cannot drive @media, so the app's useIsMobile hook READS this token and
+     builds its matchMedia from it, then stamps data-mobile on the shell —
+     the token stays the single source; no @media literal duplicates it. */
+  --ui-sys-breakpoint-mobile: 720px;
+
   /* Avatar sizing scale (identity circles; the ONE place avatar px live) */
   --ui-sys-avatar-size-sm: 24px;
   --ui-sys-avatar-size-md: 32px;
