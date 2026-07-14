@@ -744,7 +744,7 @@ export function AppShell() {
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Phase 20 — Tour + mobile (onboarding coachmarks · mobile companion)</span>
+        <span>Phase 21 — Card anatomy (one entity-card contract · uniform heights · one pill scale · compact vote row)</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
 
