@@ -1765,6 +1765,16 @@ ui-tab[active] .profile-tab-count {
  * CHROME: a CONTAINER surface — sidebars never white). Interior start-state
  * ported verbatim from the Phase-5 component composition (values sealed). ── */
 ui-inspector.map-scorecard { background: var(--ui-sys-surface-container); }
+/* Phase 22 sweep: the quiet tag pill's bg IS --ui-sys-surface-container — on
+ * the container-surface rails (this scorecard + the record rail) it vanished
+ * into the rail and its inline pad read as a random text indent off the value
+ * column. Within rail scope the pill re-points at the field surface (lighter
+ * than the rail — the sidebar-field law), so it reads as a pill again.
+ * Token re-point on the host, never a component override. */
+ui-inspector.map-scorecard ui-chip[variant="tag"],
+ui-inspector.record-rail ui-chip[variant="tag"] {
+  --ui-sys-surface-container: var(--ui-sys-surface-field);
+}
 .det-head-label {
   font: var(--ui-sys-font-caption);
   font-size: 11px;
