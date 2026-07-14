@@ -744,7 +744,7 @@ export function AppShell() {
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Phase 21 — Card anatomy (one entity-card contract · uniform heights · one pill scale · compact vote row)</span>
+        <span>Phase 22 — Front-end polish (card zones on three named spacing steps · keyed detail rail · spacing gate)</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
 

@@ -204,12 +204,26 @@
      pill-size variance, phantom padding, non-uniform heights, vague vote
      band — all fixed HERE, never per page). 4px rhythm throughout. */
   --ui-sys-card-pad:             var(--ui-sys-space-4);         /* 16 — the one content-box padding (ui-card body reads it) */
-  --ui-sys-card-gap:             var(--ui-sys-space-2);         /* 8  — the one vertical gap between card regions */
+  /* Phase 22 — THE THREE SPACING STEPS. Every vertical gap inside a card is
+     exactly one of these (the shots.mjs card gate measures and enforces it):
+     · tight   (4)  — inside a zone (title→subtitle)
+     · row     (8)  — line rhythm; ALSO each half of a hairline boundary
+                      (divided zones = row above the line + row below it)
+     · section (16) — an undivided zone boundary (head→classifiers→body)
+     Zones (identical across the three families): HEAD → CLASSIFIERS → BODY →
+     DETAILS (hairline) → FOOT (hairline). */
+  --ui-sys-card-gap-tight:       var(--ui-sys-space-1);         /* 4 */
+  --ui-sys-card-gap-row:         var(--ui-sys-space-2);         /* 8 */
+  --ui-sys-card-gap-section:     var(--ui-sys-space-4);         /* 16 */
   --ui-sys-card-head-height:     calc(var(--ui-ref-unit) * 11); /* 44 — title + subtitle region, FIXED (truncate, never grow) */
   --ui-sys-card-row-height:      calc(var(--ui-ref-unit) * 6);  /* 24 — one pill/meta row, single line */
   --ui-sys-card-body-lines:      2;                             /* summary clamp — a fixed-height 2-line region */
   --ui-sys-card-foot-height:     calc(var(--ui-ref-unit) * 7);  /* 28 — the one thin foot row */
-  --ui-sys-card-key-width:       calc(var(--ui-ref-unit) * 18); /* 72 — the meta key column */
+  --ui-sys-card-key-width:       calc(var(--ui-ref-unit) * 20); /* 80 — the meta key column (fits the longest tracked uppercase key) */
+  /* DETAILS key rail: uppercase tracked micro-labels (muted) — the zone that
+     must read as a keyed table at a glance, distinct from the 13px body. */
+  --ui-sys-card-key-font:        500 10.5px/1.2 var(--ui-ref-typeface-body);
+  --ui-sys-card-key-tracking:    .03em;
   --ui-sys-card-pill-height:     calc(var(--ui-ref-unit) * 5);  /* 20 — THE one pill height inside cards (every ui-chip) */
   --ui-sys-card-pill-font-size:  11px;                          /* THE one pill type size inside cards */
   --ui-sys-card-pill-pad-inline: var(--ui-sys-space-2);         /* THE one pill inline pad inside cards */
