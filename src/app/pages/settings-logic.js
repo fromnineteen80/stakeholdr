@@ -351,10 +351,11 @@ export const DEMO_DATA_INTRO =
 export const RESET_BUTTON_LABEL = 'Reset demo data…';
 export const RESET_MODAL_TITLE = 'Reset demo data?';
 export const RESET_MODAL_BODY =
-  'This permanently clears everything stored on this device: stakeholders, ' +
+  'This permanently clears everything this demo stores: stakeholders, ' +
   'workspaces, scoring & team weights, plans, community investments, ' +
   'messages, people & roles, and every Settings change (catalogs, identity, ' +
-  'design). The app then restarts. This cannot be undone.';
+  'design). View preferences (layout modes, column order) are kept. ' +
+  'The app then restarts. This cannot be undone.';
 export const RESET_DEMO_LABEL = 'Reset to demo data';
 export const RESET_BLANK_LABEL = 'Start blank';
 export const RESET_DEMO_HELP =

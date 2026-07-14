@@ -105,7 +105,10 @@ export function buildPlanDocModel({
           r.zone || '',
           r.s.priority || '',
           r.effective || '',
-          [r.fit?.reason, r.move ? `Move: ${r.move} — ${r.moveAction || ''}`.trim() : null]
+          [r.fit?.reason,
+           r.move
+             ? `Move: ${r.move}${r.moveAction ? ` — ${r.moveAction}` : ''}`
+             : null]
             .filter(Boolean),
         ]),
         empty: 'No stakeholders in this workspace.',

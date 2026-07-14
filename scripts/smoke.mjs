@@ -1233,7 +1233,7 @@ for (const path of pages) {
       wss: JSON.parse(localStorage.getItem('hpsm:workspaces') || '[]').length,
     }));
     if (p19Blank.marker !== '1') errs.push('P19BMARK: Start blank must set the blank marker');
-    if (JSON.stringify(p19Blank.users) !== '["u-you"]') errs.push(`P19BUSER: expected the solo manager [u-you], saw ${JSON.stringify(p19Blank.users)}`);
+    if (JSON.stringify(p19Blank.users) !== '["u-you","u-system"]') errs.push(`P19BUSER: expected the solo manager + the Reminders bot [u-you,u-system], saw ${JSON.stringify(p19Blank.users)}`);
     if (p19Blank.shs !== 0 || p19Blank.wss !== 0) errs.push(`P19BEMPTY: expected empty tables, saw shs=${p19Blank.shs} wss=${p19Blank.wss}`);
     // every page renders a DESIGNED, ACTIONABLE empty state (Map keeps its
     // sealed scorecard copy; the shared .empty-state covers the rest)

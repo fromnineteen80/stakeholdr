@@ -25,7 +25,7 @@ import { weightedCoord, statusFor, STATUSES } from '../src/app/data/engine.js';
 import {
   SEED_PLANS, SEED_STAKEHOLDERS, SEED_STAKEHOLDER_WORKSPACES, SEED_SCORES,
   SEED_TEAM, SEED_USERS, SEED_WORKSPACES, SEED_COMMUNITY, SEED_MESSAGES,
-  blankSeedFor, BLANK_SOLO_USER,
+  SEED_CONVERSATIONS, blankSeedFor, BLANK_SOLO_USER,
 } from '../src/app/data/seed.js';
 import { ORG_GOALS, SITES } from '../src/app/data/catalogs.js';
 import { Store, sweepKeys, BLANK_KEY } from '../src/app/data/store.js';
@@ -257,11 +257,24 @@ await ok('blank seeds: collections empty, appConfig kept, solo manager user', ()
   assert.equal(blankSeedFor('anything', 'scalar'), 'scalar');
   // the declared minimal solo MANAGER (currentUser = users[0] must exist,
   // and a manager is required to reach Settings — incl. the reset itself)
-  assert.deepEqual(blankSeedFor('users', SEED_USERS), [BLANK_SOLO_USER]);
+  // PLUS the u-system Reminders bot: the sealed create/import side effects
+  // post to c-system from u-system, and a blank org must be able to READ
+  // them (the audit's dead-write finding).
+  const blankUsers = blankSeedFor('users', SEED_USERS);
+  assert.equal(blankUsers[0], BLANK_SOLO_USER);
+  assert.equal(blankUsers.length, 2);
+  assert.equal(blankUsers[1].id, 'u-system');
+  assert.equal(blankUsers[1].role, 'system');
   assert.equal(BLANK_SOLO_USER.role, 'manager');
   assert.ok(BLANK_SOLO_USER.id && BLANK_SOLO_USER.name);
   assert.ok(String(BLANK_SOLO_USER.avatarColor).startsWith('var(--ui-sys-avatar-'),
     'token-referenced avatar color, never a literal hex');
+  // ...and the c-system Reminders channel scoped to exactly those two, so
+  // every system post lands somewhere reachable.
+  const blankConvos = blankSeedFor('conversations', SEED_CONVERSATIONS);
+  assert.equal(blankConvos.length, 1);
+  assert.equal(blankConvos[0].id, 'c-system');
+  assert.deepEqual(blankConvos[0].participants, [BLANK_SOLO_USER.id, 'u-system']);
 });
 
 await ok('Store surface: reset + startBlank exist; node (no localStorage) is safe', () => {

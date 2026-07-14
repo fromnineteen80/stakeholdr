@@ -585,10 +585,23 @@ export const BLANK_SOLO_USER = {
 
 /* blankSeedFor(table, seed) — the blank-boot seed resolution: collections
  * empty (arrays → [], keyed maps → {}), appConfig kept, users → the solo
- * manager, scalars untouched. */
+ * manager PLUS the u-system Reminders bot, conversations → the c-system
+ * channel scoped to them (the sealed create/import side effects post to
+ * c-system from u-system; without both records those writes would be
+ * permanently unreachable — the dead-write pattern the build law bans),
+ * scalars untouched. */
 export function blankSeedFor(table, seed) {
   if (table === 'appConfig') return seed;
-  if (table === 'users') return [BLANK_SOLO_USER];
+  if (table === 'users') {
+    const sys = SEED_USERS.find((u) => u.id === 'u-system');
+    return sys ? [BLANK_SOLO_USER, sys] : [BLANK_SOLO_USER];
+  }
+  if (table === 'conversations') {
+    return [{
+      id: 'c-system', kind: 'system', title: 'Reminders',
+      participants: [BLANK_SOLO_USER.id, 'u-system'],
+    }];
+  }
   if (Array.isArray(seed)) return [];
   if (seed && typeof seed === 'object') return {};
   return seed;

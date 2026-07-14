@@ -196,7 +196,7 @@ function FitMenu({ row, onSet, onClose }) {
 /* ══ ELEMENT-6 TABLE (BINDING ROW SCHEMA — Stakeholder · Type · Relationship
  * · manual Priority · Plan Fit · Reason + Move; the sealed 4-column oracle
  * layout is superseded). Read-only in review (rows not clickable, no add). ══ */
-function PlanShTable({ rows, readOnly, canOverride, fitOpenFor, onFitOpen, onRowOpen }) {
+function PlanShTable({ rows, readOnly, printOnly, canOverride, fitOpenFor, onFitOpen, onRowOpen }) {
   return (
     /* Wide content scrolls inside its OWN container — the main document
        column never scrolls horizontally. */
@@ -247,12 +247,20 @@ function PlanShTable({ rows, readOnly, canOverride, fitOpenFor, onFitOpen, onRow
             <td className="plan-sh-reason">
               <span className="plan-sh-reason-line">{r.fit.reason}</span>
               {/* THE MOVE (sealed) = the zone's strategy + ACTION, verbatim
-                  from the 14-zone engine; the action rides a ui-tooltip on
-                  the strategy text (row density stays one line). */}
-              <ui-tooltip>
-                <span className="plan-sh-move muted">Move: {r.move}</span>
-                <span slot="content">{r.moveAction}</span>
-              </ui-tooltip>
+                  from the 14-zone engine; on SCREEN the action rides a
+                  ui-tooltip (row density stays one line) — on PAPER
+                  (printOnly) it prints inline in full, matching the .docx
+                  ("Move: strategy — action"): tooltips don't print. */}
+              {printOnly ? (
+                <span className="plan-sh-move muted">
+                  Move: {r.move}{r.moveAction ? ` — ${r.moveAction}` : ''}
+                </span>
+              ) : (
+                <ui-tooltip>
+                  <span className="plan-sh-move muted">Move: {r.move}</span>
+                  <span slot="content">{r.moveAction}</span>
+                </ui-tooltip>
+              )}
             </td>
           </tr>
         ))}
@@ -1655,7 +1663,7 @@ function PlanReviewDocument({
             {rows.length === 0 ? (
               <p className="muted">No stakeholders in this workspace.</p>
             ) : (
-              <PlanShTable rows={rows} readOnly />
+              <PlanShTable rows={rows} readOnly printOnly />
             )}
           </RS>
 
