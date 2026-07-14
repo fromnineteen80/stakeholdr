@@ -72,8 +72,11 @@ template.innerHTML = `
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 40px;
-      height: 40px;
+      /* Geometry token hook (Phase 21 card contract): hosts re-point
+         --ui-sys-icon-button-size in a scope (entity-card foot actions read
+         --ui-sys-card-action-height) — never a component override. */
+      width: var(--ui-sys-icon-button-size, 40px);
+      height: var(--ui-sys-icon-button-size, 40px);
       padding: 0;
       border: 1px solid var(--_border);
       border-radius: 50%;

@@ -845,4 +845,19 @@ await mp.screenshot({ path: `${OUT}/p20-add-note.png` });
 await mp.close();
 
 await browser.close(); srv.close();
+
+// ── PHASE-21 CARD-ANATOMY GATE ─────────────────────────────────────────────
+// The card-consistency probe (scripts/cards-test.mjs) captures
+// p21-{plans,community,workspaces}.png and asserts, per page: (a) every card
+// in a grid has THE SAME offsetHeight, (b) every ui-chip inside cards renders
+// one height (the ONE card pill scale), (c) each title's left edge sits flush
+// on the card's content box (±1px). A violation fails this visual gate.
+const { spawnSync } = await import('node:child_process');
+const cardProbe = spawnSync('node', ['scripts/cards-test.mjs', '--shots', OUT],
+  { stdio: 'inherit', cwd: '/home/user/stakeholdr' });
+if (cardProbe.status !== 0) {
+  console.error('VISUAL GATE FAILED: card-consistency probe (see above)');
+  process.exit(cardProbe.status || 1);
+}
+
 console.log('shots written to', OUT);

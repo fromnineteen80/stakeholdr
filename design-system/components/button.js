@@ -42,8 +42,11 @@ template.innerHTML = `
       align-items: center;
       justify-content: center;
       gap: var(--ui-sys-space-2);
-      min-height: 36px;
-      padding: 0 var(--ui-sys-space-4);
+      /* Geometry token hooks (Phase 21 card contract): hosts re-point
+         --ui-sys-button-* in a scope (e.g. entity-card foot actions read
+         --ui-sys-card-action-height) — never a component override. */
+      min-height: var(--ui-sys-button-height, 36px);
+      padding: 0 var(--ui-sys-button-pad-inline, var(--ui-sys-space-4));
       border: 1px solid var(--_border);
       border-radius: var(--ui-sys-shape-control);
       background: var(--_bg);
@@ -73,6 +76,35 @@ template.innerHTML = `
     button:focus-visible {
       outline: 2px solid var(--ui-sys-focus-ring);
       outline-offset: 2px;
+    }
+
+    /* variant="title" — the entity-card TITLE control (Phase 21 card
+       contract): a REAL button that renders as a left-flush single-line
+       heading. Zero inline padding (the title's left edge sits exactly on
+       the card's content box), no min-height, the title typeface at ONE
+       size (--ui-sys-font-title), ellipsis truncation. Hover = ink only
+       (underline), never a background wash — the shell's quiet-control
+       ruling; the focus ring stays. */
+    :host([variant="title"]) { min-width: 0; max-width: 100%; }
+    :host([variant="title"]) button {
+      display: block;
+      min-height: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--ui-sys-on-surface);
+      font: var(--ui-sys-font-title);
+      text-align: left;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    :host([variant="title"]) button::before { display: none; }
+    :host([variant="title"]) button:hover {
+      text-decoration: underline;
+      text-underline-offset: 3px;
     }
 
     :host([disabled]) { pointer-events: none; }

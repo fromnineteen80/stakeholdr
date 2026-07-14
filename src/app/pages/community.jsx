@@ -136,7 +136,13 @@ function ValueBar({ vs }) {
 /* ── VOTE GROUP (sealed VOTE CONTROL): exactly TWO buttons — for (up, "Align /
  * support") and against (down, "Object") — count + icon, toggle-off on
  * re-click, .on state token-driven (the selected host re-points
- * --ui-sys-primary at pos/neg in app.css). ─────────────────────────────── */
+ * --ui-sys-primary at pos/neg in app.css).
+ * Phase 21 CARD CONTRACT (declared visual recomposition; behavior sealed —
+ * who can vote, the toggle, the tally math are all unchanged): the "massive
+ * and vague" band compresses to ONE tight labeled row — the two sealed
+ * buttons restyled small as a joined segmented control, a caption tally
+ * ("2 for · 0 against"), and the voters' avatars at the sm size; the row's
+ * "Your vote" key is its overline label. ─────────────────────────────────── */
 function VoteBtn({ dir, count, active, tip, onVote }) {
   return (
     <ui-tooltip>
@@ -145,7 +151,7 @@ function VoteBtn({ dir, count, active, tip, onVote }) {
         class={`comm-vote-btn comm-vote-${dir}`}
         onClick={(e) => { e.stopPropagation(); onVote(); }}
       >
-        <ui-icon slot="leading" size="sm">
+        <ui-icon slot="leading" size="xs">
           {dir === 'for' ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}
         </ui-icon>
         {count}
@@ -155,35 +161,56 @@ function VoteBtn({ dir, count, active, tip, onVote }) {
   );
 }
 
-function VoteGroup({ app, currentUser, onVote }) {
+function VoteGroup({ app, users, currentUser, onVote }) {
   const counts = voteCounts(app.votes);
   const my = currentUser ? (app.votes || {})[currentUser.id] : undefined;
+  // the voters shown = the for/against casters the tally counts
+  const voterIds = Object.entries(app.votes || {})
+    .filter(([, v]) => v === 'for' || v === 'against')
+    .map(([id]) => id);
   return (
-    <span className="comm-vote">
-      <VoteBtn dir="for" count={counts.for} active={my === 'for'}
-               tip="Align / support" onVote={() => onVote('for')} />
-      <VoteBtn dir="against" count={counts.against} active={my === 'against'}
-               tip="Object" onVote={() => onVote('against')} />
+    <span className="comm-vote-line">
+      <span className="comm-vote">
+        <VoteBtn dir="for" count={counts.for} active={my === 'for'}
+                 tip="Align / support" onVote={() => onVote('for')} />
+        <VoteBtn dir="against" count={counts.against} active={my === 'against'}
+                 tip="Object" onVote={() => onVote('against')} />
+      </span>
+      <span className="muted comm-vote-tally">
+        {counts.for} for · {counts.against} against
+      </span>
+      {voterIds.length > 0 && (
+        <span className="comm-voters">
+          <Owners users={users} value={voterIds} readonly max={3} />
+        </span>
+      )}
     </span>
   );
 }
 
 /* Stakeholder pills (sealed TREE 4a): clickable ONLY when the bridge handler
- * is passed (assist variant + onClick); plain tag pills otherwise. */
-function StakeholderPills({ ids, stakeholders, onOpen }) {
+ * is passed (assist variant + onClick); plain tag pills otherwise.
+ * Phase 21: an optional `max` cap for the card's fixed single-line rows —
+ * overflow renders as the sealed "+N" MUTED TEXT SPAN (the TagPills
+ * primitive's exact pattern), never a mid-clipped pill. The profile passes
+ * no max and keeps every pill. */
+function StakeholderPills({ ids, stakeholders, onOpen, max }) {
   const resolved = (ids || [])
     .map((id) => stakeholders.find((s) => s.id === id))
     .filter(Boolean);
   if (!resolved.length) return null;
+  const cap = max || resolved.length;
+  const extra = resolved.length - cap;
   return (
     <span className="pills-inline">
-      {resolved.map((s) => onOpen ? (
+      {resolved.slice(0, cap).map((s) => onOpen ? (
         <ui-chip key={s.id} variant="assist" onClick={() => onOpen(s.id)}>
           {displayName(s) || s.name}
         </ui-chip>
       ) : (
         <ui-chip key={s.id} variant="tag">{displayName(s) || s.name}</ui-chip>
       ))}
+      {extra > 0 && <span className="muted">+{extra}</span>}
     </span>
   );
 }
@@ -207,21 +234,22 @@ function CommunityCard({
     </div>
   );
   return (
-    <ui-card variant="outlined" class="plan-card comm-card">
+    <ui-card variant="outlined" class="entity-card plan-card comm-card">
+      {/* Phase 21 CARD CONTRACT (declared visual recomposition on the sealed
+          anatomy; every control keeps its handler): title row left-flush
+          (variant=title + full-text tooltip); owners move head → foot-left;
+          every meta row now ALWAYS renders (— when empty) so all cards in
+          the grid are the same fixed height; the vote band compresses to
+          the ONE labeled "Your vote" row. */}
       <div className="plan-card-head">
         <div className="plan-card-titlewrap">
           <ui-tooltip>
-            <ui-button variant="text" class="plan-card-title" onClick={onOpen}>
+            <ui-button variant="title" class="plan-card-title" onClick={onOpen}>
               {app.name}
             </ui-button>
-            <span slot="content">Open application</span>
+            <span slot="content">{app.name} — open application</span>
           </ui-tooltip>
           <div className="plan-card-recipient muted">{app.recipient}</div>
-        </div>
-        <div className="plan-card-avatars" aria-label="owners">
-          {/* Census I6 make-real: owner avatars open that user's profile. */}
-          <Owners users={users} value={app.owners || []} readonly
-                  onOpen={onOpenUser} />
         </div>
       </div>
       <div className="plan-card-badges">
@@ -249,32 +277,41 @@ function CommunityCard({
             <span className="comm-value-num">{vs.toFixed(1)}</span>
           </span>
         ))}
-        {(app.issues || []).length > 0 &&
-          metaRow('Issues', <TagPills values={app.issues} />)}
-        {engaged.length > 0 &&
-          metaRow('Engaged', (
-            /* Census F8 MAKE-REAL: clickable pills, consistent with F4. */
-            <StakeholderPills
-              ids={engaged.map((s) => s.id)}
-              stakeholders={stakeholders}
-              onOpen={onOpenStakeholder}
-            />
-          ))}
+        {/* TagPills renders its own muted "-" when empty (sealed primitive) */}
+        {metaRow('Issues', <TagPills values={app.issues} />)}
+        {metaRow('Engaged', engaged.length ? (
+          /* Census F8 MAKE-REAL: clickable pills, consistent with F4. */
+          <StakeholderPills
+            ids={engaged.map((s) => s.id)}
+            stakeholders={stakeholders}
+            onOpen={onOpenStakeholder}
+            max={2}
+          />
+        ) : '—')}
       </div>
-      {((app.markets || []).length > 0 || (app.regions || []).length > 0 || (app.site && companySites.length > 0)) && (
-        <div className="plan-card-meta">
-          {(app.markets || []).length > 0 && metaRow('Markets', app.markets.join(', '))}
-          {(app.regions || []).length > 0 && metaRow('Regions', app.regions.join(', '))}
-          {/* Sealed: the Site row renders whenever app.site is SET (and the
-              SITES catalog exists); "-" when the id doesn't resolve — the
-              landing table column's exact fallback. */}
-          {app.site && companySites.length > 0
-            ? metaRow('Site', site ? (siteLabel(site) || '-') : '-')
-            : null}
-        </div>
-      )}
+      <div className="plan-card-meta">
+        {metaRow('Markets', (app.markets || []).join(', ') || '—')}
+        {metaRow('Regions', (app.regions || []).join(', ') || '—')}
+        {/* Sealed fallback kept: an unresolvable site id renders "-" — the
+            landing table column's exact fallback. The row itself renders
+            whenever the SITES catalog exists (constant per page → uniform
+            card heights), "—" when no site is set. */}
+        {companySites.length > 0
+          ? metaRow('Site', app.site ? (site ? (siteLabel(site) || '-') : '-') : '—')
+          : null}
+        {/* THE VOTE ROW (see the VoteGroup contract note): one tight line,
+            keyed "Your vote". */}
+        {metaRow('Your vote', (
+          <VoteGroup app={app} users={users} currentUser={currentUser}
+                     onVote={(c) => onVote(app.id, c)} />
+        ))}
+      </div>
       <div className="plan-card-foot">
-        <VoteGroup app={app} currentUser={currentUser} onVote={(c) => onVote(app.id, c)} />
+        <div className="plan-card-avatars" aria-label="owners">
+          {/* Census I6 make-real: owner avatars open that user's profile. */}
+          <Owners users={users} value={app.owners || []} readonly
+                  onOpen={onOpenUser} />
+        </div>
         <span className="plan-spacer"></span>
         <span className="plan-card-actions">
           <ui-button variant="text" onClick={(e) => { e.stopPropagation(); onOpen(); }}>

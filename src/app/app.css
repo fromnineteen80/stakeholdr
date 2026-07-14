@@ -557,7 +557,7 @@ ui-sidebar[collapsed] .brand { margin-left: 0; }
 .plan-empty { padding: var(--ui-sys-space-6); text-align: center; font: var(--ui-sys-font-body); }
 .plan-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: var(--ui-sys-space-3); align-items: start;
+  gap: var(--ui-sys-space-3); align-items: stretch; /* Phase 21: uniform card heights per grid */
   padding-bottom: var(--ui-sys-space-3);
 }
 
@@ -574,32 +574,100 @@ ui-sidebar[collapsed] .brand { margin-left: 0; }
 .plan-stage-text[data-stage="approved"]     { color: var(--ui-sys-stage-approved); }
 .plan-stage-text[data-stage="declined"]     { color: var(--ui-sys-stage-declined); }
 
-/* ── PLAN CARD (sealed TREE 2) ── */
-.plan-card { display: flex; flex-direction: column; gap: var(--ui-sys-space-2); padding: var(--ui-sys-space-3); }
-.plan-card-head { display: flex; align-items: flex-start; gap: var(--ui-sys-space-2); min-width: 0; }
-.plan-card-titlewrap { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; align-items: flex-start; }
-.plan-card-recipient { font: var(--ui-sys-font-caption); }
-.plan-card-avatars { flex: none; }
-.plan-card-badges { display: flex; align-items: center; gap: var(--ui-sys-space-2); }
-.plan-card-summary { margin: 0; font: var(--ui-sys-font-body); }
-.plan-linked-group, .plan-card-meta {
-  display: flex; flex-direction: column; gap: var(--ui-sys-space-1);
+/* ══ ENTITY CARD (Phase 21 — the ONE card contract; Plans · Community ·
+ * Workspaces all wear .entity-card). Every geometry value below reads a
+ * --ui-sys-card-* token (tokens.css — the ONE place card geometry lives);
+ * this block only re-points component geometry hooks in card scope, never
+ * overrides a component. Fixed internal regions ⇒ every card in a grid is
+ * the SAME height; content truncates (title carries a full-text tooltip),
+ * it never grows the card. Declared visual recomposition on the sealed card
+ * anatomy — every sealed control keeps its handler. ══ */
+.entity-card {
+  /* ONE pill scale for every ui-chip on a card (segment, kind, goal, tag,
+     assist — all of them), via the chip geometry hooks */
+  --ui-sys-pill-height: var(--ui-sys-card-pill-height);
+  --ui-sys-pill-pad-block: 0px;
+  --ui-sys-pill-pad-inline: var(--ui-sys-card-pill-pad-inline);
+  --ui-sys-pill-font-size: var(--ui-sys-card-pill-font-size);
+  --ui-sys-chip-height: var(--ui-sys-card-pill-height);
+  --ui-sys-chip-pad-inline: var(--ui-sys-card-pill-pad-inline);
+  --ui-sys-chip-font-size: var(--ui-sys-card-pill-font-size);
+}
+/* one vertical rhythm between regions (light-DOM children of the card) */
+.entity-card > * + * { margin-top: var(--ui-sys-card-gap); }
+
+/* TITLE ROW — fixed height; title + subtitle, both left-flush on the card's
+   content box (ui-button variant=title carries zero inline padding). */
+.entity-card .plan-card-head {
+  height: var(--ui-sys-card-head-height);
+  display: flex; align-items: flex-start; gap: var(--ui-sys-space-2);
+  min-width: 0; overflow: hidden;
+}
+.entity-card .plan-card-titlewrap {
+  min-width: 0; flex: 1; display: flex; flex-direction: column;
+  gap: var(--ui-sys-space-1); align-items: stretch;
+}
+.entity-card .plan-card-title { min-width: 0; max-width: 100%; align-self: flex-start; }
+.entity-card .plan-card-recipient {
+  font: var(--ui-sys-font-caption);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* META/PILL ROW — one baseline row, one pill scale, single line. */
+.entity-card .plan-card-badges {
+  height: var(--ui-sys-card-row-height);
+  align-items: center; flex-wrap: nowrap; overflow: hidden;
+}
+
+/* BODY — the fixed-height line-clamped summary region. */
+.entity-card .plan-card-summary {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--ui-sys-card-body-lines);
+  overflow: hidden;
+  height: calc(var(--ui-sys-card-body-lines) * 1.45em);
+}
+
+/* META GROUPS — fixed single-line rows on one key column. */
+.entity-card .plan-linked-group, .entity-card .plan-card-meta {
+  display: flex; flex-direction: column;
   border-top: 1px solid var(--ui-sys-outline-subtle);
-  padding-top: var(--ui-sys-space-2);
+  padding-top: var(--ui-sys-space-1);
 }
-.plan-linked-row { display: flex; align-items: baseline; gap: var(--ui-sys-space-2); min-width: 0; }
-.plan-meta-k {
-  flex: 0 0 88px; font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted);
+.entity-card .plan-linked-row {
+  height: var(--ui-sys-card-row-height);
+  display: flex; align-items: center; gap: var(--ui-sys-space-2);
+  min-width: 0; overflow: hidden; flex-wrap: nowrap;
 }
-.plan-meta-v { font: var(--ui-sys-font-caption); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.plan-card-foot {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: var(--ui-sys-space-2);
+.entity-card .plan-meta-k {
+  flex: 0 0 var(--ui-sys-card-key-width);
+  font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted);
+}
+.entity-card .plan-meta-v {
+  flex: 1; font: var(--ui-sys-font-caption); min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.entity-card .pills-inline { flex-wrap: nowrap; }
+
+/* FOOT — one thin row: owners stack left, quiet compact actions right. */
+.entity-card .plan-card-foot {
+  min-height: var(--ui-sys-card-foot-height);
+  display: flex; align-items: center; gap: var(--ui-sys-space-2);
   border-top: 1px solid var(--ui-sys-outline-subtle);
   padding-top: var(--ui-sys-space-1);
   font: var(--ui-sys-font-caption);
+  /* compact action controls (button/icon-button geometry hooks) */
+  --ui-sys-button-height: var(--ui-sys-card-action-height);
+  --ui-sys-button-pad-inline: var(--ui-sys-space-2);
+  --ui-sys-icon-button-size: var(--ui-sys-card-action-height);
 }
-.plan-card-actions { display: flex; align-items: center; }
+.entity-card .plan-card-avatars { flex: none; }
+.entity-card .plan-card-actions { display: flex; align-items: center; margin-left: auto; }
+
+/* base rules for the classes the Community PROFILE document reuses OUTSIDE
+   cards (comm-doc badges + summary paragraphs) */
+.plan-card-badges { display: flex; align-items: center; gap: var(--ui-sys-space-2); }
+.plan-card-summary { margin: 0; font: var(--ui-sys-font-body); }
 
 /* ── LANDING table mode (sealed cols; token-styled table — see the declared
  * recomposition note in plan.jsx) ── */
@@ -848,9 +916,33 @@ ui-sidebar[collapsed] .brand { margin-left: 0; }
 /* Vote group (sealed .comm-vote): two ui-buttons; the SELECTED (.on) state is
  * a token re-point — the filled variant's --ui-sys-primary reads the pos/neg
  * valence token on that host (declared; never a component override). */
-.comm-vote { display: inline-flex; align-items: center; gap: var(--ui-sys-space-1); }
 .comm-vote-for     { --ui-sys-primary: var(--ui-sys-pos); }
 .comm-vote-against { --ui-sys-primary: var(--ui-sys-neg); }
+/* Phase 21 vote row (the card contract's ONE tight labeled line): the two
+ * sealed buttons join into a compact pill-scale segmented control; beside
+ * them a caption tally and the voters' sm avatar stack; the meta-row key
+ * "Your vote" is the label. Geometry = token re-points only. */
+.comm-vote-line {
+  display: flex; align-items: center; gap: var(--ui-sys-space-2);
+  min-width: 0; overflow: hidden;
+}
+.comm-vote {
+  display: inline-flex; align-items: center; flex: none;
+  border: 1px solid var(--ui-sys-outline-subtle);
+  border-radius: var(--ui-sys-shape-pill);
+  overflow: hidden;
+}
+.comm-vote-btn {
+  --ui-sys-button-height: var(--ui-sys-card-pill-height);
+  --ui-sys-button-pad-inline: var(--ui-sys-space-1);
+}
+/* icon and count sit tight inside the compact segments */
+.comm-vote-btn ui-icon { margin-right: calc(var(--ui-sys-space-1) * -1); }
+.comm-vote-tally {
+  font: var(--ui-sys-font-caption); white-space: nowrap;
+  flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+}
+.comm-voters { flex: none; display: inline-flex; align-items: center; }
 
 /* Value bar (sealed .comm-value-bar → ui-linear-progress) + tnum readout. */
 .comm-value-wrap { display: inline-flex; align-items: center; gap: var(--ui-sys-space-2); min-width: 0; }

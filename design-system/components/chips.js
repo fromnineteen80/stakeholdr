@@ -115,13 +115,18 @@ chipTpl.innerHTML = `
       display: inline-flex;
       align-items: center;
       gap: var(--ui-sys-space-1);
-      height: 32px;
-      padding: 0 var(--ui-sys-space-3);
+      /* Geometry token hooks (Phase 21 card contract): hosts re-point
+         --ui-sys-chip-* in a scope (e.g. .entity-card sets them to the
+         --ui-sys-card-pill-* scale) — never a component override. Defaults
+         = the structural MD3 chip geometry. */
+      height: var(--ui-sys-chip-height, 32px);
+      padding: 0 var(--ui-sys-chip-pad-inline, var(--ui-sys-space-3));
       border: 1px solid var(--_border);
       border-radius: var(--ui-sys-shape-pill);
       background: var(--_bg);
       color: var(--_fg);
       font: var(--ui-sys-font-label);
+      font-size: var(--ui-sys-chip-font-size, 13px);
       cursor: pointer;
       user-select: none;
       transition: background var(--ui-sys-motion-control),
@@ -216,9 +221,14 @@ chipTpl.innerHTML = `
     :host([variant="goal"]) .chip,
     :host([variant="kind"]) .chip,
     :host([variant="error"]) .chip {
-      height: auto;
-      padding: 1px var(--ui-sys-space-2);
+      /* Pill geometry token hooks (Phase 21 card contract): inside cards the
+         host re-points --ui-sys-pill-* at the ONE --ui-sys-card-pill-* scale
+         so every pill on a card shares one height/size/pad. Defaults = the
+         compact auto-height caption pill. */
+      height: var(--ui-sys-pill-height, auto);
+      padding: var(--ui-sys-pill-pad-block, 1px) var(--ui-sys-pill-pad-inline, var(--ui-sys-space-2));
       font: var(--ui-sys-font-caption);
+      font-size: var(--ui-sys-pill-font-size, 12px);
       cursor: default;
       user-select: text;
     }
@@ -245,7 +255,9 @@ chipTpl.innerHTML = `
       text-transform: uppercase;
       letter-spacing: .06em;
       font-weight: 600;
-      font-size: calc(var(--ui-sys-badge-font-size, 9.5px) + 0.5px);
+      /* same --ui-sys-pill-font-size hook as every pill (one card scale);
+         the standalone default keeps the sealed badge-derived size */
+      font-size: var(--ui-sys-pill-font-size, calc(var(--ui-sys-badge-font-size, 9.5px) + 0.5px));
     }
     :host([variant="segment"][value="Personal Systems"]) {
       --_bg: var(--ui-sys-segment-personal-systems-surface);

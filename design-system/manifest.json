@@ -197,7 +197,7 @@
    "tag": "ui-button",
    "status": "built",
    "category": "native",
-   "summary": "Primary action control; filled/tonal/outlined/text variants, neutral/danger tones, state layer, focus ring, form-associated.",
+   "summary": "Primary action control; filled/tonal/outlined/text variants, neutral/danger tones, state layer, focus ring, form-associated. Geometry token hooks: --ui-sys-button-height / --ui-sys-button-pad-inline (defaults 36px / space-4) — hosts re-point them in a scope (entity-card foot actions), never a component override.",
    "props": [
     {
      "name": "variant",
@@ -206,9 +206,11 @@
       "filled",
       "tonal",
       "outlined",
-      "text"
+      "text",
+      "title"
      ],
-     "default": "filled"
+     "default": "filled",
+     "note": "title (Phase 21 card contract) = the entity-card title control: a real button rendered as a left-flush single-line heading — zero inline padding, no min-height, --ui-sys-font-title, ellipsis truncation, hover = ink underline (never a background wash), focus ring kept."
     },
     {
      "name": "disabled",
@@ -249,7 +251,7 @@
    "tag": "ui-icon-button",
    "status": "built",
    "category": "native",
-   "summary": "Circular icon button; standard/filled/tonal/outlined variants, optional selected toggle (aria-pressed). size=xs = the dense matrix-cell stepper (sealed Scoring-box xy-spin ± stack).",
+   "summary": "Circular icon button; standard/filled/tonal/outlined variants, optional selected toggle (aria-pressed). size=xs = the dense matrix-cell stepper (sealed Scoring-box xy-spin ± stack). Geometry token hook: --ui-sys-icon-button-size (default 40px) — hosts re-point it in a scope (entity-card foot actions read --ui-sys-card-action-height), never a component override.",
    "props": [
     {
      "name": "variant",
@@ -618,7 +620,7 @@
    "tag": "ui-chip",
    "status": "built",
    "category": "native",
-   "summary": "Chip variants assist/filter/input/suggestion (interactive: pill shape; filter toggles primary-container; input removable; paired with ui-chip-set) PLUS the sealed presentational pill variants priority/zone/tag/segment/goal/kind (Shared-UI-primitives): non-interactive caption-type pills with no state layer/tabstop/role. priority reads --ui-sys-priority-{high|medium|low}-surface/-ink via the value attr (case-insensitive; unknown falls back to the Low pair). zone reads the 14 single-sourced --ui-sys-zone-* fills + band inks via data-zone = the exact zone name, with the SEALED NULL-GUARD: an uncatalogued zone renders NOTHING. tag is the quiet surface-container tag pill. These variants are the ONE source of pill visuals — screens compose them, never hand-rolled spans. segment = the sealed SegmentBadge pill (Workspaces box): uppercase caption pill reading --ui-sys-segment-* pairs via the value attr, Corporate Functions fallback. goal = the sealed PLAN_GOAL_COLORS \"type of plan\" pill (Plan-page box): caption pill reading --ui-sys-goal-* pairs via the value attr (goal-model id general|shared-value|crisis|activist|dei|community|union); unknown/absent falls back to the container/muted pair (the sealed var(--bg-2)/var(--ink-2) rule). kind = the sealed community KindBadge (Community box): caption pill reading --ui-sys-kind-* pairs via the value attr (the exact kind name: Philanthropy | Volunteering | Corporate Giving | Political Action (PAC) | Sustainability | Social Impact); unknown/absent falls back to the container/muted pair (the sealed var(--bg-2)/var(--ink-2) rule). error (Phase 18) = the sealed import-wizard validation pill (Demo-features BUILD-MAP \"ui-chip (error variant) naming the failure\"): non-interactive caption pill reading --ui-sys-error-container / --ui-sys-error.",
+   "summary": "Chip variants assist/filter/input/suggestion (interactive: pill shape; filter toggles primary-container; input removable; paired with ui-chip-set) PLUS the sealed presentational pill variants priority/zone/tag/segment/goal/kind (Shared-UI-primitives): non-interactive caption-type pills with no state layer/tabstop/role. priority reads --ui-sys-priority-{high|medium|low}-surface/-ink via the value attr (case-insensitive; unknown falls back to the Low pair). zone reads the 14 single-sourced --ui-sys-zone-* fills + band inks via data-zone = the exact zone name, with the SEALED NULL-GUARD: an uncatalogued zone renders NOTHING. tag is the quiet surface-container tag pill. These variants are the ONE source of pill visuals — screens compose them, never hand-rolled spans. segment = the sealed SegmentBadge pill (Workspaces box): uppercase caption pill reading --ui-sys-segment-* pairs via the value attr, Corporate Functions fallback. goal = the sealed PLAN_GOAL_COLORS \"type of plan\" pill (Plan-page box): caption pill reading --ui-sys-goal-* pairs via the value attr (goal-model id general|shared-value|crisis|activist|dei|community|union); unknown/absent falls back to the container/muted pair (the sealed var(--bg-2)/var(--ink-2) rule). kind = the sealed community KindBadge (Community box): caption pill reading --ui-sys-kind-* pairs via the value attr (the exact kind name: Philanthropy | Volunteering | Corporate Giving | Political Action (PAC) | Sustainability | Social Impact); unknown/absent falls back to the container/muted pair (the sealed var(--bg-2)/var(--ink-2) rule). error (Phase 18) = the sealed import-wizard validation pill (Demo-features BUILD-MAP \"ui-chip (error variant) naming the failure\"): non-interactive caption pill reading --ui-sys-error-container / --ui-sys-error. Geometry token hooks (Phase 21 card contract): interactive chips read --ui-sys-chip-height/-pad-inline/-font-size (defaults 32px / space-3 / 13px); presentational pills read --ui-sys-pill-height/-pad-block/-pad-inline/-font-size (defaults auto / 1px / space-2 / 12px; segment default keeps its badge-derived size). The .entity-card scope re-points all of them at the ONE --ui-sys-card-pill-* scale so every pill on a card shares one height, one type size, one pad.",
    "props": [
     {
      "name": "variant",
@@ -1704,7 +1706,7 @@
    "tag": "ui-card",
    "status": "built",
    "category": "native",
-   "summary": "Content surface; outlined/filled/elevated variants; media/body/actions slots; `interactive` makes the whole card clickable (state layer, focus ring, role=button, Enter/Space). Reads --ui-sys-surface-card / -surface-container, --ui-sys-shape-card, --ui-sys-outline-subtle, --ui-sys-elevation-1.",
+   "summary": "Content surface; outlined/filled/elevated variants; media/body/actions slots; `interactive` makes the whole card clickable (state layer, focus ring, role=button, Enter/Space). Body padding reads --ui-sys-card-pad (the ONE card padding scale, default space-4). Reads --ui-sys-surface-card / -surface-container, --ui-sys-shape-card, --ui-sys-outline-subtle, --ui-sys-elevation-1.",
    "props": [
     {
      "name": "variant",

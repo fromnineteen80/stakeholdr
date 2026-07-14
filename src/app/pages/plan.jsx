@@ -929,23 +929,23 @@ function PlanCard({ p, users, ws, site, engaged, onReview, onOpen, onOpenUser })
     </div>
   );
   return (
-    <ui-card variant="outlined" class="plan-card">
+    <ui-card variant="outlined" class="entity-card plan-card">
+      {/* Phase 21 CARD CONTRACT (declared visual recomposition on the sealed
+          anatomy; every control keeps its handler): title row left-flush
+          (variant=title + full-text tooltip); team avatars move head →
+          foot-left; the Issues row ALWAYS renders (— when empty) so all
+          cards in the grid are the same fixed height. */}
       <div className="plan-card-head">
         <div className="plan-card-titlewrap">
           {/* Title = a REAL text control (never a role-d span) in ui-tooltip
-              per the sealed card anatomy (tooltip "Open plan"). */}
+              per the sealed card anatomy (full-text tooltip). */}
           <ui-tooltip>
-            <ui-button variant="text" class="plan-card-title" onClick={onReview}>
+            <ui-button variant="title" class="plan-card-title" onClick={onReview}>
               {p.title}
             </ui-button>
-            <span slot="content">Open plan</span>
+            <span slot="content">{p.title} — open plan</span>
           </ui-tooltip>
           <div className="plan-card-recipient muted">{ws ? ws.name : '-'}</div>
-        </div>
-        <div className="plan-card-avatars" aria-label="team">
-          {/* Census I6 make-real: team avatars open that user's profile. */}
-          <Owners users={users} value={(p.team || []).map((m) => m.userId)} readonly
-                  onOpen={onOpenUser} />
         </div>
       </div>
       <div className="plan-card-badges">
@@ -957,14 +957,18 @@ function PlanCard({ p, users, ws, site, engaged, onReview, onOpen, onOpenUser })
         {p.summary || 'No summary written yet.'}
       </p>
       <div className="plan-linked-group">
-        {(p.issues || []).length > 0 && (
-          <div className="plan-linked-row">
-            <span className="plan-meta-k">Issues</span>
+        <div className="plan-linked-row">
+          <span className="plan-meta-k">Issues</span>
+          {(p.issues || []).length > 0 ? (
             <span className="pills-inline">
-              {p.issues.map((i) => <ui-chip variant="tag" key={i}>{i}</ui-chip>)}
+              {p.issues.slice(0, 2).map((i) => <ui-chip variant="tag" key={i}>{i}</ui-chip>)}
+              {/* sealed Tags primitive: "+N" overflow = a MUTED TEXT SPAN */}
+              {p.issues.length > 2 && <span className="muted">+{p.issues.length - 2}</span>}
             </span>
-          </div>
-        )}
+          ) : (
+            <span className="plan-meta-v">—</span>
+          )}
+        </div>
         {linkedRow('Engaged', `${engaged} stakeholders`)}
         {linkedRow('Market', p.market || '-')}
         {linkedRow('Region', p.region || '-')}
@@ -977,6 +981,11 @@ function PlanCard({ p, users, ws, site, engaged, onReview, onOpen, onOpenUser })
         {linkedRow('Unit', ws?.businessUnit || '-')}
       </div>
       <div className="plan-card-foot">
+        <div className="plan-card-avatars" aria-label="team">
+          {/* Census I6 make-real: team avatars open that user's profile. */}
+          <Owners users={users} value={(p.team || []).map((m) => m.userId)} readonly
+                  onOpen={onOpenUser} />
+        </div>
         <span className="muted">Updated {planDate(p.updatedAt || p.createdAt)}</span>
         <span className="plan-card-actions">
           <ui-button variant="text" onClick={(e) => { e.stopPropagation(); onReview(); }}>
