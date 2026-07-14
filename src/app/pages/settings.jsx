@@ -69,9 +69,19 @@
  *    from scratch WITH the user — pending that session).
  *  · "Make manager" title on the role toggle is an a11y addition beyond the
  *    sealed titles (the box titles only the User button).
+ *  · PHASE 19 — DEMO DATA (sealed ~3882: the captured Store.reset() key
+ *    sweep had ZERO oracle call sites; the ACTION is the sealed
+ *    forward-design "manager-only Settings affordance calling Store.reset()
+ *    then reloading", plus the sealed ~3899 blank-org vs demo-data seed
+ *    choice). DECLARED PLACEMENT: a Demo Data section on the Team
+ *    Management pane (the pane already carries the org-administration
+ *    controls; the whole view is manager-gated). The danger-tone button
+ *    opens a confirm ui-dialog naming EXACTLY what the sweep clears and
+ *    offering "Start blank" vs "Reset to demo data"; either choice runs the
+ *    Store call then location.reload() (the sealed reload-the-seed step).
  */
 import { useEffect, useRef, useState } from 'react';
-import { usePersistentState, uid, nowStamp } from '../data/store.js';
+import { usePersistentState, uid, nowStamp, Store } from '../data/store.js';
 import { SEED_USERS } from '../data/seed.js';
 import { useCompanyConfig, useCompanyCatalogs, applyAppConfigLive } from '../data/company.js';
 import {
@@ -90,6 +100,8 @@ import {
   SETTINGS_EXPLAINER,
   INVITE_PLACEHOLDER, INVITE_MODAL_TITLE, INVITE_MODAL_BODY_PRE,
   INVITE_MODAL_BODY_POST, INVITE_MAIL_SUBJECT, ROLES_SEARCH_PLACEHOLDER,
+  DEMO_DATA_INTRO, RESET_BUTTON_LABEL, RESET_MODAL_TITLE, RESET_MODAL_BODY,
+  RESET_DEMO_LABEL, RESET_BLANK_LABEL, RESET_DEMO_HELP,
   SELF_DEMOTE_TITLE, MAKE_USER_TITLE, ROLE_MEMBER, ROLE_MANAGER,
   rolesFiltered, rolesHeadCount,
   INTEGRATIONS_CONNECTORS, INTEGRATIONS_CHIP, INTEGRATIONS_INTRO,
@@ -398,6 +410,51 @@ function InviteCode({ code }) {
         </div>
       </ui-dialog>
     </div>
+  );
+}
+
+/* ── DEMO DATA (Phase 19 — see the header ledger) ────────────────────────── */
+function DemoDataReset() {
+  const [open, setOpen] = useState(false);
+  const dlgRef = useRef(null);
+  useUiEvent(dlgRef, 'close', (e) => {
+    if (e.target === dlgRef.current) setOpen(false);
+  });
+  /* Either choice = the sealed Store call + the sealed reload-the-seed step.
+   * reset() sweeps the "hpsm:" namespace + re-stamps the schema; startBlank()
+   * additionally sets the blank marker so every table boots EMPTY. */
+  const resetDemo = () => { Store.reset(); window.location.reload(); };
+  const startBlank = () => { Store.startBlank(); window.location.reload(); };
+  return (
+    <>
+      <ui-button variant="outlined" tone="danger" class="reset-demo-btn"
+                 onClick={() => setOpen(true)}>
+        <ui-icon slot="leading" size="sm">restart_alt</ui-icon>
+        {RESET_BUTTON_LABEL}
+      </ui-button>
+      <ui-dialog ref={dlgRef} open={open ? '' : undefined} class="reset-demo-confirm">
+        {open && (
+          <>
+            <span slot="headline">{RESET_MODAL_TITLE}</span>
+            <div className="reset-demo-body">
+              <p className="reset-demo-warning">{RESET_MODAL_BODY}</p>
+              <p className="reset-demo-choices muted">{RESET_DEMO_HELP}</p>
+            </div>
+            <div slot="actions">
+              <ui-button variant="text" onClick={() => setOpen(false)}>Cancel</ui-button>
+              <ui-button variant="outlined" tone="danger" class="reset-blank-btn"
+                         onClick={startBlank}>
+                {RESET_BLANK_LABEL}
+              </ui-button>
+              <ui-button variant="filled" tone="danger" class="reset-demo-go"
+                         onClick={resetDemo}>
+                {RESET_DEMO_LABEL}
+              </ui-button>
+            </div>
+          </>
+        )}
+      </ui-dialog>
+    </>
   );
 }
 
@@ -858,6 +915,11 @@ export function SettingsPage({ onOpenUserProfile }) {
               <RolesTable users={users} currentUser={currentUser}
                 filter={filter} onFilter={setFilter} onRole={updateUserRole}
                 onOpenUser={onOpenUserProfile} />
+            </Section>
+            {/* Phase 19 (header ledger): the sealed reset-demo-data action +
+                the blank-org seed choice, on the manager-gated pane. */}
+            <Section sub title="Demo Data" intro={DEMO_DATA_INTRO}>
+              <DemoDataReset />
             </Section>
           </>
         )}

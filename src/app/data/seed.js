@@ -562,3 +562,47 @@ export const SEED_PLANS = [
     updatedAt: '2026-06-11T15:20:00.000Z',
   },
 ];
+
+/* ── BLANK START (Phase 19, sealed ~3899 "blank-org vs demo-data seed
+ * choice" — FORWARD-DESIGN made real). When the blank marker is set
+ * (store.js Store.startBlank), every table boots EMPTY instead of falling
+ * back to its SEED_* fixture. Declared resolution of the two survivals:
+ *  · appConfig KEEPS its defaults — the catalogs/fiscal/identity are org
+ *    CONFIG, not demo rows (the Settings panes stay functional).
+ *  · users boots with ONE minimal solo MANAGER — the app derives
+ *    currentUser = users[0] until the Login phase, and a manager is required
+ *    to reach Settings (incl. the reset affordance itself); a blank org must
+ *    never lock itself out. avatarColor is a token reference (token law).   */
+export const BLANK_SOLO_USER = {
+  id: 'u-you',
+  name: 'You',
+  title: 'Manager',
+  email: '',
+  avatarColor: 'var(--ui-sys-avatar-palette-1)',
+  presence: 'online',
+  role: 'manager',
+};
+
+/* blankSeedFor(table, seed) — the blank-boot seed resolution: collections
+ * empty (arrays → [], keyed maps → {}), appConfig kept, users → the solo
+ * manager PLUS the u-system Reminders bot, conversations → the c-system
+ * channel scoped to them (the sealed create/import side effects post to
+ * c-system from u-system; without both records those writes would be
+ * permanently unreachable — the dead-write pattern the build law bans),
+ * scalars untouched. */
+export function blankSeedFor(table, seed) {
+  if (table === 'appConfig') return seed;
+  if (table === 'users') {
+    const sys = SEED_USERS.find((u) => u.id === 'u-system');
+    return sys ? [BLANK_SOLO_USER, sys] : [BLANK_SOLO_USER];
+  }
+  if (table === 'conversations') {
+    return [{
+      id: 'c-system', kind: 'system', title: 'Reminders',
+      participants: [BLANK_SOLO_USER.id, 'u-system'],
+    }];
+  }
+  if (Array.isArray(seed)) return [];
+  if (seed && typeof seed === 'object') return {};
+  return seed;
+}

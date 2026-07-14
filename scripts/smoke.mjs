@@ -6,6 +6,9 @@ import { chromium } from 'playwright';
 import { createServer } from 'http';
 import { readFile } from 'fs/promises';
 import { extname, join } from 'path';
+// Phase 19: the P19 export probe unzip-validates the captured .docx bytes
+// with the Phase-18 zip reader, node-side.
+import { listZipEntries, readZipEntry } from '../src/app/import/xlsx-read.js';
 
 const ROOT = '/home/user/stakeholdr/dist';
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png' };
@@ -1134,6 +1137,182 @@ for (const path of pages) {
     if (p18RtCount !== p18CountBefore + 2 + p18RtRows) errs.push(`P18RTLAND: expected ${p18CountBefore + 2 + p18RtRows} after the round-trip import, saw ${p18RtCount}`);
     const p18RtSnack = (await page.locator('.sheet-wrap ui-snackbar').getAttribute('message').catch(() => '') || '').trim();
     if (p18RtSnack !== `Imported ${p18RtRows} stakeholders`) errs.push(`P18RTSNACK: expected "Imported ${p18RtRows} stakeholders", saw "${p18RtSnack}"`);
+    // Phase 19 — DEMO POLISH: (a) plan → Word export (capture the download,
+    // assert the blob MIME, unzip-validate the bytes node-side with the
+    // Phase-18 reader); (b) reset-demo-data → the seed restores; (c) blank
+    // start → every page renders a designed, actionable empty state and
+    // CREATE works end-to-end (workspace → stakeholder → scoring team).
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Plans' }).click({ timeout: 3000 }).catch(e => errs.push('P19NAV: ' + e.message));
+    await page.waitForTimeout(500);
+    await page.locator('.plan-card-actions ui-button', { hasText: 'Review' }).first().click({ timeout: 3000 }).catch(e => errs.push('P19REVIEW: ' + e.message));
+    await page.waitForTimeout(500);
+    const p19Title = (await page.locator('.plan-review-toolbar-title').textContent().catch(() => '') || '').trim();
+    if (await page.locator('.plan-editor-bar .plan-export-btn').count() !== 1) errs.push('P19BTN: the review toolbar Export control is missing');
+    if (await page.locator('.plan-editor-bar .plan-print-btn').count() !== 1) errs.push('P19PRINT: the Print / Save as PDF control is missing');
+    if (await page.locator('body > .plan-print-sheet').count() !== 1) errs.push('P19SHEET: the body-level print sheet portal is missing');
+    const p19Cap = await page.evaluate(() => new Promise((resolve, reject) => {
+      const orig = URL.createObjectURL;
+      const timer = setTimeout(() => { URL.createObjectURL = orig; reject(new Error('no download captured')); }, 4000);
+      URL.createObjectURL = (blob) => {
+        clearTimeout(timer);
+        URL.createObjectURL = orig;
+        blob.arrayBuffer().then((buf) => {
+          const u8 = new Uint8Array(buf);
+          let s = '';
+          for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+          resolve({ type: blob.type, b64: btoa(s) });
+        });
+        return orig.call(URL, blob);
+      };
+      document.querySelector('.plan-editor-bar .plan-export-btn').click();
+    })).catch(e => { errs.push('P19EXPORT: ' + e.message); return null; });
+    if (p19Cap) {
+      if (p19Cap.type !== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        errs.push(`P19MIME: expected the .docx MIME on the blob, saw "${p19Cap.type}"`);
+      }
+      try {
+        const docxBytes = new Uint8Array(Buffer.from(p19Cap.b64, 'base64'));
+        const zipEntries = listZipEntries(docxBytes);
+        const names = zipEntries.map(e => e.name).sort();
+        if (JSON.stringify(names) !== JSON.stringify(['[Content_Types].xml', '_rels/.rels', 'word/document.xml'])) {
+          errs.push(`P19ZIP: unexpected part set ${names.join(', ')}`);
+        }
+        const docPart = zipEntries.find(e => e.name === 'word/document.xml');
+        const docXml = new TextDecoder().decode(await readZipEntry(docxBytes, docPart));
+        if (!docXml.includes(p19Title.replace(/&/g, '&amp;'))) errs.push('P19DOC: the exported document is missing the plan title');
+        for (const head of ['Scenario &amp; Context', 'Stakeholders In This Plan', 'Tactics', 'Measurement &amp; Reporting']) {
+          if (!docXml.includes(head)) errs.push(`P19DOC: missing the sealed section heading "${head.replace(/&amp;/g, '&')}"`);
+        }
+        // the element-6 section: a populated plan prints the table (WITH its
+        // schema-required tblGrid); a memberless plan prints the sealed
+        // empty string — either way the section is honest, never absent
+        if (docXml.includes('<w:tbl>')) {
+          if (!docXml.includes('<w:tblGrid>')) errs.push('P19DOC: the element-6 table is missing its schema-required tblGrid');
+        } else if (!docXml.includes('No stakeholders in this workspace.')) {
+          errs.push('P19DOC: neither the element-6 table nor its sealed empty string rendered');
+        }
+      } catch (e) {
+        errs.push('P19UNZIP: ' + e.message);
+      }
+    }
+    // (b) RESET DEMO DATA — the confirm names what resets; the seed restores.
+    await openSettings('P19R');
+    await page.locator('.settings-nav ui-list-item', { hasText: 'Team Management' }).click({ timeout: 3000 }).catch(e => errs.push('P19RPANE: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('.reset-demo-btn').click({ timeout: 3000 }).catch(e => errs.push('P19ROPEN: ' + e.message));
+    await page.waitForTimeout(300);
+    if (await page.locator('ui-dialog.reset-demo-confirm[open]').count() !== 1) errs.push('P19RDLG: the reset confirm dialog did not open');
+    const p19ResetCopy = await page.locator('.reset-demo-confirm').textContent().catch(() => '');
+    if (!/stakeholders, workspaces, scoring & team weights, plans, community investments, messages/.test(p19ResetCopy || '')) {
+      errs.push('P19RCOPY: the confirm must name exactly what resets');
+    }
+    await page.locator('.reset-demo-go').click({ timeout: 3000 }).catch(e => errs.push('P19RGO: ' + e.message));
+    await page.waitForTimeout(2000); // location.reload()
+    const p19AfterReset = await page.evaluate(() => ({
+      blank: localStorage.getItem('hpsm:__blank'),
+      shs: JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]').length,
+      wss: JSON.parse(localStorage.getItem('hpsm:workspaces') || '[]').length,
+      users: JSON.parse(localStorage.getItem('hpsm:users') || '[]').length,
+    }));
+    if (p19AfterReset.shs !== 20 || p19AfterReset.wss !== 6 || p19AfterReset.users !== 8) {
+      errs.push(`P19RESTORE: expected the 20/6/8 demo seed back, saw ${JSON.stringify(p19AfterReset)}`);
+    }
+    if (p19AfterReset.blank !== null) errs.push('P19RMARK: a demo reset must not leave the blank marker');
+    // (c) BLANK START — the seed choice's other arm.
+    await openSettings('P19B');
+    await page.locator('.settings-nav ui-list-item', { hasText: 'Team Management' }).click({ timeout: 3000 }).catch(e => errs.push('P19BPANE: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('.reset-demo-btn').click({ timeout: 3000 }).catch(e => errs.push('P19BOPEN: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('.reset-blank-btn').click({ timeout: 3000 }).catch(e => errs.push('P19BGO: ' + e.message));
+    await page.waitForTimeout(2000); // location.reload()
+    const p19Blank = await page.evaluate(() => ({
+      marker: localStorage.getItem('hpsm:__blank'),
+      users: JSON.parse(localStorage.getItem('hpsm:users') || '[]').map(u => u.id),
+      shs: JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]').length,
+      wss: JSON.parse(localStorage.getItem('hpsm:workspaces') || '[]').length,
+    }));
+    if (p19Blank.marker !== '1') errs.push('P19BMARK: Start blank must set the blank marker');
+    if (JSON.stringify(p19Blank.users) !== '["u-you","u-system"]') errs.push(`P19BUSER: expected the solo manager + the Reminders bot [u-you,u-system], saw ${JSON.stringify(p19Blank.users)}`);
+    if (p19Blank.shs !== 0 || p19Blank.wss !== 0) errs.push(`P19BEMPTY: expected empty tables, saw shs=${p19Blank.shs} wss=${p19Blank.wss}`);
+    // every page renders a DESIGNED, ACTIONABLE empty state (Map keeps its
+    // sealed scorecard copy; the shared .empty-state covers the rest)
+    if (await page.locator('.empty-state').count() !== 1) errs.push('P19LISTS: the Lists zero-data empty state did not render');
+    if (await page.locator('ui-stakeholder-table').count() !== 0) errs.push('P19LISTS: the empty state must substitute the table node');
+    if (await page.locator('.empty-state ui-button', { hasText: 'Add stakeholder' }).count() !== 1) errs.push('P19LISTSACT: the Add-stakeholder action is missing');
+    if (await page.locator('.empty-state ui-button', { hasText: 'Import' }).count() !== 1) errs.push('P19LISTSIMP: the Import secondary action is missing');
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Map' }).click({ timeout: 3000 }).catch(e => errs.push('P19MAPNAV: ' + e.message));
+    await page.waitForTimeout(500);
+    if (await page.locator('ui-stakeholder-map').count() !== 1) errs.push('P19MAP: the map did not mount on a blank org');
+    const p19MapPrompt = (await page.locator('.map-scorecard .empty-prompt').textContent().catch(() => '') || '').trim();
+    if (p19MapPrompt !== 'Click any dot on the map to see details.') errs.push(`P19MAPCOPY: the sealed scorecard prompt must stay verbatim, saw "${p19MapPrompt}"`);
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Plans' }).click({ timeout: 3000 }).catch(e => errs.push('P19PLNAV: ' + e.message));
+    await page.waitForTimeout(500);
+    const p19PlanEmpty = (await page.locator('.empty-state-line').textContent().catch(() => '') || '').trim();
+    if (p19PlanEmpty !== 'No plans yet. Create one to begin building a stakeholder engagement plan.') {
+      errs.push(`P19PLTEXT: the Plans empty state must carry the SEALED emptyText verbatim, saw "${p19PlanEmpty}"`);
+    }
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Community' }).click({ timeout: 3000 }).catch(e => errs.push('P19CMNAV: ' + e.message));
+    await page.waitForTimeout(500);
+    if (await page.locator('.empty-state ui-button', { hasText: 'New application' }).count() !== 1) errs.push('P19CMACT: the Community empty state action is missing');
+    // CREATE WORKS from the empty states: workspace → stakeholder → teammate
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Workspaces' }).click({ timeout: 3000 }).catch(e => errs.push('P19WSNAV: ' + e.message));
+    await page.waitForTimeout(500);
+    await page.locator('.empty-state ui-button', { hasText: 'New workspace' }).click({ timeout: 3000 }).catch(e => errs.push('P19WSACT: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('.ws-modal ui-text-field input').click({ timeout: 3000 }).catch(e => errs.push('P19WSNAME: ' + e.message));
+    await page.keyboard.type('Blank Org Workspace');
+    await page.waitForTimeout(300);
+    await page.locator('.ws-modal ui-button', { hasText: 'Create workspace' }).click({ timeout: 3000 }).catch(e => errs.push('P19WSGO: ' + e.message));
+    await page.waitForTimeout(500);
+    const p19WsName = (await page.locator('.ws-select-name').textContent().catch(() => '') || '').trim();
+    if (p19WsName !== 'Blank Org Workspace') errs.push(`P19WSOPEN: expected the new workspace active on Lists, saw "${p19WsName}"`);
+    // Lists (empty workspace) → Add stakeholder through the empty state
+    await page.locator('.empty-state ui-button', { hasText: 'Add stakeholder' }).click({ timeout: 3000 }).catch(e => errs.push('P19SHACT: ' + e.message));
+    await page.waitForTimeout(400);
+    if (await page.locator('ui-dialog.sh-dialog[open]').count() !== 1) errs.push('P19SHDLG: the create modal did not open from the empty state');
+    await page.locator('ui-dialog.sh-dialog ui-text-field input').first().click({ timeout: 3000 }).catch(e => errs.push('P19SHORG: ' + e.message));
+    await page.keyboard.type('Blank Probe Org');
+    const p19Pick = async (label, option) => {
+      const sel = page.locator(`ui-dialog.sh-dialog ui-select[aria-label="${label}"]`);
+      await sel.click({ timeout: 3000 }).catch(e => errs.push(`P19SEL${label}: ` + e.message));
+      await page.waitForTimeout(250);
+      await sel.locator('ui-option', { hasText: option }).first().click({ timeout: 3000 }).catch(e => errs.push(`P19OPT${label}: ` + e.message));
+      await page.waitForTimeout(250);
+    };
+    await p19Pick('Category', 'Government');   // the cascade fills Audience type
+    await p19Pick('Market', 'Americas');       // the cascade fills Region
+    await p19Pick('Geography', 'Local');
+    await page.locator('ui-dialog.sh-dialog ui-button', { hasText: 'Create stakeholder' }).click({ timeout: 3000 }).catch(e => errs.push('P19SHGO: ' + e.message));
+    await page.waitForTimeout(600);
+    const p19Created = await page.evaluate(() => {
+      const shs = JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]');
+      const s = shs.find(x => x.org === 'Blank Probe Org');
+      return s ? { count: shs.length, owners: s.owners, category: s.category } : null;
+    });
+    if (!p19Created) errs.push('P19CREATE: the blank-org stakeholder did not persist');
+    else {
+      if (p19Created.count !== 1) errs.push(`P19CREATE: expected exactly 1 stakeholder, saw ${p19Created.count}`);
+      if (!(p19Created.owners || []).includes('u-you')) errs.push('P19OWNER: the solo manager must default as owner');
+    }
+    if (await page.locator('ui-stakeholder-table .sheet-row').count() !== 1) errs.push('P19TABLE: the table did not take over from the empty state after create');
+    // Scoring (no team edge): the empty state's action IS the add-teammate flow
+    await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Scoring' }).first().click({ timeout: 3000 }).catch(e => errs.push('P19SCNAV: ' + e.message));
+    await page.waitForTimeout(500);
+    if (await page.locator('.scoring-wrap .empty-state').count() !== 1) errs.push('P19SCEMPTY: the Scoring no-team empty state did not render');
+    if (await page.locator('.scoring-table').count() !== 0) errs.push('P19SCTABLE: the matrix must yield to the empty state with no team');
+    await page.locator('.scoring-wrap .empty-state ui-button', { hasText: 'Add teammate' }).click({ timeout: 3000 }).catch(e => errs.push('P19SCACT: ' + e.message));
+    await page.waitForTimeout(400);
+    await page.locator('ui-autocomplete input').click({ timeout: 3000 }).catch(e => errs.push('P19TMQ: ' + e.message));
+    await page.keyboard.type('You');
+    await page.waitForTimeout(400);
+    await page.locator('ui-autocomplete .option', { hasText: 'You' }).first().click({ timeout: 3000 }).catch(e => errs.push('P19TMPICK: ' + e.message));
+    await page.waitForTimeout(300);
+    await page.locator('ui-dialog ui-button', { hasText: 'Add to team' }).click({ timeout: 3000 }).catch(e => errs.push('P19TMGO: ' + e.message));
+    await page.waitForTimeout(500);
+    const p19Team = await page.evaluate(() => JSON.parse(localStorage.getItem('hpsm:team') || '[]'));
+    if (p19Team.length !== 1 || p19Team[0].userId !== 'u-you') errs.push(`P19TEAM: expected the solo manager on the scoring team, saw ${JSON.stringify(p19Team)}`);
+    if (await page.locator('.scoring-table').count() !== 1) errs.push('P19SCBACK: the matrix must return once a team exists');
   }
   if (path === '/record.html') {
     // Phase 14: SampleRecord — the sealed neutral tuning preview (standalone

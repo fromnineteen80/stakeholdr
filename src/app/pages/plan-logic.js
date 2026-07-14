@@ -17,6 +17,7 @@
  */
 import { weightedCoord } from '../data/engine.js';
 import { affiliatedCommunity } from '../modals/stakeholder-logic.js';
+import { STATE_ABBR, siteLabel } from '../data/catalogs.js';
 import {
   PLAN_SECTOR_MODELS, PLAN_GOAL_MODELS,
   resolveSectorModel, resolveGoalModel, goalName, modelFormula,
@@ -355,6 +356,36 @@ export function planDate(raw) {
     : new Date(raw);
   if (isNaN(d.getTime())) return '-';
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+/* ── REVIEW-DOCUMENT DERIVATIONS (Phase 19 refactor, replace-don't-duplicate:
+ * the sealed review header meta line + scenario labels were assembled inline
+ * in PlanReview; the Word export renders the SAME document, so both read
+ * these ONE derivations). ────────────────────────────────────────────────── */
+
+/* planMetaLine — the sealed review-header meta assembly: workspace name ·
+ * market/region · site label · state abbr · geography · "Updated {date}". */
+export function planMetaLine(plan, ws, site) {
+  const p = plan || {};
+  return [
+    ws ? ws.name : null,
+    p.market && p.region ? `${p.market} / ${p.region}` : (p.market || p.region || null),
+    site ? siteLabel(site) : null,
+    p.state ? (STATE_ABBR[p.state] || p.state) : null,
+    p.geography || null,
+    `Updated ${planDate(p.updatedAt || p.createdAt)}`,
+  ].filter(Boolean).join(' · ');
+}
+
+/* reviewScenario — the sealed review scenario labels over the three prose
+ * fields, empties dropped (section-level "Not written yet." when ALL drop). */
+export function reviewScenario(plan) {
+  const p = plan || {};
+  return [
+    ['What this plan solves & its impact', p.scenarioSolves],
+    ['Our phased approach', p.scenarioApproach],
+    ['The outcome we expect', p.scenarioOutcome],
+  ].filter(([, v]) => String(v || '').trim());
 }
 
 /* ── LANDING DEFS (sealed PlanHome: filterDefs · sortFields · searchKeys ·

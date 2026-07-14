@@ -151,3 +151,11 @@ export function canRemoveMember(currentUser, member) {
   if (currentUser.role === 'manager') return true;
   return member.userId === currentUser.id;
 }
+
+/* ── PHASE 19 — SCORING no-team empty state (sealed ~3899 "empty states per
+ * page", forward-design copy). Renders in place of the matrix when the
+ * scoring TEAM is empty (the no-team edge — e.g. a blank-started org); the
+ * action is the team bar's existing real add-teammate flow. */
+export const SCORING_NO_TEAM_LINE =
+  "No scoring team yet. Add teammates to score this workspace's stakeholders " +
+  'and place them on the map.';

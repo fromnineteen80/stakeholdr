@@ -25,6 +25,7 @@ const SUITES = [
   'palette-test.mjs',
   'scale-test.mjs',
   'import-test.mjs',
+  'demo-test.mjs',
 ];
 
 let failed = 0;

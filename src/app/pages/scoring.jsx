@@ -40,8 +40,10 @@ import {
 import {
   clampScore, stepScore, nextScoreRecord, orderedTeam, pctOfTeam, totalWeight,
   weightTint, weightReadout, axisDisplay, teammateCandidates,
-  purgeMemberScores, canRemoveMember,
+  purgeMemberScores, canRemoveMember, SCORING_NO_TEAM_LINE,
 } from './scoring-logic.js';
+// Phase 19: the shared zero-data empty state (sealed "empty states per page").
+import { EmptyState } from '../empty-state.jsx';
 import { displayName } from '../../../design-system/components/stakeholder-table.js';
 import { scoringNeededBody } from '../modals/stakeholder-logic.js';
 import { StakeholderModal, UAv } from '../modals/stakeholder-modal.jsx';
@@ -383,7 +385,18 @@ export function ScoringPage({
       </div>
 
       {/* ── THE MATRIX — sticky Stakeholder col · my editable sticky col ·
-             teammates read-only · Weighted (x, y) · Relationship ─────────── */}
+             teammates read-only · Weighted (x, y) · Relationship ───────────
+          PHASE 19 (sealed "empty states per page", the no-team edge): an
+          EMPTY scoring team renders the shared empty state in place of the
+          matrix; the action IS the team bar's real add-teammate flow. */}
+      {ordered.length === 0 ? (
+        <EmptyState
+          icon="thumb_up"
+          line={SCORING_NO_TEAM_LINE}
+          actionLabel="Add teammate"
+          onAction={() => setAddOpen(true)}
+        />
+      ) : (
       <div className="scoring-table-wrap">
         <table className="scoring-table">
           <thead>
@@ -504,6 +517,7 @@ export function ScoringPage({
           </tbody>
         </table>
       </div>
+      )}
 
       {/* ── ADD A TEAMMATE (sealed dialog: width 380, typeahead over users
              not on the team excluding system; added at weight 1.0) ───────── */}

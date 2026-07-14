@@ -684,7 +684,7 @@ export function AppShell() {
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Phase 18 — Import (wizard · XLSX/CSV template · round-trip)</span>
+        <span>Phase 19 — Demo polish (plan Word export · reset / blank start · empty states)</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
 
