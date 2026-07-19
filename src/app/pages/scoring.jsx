@@ -26,6 +26,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePersistentState, uid, nowStamp } from '../data/store.js';
+import { useCurrentUser } from '../data/session.js';
 import { weightedCoord, statusFor } from '../data/engine.js';
 import {
   SEED_STAKEHOLDERS, SEED_SCORES, SEED_TEAM, SEED_USERS, SEED_COMMUNITY,
@@ -64,7 +65,9 @@ export function ScoringPage({
   const [, setMessages] = usePersistentState('messages', SEED_MESSAGES);
 
   // currentUser = the seeded first user until the login phase (sealed order).
-  const currentUser = users[0] || null;
+  /* Phase 23: currentUser = the SESSION user resolved against the directory
+   * (the one seam, data/session.js) — the users[0] stand-in is retired. */
+  const currentUser = useCurrentUser(users);
   const currentMember = team.find((m) => m.userId === currentUser?.id) || null;
 
   const wrapRef = useRef(null);

@@ -123,8 +123,10 @@ export function LoginScreen({ users, appConfig, onLogin }) {
             <div className="login-avatar-row">
               {/* Live preview: photo (cover) when set, else the picked color
                   + initials — the sealed preview circle via the ONE avatar
-                  primitive. */}
-              <UAv user={{ name, avatarUrl: photo, avatarColor: color }} size="lg" />
+                  primitive ("· ·" feeds the component's initials derivation
+                  to render the sealed "··" placeholder before a name). */}
+              <UAv user={{ name: name.trim() ? name : '· ·', avatarUrl: photo, avatarColor: color }}
+                   size="lg" />
               <div className="login-avatar-actions">
                 <Upload onData={setPhoto}>
                   {photo ? LOGIN.replacePhoto : LOGIN.uploadPhoto}

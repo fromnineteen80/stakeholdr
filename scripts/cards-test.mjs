@@ -33,6 +33,12 @@ await new Promise((r) => srv.listen(4176, r));
 
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+// Phase 23 harness bootstrap (declared, mirrors smoke.mjs): the card probe
+// assumes a signed-in app — seed the session before any app script runs.
+await page.addInitScript(() => {
+  localStorage.setItem('hpsm:__schema', 'v10-rebuild');
+  localStorage.setItem('hpsm:session', JSON.stringify({ userId: 'u-alex' }));
+});
 await page.goto('http://127.0.0.1:4176/app.html', { waitUntil: 'networkidle' });
 await page.waitForTimeout(1500);
 await page.keyboard.press('Escape'); // skip the first-run tour

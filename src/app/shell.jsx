@@ -777,7 +777,7 @@ function AppSignedIn() {
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Phase 22 — Front-end polish (card zones on three named spacing steps · keyed detail rail · spacing gate)</span>
+        <span>Phase 23 — Login gate (session seam · demo-account sign-in · no auto-promote · logout live)</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
 

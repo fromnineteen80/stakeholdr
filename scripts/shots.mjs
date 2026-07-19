@@ -37,7 +37,35 @@ async function measureAxis(page, label) {
 }
 
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+
+// ── PHASE 23 — LOGIN GATE captures (BEFORE the signed-in journey; each on a
+// clean context so no session exists and the gate is what renders).
+{
+  const login = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await login.goto('http://127.0.0.1:4174/app.html', { waitUntil: 'networkidle' });
+  await login.waitForTimeout(1200);
+  await login.screenshot({ path: `${OUT}/p23-login.png` });
+  await login.close();
+  // blank-org variant: the blank marker set, no session → the gate lists the
+  // solo manager u-you (schema stamp rides along or init sweeps the marker).
+  const blank = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await blank.addInitScript(() => {
+    localStorage.setItem('hpsm:__schema', 'v10-rebuild');
+    localStorage.setItem('hpsm:__blank', '1');
+  });
+  await blank.goto('http://127.0.0.1:4174/app.html', { waitUntil: 'networkidle' });
+  await blank.waitForTimeout(1200);
+  await blank.screenshot({ path: `${OUT}/p23-login-blank.png` });
+  await blank.close();
+}
+
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+// PHASE 23 HARNESS BOOTSTRAP (declared, mirrors smoke.mjs): the signed-in
+// journey below assumes a session — seed it before any app script runs.
+await page.addInitScript(() => {
+  localStorage.setItem('hpsm:__schema', 'v10-rebuild');
+  localStorage.setItem('hpsm:session', JSON.stringify({ userId: 'u-alex' }));
+});
 
 await page.goto('http://127.0.0.1:4174/app.html', { waitUntil: 'networkidle' });
 await page.waitForTimeout(1500);
@@ -819,7 +847,11 @@ await page.screenshot({ path: `${OUT}/p19-reset-dialog.png` });
 // it wipes the store; the browser closes right after)
 await page.locator('.reset-blank-btn').click();
 await page.waitForTimeout(2000);
-// Phase 20: the wipe re-armed the first-run tour — skip it before capturing.
+// Phase 23: the blank sweep logged us out (the harness's re-seeded u-alex
+// session cannot resolve in a blank org) — sign back in as the solo manager
+// u-you through the gate, then skip the re-armed first-run tour.
+await page.locator('.login-demo-row', { hasText: 'You' }).click();
+await page.waitForTimeout(1200);
 await page.keyboard.press('Escape');
 await page.waitForTimeout(300);
 await page.screenshot({ path: `${OUT}/p19-empty-state-lists.png` });
@@ -830,6 +862,12 @@ await page.screenshot({ path: `${OUT}/p19-empty-state-plans.png` });
 // ── PHASE-20 MOBILE-COMPANION CAPTURES (fresh context = fresh seed, so the
 // blank wipe above never bleeds in; 390×844) ───────────────────────────────
 const mp = await browser.newPage({ viewport: { width: 390, height: 844 } });
+// Phase 23 harness bootstrap (fresh context — the mobile captures assume a
+// signed-in app).
+await mp.addInitScript(() => {
+  localStorage.setItem('hpsm:__schema', 'v10-rebuild');
+  localStorage.setItem('hpsm:session', JSON.stringify({ userId: 'u-alex' }));
+});
 await mp.goto('http://127.0.0.1:4174/app.html', { waitUntil: 'networkidle' });
 await mp.waitForTimeout(1500);
 // the compact stakeholder list (collapsed rail + name/org/zone rows)

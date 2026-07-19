@@ -73,6 +73,8 @@ await page.addInitScript((total) => {
   });
   localStorage.setItem('hpsm:__schema', 'v10-rebuild');
   localStorage.setItem('hpsm:stakeholders', JSON.stringify(rows));
+  // Phase 23: the probe assumes a signed-in app — seed the session too.
+  localStorage.setItem('hpsm:session', JSON.stringify({ userId: 'u-alex' }));
 }, N);
 
 await page.goto('http://127.0.0.1:4176/app.html', { waitUntil: 'networkidle' });

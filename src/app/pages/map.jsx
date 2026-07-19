@@ -30,6 +30,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePersistentState, nowStamp } from '../data/store.js';
+import { useCurrentUser } from '../data/session.js';
 import { weightedCoord, statusFor, STATUSES } from '../data/engine.js';
 import {
   SEED_STAKEHOLDERS, SEED_SCORES, SEED_TEAM, SEED_USERS, SEED_COMMUNITY,
@@ -217,7 +218,9 @@ export function MapPage({
   // OPEN-PROFILE route (sealed: dot double-click → the read-only profile).
   const [shModal, setShModal] = useState(null);
 
-  const currentUser = users[0] || null;
+  /* Phase 23: currentUser = the SESSION user resolved against the directory
+   * (the one seam, data/session.js) — the users[0] stand-in is retired. */
+  const currentUser = useCurrentUser(users);
 
   /* Sealed row mapping — identical to Lists (RAW weightedCoord → statusFor). */
   const rows = useMemo(() =>

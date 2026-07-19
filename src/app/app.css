@@ -2580,5 +2580,10 @@ ui-app-shell[data-mobile] .messaging-list-pane { border-right: none; flex: 1; mi
   margin-bottom: var(--ui-sys-space-2);
 }
 /* Rows sit flush with the card's content box (list items carry their own
- * inline pad — re-point it to zero here, the established token re-point). */
-.login-sample-list { --ui-sys-list-item-pad-inline: 0px; }
+ * inline pad — re-point it to zero here, the established token re-point).
+ * The list scrolls INSIDE the card past ~4.5 rows so the centered card
+ * stays inside the viewport (the demo org has 7 accounts; blank has 1). */
+.login-sample-list {
+  --ui-sys-list-item-pad-inline: 0px;
+  display: block; max-height: 216px; overflow-y: auto;
+}

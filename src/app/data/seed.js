@@ -569,10 +569,11 @@ export const SEED_PLANS = [
  * back to its SEED_* fixture. Declared resolution of the two survivals:
  *  · appConfig KEEPS its defaults — the catalogs/fiscal/identity are org
  *    CONFIG, not demo rows (the Settings panes stay functional).
- *  · users boots with ONE minimal solo MANAGER — the app derives
- *    currentUser = users[0] until the Login phase, and a manager is required
- *    to reach Settings (incl. the reset affordance itself); a blank org must
- *    never lock itself out. avatarColor is a token reference (token law).   */
+ *  · users boots with ONE minimal solo MANAGER — the login gate's demo list
+ *    offers the blank org's users (Phase 23), so u-you is the blank org's
+ *    sign-in identity, and a manager is required to reach Settings (incl.
+ *    the reset affordance itself); a blank org must never lock itself out.
+ *    avatarColor is a token reference (token law).                          */
 export const BLANK_SOLO_USER = {
   id: 'u-you',
   name: 'You',
