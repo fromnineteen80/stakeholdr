@@ -22,10 +22,13 @@
  * with no join entry yet, and set-unions for rows that have one (the join
  * map carries no stamps — sealed shape: { stakeholderId: [workspaceId] }).
  *
- * BULK DELETE IS DELIBERATELY ABSENT (deferred, declared): destructive
- * actions at thousands-of-rows scale need the soft-delete/archive semantics
- * specified in the Enterprise box — shipping a hard mass delete first would
- * be a trap. Pure + node-testable (scripts/scale-test.mjs).
+ * PHASE 24 closes the deferred gap ABOVE the trap (the SAFETY MODEL,
+ * declared): the live list gains bulk ARCHIVE (the Enterprise box's soft
+ * delete — recoverable, one stamped write, snackbar UNDO); bulk DELETE
+ * exists ONLY inside the Archived view, so mass destruction is always a
+ * TWO-STEP (archive first, then delete from the archive behind a confirm).
+ * A direct bulk hard-delete from the live list stays absent BY DESIGN.
+ * Pure + node-testable (scripts/scale-test.mjs, scripts/archive-test.mjs).
  */
 import { createJoinFor } from '../data/workspace.js';
 
@@ -99,6 +102,127 @@ export function bulkActionSummary(landed, total, what) {
   if (landed >= total) return `${what} for ${noun(landed)}`;
   return `${what} for ${noun(landed)} · ${total - landed} already had it`;
 }
+
+/* ── PHASE 24 — ARCHIVE BUILDERS (the Enterprise box's soft delete, poured
+ * through the SAME one-setState/honest-count contract as every bulk write
+ * above). bulkArchive/bulkRestore additionally return changedIds — the exact
+ * rows the write landed on — because the snackbar UNDO must restore exactly
+ * that set (never the selection: an already-archived row in the selection
+ * was a no-op and must not be "restored" by the undo).                     */
+
+/* bulkArchive(stakeholders, ids, stamp, byId) → { next, landed, changedIds }
+ * — sets archived:true + archivedAt/archivedBy (the envelope's deleted_at/
+ * deleted_by, camelCase per the record's audit fields) + updatedAt on every
+ * selected ACTIVE row; already-archived rows keep their reference.         */
+export function bulkArchive(stakeholders, ids, stamp, byId) {
+  const sel = new Set(asArr(ids));
+  if (!sel.size) return { next: stakeholders, landed: 0, changedIds: [] };
+  const changedIds = [];
+  const next = asArr(stakeholders).map((s) => {
+    if (!sel.has(s.id) || s.archived) return s;
+    changedIds.push(s.id);
+    return {
+      ...s,
+      archived: true,
+      archivedAt: stamp,
+      archivedBy: byId ?? null,
+      updatedAt: stamp,
+    };
+  });
+  return changedIds.length
+    ? { next, landed: changedIds.length, changedIds }
+    : { next: stakeholders, landed: 0, changedIds };
+}
+
+/* bulkRestore(stakeholders, ids, stamp) → { next, landed, changedIds } —
+ * clears the archive flag + stamps on every selected ARCHIVED row (restore =
+ * write the flag off, never a record resurrection: nothing else changed when
+ * it was archived). Active rows in the selection keep their reference.     */
+export function bulkRestore(stakeholders, ids, stamp) {
+  const sel = new Set(asArr(ids));
+  if (!sel.size) return { next: stakeholders, landed: 0, changedIds: [] };
+  const changedIds = [];
+  const next = asArr(stakeholders).map((s) => {
+    if (!sel.has(s.id) || !s.archived) return s;
+    changedIds.push(s.id);
+    return {
+      ...s,
+      archived: false,
+      archivedAt: null,
+      archivedBy: null,
+      updatedAt: stamp,
+    };
+  });
+  return changedIds.length
+    ? { next, landed: changedIds.length, changedIds }
+    : { next: stakeholders, landed: 0, changedIds };
+}
+
+/* cascadeDeleteStakeholders(stakeholders, scores, joins, ids) — the SEALED
+ * stakeholder hard-delete cascade (App-shell box: remove the record, purge
+ * scores[id], purge stakeholderWorkspaces[id]; the wider owners-reference
+ * scrub belongs to removeUser, not this cascade), generalized over a set so
+ * the modal's single delete and the Archived view's bulk delete run the ONE
+ * code path (replace-don't-duplicate). Each store returns its input
+ * reference when nothing in it changed.                                    */
+export function cascadeDeleteStakeholders(stakeholders, scores, joins, ids) {
+  const sel = new Set(asArr(ids));
+  if (!sel.size) {
+    return { stakeholders, scores, joins, landed: 0 };
+  }
+  const nextSh = asArr(stakeholders).filter((s) => !sel.has(s.id));
+  const landed = asArr(stakeholders).length - nextSh.length;
+  let nextScores = scores;
+  if (Object.keys(scores || {}).some((id) => sel.has(id))) {
+    nextScores = {};
+    for (const [id, v] of Object.entries(scores || {})) {
+      if (!sel.has(id)) nextScores[id] = v;
+    }
+  }
+  let nextJoins = joins;
+  if (Object.keys(joins || {}).some((id) => sel.has(id))) {
+    nextJoins = {};
+    for (const [id, v] of Object.entries(joins || {})) {
+      if (!sel.has(id)) nextJoins[id] = v;
+    }
+  }
+  return {
+    stakeholders: landed ? nextSh : stakeholders,
+    scores: nextScores,
+    joins: nextJoins,
+    landed,
+  };
+}
+
+/* Archive-family snackbar copy — the Phase-17 honest-count pattern (landed,
+ * never the selection size; already-satisfied rows named, never absorbed). */
+const shNoun = (n) => `${n} stakeholder${n === 1 ? '' : 's'}`;
+
+export function archiveSummary(landed, total) {
+  if (!landed) return `No change — ${shNoun(total)} already archived`;
+  if (landed >= total) return `Archived ${shNoun(landed)}`;
+  return `Archived ${shNoun(landed)} · ${total - landed} already archived`;
+}
+
+export function restoreSummary(landed, total) {
+  if (!landed) return `No change — ${shNoun(total)} already active`;
+  if (landed >= total) return `Restored ${shNoun(landed)}`;
+  return `Restored ${shNoun(landed)} · ${total - landed} already active`;
+}
+
+export function deleteForeverSummary(landed) {
+  return `Deleted ${shNoun(landed)} forever`;
+}
+
+/* The Lists entry-point label ("Archived (N)") + the archived-view copy.    */
+export function archivedToggleLabel(n) {
+  return `Archived (${n})`;
+}
+export const ARCHIVED_VIEW_TITLE = 'Archived stakeholders';
+export const ARCHIVED_VIEW_LINE =
+  'Hidden from Lists, Map, Scoring, workHQ, search, and plans. Restore to bring them back.';
+export const ARCHIVED_EMPTY_LINE =
+  'No archived stakeholders. Archived records land here, off every live surface.';
 
 /* ── PHASE 19 — LISTS zero-data empty state (sealed ~3899 "empty states per
  * page", forward-design; nothing sealed prescribes this copy). Renders in

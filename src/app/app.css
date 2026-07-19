@@ -2296,6 +2296,47 @@ ui-sidebar.record-nav[collapsed] .record-nav-title { display: none; }
 .intel-split[data-mode="intel"] > .bulk-bar { display: none; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+ * PHASE 24 — ARCHIVE (token-only containers; components carry all structure).
+ * The entry strip: a quiet right-aligned row between the workHQ divider and
+ * the table (hidden with the table in intel mode). The archived view: head
+ * (back + title + honest scope line) over the readonly grid.
+ * ═════════════════════════════════════════════════════════════════════════ */
+.archived-strip {
+  flex: none;
+  display: flex;
+  justify-content: flex-end;
+}
+.intel-split[data-mode="intel"] > .archived-strip { display: none; }
+.archived-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-sys-space-3);
+  height: 100%;
+  min-height: 0;
+}
+.archived-wrap > .sheet-table { flex: 1 1 auto; min-height: 0; }
+.archived-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--ui-sys-space-3);
+}
+.archived-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.archived-title { font: var(--ui-sys-font-title); color: var(--ui-sys-on-surface); }
+.archived-line { font: var(--ui-sys-font-caption); color: var(--ui-sys-on-surface-muted); }
+.forever-copy {
+  margin: 0;
+  max-width: 44ch;
+  font: var(--ui-sys-font-body);
+  color: var(--ui-sys-on-surface-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
  * PHASE 18 — IMPORT WIZARD (sealed demo-features BUILD-MAP: one ui-dialog,
  * 4 steps, ui-progress header, ui-dropzone, ui-data-table column map +
  * validation preview, ui-switch skip-invalid). Token-only layout; the wide

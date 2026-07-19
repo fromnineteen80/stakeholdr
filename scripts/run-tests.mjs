@@ -29,6 +29,7 @@ const SUITES = [
   'tour-test.mjs',
   'mobile-test.mjs',
   'login-test.mjs',
+  'archive-test.mjs',
 ];
 
 let failed = 0;

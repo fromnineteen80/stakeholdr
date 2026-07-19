@@ -7,7 +7,11 @@
    Re-subset again 2026-07-14 (Phase 19), same pipeline + GSUB diff (all 123
    prior names covered, nothing dropped) + print + restart_alt (the plan
    review's Print/Save-as-PDF control and the Settings reset-demo-data row;
-   local_printshop rides along as print's alias). Extend the subset again
+   local_printshop rides along as print's alias).
+   Re-subset again 2026-07-19 (Phase 24), same icon_names pipeline + GSUB
+   ligature diff (all 126 prior names covered, nothing dropped; 129 total)
+   + archive + unarchive + delete_forever (the Lists bulk Archive action,
+   the Archived-view Restore, and Delete forever). Extend the subset again
    BEFORE using any new ligature - an out-of-subset name renders as raw
    text. */
 @font-face {

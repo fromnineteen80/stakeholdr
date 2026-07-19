@@ -16,11 +16,43 @@ export { MASTER_WORKSPACE_ID };
 
 export const isMasterWorkspace = (wsId) => wsId === MASTER_WORKSPACE_ID;
 
+/* ── PHASE 24 — ARCHIVE (SOFT DELETE) ────────────────────────────────────
+ * The sealed Enterprise state model box: "SOFT DELETE [STD] — deleted_at +
+ * deleted_by instead of hard delete … lists filter out soft-deleted rows",
+ * and Enterprise architecture pillar 8 ("soft-delete + an Archive state …
+ * revisit, export, restore"). DECLARED demo mapping: the flag lives on the
+ * record as archived / archivedAt / archivedBy (camelCase like createdAt;
+ * these ARE the envelope's deleted_at/deleted_by at the State-B schema).
+ * activeStakeholders is the ONE archive filter every default surface rides
+ * (Lists rows via visibleStakeholders, Map dots, Scoring matrix, plan
+ * rosters, the record embeds, palette results, the shell counts). Archived
+ * records SURVIVE in the store — archiving cascades NOTHING (scores, joins
+ * and plan memberships keep the id; surfaces just hide it — declared), so
+ * Restore is a pure flag clear.                                            */
+export const isArchived = (s) => !!(s && s.archived);
+
+export function activeStakeholders(stakeholders) {
+  return (stakeholders || []).filter((s) => !isArchived(s));
+}
+
 /* Sealed visibleStakeholders (App-shell box): master → all stakeholders;
- * else stakeholders whose stakeholderWorkspaces[s.id] includes the ws id.  */
+ * else stakeholders whose stakeholderWorkspaces[s.id] includes the ws id.
+ * PHASE 24: archived rows leave EVERY default surface — the workspace-
+ * visible set is active-only (the archived set has its own accessor).      */
 export function visibleStakeholders(stakeholders, stakeholderWorkspaces, wsId) {
-  if (isMasterWorkspace(wsId)) return stakeholders;
-  return (stakeholders || []).filter((s) =>
+  const active = activeStakeholders(stakeholders);
+  if (isMasterWorkspace(wsId)) return active;
+  return active.filter((s) =>
+    ((stakeholderWorkspaces || {})[s.id] || []).includes(wsId));
+}
+
+/* The workspace-scoped ARCHIVED set (Phase 24) — the same scoping rule as
+ * visibleStakeholders, over archived rows only. Feeds the Lists "Archived
+ * (N)" view; no other surface reads it.                                    */
+export function archivedStakeholders(stakeholders, stakeholderWorkspaces, wsId) {
+  const archived = (stakeholders || []).filter(isArchived);
+  if (isMasterWorkspace(wsId)) return archived;
+  return archived.filter((s) =>
     ((stakeholderWorkspaces || {})[s.id] || []).includes(wsId));
 }
 
@@ -43,10 +75,19 @@ export function createJoinFor(activeWorkspaceId, forceWorkspaceId) {
 }
 
 /* Per-workspace stakeholder count (sealed OpenWorkspaceModal row meta +
- * tab-strip counts): stakeholders whose join includes w.id.                */
-export function countForWorkspace(stakeholderWorkspaces, wsId) {
-  return Object.values(stakeholderWorkspaces || {})
-    .filter((list) => (list || []).includes(wsId)).length;
+ * tab-strip counts): stakeholders whose join includes w.id.
+ * PHASE 24 (declared): counts stay honest against the archive — when the
+ * caller passes the stakeholder collection, archived ids are excluded, so a
+ * count never promises rows the surfaces hide ("what you see is what you
+ * act on"). Legacy callers without the third argument keep the raw join
+ * count.                                                                   */
+export function countForWorkspace(stakeholderWorkspaces, wsId, stakeholders) {
+  const archived = stakeholders
+    ? new Set((stakeholders || []).filter(isArchived).map((s) => s.id))
+    : null;
+  return Object.entries(stakeholderWorkspaces || {})
+    .filter(([sid, list]) =>
+      (list || []).includes(wsId) && !(archived && archived.has(sid))).length;
 }
 
 /* Sealed count copy: "{count} stakeholder(s)" — singular/plural on count===1 */

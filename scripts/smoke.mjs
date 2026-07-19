@@ -1620,5 +1620,151 @@ for (const path of pages) {
   await page.close();
 }
 
+// ── PHASE 24 — ARCHIVE drive (fresh context, seeded u-alex session + the
+// tour flag so the coachmark never intercepts). The declared safety model
+// end-to-end: archive 2 from the bulk bar → gone from Lists/Master count →
+// UNDO via the snackbar action (within its 5s window) → restored → archive
+// again → gone from Map dots + palette results → the Archived (2) view
+// (readonly grid) → select all → bulk Delete forever behind the confirm →
+// the SEALED cascade ran (records gone, scores purged, joins purged).
+{
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const errs = [];
+  page.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+  page.on('pageerror', e => errs.push('PAGEERROR: ' + e.message));
+  await page.addInitScript(() => {
+    localStorage.setItem('hpsm:__schema', 'v10-rebuild');
+    localStorage.setItem('hpsm:session', JSON.stringify({ userId: 'u-alex' }));
+    localStorage.setItem('hpsm:__tourSeen', '1');
+  });
+  await page.goto('http://127.0.0.1:4173/app.html', { waitUntil: 'networkidle', timeout: 30000 }).catch(e => errs.push('P24NAV: ' + e.message));
+  await page.waitForTimeout(1500);
+  const p24Store = () => page.evaluate(() => JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]'));
+  const p24Total = (await p24Store()).length;
+  const p24Cbs = page.locator('ui-stakeholder-table .sheet-row .sheet-cell.sel ui-checkbox');
+  // 1 · archive 2 from the live bar
+  await p24Cbs.nth(0).click({ timeout: 3000 }).catch(e => errs.push('P24PICK0: ' + e.message));
+  await page.waitForTimeout(200);
+  await p24Cbs.nth(1).click({ timeout: 3000 }).catch(e => errs.push('P24PICK1: ' + e.message));
+  await page.waitForTimeout(300);
+  const p24Ids = await page.evaluate(() => document.querySelector('ui-stakeholder-table').selection);
+  if (p24Ids.length !== 2) errs.push(`P24SEL: expected 2 selected ids, saw ${p24Ids.length}`);
+  await page.locator('.bulk-bar .bulk-archive-btn').click({ timeout: 3000 }).catch(e => errs.push('P24GO: ' + e.message));
+  await page.waitForTimeout(400);
+  const p24Snack = (await page.locator('.sheet-wrap ui-snackbar').getAttribute('message').catch(() => '') || '').trim();
+  if (p24Snack !== 'Archived 2 stakeholders') errs.push(`P24SNACK: expected "Archived 2 stakeholders", saw "${p24Snack}"`);
+  if (await page.locator('.sheet-wrap ui-snackbar .snack-undo').count() !== 1) errs.push('P24UNDOBTN: the snackbar UNDO action is missing');
+  // gone from Lists; the flag + stamps landed through the one seam
+  const p24RowsAfter = await page.locator('ui-stakeholder-table .sheet-row').count();
+  if (p24RowsAfter !== p24Total - 2) errs.push(`P24LISTS: expected ${p24Total - 2} live rows, saw ${p24RowsAfter}`);
+  const p24Flags = (await p24Store()).filter(s => s.archived);
+  if (p24Flags.length !== 2) errs.push(`P24FLAG: expected 2 archived records in the store, saw ${p24Flags.length}`);
+  for (const s of p24Flags) {
+    if (!s.archivedAt || s.archivedBy !== 'u-alex') errs.push(`P24STAMP: ${s.id} missing archivedAt/archivedBy stamps`);
+  }
+  if (await page.locator('.bulk-bar').count() !== 0) errs.push('P24PRUNE: archiving the selection must retire the bar (prune contract)');
+  const p24Strip = (await page.locator('.archived-strip .archived-toggle').textContent().catch(() => '') || '').trim();
+  if (!p24Strip.endsWith('Archived (2)')) errs.push(`P24STRIP: expected the "Archived (2)" entry point, saw "${p24Strip}"`);
+  const p24Master = (await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Master' }).textContent().catch(() => '') || '');
+  if (!p24Master.includes(`· ${p24Total - 2}`)) errs.push(`P24COUNT: the Master rail count must drop to ${p24Total - 2}, saw "${p24Master.trim()}"`);
+  // 2 · UNDO via the snackbar action → the exact set restores
+  await page.locator('.sheet-wrap ui-snackbar .snack-undo').click({ timeout: 3000 }).catch(e => errs.push('P24UNDO: ' + e.message));
+  await page.waitForTimeout(400);
+  const p24Snack2 = (await page.locator('.sheet-wrap ui-snackbar').getAttribute('message').catch(() => '') || '').trim();
+  if (p24Snack2 !== 'Restored 2 stakeholders') errs.push(`P24UNDOSNACK: expected "Restored 2 stakeholders", saw "${p24Snack2}"`);
+  const p24Restored = await p24Store();
+  if (p24Restored.filter(s => s.archived).length !== 0) errs.push('P24RESTORE: undo must clear every archive flag');
+  const p24Back = p24Restored.filter(s => p24Ids.includes(s.id));
+  for (const s of p24Back) {
+    if (s.archivedAt !== null || s.archivedBy !== null) errs.push(`P24CLEAN: ${s.id} must clear archivedAt/archivedBy on restore`);
+  }
+  if (await page.locator('ui-stakeholder-table .sheet-row').count() !== p24Total) errs.push('P24RESTORE: the restored rows did not return to Lists');
+  if (await page.locator('.archived-strip').count() !== 0) errs.push('P24STRIP0: the entry point must hide at zero archived (make-real law)');
+  // 3 · archive again → gone from the Map dots and the palette.
+  // CONTROL first (so the zero-hit below can never false-pass on a name the
+  // palette wouldn't match anyway): while ACTIVE, the row's name surfaces.
+  const p24CtlName = await page.evaluate((ids) => {
+    const s = JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]').find(x => x.id === ids[0]);
+    return s ? (s.name || '') : '';
+  }, p24Ids);
+  await page.keyboard.press('ControlOrMeta+k');
+  await page.waitForTimeout(500);
+  await page.keyboard.type(p24CtlName);
+  await page.waitForTimeout(500);
+  if (await page.locator('.cmdk-row', { hasText: p24CtlName }).count() < 1) {
+    errs.push(`P24PALCTL: the ACTIVE "${p24CtlName}" must surface in palette results (control)`);
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  await p24Cbs.nth(0).click({ timeout: 3000 }).catch(e => errs.push('P24RE0: ' + e.message));
+  await page.waitForTimeout(200);
+  await p24Cbs.nth(1).click({ timeout: 3000 }).catch(e => errs.push('P24RE1: ' + e.message));
+  await page.waitForTimeout(300);
+  await page.locator('.bulk-bar .bulk-archive-btn').click({ timeout: 3000 }).catch(e => errs.push('P24REGO: ' + e.message));
+  await page.waitForTimeout(400);
+  const p24ArchName = await page.evaluate(() => {
+    const s = JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]').find(x => x.archived);
+    return s ? (s.name || '') : '';
+  });
+  await page.locator('ui-sidebar > ui-sidebar-item', { hasText: 'Map' }).click({ timeout: 3000 }).catch(e => errs.push('P24MAPNAV: ' + e.message));
+  await page.waitForTimeout(600);
+  const p24Dots = await page.locator('ui-stakeholder-map .dot').count();
+  if (p24Dots !== p24Total - 2) errs.push(`P24MAP: expected ${p24Total - 2} map dots (archived excluded), saw ${p24Dots}`);
+  await page.keyboard.press('ControlOrMeta+k');
+  await page.waitForTimeout(500);
+  if (await page.locator('ui-dialog.cmdk-dialog[open]').count() !== 1) errs.push('P24PALOPEN: the ⌘K palette did not open');
+  await page.keyboard.type(p24ArchName);
+  await page.waitForTimeout(500);
+  const p24PalHit = await page.locator('.cmdk-row', { hasText: p24ArchName }).count();
+  if (p24PalHit !== 0) errs.push(`P24PALETTE: the archived "${p24ArchName}" must not surface in palette results`);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  // 4 · the Archived view: readonly grid, restore/delete bar, bulk delete
+  await page.locator('#nav-sheet').click({ timeout: 3000 }).catch(e => errs.push('P24BACKNAV: ' + e.message));
+  await page.waitForTimeout(500);
+  await page.locator('.archived-strip .archived-toggle').click({ timeout: 3000 }).catch(e => errs.push('P24OPEN: ' + e.message));
+  await page.waitForTimeout(600);
+  if (await page.locator('.archived-title').count() !== 1) errs.push('P24VIEW: the Archived view head did not render');
+  const p24ArchRows = await page.locator('.archived-table .sheet-row').count();
+  if (p24ArchRows !== 2) errs.push(`P24VIEWROWS: expected the 2 archived rows, saw ${p24ArchRows}`);
+  if (await page.locator('.archived-table[readonly]').count() !== 1) errs.push('P24RO: the archived table must carry the readonly mode');
+  // readonly proof: poking a dropdown display cell mounts NO editor
+  await page.locator('.archived-table .sheet-row .cell-dd-trigger').first().click({ force: true, timeout: 3000 }).catch(() => {});
+  await page.waitForTimeout(300);
+  if (await page.locator('.archived-table .cell-editor').count() !== 0) errs.push('P24ROEDIT: a cell editor mounted in the readonly archived view');
+  // select all archived → Delete forever behind the confirm
+  await page.locator('.archived-table .sheet-head ui-checkbox').click({ timeout: 3000 }).catch(e => errs.push('P24ALL: ' + e.message));
+  await page.waitForTimeout(300);
+  const p24ArchBar = (await page.locator('.archived-wrap .bulk-bar .bulk-count').textContent().catch(() => '') || '').trim();
+  if (p24ArchBar !== '2 selected') errs.push(`P24ARCHBAR: expected "2 selected" in the archived bar, saw "${p24ArchBar}"`);
+  await page.locator('.archived-wrap .bulk-bar ui-button', { hasText: 'Delete forever' }).click({ timeout: 3000 }).catch(e => errs.push('P24DELBTN: ' + e.message));
+  await page.waitForTimeout(400);
+  if (await page.locator('ui-dialog.forever-confirm[open]').count() !== 1) errs.push('P24CONFIRM: the delete-forever confirm did not open');
+  await page.locator('.forever-confirm .forever-go').click({ timeout: 3000 }).catch(e => errs.push('P24DELGO: ' + e.message));
+  await page.waitForTimeout(500);
+  const p24After = await page.evaluate(() => ({
+    shs: JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]'),
+    scores: Object.keys(JSON.parse(localStorage.getItem('hpsm:scores') || '{}')),
+    joins: Object.keys(JSON.parse(localStorage.getItem('hpsm:stakeholderWorkspaces') || '{}')),
+  }));
+  if (p24After.shs.length !== p24Total - 2) errs.push(`P24CASCADE: expected ${p24Total - 2} records after delete-forever, saw ${p24After.shs.length}`);
+  for (const id of p24Ids) {
+    if (p24After.shs.some(s => s.id === id)) errs.push(`P24CASCADE: ${id} survived delete-forever`);
+    if (p24After.scores.includes(id)) errs.push(`P24CASCADE: scores[${id}] was not purged (sealed cascade)`);
+    if (p24After.joins.includes(id)) errs.push(`P24CASCADE: stakeholderWorkspaces[${id}] was not purged (sealed cascade)`);
+  }
+  const p24Snack3 = (await page.locator('.sheet-wrap ui-snackbar').getAttribute('message').catch(() => '') || '').trim();
+  if (p24Snack3 !== 'Deleted 2 stakeholders forever') errs.push(`P24DELSNACK: expected "Deleted 2 stakeholders forever", saw "${p24Snack3}"`);
+  if (await page.locator('.archived-wrap .empty-state').count() !== 1) errs.push('P24EMPTY: the emptied archive must show its empty state');
+  await page.locator('.archived-wrap .empty-state ui-button', { hasText: 'Back to Lists' }).click({ timeout: 3000 }).catch(e => errs.push('P24BACK: ' + e.message));
+  await page.waitForTimeout(500);
+  const p24Final = await page.locator('ui-stakeholder-table .sheet-row').count();
+  if (p24Final !== p24Total - 2) errs.push(`P24FINAL: expected the live table back with ${p24Total - 2} rows, saw ${p24Final}`);
+  const real = errs.filter(e => !/fonts\.g(oogleapis|static)\.com|net::ERR_|Failed to load resource/.test(e));
+  totalErrors += real.length;
+  console.log(`/app.html [P24 archive]: ${real.length} real console/page errors` + (real.length ? '\n  - ' + real.slice(0, 8).join('\n  - ') : ''));
+  await page.close();
+}
+
 await browser.close(); srv.close();
 console.log(totalErrors === 0 ? 'SMOKE: ALL PAGES CLEAN' : `SMOKE: ${totalErrors} REAL ERRORS`);

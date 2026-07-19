@@ -61,8 +61,40 @@
  *  · HONEST COUNTS (audit F5): the builders return { next, landed }; the
  *    snackbar reports the landed count (already-satisfied rows are named,
  *    never absorbed) and Export selected guards the zero-row case.
- *  · NO BULK DELETE here (deferred, declared): destructive-at-scale waits on
- *    the Enterprise box's soft-delete/archive semantics.
+ *  · NO BULK DELETE on the LIVE list (BY DESIGN — the Phase-24 safety model
+ *    below): destructive-at-scale always runs through the archive.
+ *
+ * PHASE 24 — ARCHIVE / SOFT DELETE (the Enterprise state model box's "SOFT
+ * DELETE [STD] — deleted_at + deleted_by instead of hard delete … lists
+ * filter out soft-deleted rows" + architecture pillar 8's Archive state,
+ * closing the sealed demo-features line "soft-delete/archive (per the
+ * Enterprise model box)"; thin surfaces DECLARED to industry standard):
+ *  · the record carries archived / archivedAt / archivedBy through the ONE
+ *    store seam (the envelope's deleted_at/deleted_by, camelCase like the
+ *    sealed audit fields). Archiving CASCADES NOTHING — scores, joins and
+ *    plan memberships keep the id; every default surface hides it (the
+ *    activeStakeholders seam in data/workspace.js).
+ *  · the bulk bar gains ARCHIVE (any signed-in user, one stamped write,
+ *    honest landed-count snackbar with UNDO — restore exactly the landed
+ *    set via the ui-snackbar action slot).
+ *  · ENTRY POINT (declared placement): a quiet right-aligned "Archived (N)"
+ *    strip between the workHQ divider and the table — visible only when the
+ *    workspace scope holds archived rows (make-real law: no dead control at
+ *    zero). It opens the ARCHIVED VIEW: the SAME ui-stakeholder-table in
+ *    its Phase-24 `readonly` mode (selection live, writes impossible) with
+ *    its own bulk bar: Restore · Delete forever… · Export selected.
+ *  · SAFETY MODEL (declared): bulk hard-delete exists ONLY here — archive
+ *    first, then delete from the archive behind a typed-out confirm dialog;
+ *    the live list never mass-destroys. Delete forever reuses the SEALED
+ *    single-record cascade (remove record, purge scores[id], purge
+ *    stakeholderWorkspaces[id]) generalized in cascadeDeleteStakeholders —
+ *    the modal's danger delete runs the same one code path. Gating parity
+ *    (declared): the sealed modal delete is open to any signed-in user
+ *    behind its confirm; delete-forever keeps that same audience.
+ *  · Archived records stay REACHABLE by direct reference (deep links,
+ *    mentions, the record page, this view's read profile) — a link must
+ *    never dead-end on a recoverable record (declared).
+ *  · Desktop surface (like bulk actions); mobile keeps the companion scope.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -88,6 +120,10 @@ import { displayName, normalizeUrl, PRIORITY_OPTIONS } from '../../../design-sys
 import {
   bulkPatchStakeholders, bulkAddTag, bulkAssignWorkspace, bulkActionSummary,
   LISTS_EMPTY_LINE,
+  // Phase 24: the archive layer's pure builders + copy (see their headers).
+  bulkArchive, bulkRestore, cascadeDeleteStakeholders,
+  archiveSummary, restoreSummary, deleteForeverSummary, archivedToggleLabel,
+  ARCHIVED_VIEW_TITLE, ARCHIVED_VIEW_LINE, ARCHIVED_EMPTY_LINE,
 } from './sheet-logic.js';
 // Phase 19: the shared zero-data empty state (sealed "empty states per page").
 import { EmptyState } from '../empty-state.jsx';
@@ -100,7 +136,7 @@ import { StakeholderModal, useUiEvent } from '../modals/stakeholder-modal.jsx';
 import { quickViewFields } from '../mobile-logic.js';
 import {
   MASTER_WORKSPACE_ID, isMasterWorkspace, visibleStakeholders, createJoinFor,
-  workspaceLabel as workspaceLabelOf,
+  archivedStakeholders, workspaceLabel as workspaceLabelOf,
 } from '../data/workspace.js';
 import { WorkHQBand } from './workhq.jsx';
 import { withIgnores, withoutIgnore } from './workhq-logic.js';
@@ -211,6 +247,16 @@ export function SheetPage({
   // Phase 17: the bulk selection (mirrors the table's bulk-selection-change
   // stream); drives the host-owned action bar.
   const [bulkIds, setBulkIds] = useState([]);
+  /* Phase 24: the ARCHIVED VIEW state — the view flag, its own selection
+   * stream (a separate table element), the armed UNDO set (the exact ids the
+   * last archive landed on — the snackbar action restores exactly those),
+   * and the delete-forever confirm. */
+  const [archivedView, setArchivedView] = useState(false);
+  const [archBulkIds, setArchBulkIds] = useState([]);
+  const [undoIds, setUndoIds] = useState(null);
+  const [confirmForever, setConfirmForever] = useState(false);
+  const archRef = useRef(null);
+  const foreverRef = useRef(null);
   const [notesFor, setNotesFor] = useState(null);
   const [noteDraft, setNoteDraft] = useState('');
   // Phase 18: the import wizard (opened by the table's footer import-open).
@@ -256,6 +302,42 @@ export function SheetPage({
       }),
   [stakeholders, stakeholderWorkspaces, activeWorkspaceId, scores, team, community]);
 
+  /* Phase 24: the workspace-scoped ARCHIVED rows — the same sealed row
+   * mapping over the archived set (zone pills etc. render identically in
+   * the read-only view). The count drives the "Archived (N)" entry point. */
+  const archivedRows = useMemo(() =>
+    archivedStakeholders(stakeholders, stakeholderWorkspaces, activeWorkspaceId)
+      .map((s) => {
+        const pos = weightedCoord(s.id, scores, team);
+        const perRater = scores[s.id] || {};
+        return {
+          ...s,
+          _x: pos.x,
+          _y: pos.y,
+          _status: statusFor(pos.x, pos.y),
+          _unscored: team.length > 0 && !team.some((m) => perRater[m.id]),
+          community: affiliatedCommunity(s.id, community).map((a) => a.name),
+        };
+      }),
+  [stakeholders, stakeholderWorkspaces, activeWorkspaceId, scores, team, community]);
+
+  /* Phase 24: the ONE snackbar entry — every show routes here so an armed
+   * Undo can never dangle on an unrelated message; the snackbar's own close
+   * (timeout/dismiss) disarms it too (effect below). */
+  const showSnack = (msg, ids = null) => {
+    setUndoIds(ids && ids.length ? ids : null);
+    snackRef.current?.show(msg);
+  };
+  const showSnackRef = useRef(showSnack);
+  showSnackRef.current = showSnack;
+  useEffect(() => {
+    const sb = snackRef.current;
+    if (!sb) return;
+    const onClose = () => setUndoIds(null);
+    sb.addEventListener('close', onClose);
+    return () => sb.removeEventListener('close', onClose);
+  }, []);
+
   // Manifest: data/catalogs/users are JS properties — feed through the ref.
   useEffect(() => {
     const el = tableRef.current;
@@ -271,8 +353,11 @@ export function SheetPage({
       ? ''
       : (workspaces.find((w) => w.id === activeWorkspaceId)?.name || '');
     el.data = rows;
+    /* archivedView in the deps (Phase 24): leaving the Archived view REMOUNTS
+     * this table with otherwise-unchanged deps — without the flag the feed
+     * would not re-run and the fresh element would show its gallery sample. */
   }, [rows, users, workspaces, activeWorkspaceId,
-    companyCategories, companyMarkets, companySites]);
+    companyCategories, companyMarkets, companySites, archivedView]);
 
   /* THE ONE PERSISTENCE SEAM — every table edit flows out as row-change
    * {id, patch} and lands here: updateStakeholder + updatedAt stamp.         */
@@ -310,7 +395,7 @@ export function SheetPage({
       const entry = (communityRef.current || []).find((c) => c.name === e.detail.name);
       const route = openCommunityRef.current;
       if (entry && route) route(entry.id);
-      else snackRef.current?.show(`"${e.detail.name}" — no matching community entry`);
+      else showSnackRef.current(`"${e.detail.name}" — no matching community entry`);
     };
     // CENSUS I6 ROUTE (make-real): an owners-popover row opens that user's
     // profile through the shell's ONE user seam (existence-guarded there).
@@ -341,8 +426,62 @@ export function SheetPage({
     };
     /* Phase 19: rows.length === 0 in the deps — the table conditionally
      * yields to the empty state, so the bindings must re-attach when it
-     * remounts (el is null while empty; the guard above returns). */
-  }, [setStakeholders, rows.length === 0]);
+     * remounts (el is null while empty; the guard above returns).
+     * Phase 24: archivedView too — the Archived view swaps the table out. */
+  }, [setStakeholders, rows.length === 0, archivedView]);
+
+  /* ── PHASE 24: the ARCHIVED table's feed + bindings (its own element —
+   * separate selection stream; open-record maps to the READ profile, the
+   * A20/I4 deep-link ruling: never straight into edit from the archive).
+   * Notes/community/user routes are the same live seams as the main table. */
+  useEffect(() => {
+    const el = archRef.current;
+    if (!el) return;
+    el.catalogs = {
+      CATEGORIES: companyCategories, MARKETS: companyMarkets,
+      GEOGRAPHIES, US_STATES, SITES: companySites, siteLabel,
+    };
+    el.users = users;
+    // Declared filename: "<workspace> archived" → the sealed rule slugs it
+    // ("Hawk_archived.csv"; Master → "stakeholders_archived.csv").
+    const base = isMasterWorkspace(activeWorkspaceId)
+      ? 'stakeholders'
+      : (workspaces.find((w) => w.id === activeWorkspaceId)?.name || 'stakeholders');
+    el.workspaceLabel = `${base} archived`;
+    el.data = archivedRows;
+  }, [archivedView, archivedRows, users, workspaces, activeWorkspaceId,
+    companyCategories, companyMarkets, companySites]);
+
+  useEffect(() => {
+    const el = archRef.current;
+    if (!el) return;
+    const onBulk = (e) => setArchBulkIds(e.detail.ids);
+    const onOpenRecord = (e) => setShModal({ mode: 'edit', id: e.detail.id, view: true });
+    const onNotesOpen = (e) => {
+      setNoteDraft('');
+      if (composerRef.current) composerRef.current.value = '';
+      setNotesFor(e.detail.id);
+    };
+    const onCommunityOpen = (e) => {
+      const entry = (communityRef.current || []).find((c) => c.name === e.detail.name);
+      const route = openCommunityRef.current;
+      if (entry && route) route(entry.id);
+      else showSnackRef.current(`"${e.detail.name}" — no matching community entry`);
+    };
+    const onUserOpen = (e) => openUserRef.current?.(e.detail.userId);
+    el.addEventListener('bulk-selection-change', onBulk);
+    el.addEventListener('open-record', onOpenRecord);
+    el.addEventListener('notes-open', onNotesOpen);
+    el.addEventListener('community-open', onCommunityOpen);
+    el.addEventListener('user-open', onUserOpen);
+    return () => {
+      el.removeEventListener('bulk-selection-change', onBulk);
+      el.removeEventListener('open-record', onOpenRecord);
+      el.removeEventListener('notes-open', onNotesOpen);
+      el.removeEventListener('community-open', onCommunityOpen);
+      el.removeEventListener('user-open', onUserOpen);
+    };
+  }, [archivedView, archivedRows.length === 0]);
 
   /* ── NOTES MODAL (sealed NotesModal spec) ─────────────────────────────── */
   const subject = notesFor ? stakeholders.find((s) => s.id === notesFor) : null;
@@ -474,25 +613,21 @@ export function SheetPage({
     )));
   };
 
-  /* deleteStakeholder — the SEALED CASCADE (App-shell box): remove the
+  /* deleteStakeholders — the SEALED CASCADE (App-shell box): remove the
    * stakeholder, purge scores[id], purge stakeholderWorkspaces[id]. (The
    * wider owners-reference scrub belongs to the removeUser cascade, not this
-   * one.)                                                                    */
-  const deleteStakeholder = (id) => {
-    setStakeholders((prev) => prev.filter((s) => s.id !== id));
-    setScores((prev) => {
-      if (!prev[id]) return prev;
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
-    setStakeholderWorkspaces((prev) => {
-      if (!prev[id]) return prev;
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
+   * one.) Phase 24: generalized over a set through the ONE pure builder
+   * (cascadeDeleteStakeholders) so the modal's danger delete and the
+   * Archived view's bulk delete-forever run the SAME code path — one
+   * setState per store, reference-honest (replace-don't-duplicate).        */
+  const deleteStakeholders = (ids) => {
+    const r = cascadeDeleteStakeholders(stakeholders, scores, stakeholderWorkspaces, ids);
+    if (r.stakeholders !== stakeholders) setStakeholders(r.stakeholders);
+    if (r.scores !== scores) setScores(r.scores);
+    if (r.joins !== stakeholderWorkspaces) setStakeholderWorkspaces(r.joins);
+    return r.landed;
   };
+  const deleteStakeholder = (id) => { deleteStakeholders([id]); };
 
   // Sealed cross-link: workspaces that contain this stakeholder (join map).
   const getWorkspacesForStakeholder = (id) =>
@@ -550,18 +685,18 @@ export function SheetPage({
   const bulkSetPriority = (level) => {
     const { next, landed } = bulkPatchStakeholders(stakeholders, bulkIds, { priority: level }, nowStamp());
     if (next !== stakeholders) setStakeholders(next);
-    snackRef.current?.show(bulkActionSummary(landed, bulkIds.length, `Priority set to ${level}`));
+    showSnack(bulkActionSummary(landed, bulkIds.length, `Priority set to ${level}`));
   };
   const bulkTag = (tag) => {
     const { next, landed } = bulkAddTag(stakeholders, bulkIds, tag, nowStamp());
     if (next !== stakeholders) setStakeholders(next);
-    snackRef.current?.show(bulkActionSummary(landed, bulkIds.length, `Tag "${tag}" added`));
+    showSnack(bulkActionSummary(landed, bulkIds.length, `Tag "${tag}" added`));
   };
   const bulkAssign = (wsId) => {
     const wsName = workspaces.find((w) => w.id === wsId)?.name || wsId;
     const { next, landed } = bulkAssignWorkspace(stakeholderWorkspaces, bulkIds, wsId);
     if (next !== stakeholderWorkspaces) setStakeholderWorkspaces(next);
-    snackRef.current?.show(bulkActionSummary(landed, bulkIds.length, `Added to "${wsName}"`));
+    showSnack(bulkActionSummary(landed, bulkIds.length, `Added to "${wsName}"`));
   };
   // Export selected rides the table's sealed CSV path over the selection
   // (filtered order) — replace-don't-duplicate. Zero-row guard (audit F2):
@@ -570,10 +705,74 @@ export function SheetPage({
   const bulkExport = () => {
     const el = tableRef.current;
     if (!el) return;
-    if (!el.selection.length) { snackRef.current?.show('No rows selected to export'); return; }
+    if (!el.selection.length) { showSnack('No rows selected to export'); return; }
     el.exportSelected();
   };
   const bulkClear = () => tableRef.current?.clearSelection();
+
+  /* ── PHASE 24: archive-family handlers (each write = ONE setState through
+   * a pure builder; value-form for the same dispatch-time-count reason as
+   * the Phase-17 handlers above). ───────────────────────────────────────── */
+
+  // ARCHIVE (live bar; any signed-in user): one stamped write over the
+  // selection; the honest snackbar arms UNDO with EXACTLY the landed ids.
+  // The archived rows leave `rows`, so the table prunes the selection and
+  // the bar retires on its own (the ruled prune contract).
+  const bulkArchiveSelected = () => {
+    const { next, landed, changedIds } =
+      bulkArchive(stakeholders, bulkIds, nowStamp(), currentUser ? currentUser.id : null);
+    if (next !== stakeholders) setStakeholders(next);
+    showSnack(archiveSummary(landed, bulkIds.length), changedIds);
+  };
+
+  // UNDO (snackbar action): restore the exact landed set — a plain flag
+  // clear (archiving cascaded nothing, so restore resurrects nothing).
+  const undoArchive = () => {
+    const ids = undoIds || [];
+    const { next, landed } = bulkRestore(stakeholders, ids, nowStamp());
+    if (next !== stakeholders) setStakeholders(next);
+    showSnack(restoreSummary(landed, ids.length));
+  };
+
+  // RESTORE (archived-view bar).
+  const archRestore = () => {
+    const { next, landed } = bulkRestore(stakeholders, archBulkIds, nowStamp());
+    if (next !== stakeholders) setStakeholders(next);
+    showSnack(restoreSummary(landed, archBulkIds.length));
+  };
+
+  // DELETE FOREVER (archived-view bar, behind the confirm dialog): the ONE
+  // sealed cascade over the selection. No undo — the confirm says so.
+  const archDeleteForever = () => {
+    setConfirmForever(false);
+    const landed = deleteStakeholders(archBulkIds);
+    showSnack(deleteForeverSummary(landed));
+  };
+
+  const archExport = () => {
+    const el = archRef.current;
+    if (!el) return;
+    if (!el.selection.length) { showSnack('No rows selected to export'); return; }
+    el.exportSelected();
+  };
+  const archClear = () => archRef.current?.clearSelection();
+
+  // View toggles: each direction drops the OTHER surface's selection state
+  // (the element unmounts and takes its checkboxes with it).
+  const openArchivedView = () => { setArchivedView(true); setBulkIds([]); };
+  const closeArchivedView = () => { setArchivedView(false); setArchBulkIds([]); };
+
+  /* The delete-forever confirm ui-dialog (the notes-modal open/close
+   * pattern): scrim/Escape and the Cancel button all land on 'close'. */
+  useEffect(() => {
+    const dlg = foreverRef.current;
+    if (!dlg) return;
+    if (confirmForever) dlg.setAttribute('open', '');
+    else dlg.removeAttribute('open');
+    const onClose = () => setConfirmForever(false);
+    dlg.addEventListener('close', onClose);
+    return () => dlg.removeEventListener('close', onClose);
+  }, [confirmForever]);
 
   /* ── PHASE 18: IMPORT (sealed demo-features flow) ─────────────────────── */
 
@@ -628,7 +827,7 @@ export function SheetPage({
       ],
     }));
     setImportOpen(false);
-    snackRef.current?.show(importedSnack(records.length));
+    showSnack(importedSnack(records.length));
   };
 
   /* ── PHASE 20: MOBILE QUICK-VIEW actions (sealed: "stakeholder quick-view
@@ -700,6 +899,63 @@ export function SheetPage({
             ))}
           </ui-list>
         )
+      ) : archivedView ? (
+        /* ── PHASE 24: the ARCHIVED VIEW (desktop) — the same grid, readonly,
+           with its own Restore / Delete-forever bar. Declared composition:
+           head (back + title + honest scope line) · selection bar · table. */
+        <div className="archived-wrap">
+          <div className="archived-head">
+            <ui-icon-button variant="standard" aria-label="Back to Lists"
+                            title="Back to Lists" onClick={closeArchivedView}>
+              <ui-icon>arrow_back</ui-icon>
+            </ui-icon-button>
+            <div className="archived-titles">
+              <span className="archived-title">{ARCHIVED_VIEW_TITLE}</span>
+              <span className="archived-line">{ARCHIVED_VIEW_LINE}</span>
+            </div>
+          </div>
+          {archBulkIds.length > 0 && (
+            <div className="bulk-bar" role="toolbar" aria-label="Archived bulk actions">
+              <span className="bulk-count">
+                <strong>{archBulkIds.length}</strong> selected
+              </span>
+              <ui-button variant="outlined" onClick={archRestore}>
+                <ui-icon slot="leading" size="sm">unarchive</ui-icon>Restore
+              </ui-button>
+              {/* The ONLY bulk hard-delete in the app (the declared safety
+                  model: always two-step — archive first, then this, behind
+                  the confirm). */}
+              <ui-button variant="outlined" tone="danger"
+                         onClick={() => setConfirmForever(true)}>
+                <ui-icon slot="leading" size="sm">delete_forever</ui-icon>
+                Delete forever…
+              </ui-button>
+              <span className="bulk-spacer"></span>
+              <ui-button variant="text" onClick={archExport} aria-label="Export selected to CSV">
+                <ui-icon slot="leading" size="sm">download</ui-icon>Export selected
+              </ui-button>
+              <ui-button variant="text" onClick={archClear}>Clear selection</ui-button>
+            </div>
+          )}
+          {archivedRows.length === 0 ? (
+            <EmptyState
+              icon="archive"
+              line={ARCHIVED_EMPTY_LINE}
+              secondaryLabel="Back to Lists"
+              onSecondary={closeArchivedView}
+            />
+          ) : (
+            /* The SAME domain component in its Phase-24 readonly mode:
+               selection live (the bar above), writes impossible (no editor
+               mounts, row-change never fires), export/search/filter intact.
+               key forces a fresh element vs the live table (clean selection,
+               static attributes). */
+            <ui-stakeholder-table key="archived" ref={archRef}
+                                  class="sheet-table archived-table"
+                                  readonly="" selectable=""
+                                  kbd-label={cmdKeyLabel}></ui-stakeholder-table>
+          )}
+        </div>
       ) : (
       /* SEALED HOST TREE (workHQ box): .intel-split carries data-mode HERE
           in the host; the band renders ABOVE the table, divider between,
@@ -751,6 +1007,13 @@ export function SheetPage({
               Add tag…
             </ui-button>
             <ui-button variant="outlined" id="bulk-priority-btn">Set priority…</ui-button>
+            {/* PHASE 24: ARCHIVE — the recoverable bulk remove (any signed-in
+                user; one stamped write; snackbar UNDO). The only route toward
+                bulk deletion: the live list itself never hard-deletes (the
+                declared safety model — delete lives in the Archived view). */}
+            <ui-button variant="outlined" class="bulk-archive-btn" onClick={bulkArchiveSelected}>
+              <ui-icon slot="leading" size="sm">archive</ui-icon>Archive
+            </ui-button>
             <span className="bulk-spacer"></span>
             <ui-button variant="text" onClick={bulkExport} aria-label="Export selected to CSV">
               <ui-icon slot="leading" size="sm">download</ui-icon>Export selected
@@ -769,6 +1032,19 @@ export function SheetPage({
             <BulkMenu anchorId="bulk-priority-btn" menuClass="bulk-menu-priority"
                       items={PRIORITY_OPTIONS.map((p) => ({ value: p, label: p }))}
                       onPick={bulkSetPriority} />
+          </div>
+        )}
+
+        {/* PHASE 24 — the ARCHIVED entry point (declared placement: a quiet
+            right-aligned strip between the workHQ divider and the table;
+            rendered only when the workspace scope holds archived rows — no
+            dead control at zero, make-real law). */}
+        {archivedRows.length > 0 && (
+          <div className="archived-strip">
+            <ui-button variant="text" class="archived-toggle" onClick={openArchivedView}>
+              <ui-icon slot="leading" size="sm">archive</ui-icon>
+              {archivedToggleLabel(archivedRows.length)}
+            </ui-button>
           </div>
         )}
 
@@ -946,8 +1222,40 @@ export function SheetPage({
         onOpenUser={onOpenUserProfile}
       />
 
-      {/* Fallback surface for unresolvable community-pill opens (C5 guard). */}
-      <ui-snackbar ref={snackRef}></ui-snackbar>
+      {/* PHASE 24 — DELETE FOREVER confirm (the declared two-step's second
+          gate; mirrors the sealed modal delete-confirm composition: headline
+          + honest cascade copy + Cancel / danger action). */}
+      <ui-dialog ref={foreverRef} class="forever-confirm">
+        {confirmForever && (
+          <>
+            <span slot="headline">
+              Delete {archBulkIds.length} archived stakeholder{archBulkIds.length === 1 ? '' : 's'} forever?
+            </span>
+            <p className="forever-copy">
+              This permanently removes {archBulkIds.length === 1 ? 'the record and its' : 'the records and their'} scores
+              and workspace assignments. There is no undo.
+            </p>
+            <div slot="actions">
+              <ui-button variant="text" onClick={() => setConfirmForever(false)}>Cancel</ui-button>
+              <ui-button variant="filled" tone="danger" class="forever-go" onClick={archDeleteForever}>
+                Delete forever
+              </ui-button>
+            </div>
+          </>
+        )}
+      </ui-dialog>
+
+      {/* The page snackbar: C5 fallbacks, bulk honest counts, and (Phase 24)
+          the archive UNDO — the ui-snackbar action slot, rendered only while
+          an undo set is armed (showSnack disarms it on any other message;
+          the snackbar close event disarms on timeout/dismiss). */}
+      <ui-snackbar ref={snackRef}>
+        {undoIds ? (
+          <ui-button slot="action" variant="text" class="snack-undo" onClick={undoArchive}>
+            Undo
+          </ui-button>
+        ) : null}
+      </ui-snackbar>
     </div>
   );
 }

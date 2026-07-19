@@ -996,6 +996,15 @@ template.innerHTML = `
   .cell-dd-trigger:focus-visible { outline: 2px solid var(--ui-sys-focus-ring); outline-offset: 1px; }
   .cell-dd-trigger.is-empty { color: var(--ui-sys-on-surface-muted); }
   .cell-editing > .cell-display { visibility: hidden; }
+
+  /* Phase 24 — readonly (the Archived view): the edit surfaces go inert as
+     plain display text — no hover wash, no caret, no pointer — while the
+     read affordances (selection, notes history, owners popover, community
+     pills, links, toolbar) stay live. The #patch guard backs this up. */
+  :host([readonly]) .cell-input,
+  :host([readonly]) .cell-dd-trigger { pointer-events: none; }
+  :host([readonly]) .cell-input:hover,
+  :host([readonly]) .cell-dd-trigger:hover { background: transparent; }
   .cell-editor {
     position: absolute;
     top: 2px;
@@ -1237,7 +1246,7 @@ class UiStakeholderTable extends HTMLElement {
   /* kbd-label (finding: single source) — the cmd-key hint text is NOT derived
    * here; the page passes it from the store's exported single source
    * (src/app/data/store.js → cmdKeyLabel). Empty/absent hides the chip. */
-  static observedAttributes = ['kbd-label', 'selectable', 'importable'];
+  static observedAttributes = ['kbd-label', 'selectable', 'importable', 'readonly'];
 
   constructor() {
     super();
@@ -1248,6 +1257,7 @@ class UiStakeholderTable extends HTMLElement {
     if (name === 'kbd-label') this.#syncKbd();
     if (name === 'selectable') this.#render(); // column set changed
     if (name === 'importable') this.#syncImportable();
+    if (name === 'readonly') this.#render();   // edit affordances change
   }
 
   /* Phase 18: opt-in footer Import affordance (declared placement — the quiet
@@ -1272,6 +1282,18 @@ class UiStakeholderTable extends HTMLElement {
   set selectable(v) {
     if (v) this.setAttribute('selectable', '');
     else this.removeAttribute('selectable');
+  }
+
+  /* Phase 24: read-only mode (attribute) — the Archived view renders the SAME
+   * grid without its write surfaces: no cell editor ever mounts and row-change
+   * never fires (the #patch guard is the belt under the CSS suspenders).
+   * Read affordances stay live: search/filter/sort, selection (the archived
+   * bulk bar needs it), notes history, owners popover, community pills, the
+   * record opener (the host maps it to the read profile), and Export CSV.   */
+  get readonly() { return this.hasAttribute('readonly'); }
+  set readonly(v) {
+    if (v) this.setAttribute('readonly', '');
+    else this.removeAttribute('readonly');
   }
 
   /* Phase 17: the live selection (id array). Writable so a host can restore
@@ -1862,7 +1884,13 @@ class UiStakeholderTable extends HTMLElement {
   #emit(name, detail) {
     this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
   }
-  #patch(row, patch) { this.#emit('row-change', { id: row.id, patch }); }
+  /* Phase 24: in readonly mode NO edit ever commits — every write path (text
+   * inputs, cell editors, popover checks) funnels through here, so this one
+   * guard makes the Archived view honestly write-proof. */
+  #patch(row, patch) {
+    if (this.readonly) return;
+    this.#emit('row-change', { id: row.id, patch });
+  }
   /* Phase 17: every selection change flows out here — the host owns the
    * action bar and all bulk writes (the events-out/props-in contract). */
   #emitSelection() {
@@ -1998,7 +2026,11 @@ class UiStakeholderTable extends HTMLElement {
         const person = isPersonOf(row);
         const btn = document.createElement('ui-icon-button');           // REAL icon button (composition ruling)
         btn.setAttribute('variant', 'standard');
-        const hint = person ? 'Edit person' : 'Edit organization';      // sealed tooltip copy
+        // Phase 24: readonly hosts open the READ profile — the hint says so
+        // (a live-looking "Edit" affordance would lie in the Archived view).
+        const hint = this.readonly
+          ? (person ? 'View person' : 'View organization')
+          : (person ? 'Edit person' : 'Edit organization');             // sealed tooltip copy
         btn.setAttribute('aria-label', hint);
         btn.title = hint;                                               // supplementary (TOOLTIP RULING above)
         const ic = document.createElement('ui-icon');
@@ -2336,6 +2368,7 @@ class UiStakeholderTable extends HTMLElement {
    * `open` attribute clears — the component's dismissal (outside click /
    * Escape / commit) drives the teardown; no dismissal logic is re-rolled.  */
   #mountCellEditor(cell, editor, preOpen, onCommit) {
+    if (this.readonly) return;                                          // Phase 24: no editor in the Archived view
     if (this.#openEditor) this.#openEditor();                           // one editor at a time
     editor.classList.add('cell-editor');
     cell.classList.add('cell-editing');

@@ -26,6 +26,7 @@ import { unreadTotal } from './pages/messages-logic.js';
 import {
   MASTER_WORKSPACE_ID, isMasterWorkspace, countForWorkspace,
   stakeholderCountLabel, workspaceLabel, stripWorkspaceFromJoins,
+  activeStakeholders,
 } from './data/workspace.js';
 import { unscoredCountFor } from './pages/scoring-logic.js';
 import { companySegmentsFrom } from './pages/setup-logic.js';
@@ -154,6 +155,16 @@ function AppSignedIn() {
 
   const isMaster = isMasterWorkspace(activeWorkspaceId);
   const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId) || null;
+
+  /* PHASE 24 — ARCHIVE: archived stakeholders leave every default surface
+   * (the Enterprise soft-delete rule: "lists filter out soft-deleted rows").
+   * The shell's slice of that: the Master counts, the per-workspace counts,
+   * the unscored badge, and the palette's search set are ACTIVE-only, so no
+   * chrome number ever promises rows the pages hide. Deep links/mentions
+   * stay resolvable against the RAW collection (declared: a direct link to
+   * a recoverable record must never dead-end — it opens the read view).    */
+  const liveStakeholders = useMemo(
+    () => activeStakeholders(stakeholders), [stakeholders]);
 
   const [createNonce, setCreateNonce] = useState(0);
 
@@ -331,8 +342,8 @@ function AppSignedIn() {
    * global scope, keyed by the current user's TEAM-MEMBER id; a deliberate
    * (0,0) record counts as scored.                                          */
   const unscoredCount = useMemo(
-    () => unscoredCountFor(stakeholders, scores, team, currentUser?.id),
-    [stakeholders, scores, team, currentUser]);
+    () => unscoredCountFor(liveStakeholders, scores, team, currentUser?.id),
+    [liveStakeholders, scores, team, currentUser]);
 
   /* REAL unread badge (sealed DO-NOT-REPLICATE: the oracle's badge merely
    * mirrored unscoredCount while claiming to count messages): per-user read
@@ -441,7 +452,8 @@ function AppSignedIn() {
     setView('setup');
   };
 
-  const wsCount = (wsId) => countForWorkspace(stakeholderWorkspaces, wsId);
+  // Phase 24: pass the collection so archived joins never inflate a count.
+  const wsCount = (wsId) => countForWorkspace(stakeholderWorkspaces, wsId, stakeholders);
 
   /* ── ONBOARDING TOUR (Phase 20, sealed Demo-features box) ────────────────
    * tourStep: null = idle; 0..N-1 = the running step. FIRST RUN: when the
@@ -586,7 +598,7 @@ function AppSignedIn() {
                 onClick={() => activateWorkspaceTab(id)}
               >
                 <ui-icon slot="icon">table_rows</ui-icon>
-                Master <span className="ws-count">· {stakeholders.length}</span>
+                Master <span className="ws-count">· {liveStakeholders.length}</span>
               </ui-sidebar-item>
             );
           }
@@ -777,7 +789,7 @@ function AppSignedIn() {
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Phase 23 — Login gate (session seam · demo-account sign-in · no auto-promote · logout live)</span>
+        <span>Phase 24 — Archive (soft-delete layer · Archived view with restore · bulk archive + undo · delete-forever behind the archive)</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
 
@@ -802,7 +814,7 @@ function AppSignedIn() {
       <CommandPalette
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}
-        stakeholders={stakeholders}
+        stakeholders={liveStakeholders}
         plans={plans}
         community={community}
         workspaces={workspaces}
@@ -890,7 +902,7 @@ function AppSignedIn() {
           <span className="ws-row">
             <span className="ws-row-main">
               <span className="ws-row-name">Master</span>
-              <span className="ws-row-meta">{stakeholderCountLabel(stakeholders.length)}</span>
+              <span className="ws-row-meta">{stakeholderCountLabel(liveStakeholders.length)}</span>
             </span>
             <span className="ws-row-cta">
               {isMaster ? 'Active' : 'Switch to'}

@@ -882,6 +882,32 @@ await mp.waitForTimeout(500);
 await mp.screenshot({ path: `${OUT}/p20-add-note.png` });
 await mp.close();
 
+// ── PHASE-24 ARCHIVE CAPTURES (fresh context = fresh seed; 1440×900) ───────
+const ap = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+await ap.addInitScript(() => {
+  localStorage.setItem('hpsm:__schema', 'v10-rebuild');
+  localStorage.setItem('hpsm:session', JSON.stringify({ userId: 'u-alex' }));
+  localStorage.setItem('hpsm:__tourSeen', '1');
+});
+await ap.goto('http://127.0.0.1:4174/app.html', { waitUntil: 'networkidle' });
+await ap.waitForTimeout(1500);
+// select 2 rows → Archive → the honest snackbar with its UNDO action + the
+// "Archived (2)" entry strip (the live bar has already pruned away — the
+// archived rows left the filtered set)
+const apCbs = ap.locator('ui-stakeholder-table .sheet-row .sheet-cell.sel ui-checkbox');
+await apCbs.nth(0).click(); await ap.waitForTimeout(200);
+await apCbs.nth(1).click(); await ap.waitForTimeout(300);
+await ap.locator('.bulk-bar .bulk-archive-btn').click();
+await ap.waitForTimeout(500);
+await ap.screenshot({ path: `${OUT}/p24-bulk-archive-snackbar.png` });
+// the Archived view: readonly grid + the Restore / Delete-forever bar
+await ap.locator('.archived-strip .archived-toggle').click();
+await ap.waitForTimeout(600);
+await ap.locator('.archived-table .sheet-head ui-checkbox').click();
+await ap.waitForTimeout(400);
+await ap.screenshot({ path: `${OUT}/p24-archived-view.png` });
+await ap.close();
+
 await browser.close(); srv.close();
 
 // ── PHASE-21 CARD-ANATOMY GATE ─────────────────────────────────────────────
