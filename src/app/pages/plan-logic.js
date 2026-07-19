@@ -16,6 +16,7 @@
  * It never renders; every surface shows the BAND + model-scoped labels.
  */
 import { weightedCoord } from '../data/engine.js';
+import { activeStakeholders } from '../data/workspace.js';
 import { affiliatedCommunity } from '../modals/stakeholder-logic.js';
 import { STATE_ABBR, siteLabel } from '../data/catalogs.js';
 import {
@@ -316,6 +317,28 @@ export function newPlan({ workspaces = [], activeWorkspaceId, isMaster = false, 
  * WITHOUT the field = the oracle behavior — the full workspace roster. ───── */
 export function planStakeholderIds(plan, rosterIds) {
   return Array.isArray(plan.stakeholderIds) ? plan.stakeholderIds : (rosterIds || []);
+}
+
+/* ── PHASE 24 FIX (archive audit F1): the ONE member-resolution both the
+ * editor and the review read. Member ids resolve against the caller's
+ * stakeholder set; the EDITOR passes the ACTIVE set (parity with Review,
+ * whose set is the active-only roster), so an archived member id simply
+ * DROPS from the rendered rows — plan.stakeholderIds itself is untouched
+ * (restore brings the row back). Unresolvable ids filter out (the sealed
+ * filter(Boolean) ghost guard). ─────────────────────────────────────────── */
+export function planMemberRecords(plan, rosterIds, stakeholders) {
+  return planStakeholderIds(plan, rosterIds)
+    .map((id) => (stakeholders || []).find((s) => s.id === id))
+    .filter(Boolean);
+}
+
+/* PHASE 24 FIX (archive audit F5): the From-Master add-picker OPTION LIST is
+ * active-only (option lists author NEW references; archived records are never
+ * offered). Sealed rule otherwise unchanged: every stakeholder not yet in
+ * this workspace's roster. */
+export function addableMasterFor(stakeholders, rosterIds) {
+  const ids = rosterIds || [];
+  return activeStakeholders(stakeholders).filter((s) => !ids.includes(s.id));
 }
 
 /* ── MIGRATION SCRUB (sealed goalNotes ORACLE-BUG consequence): plans touched

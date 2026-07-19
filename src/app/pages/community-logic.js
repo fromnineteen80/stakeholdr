@@ -14,6 +14,8 @@
  * approvedAt"); the free stage select stays as the sealed oracle baseline.
  */
 import { MARKETS } from '../data/catalogs.js';
+import { activeStakeholders } from '../data/workspace.js';
+import { displayName } from '../../../design-system/components/stakeholder-table.js';
 import {
   isDecided, money, approvedLabel, communityEntryAmount, todayYMD,
 } from '../modals/stakeholder-logic.js';
@@ -342,4 +344,39 @@ export function sortCommunity(items, sort) {
   const dir = sort.dir === 'desc' ? -1 : 1;
   return [...items].sort((a, b) =>
     String(def.get(a)).localeCompare(String(def.get(b))) * dir);
+}
+
+/* ── PHASE 24 FIX (archive audit F5): ACTIVE-ONLY OPTION BUILDERS ──────────
+ * Option lists author NEW references, so they never offer archived records;
+ * resolution of EXISTING references (chosen chips, the already-picked target)
+ * stays RAW at the call sites — a recoverable record never dead-ends. */
+
+/* StakeholderPicker options (sealed mechanics unchanged: options exclude
+ * selected; label = display name, sub = "org · type"). Active-only. */
+export function stakeholderPickerOptions(stakeholders, selected) {
+  const chosen = selected || [];
+  return activeStakeholders(stakeholders)
+    .filter((s) => !chosen.includes(s.id))
+    .map((s) => ({
+      value: s.id,
+      label: displayName(s) || s.name,
+      sub: `${s.org || ''} · ${s.type || ''}`,
+    }));
+}
+
+/* "Stakeholder / Organization Targeted" select options: None + the ACTIVE
+ * records — plus the CURRENTLY-CHOSEN record even when archived (RAW
+ * resolution of an existing reference: the saved pick must keep rendering,
+ * never a blank select), listed first so the control always resolves. */
+export function representedStakeholderOptions(stakeholders, currentId) {
+  const act = activeStakeholders(stakeholders);
+  const cur = currentId && !act.some((s) => s.id === currentId)
+    ? (stakeholders || []).find((s) => s.id === currentId)
+    : null;
+  return [
+    { value: '', label: 'None' },
+    ...(cur ? [cur] : []).concat(act).map((s) => ({
+      value: s.id, label: displayName(s) || s.name,
+    })),
+  ];
 }

@@ -145,7 +145,8 @@ export function MetaField({
 /* ── RecordShell — the universal page (sealed 3485–3491, TREE SURFACE 1) ──── */
 export function RecordShell({
   backLabel, onBack, backInertNote, pageIcon, title, subtitle, editing,
-  onToggleEdit, sections = [], rightRail, navTitle, railTitle, toolbar, footer,
+  onToggleEdit, editDisabledNote, sections = [], rightRail, navTitle,
+  railTitle, toolbar, footer,
 }) {
   const [active, setActive] = useState(sections[0] ? sections[0].id : null);
   const [railCollapsed, setRailCollapsed] = useState(false);
@@ -176,11 +177,17 @@ export function RecordShell({
         ) : null}
         {toolbar ? <span slot="trailing" className="record-toolbar">{toolbar}</span> : null}
         {onToggleEdit ? (
+          /* editDisabledNote (Phase 24 F8 ruling, the backInertNote pattern):
+             an ARCHIVED record's edit toggle renders honestly DISABLED with
+             the note as its title ("Restore to edit") — never a live-looking
+             dead affordance. */
           <ui-button
             slot="trailing"
             class="record-edit-btn"
             variant={editing ? 'filled' : 'outlined'}
-            onClick={onToggleEdit}
+            disabled={editDisabledNote ? '' : undefined}
+            title={editDisabledNote || undefined}
+            onClick={editDisabledNote ? undefined : onToggleEdit}
           >
             <ui-icon slot="leading">{tog.icon}</ui-icon>
             {tog.label}

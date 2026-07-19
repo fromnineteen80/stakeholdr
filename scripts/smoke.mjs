@@ -1766,5 +1766,140 @@ for (const path of pages) {
   await page.close();
 }
 
+// ── PHASE 24 FIX drive (archive audit, 2026-07-19) — the exclusion-seam
+// consumers that never got rewired. Fixture (store-level, honest: the archive
+// WRITE path is already proven above): archive sh-02 (a Hawk plan member) and
+// clear alex's scores for sh-02 AND sh-03, so the RAW pending count (2) and
+// the ACTIVE one (1) diverge — any surface still on the raw store shows 2.
+// Also give the seed plan an EXPLICIT stakeholderIds set including the
+// archived id (the seed plan's roster-fallback would mask F1). Asserts:
+// archived member absent from the plan EDITOR (parity with Review) · the
+// Reminders chip matches the nav badge (1) · the mention PICKER excludes the
+// archived (control: an active name surfaces) · the profile Relationships tab
+// excludes it · the Archived view's NotesModal shows NO composer + the honest
+// "Restore to add notes" line · the read profile's Edit bridge is DISABLED
+// ("Restore to edit") on an archived record.
+{
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const errs = [];
+  page.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+  page.on('pageerror', e => errs.push('PAGEERROR: ' + e.message));
+  await page.addInitScript(() => {
+    localStorage.setItem('hpsm:__schema', 'v10-rebuild');
+    localStorage.setItem('hpsm:session', JSON.stringify({ userId: 'u-alex' }));
+    localStorage.setItem('hpsm:__tourSeen', '1');
+  });
+  await page.goto('http://127.0.0.1:4173/app.html', { waitUntil: 'networkidle', timeout: 30000 }).catch(e => errs.push('P24FNAV: ' + e.message));
+  await page.waitForTimeout(1500);
+  await page.evaluate(() => {
+    const shs = JSON.parse(localStorage.getItem('hpsm:stakeholders') || '[]');
+    const t = shs.find(s => s.id === 'sh-02');
+    t.archived = true; t.archivedAt = '2026-07-19T00:00:00.000Z'; t.archivedBy = 'u-alex';
+    localStorage.setItem('hpsm:stakeholders', JSON.stringify(shs));
+    const scores = JSON.parse(localStorage.getItem('hpsm:scores') || '{}');
+    delete scores['sh-02']['tm-alex'];
+    delete scores['sh-03']['tm-alex'];
+    localStorage.setItem('hpsm:scores', JSON.stringify(scores));
+    const plans = JSON.parse(localStorage.getItem('hpsm:plans') || '[]');
+    plans[0].stakeholderIds = ['sh-01', 'sh-02', 'sh-03', 'sh-04'];
+    localStorage.setItem('hpsm:plans', JSON.stringify(plans));
+  });
+  await page.reload({ waitUntil: 'networkidle', timeout: 30000 }).catch(e => errs.push('P24FRELOAD: ' + e.message));
+  await page.waitForTimeout(1500);
+  // F2a · switch to Hawk → the Scoring nav badge reads the ACTIVE count (1)
+  await page.locator('#ws-select-anchor').click({ timeout: 3000 }).catch(e => errs.push('P24FWS: ' + e.message));
+  await page.waitForTimeout(400);
+  await page.locator('ui-menu ui-menu-item', { hasText: 'Hawk' }).first().click({ timeout: 3000 }).catch(e => errs.push('P24FWSPICK: ' + e.message));
+  await page.waitForTimeout(700);
+  const fxBadge = await page.locator('ui-badge.nav-badge').getAttribute('count').catch(() => null);
+  if (fxBadge !== '1') errs.push(`P24F2BADGE: the Scoring nav badge must read the ACTIVE unscored count 1, saw "${fxBadge}"`);
+  // F2b · Messages: the Reminders chip must MATCH the badge (active-only, not the raw 2)
+  await page.locator('#me-anchor').click({ timeout: 3000 }).catch(e => errs.push('P24FMENU: ' + e.message));
+  await page.waitForTimeout(300);
+  await page.locator('ui-menu.profile-menu ui-menu-item', { hasText: 'Messages' }).click({ timeout: 3000 }).catch(e => errs.push('P24FMSGNAV: ' + e.message));
+  await page.waitForTimeout(700);
+  const fxChip = await page.locator('.messaging-page .conv-row.conv-system ui-badge').getAttribute('count').catch(() => null);
+  if (fxChip !== '1') errs.push(`P24F2CHIP: the Reminders chip must match the nav badge (1, active-only), saw "${fxChip}"`);
+  if (fxChip !== fxBadge) errs.push(`P24F2PARITY: Reminders chip (${fxChip}) disagrees with the nav badge (${fxBadge})`);
+  // F4 · the mention PICKER excludes the archived record (control first-class)
+  await page.locator('.messaging-page .conv-row', { hasText: 'Jordan Kim, Sam Okafor' }).click({ timeout: 3000 }).catch(e => errs.push('P24FCONV: ' + e.message));
+  await page.waitForTimeout(400);
+  await page.locator('.messaging-page .composer ui-textarea textarea').click({ timeout: 3000 }).catch(e => errs.push('P24FTA: ' + e.message));
+  await page.keyboard.type('@Maria');
+  await page.waitForTimeout(400);
+  if (await page.locator('.mention-pop ui-list-item', { hasText: 'Mayor Maria Chen' }).count() < 1) {
+    errs.push('P24F4CTL: the ACTIVE "Mayor Maria Chen" must surface in the mention picker (control)');
+  }
+  for (let i = 0; i < 6; i++) await page.keyboard.press('Backspace');
+  await page.keyboard.type('@Whitfield');
+  await page.waitForTimeout(400);
+  if (await page.locator('.mention-pop ui-list-item').count() !== 0) {
+    errs.push('P24F4: the ARCHIVED "Sen. Dana Whitfield" must not surface in the mention picker');
+  }
+  for (let i = 0; i < 10; i++) await page.keyboard.press('Backspace');
+  // F1 · the Hawk plan EDITOR drops the archived member (ids untouched) — parity with Review
+  await page.locator('#nav-plan').click({ timeout: 3000 }).catch(e => errs.push('P24FPLANNAV: ' + e.message));
+  await page.waitForTimeout(600);
+  await page.locator('.plan-card .plan-card-actions ui-button', { hasText: 'Edit' }).first().click({ timeout: 3000 }).catch(e => errs.push('P24FPLANEDIT: ' + e.message));
+  await page.waitForTimeout(700);
+  const fxEdRows = await page.locator('.plan-editor .plan-sh-table tbody tr').count();
+  if (fxEdRows !== 3) errs.push(`P24F1: the plan EDITOR must render the 3 ACTIVE members (archived dropped), saw ${fxEdRows}`);
+  if (await page.locator('.plan-editor .plan-sh-table tbody tr', { hasText: 'Whitfield' }).count() !== 0) {
+    errs.push('P24F1: the ARCHIVED member rendered as a live editor row');
+  }
+  await page.locator('.plan-editor ui-button', { hasText: 'Review' }).first().click({ timeout: 3000 }).catch(e => errs.push('P24FREVIEW: ' + e.message));
+  await page.waitForTimeout(600);
+  const fxRevRows = await page.locator('.plan-editor .plan-sh-table tbody tr').count();
+  if (fxRevRows !== fxEdRows) errs.push(`P24F1PARITY: editor rendered ${fxEdRows} member rows, review ${fxRevRows} — the surfaces must agree`);
+  const fxIds = await page.evaluate(() => JSON.parse(localStorage.getItem('hpsm:plans') || '[]')[0].stakeholderIds);
+  if (!fxIds.includes('sh-02')) errs.push('P24F1IDS: plan.stakeholderIds must KEEP the archived id (restore brings the row back)');
+  // F3 · the profile Relationships tab excludes the archived record
+  await page.locator('#me-anchor').click({ timeout: 3000 }).catch(e => errs.push('P24FMENU2: ' + e.message));
+  await page.waitForTimeout(300);
+  await page.locator('ui-menu.profile-menu ui-menu-item', { hasText: 'View profile' }).click({ timeout: 3000 }).catch(e => errs.push('P24FPROF: ' + e.message));
+  await page.waitForTimeout(700);
+  await page.locator('.profile-tabs ui-tab', { hasText: 'Relationships' }).click({ timeout: 3000 }).catch(e => errs.push('P24FTAB: ' + e.message));
+  await page.waitForTimeout(500);
+  if (await page.locator('.profile-table tbody tr', { hasText: 'Whitfield' }).count() !== 0) {
+    errs.push('P24F3: the ARCHIVED record rendered on the profile Relationships tab');
+  }
+  if (await page.locator('.profile-table tbody tr', { hasText: 'Mayor Maria Chen' }).count() < 1) {
+    errs.push('P24F3CTL: the ACTIVE "Mayor Maria Chen" must render on the Relationships tab (control)');
+  }
+  // F7 · the Archived view's NotesModal: history readable, composer GONE,
+  // the honest muted line in its slot, no Add note affordance
+  await page.locator('#nav-sheet').click({ timeout: 3000 }).catch(e => errs.push('P24FLISTS: ' + e.message));
+  await page.waitForTimeout(600);
+  await page.locator('.archived-strip .archived-toggle').click({ timeout: 3000 }).catch(e => errs.push('P24FARCH: ' + e.message));
+  await page.waitForTimeout(600);
+  await page.locator('.archived-table .sheet-row .sheet-cell.notes').first().click({ timeout: 3000 }).catch(e => errs.push('P24FNOTES: ' + e.message));
+  await page.waitForTimeout(500);
+  if (await page.locator('ui-dialog[open] .notes-composer').count() !== 1) errs.push('P24F7: the notes dialog did not open from the archived row');
+  if (await page.locator('ui-dialog[open] .notes-composer ui-textarea').count() !== 0) {
+    errs.push('P24F7: the composer textarea mounted for an ARCHIVED subject (write surface on a write-proof view)');
+  }
+  const fxLine = (await page.locator('ui-dialog[open] .notes-composer .notes-composer-label').textContent().catch(() => '') || '').trim();
+  if (fxLine !== 'Restore to add notes') errs.push(`P24F7LINE: expected the honest "Restore to add notes" line, saw "${fxLine}"`);
+  if (await page.locator('ui-dialog[open] .notes-foot ui-button', { hasText: 'Add note' }).count() !== 0) {
+    errs.push('P24F7BTN: an Add note affordance rendered for an ARCHIVED subject');
+  }
+  await page.locator('ui-dialog[open] .notes-foot ui-button', { hasText: 'Close' }).click({ timeout: 3000 }).catch(e => errs.push('P24F7CLOSE: ' + e.message));
+  await page.waitForTimeout(400);
+  // F8 · the archived read profile: Edit bridge DISABLED, "Restore to edit"
+  await page.locator('.archived-table .sheet-row .sheet-cell.edit ui-icon-button').first().click({ timeout: 3000 }).catch(e => errs.push('P24FOPENREC: ' + e.message));
+  await page.waitForTimeout(600);
+  const fxEdit = page.locator('.sh-dialog[open] .prof-actions ui-button', { hasText: 'Edit stakeholder' });
+  if (await fxEdit.count() !== 1) errs.push('P24F8: the read profile did not open from the archived row');
+  else {
+    if (await fxEdit.getAttribute('disabled') === null) errs.push('P24F8: the Edit bridge must render DISABLED on an archived record');
+    const fxTitle = await fxEdit.getAttribute('title').catch(() => null);
+    if (fxTitle !== 'Restore to edit') errs.push(`P24F8TITLE: expected title "Restore to edit", saw "${fxTitle}"`);
+  }
+  const real = errs.filter(e => !/fonts\.g(oogleapis|static)\.com|net::ERR_|Failed to load resource/.test(e));
+  totalErrors += real.length;
+  console.log(`/app.html [P24 fix audit]: ${real.length} real console/page errors` + (real.length ? '\n  - ' + real.slice(0, 10).join('\n  - ') : ''));
+  await page.close();
+}
+
 await browser.close(); srv.close();
 console.log(totalErrors === 0 ? 'SMOKE: ALL PAGES CLEAN' : `SMOKE: ${totalErrors} REAL ERRORS`);

@@ -906,6 +906,20 @@ await ap.waitForTimeout(600);
 await ap.locator('.archived-table .sheet-head ui-checkbox').click();
 await ap.waitForTimeout(400);
 await ap.screenshot({ path: `${OUT}/p24-archived-view.png` });
+// FIX-audit captures (2026-07-19): the read-only end-to-end surfaces —
+// the archived NotesModal (history readable, composer replaced by the honest
+// "Restore to add notes" line) and the archived read profile (Edit bridge
+// DISABLED, "Restore to edit").
+await ap.locator('.archived-table .sheet-head ui-checkbox').click(); // clear the bar
+await ap.waitForTimeout(300);
+await ap.locator('.archived-table .sheet-row .sheet-cell.notes').first().click();
+await ap.waitForTimeout(500);
+await ap.screenshot({ path: `${OUT}/p24fix-archived-notes.png` });
+await ap.locator('ui-dialog[open] .notes-foot ui-button', { hasText: 'Close' }).click();
+await ap.waitForTimeout(400);
+await ap.locator('.archived-table .sheet-row .sheet-cell.edit ui-icon-button').first().click();
+await ap.waitForTimeout(600);
+await ap.screenshot({ path: `${OUT}/p24fix-archived-profile.png` });
 await ap.close();
 
 await browser.close(); srv.close();
