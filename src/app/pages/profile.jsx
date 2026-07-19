@@ -163,7 +163,7 @@ export function UserListPopup({
 
 /* ── small bridges (established patterns) ────────────────────────────────── */
 
-function Upload({ onData, children }) {
+export function Upload({ onData, children }) {
   const ref = useRef(null);
   useUiEvent(ref, 'change', (e) => onData(e.detail.dataUrl));
   return <ui-upload ref={ref} accept="image/*" variant="outlined">{children}</ui-upload>;
@@ -173,7 +173,7 @@ function Upload({ onData, children }) {
  * variant over the --ui-sys-avatar-1..8 tokens). */
 const AVATAR_TOKENS = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => `var(--ui-sys-avatar-${n})`);
 
-function AvatarSwatches({ value, onPick }) {
+export function AvatarSwatches({ value, onPick }) {
   const ref = useRef(null);
   useUiEvent(ref, 'change', (e) => {
     if (e.detail && e.detail.value != null) onPick(e.detail.value);

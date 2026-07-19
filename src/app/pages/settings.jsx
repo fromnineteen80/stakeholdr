@@ -119,7 +119,7 @@ import { useUiEvent, Field, TF, Sel, UAv } from '../modals/stakeholder-modal.jsx
  * the color is DATA from appConfig — it flows in as a host custom property
  * via ref (inline style= is banned; this is the established imperative
  * bridge). */
-function Tinted({ className, color, title, children }) {
+export function Tinted({ className, color, title, children }) {
   const ref = useRef(null);
   useEffect(() => {
     const el = ref.current;
