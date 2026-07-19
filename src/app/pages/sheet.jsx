@@ -94,6 +94,14 @@
  *  · Archived records stay REACHABLE by direct reference (deep links,
  *    mentions, the record page, this view's read profile) — a link must
  *    never dead-end on a recoverable record (declared).
+ *  · RULING (2026-07-19, archive audit F7): archived records are read-only
+ *    END TO END — note HISTORY stays readable from the Archived view's
+ *    NotesModal, but the COMPOSER hides and addNote refuses when the subject
+ *    is archived; an honest muted "Restore to add notes" line sits in the
+ *    composer slot (make-real law: no live-looking write surface on a
+ *    write-proof view). The earlier live composer was a write-proof leak,
+ *    repaired here. See the F8 ruling on the StakeholderModal ledger for the
+ *    Edit-bridge half of the same rule.
  *  · Desktop surface (like bulk actions); mobile keeps the companion scope.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -136,7 +144,7 @@ import { StakeholderModal, useUiEvent } from '../modals/stakeholder-modal.jsx';
 import { quickViewFields } from '../mobile-logic.js';
 import {
   MASTER_WORKSPACE_ID, isMasterWorkspace, visibleStakeholders, createJoinFor,
-  archivedStakeholders, workspaceLabel as workspaceLabelOf,
+  archivedStakeholders, isArchived, workspaceLabel as workspaceLabelOf,
 } from '../data/workspace.js';
 import { WorkHQBand } from './workhq.jsx';
 import { withIgnores, withoutIgnore } from './workhq-logic.js';
@@ -485,6 +493,9 @@ export function SheetPage({
 
   /* ── NOTES MODAL (sealed NotesModal spec) ─────────────────────────────── */
   const subject = notesFor ? stakeholders.find((s) => s.id === notesFor) : null;
+  /* RULING (2026-07-19, audit F7 — see the header ledger): an archived
+   * subject keeps its note HISTORY readable, but never accepts a write. */
+  const subjectArchived = isArchived(subject);
 
   // HISTORY (sealed): start from notesHistory; if empty but notes exists,
   // synthesize the single legacy entry {id:"n-legacy", body:notes,
@@ -526,7 +537,8 @@ export function SheetPage({
    * APPENDED to notesHistory, AND notes mirrors the new text; composer clears. */
   const addNote = () => {
     const body = noteDraft.trim();
-    if (!body || !subject) return;
+    // F7 RULING guard: no write ever lands on an archived subject.
+    if (!body || !subject || isArchived(subject)) return;
     const entry = { id: uid('n'), body, at: nowStamp(), by: currentUser ? currentUser.id : null };
     setStakeholders((prev) => prev.map((s) => (s.id === subject.id
       ? { ...s, notesHistory: [...(s.notesHistory || []), entry], notes: body, updatedAt: nowStamp() }
@@ -1165,25 +1177,42 @@ export function SheetPage({
                   })}
                 </div>
               )}
-              <div className="notes-composer">
-                <span className="notes-composer-label">Add a new note</span>
-                <ui-textarea
-                  ref={composerRef}
-                  rows="3"
-                  placeholder="Write what happened, what was said, or what you learned…"
-                ></ui-textarea>
-              </div>
+              {/* F7 RULING (header ledger): archived subject → the composer
+                  HIDES; an honest muted line takes its slot. History above
+                  stays readable. Token-only (the shared .muted ink). */}
+              {subjectArchived ? (
+                <div className="notes-composer">
+                  <span className="notes-composer-label muted">
+                    Restore to add notes
+                  </span>
+                </div>
+              ) : (
+                <div className="notes-composer">
+                  <span className="notes-composer-label">Add a new note</span>
+                  <ui-textarea
+                    ref={composerRef}
+                    rows="3"
+                    placeholder="Write what happened, what was said, or what you learned…"
+                  ></ui-textarea>
+                </div>
+              )}
             </div>
             <div slot="actions" className="notes-foot">
-              <span className="notes-foot-note">
-                Dated today, posted as {currentUser?.name || 'you'}.
-              </span>
+              {/* F7: no posting affordances on an archived subject — Close
+                  stands alone (never a live-looking dead Add note). */}
+              {!subjectArchived && (
+                <span className="notes-foot-note">
+                  Dated today, posted as {currentUser?.name || 'you'}.
+                </span>
+              )}
               <ui-button variant="text" onClick={() => setNotesFor(null)}>Close</ui-button>
-              <ui-button
-                variant="filled"
-                disabled={noteDraft.trim() ? undefined : ''}
-                onClick={addNote}
-              >Add note</ui-button>
+              {!subjectArchived && (
+                <ui-button
+                  variant="filled"
+                  disabled={noteDraft.trim() ? undefined : ''}
+                  onClick={addNote}
+                >Add note</ui-button>
+              )}
             </div>
           </>
         )}

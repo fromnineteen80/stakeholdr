@@ -75,12 +75,14 @@ import {
 import { useCompanyCatalogs } from '../data/company.js';
 import {
   MASTER_WORKSPACE_ID, isMasterWorkspace, visibleStakeholders,
+  activeStakeholders,
 } from '../data/workspace.js';
 import {
   PLAN_SECTOR_MODELS, PLAN_GOAL_MODELS, resolveSectorModel, resolveGoalModel,
   goalName, modelFormula, PLAN_STAGES, stageSlug,
   planFit, effectiveBand, overridePick, applyOverride, comparePlanRows,
   planMissing, missingReadout, newPlan, planStakeholderIds, scrubPlanRecord,
+  planMemberRecords, addableMasterFor,
   availableCommunity, planDate, planMetaLine, reviewScenario,
   PLAN_FILTER_DEFS, PLAN_SORT_FIELDS, PLAN_EMPTY_TEXT, PLAN_FOOTER_EXPLAINER,
   PRIORITIZE_EXPLAINER_PRE, PRIORITIZE_EXPLAINER_BOLD,
@@ -1003,17 +1005,17 @@ function PlanCard({ p, users, ws, site, engaged, onReview, onOpen, onOpenUser })
   );
 }
 
-/* Shared element-6 row computation (editor + review read ONE derivation). */
+/* Shared element-6 row computation (editor + review read ONE derivation).
+ * PHASE 24 FIX (audit F1): member ids resolve through the ONE pure
+ * planMemberRecords seam — the editor passes the ACTIVE set, so archived
+ * members drop from BOTH surfaces identically (ids stay in the plan). */
 function usePlanRows(plan, { stakeholders, roster, scores, team, community }) {
   return useMemo(() => {
     const sector = resolveSectorModel(plan.sectorModel);
     const goal = resolveGoalModel(plan.goalModel);
     const rosterIds = roster.map((s) => s.id);
-    const memberIds = planStakeholderIds(plan, rosterIds);
     const ctx = { scores, team, community, planIssues: plan.issues || [] };
-    const rows = memberIds
-      .map((id) => stakeholders.find((s) => s.id === id))
-      .filter(Boolean)
+    const rows = planMemberRecords(plan, rosterIds, stakeholders)
       .map((s) => {
         const wc = weightedCoord(s.id, scores, team);
         const zone = statusFor(wc.x, wc.y);
@@ -1050,7 +1052,14 @@ function PlanEditor({ onOpenUserProfile,
   const missing = planMissing(p);
   const planValid = missing.length === 0;
 
-  const { rows, sector, goal } = usePlanRows(p, { stakeholders, roster, scores, team, community });
+  /* PHASE 24 FIX (audit F1/F5): the editor renders against the ACTIVE set —
+   * parity with Review (whose set is the active-only roster). An archived
+   * member simply drops from the rendered rows; plan.stakeholderIds keeps the
+   * id (restore brings it back). The RAW `stakeholders` prop stays for
+   * RESOLUTION of an already-opened record (shView) — never a dead end. */
+  const activeShs = useMemo(() => activeStakeholders(stakeholders), [stakeholders]);
+
+  const { rows, sector, goal } = usePlanRows(p, { stakeholders: activeShs, roster, scores, team, community });
 
   /* Manager gate (sealed: only role === "manager" may override Fit). */
   const canOverride = !!currentUser && currentUser.role === 'manager';
@@ -1075,9 +1084,10 @@ function PlanEditor({ onOpenUserProfile,
   const memberIds = planStakeholderIds(p, roster.map((s) => s.id));
   /* From this workspace: roster not yet in the plan. */
   const addableWorkspace = roster.filter((s) => !memberIds.includes(s.id));
-  /* From Master (sealed): every stakeholder NOT yet in this workspace. */
+  /* From Master (sealed): every stakeholder NOT yet in this workspace.
+   * PHASE 24 FIX (audit F5): the option list is ACTIVE-only (pure builder). */
   const rosterIds = roster.map((s) => s.id);
-  const addableMaster = stakeholders.filter((s) => !rosterIds.includes(s.id));
+  const addableMaster = addableMasterFor(stakeholders, rosterIds);
 
   const ws = workspaces.find((w) => w.id === p.workspaceId);
   const shView = shModal && shModal.id

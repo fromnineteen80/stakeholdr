@@ -42,6 +42,7 @@ import {
   SEED_WORKSPACES, SEED_STAKEHOLDER_WORKSPACES,
 } from '../data/seed.js';
 import { weightedCoord, statusFor } from '../data/engine.js';
+import { isArchived } from '../data/workspace.js';
 import { STATE_ABBR, siteLabel } from '../data/catalogs.js';
 import { useCompanyCatalogs } from '../data/company.js';
 import {
@@ -256,8 +257,13 @@ export function StakeholderRecordPage({
       subtitle={s.isPerson && s.title
         ? `${s.org} · ${s.title === 'Other' ? (s.titleOther || '') : s.title}`
         : (s.org || 'Stakeholder record')}
-      editing={editing}
+      // PHASE 24 F8 RULING (the StakeholderModal ledger): archived records
+      // are read-only END TO END — the record page's edit toggle disables
+      // with "Restore to edit"; the editing flag can never hold while the
+      // record is archived.
+      editing={editing && !isArchived(s)}
       onToggleEdit={() => setEditing((e) => !e)}
+      editDisabledNote={isArchived(s) ? 'Restore to edit' : undefined}
       sections={sections}
       railTitle="Details"
       rightRail={(

@@ -96,6 +96,7 @@ import {
   regionOptionsFor, toggleMarket, toggleValue, todayYMD,
   COMMUNITY_FILTER_DEFS, COMMUNITY_SORT_FIELDS, COMMUNITY_EMPTY_TEXT,
   COMMUNITY_FOOTER_EXPLAINER, filterCommunity, sortCommunity,
+  stakeholderPickerOptions, representedStakeholderOptions,
 } from './community-logic.js';
 import { stageSlug } from './plan-logic.js';
 // Phase 19: the shared zero-data empty state (sealed "empty states per page").
@@ -917,16 +918,13 @@ function ChosenChip({ label, onRemove }) {
  * substring filter matches name OR org; 8-row cap; pick clears the query;
  * placeholder only while nothing is chosen). */
 function StakeholderPicker({ stakeholders, selected, onChange, placeholder }) {
+  /* Chosen chips resolve RAW (an archived pick keeps rendering — never a
+   * dead end); the OPTION list is ACTIVE-only (PHASE 24 FIX, audit F5 — the
+   * pure builder in community-logic.js). */
   const chosen = (selected || [])
     .map((id) => stakeholders.find((s) => s.id === id))
     .filter(Boolean);
-  const options = stakeholders
-    .filter((s) => !(selected || []).includes(s.id))
-    .map((s) => ({
-      value: s.id,
-      label: displayName(s) || s.name,
-      sub: `${s.org || ''} · ${s.type || ''}`,
-    }));
+  const options = stakeholderPickerOptions(stakeholders, selected);
   return (
     <div className="comm-sh-picker">
       {chosen.length > 0 && (
@@ -1091,11 +1089,13 @@ function CommunityEditor({
                        onChange={(v) => set({ dateSubmitted: v })} />
           </div>
           <Field label="Stakeholder / Organization Targeted">
+            {/* PHASE 24 FIX (audit F5): options are ACTIVE-only via the pure
+                builder; a saved ARCHIVED pick stays resolvable in the list
+                (RAW resolution of the existing reference — never blank). */}
             <Sel
               ariaLabel="Stakeholder / Organization Targeted"
               value={d.representedStakeholderId || ''}
-              options={[{ value: '', label: 'None' },
-                ...stakeholders.map((s) => ({ value: s.id, label: displayName(s) || s.name }))]}
+              options={representedStakeholderOptions(stakeholders, d.representedStakeholderId)}
               onChange={(v) => set({ representedStakeholderId: v })}
             />
           </Field>

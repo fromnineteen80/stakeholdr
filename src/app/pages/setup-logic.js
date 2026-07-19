@@ -12,6 +12,7 @@
  * derivation live — no page change was needed, as designed.
  */
 import { SEGMENTS, MARKETS } from '../data/catalogs.js';
+import { isArchived } from '../data/workspace.js';
 import { deriveCompanyCatalogs } from './settings-logic.js';
 
 /* Sealed app.jsx derivation: companySegments = (cfg.segments && keys.length)
@@ -110,7 +111,10 @@ export function formatCreated(iso) {
  * marketsByWs: for each [stakeholderId, wsIds] join entry, look up the
  * stakeholder; for each wsId accumulate that stakeholder's market and region —
  * a workspace's markets/regions are the UNION over its assigned stakeholders.
- * Returned as insertion-ordered arrays (Set semantics, sealed). ───────────── */
+ * Returned as insertion-ordered arrays (Set semantics, sealed).
+ * PHASE 24 FIX (audit F6): the caller passes the ACTIVE collection — an
+ * archived stakeholder's join entry then fails the lookup and rides the
+ * ghost-skip below, so no card chip is ever archived-derived. ─────────────── */
 export function marketsByWs(stakeholders, stakeholderWorkspaces) {
   const m = {};
   for (const [sid, wsIds] of Object.entries(stakeholderWorkspaces || {})) {
@@ -132,10 +136,18 @@ export function marketsByWs(stakeholders, stakeholderWorkspaces) {
   return out;
 }
 
-/* Sealed countByWs: stakeholders whose join list includes the wsId. */
-export function countByWs(stakeholderWorkspaces) {
+/* Sealed countByWs: stakeholders whose join list includes the wsId.
+ * PHASE 24 FIX (audit F6, mirroring countForWorkspace's third arg): when the
+ * caller passes the stakeholder collection, archived ids are excluded — the
+ * card counts agree with the rail ("what you see is what you act on").
+ * Legacy callers without the argument keep the raw join count. */
+export function countByWs(stakeholderWorkspaces, stakeholders) {
+  const archived = stakeholders
+    ? new Set((stakeholders || []).filter(isArchived).map((s) => s.id))
+    : null;
   const m = {};
-  for (const wsIds of Object.values(stakeholderWorkspaces || {})) {
+  for (const [sid, wsIds] of Object.entries(stakeholderWorkspaces || {})) {
+    if (archived && archived.has(sid)) continue;
     for (const wsId of wsIds || []) m[wsId] = (m[wsId] || 0) + 1;
   }
   return m;
@@ -201,11 +213,19 @@ export const DELETE_BLOCKED_TEXT =
  * assigned (their joins are STRIPPED — they stay in the Master pool, sealed
  * copy) and plans scoped to the workspace (DELETED by the sealed
  * removeWorkspace cascade — disclosed, never a silent destructive side
- * effect). */
-export function deleteImpact(wsId, stakeholderWorkspaces, plans) {
+ * effect).
+ * PHASE 24 FIX (audit F6, the countForWorkspace mirror): with the collection
+ * passed, archived joins are excluded from the disclosed count — the dialog
+ * discloses what the user SEES (the strip itself still clears every join,
+ * archived included; stakeholders stay in the Master pool either way). */
+export function deleteImpact(wsId, stakeholderWorkspaces, plans, stakeholders) {
+  const archived = stakeholders
+    ? new Set((stakeholders || []).filter(isArchived).map((s) => s.id))
+    : null;
   return {
-    stakeholders: Object.values(stakeholderWorkspaces || {})
-      .filter((list) => (list || []).includes(wsId)).length,
+    stakeholders: Object.entries(stakeholderWorkspaces || {})
+      .filter(([sid, list]) =>
+        (list || []).includes(wsId) && !(archived && archived.has(sid))).length,
     plans: (plans || []).filter((p) => p.workspaceId === wsId).length,
   };
 }

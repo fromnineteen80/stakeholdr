@@ -65,6 +65,7 @@ import {
   SEED_SCORES, SEED_TEAM, SEED_STAKEHOLDER_WORKSPACES,
 } from '../data/seed.js';
 import { weightedCoord, statusFor } from '../data/engine.js';
+import { activeStakeholders } from '../data/workspace.js';
 import { displayName } from '../../../design-system/components/stakeholder-table.js';
 import { useCompanyCatalogs } from '../data/company.js';
 import {
@@ -388,22 +389,31 @@ export function ProfilePage({
     return statusFor(wc.x, wc.y);
   };
 
+  /* PHASE 24 FIX (audit F3): the assignment tables are DEFAULT SURFACES —
+   * they derive from the ACTIVE set only (no archived rows on the
+   * Relationships tab, no archived-inflated counts, no archived-derived
+   * market/region chips on the workspace rows). Row-click RESOLUTION of an
+   * id the tables render needs no raw fallback: the rendered rows are
+   * active by construction. */
+  const liveStakeholders = useMemo(
+    () => activeStakeholders(stakeholders), [stakeholders]);
+
   const assigned = useMemo(() => (user ? {
     ws: wsAssigned(user, workspaces, plans),
     plans: plansAssigned(user, plans),
     comm: commAssigned(user, community),
-    sh: shAssigned(user, plans, stakeholders, stakeholderWorkspaces),
+    sh: shAssigned(user, plans, liveStakeholders, stakeholderWorkspaces),
   } : { ws: [], plans: [], comm: [], sh: [] }),
-  [user, workspaces, plans, community, stakeholders, stakeholderWorkspaces]);
+  [user, workspaces, plans, community, liveStakeholders, stakeholderWorkspaces]);
 
   const rows = useMemo(() => {
     if (!user) return [];
-    if (tab === 'ws') return wsRows(assigned.ws, stakeholders, stakeholderWorkspaces);
+    if (tab === 'ws') return wsRows(assigned.ws, liveStakeholders, stakeholderWorkspaces);
     if (tab === 'plans') return planRows(assigned.plans, workspaces);
     if (tab === 'comm') return commRows(assigned.comm, workspaces, stakeholderWorkspaces);
     return shRows(assigned.sh, rel, displayName);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, tab, assigned, stakeholders, stakeholderWorkspaces, workspaces, scores, team]);
+  }, [user, tab, assigned, liveStakeholders, stakeholderWorkspaces, workspaces, scores, team]);
 
   if (!user) return null; // sealed: no user → render null
 

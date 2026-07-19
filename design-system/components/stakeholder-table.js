@@ -1886,7 +1886,12 @@ class UiStakeholderTable extends HTMLElement {
   }
   /* Phase 24: in readonly mode NO edit ever commits — every write path (text
    * inputs, cell editors, popover checks) funnels through here, so this one
-   * guard makes the Archived view honestly write-proof. */
+   * guard makes the GRID honestly write-proof. PRECISION (2026-07-19, archive
+   * audit F7): the claim covers this element's writes (row-change); the
+   * Archived VIEW is write-proof end to end only because its HOST surfaces
+   * are gated too — the page's NotesModal hides its composer + refuses
+   * addNote for archived subjects, and the read profile / record page
+   * disable their Edit bridges ("Restore to edit"). */
   #patch(row, patch) {
     if (this.readonly) return;
     this.#emit('row-change', { id: row.id, patch });

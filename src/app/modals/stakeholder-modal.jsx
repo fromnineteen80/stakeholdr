@@ -20,6 +20,17 @@
  * The stacked delete-confirm's own scrim/Escape closes ONLY the confirm (it
  * is a SIBLING ui-dialog, never nested, so its close/Escape can never fall
  * through to the main dialog).
+ *
+ * PHASE 24 RULING (2026-07-19, archive audit F8): ARCHIVED RECORDS ARE
+ * READ-ONLY END TO END. When the viewed record carries the archived flag,
+ * the read profile's "Edit stakeholder" bridge renders DISABLED with title
+ * "Restore to edit" (make-real style — never a live-looking dead
+ * affordance). The danger-delete stays reachable ONLY through the Archived
+ * view's delete-forever path: every archived route into this modal opens
+ * initialView (the read profile), and with the Edit bridge disabled the form
+ * — and its delete section — is unreachable for an archived record. The
+ * NotesModal composer half of the same ruling lives on the sheet.jsx ledger
+ * (F7); the record page mirrors this gate on its edit toggle.
  */
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -32,6 +43,7 @@ import {
  * CATALOG OVERRIDE contract). */
 import { useCompanyCatalogs } from '../data/company.js';
 import { weightedCoord, statusFor } from '../data/engine.js';
+import { isArchived } from '../data/workspace.js';
 import {
   displayName, formatPhone, normalizeUrl,
 } from '../../../design-system/components/stakeholder-table.js';
@@ -515,7 +527,16 @@ export function StakeholderModal({
                 </div>
               </div>
               <div className="prof-actions">
-                <ui-button variant="text" onClick={() => setViewMode(false)}>Edit stakeholder</ui-button>
+                {/* F8 RULING (header ledger): archived → the Edit bridge is
+                    honestly DISABLED ("Restore to edit"), keeping the form —
+                    and its delete section — unreachable. */}
+                {isArchived(s) ? (
+                  <ui-button variant="text" disabled="" title="Restore to edit">
+                    Edit stakeholder
+                  </ui-button>
+                ) : (
+                  <ui-button variant="text" onClick={() => setViewMode(false)}>Edit stakeholder</ui-button>
+                )}
                 <ui-icon-button variant="standard" aria-label="Close" onClick={onCancel}>
                   <ui-icon>close</ui-icon>
                 </ui-icon-button>
@@ -888,8 +909,10 @@ export function StakeholderModal({
               {!isEdit && <div className="sh-notice muted">{CREATE_NOTICE}</div>}
 
               {/* 16 · DELETE SECTION (edit + onDelete — the sealed MAKE-REAL:
-                  Lists now wires onDelete so this section is reachable) */}
-              {isEdit && onDelete && (
+                  Lists now wires onDelete so this section is reachable).
+                  F8 RULING belt: never on an ARCHIVED record — its only
+                  delete is the Archived view's delete-forever path. */}
+              {isEdit && onDelete && !isArchived(existing) && (
                 <div className="sh-delete">
                   <span className="sh-lbl">Delete stakeholder</span>
                   <p className="sh-delete-copy muted">

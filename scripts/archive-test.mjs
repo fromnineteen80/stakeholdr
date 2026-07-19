@@ -30,6 +30,22 @@ import {
 } from '../src/app/pages/sheet-logic.js';
 import { unscoredCountFor } from '../src/app/pages/scoring-logic.js';
 import { paletteResults } from '../src/app/palette-logic.js';
+/* FIX-audit consumers (2026-07-19): the exclusion-seam surfaces that were
+ * never rewired — plan editor/review parity + option lists, mention picker,
+ * profile derivations, Setup counts. All imports are the SHIPPED modules. */
+import {
+  planStakeholderIds, planMemberRecords, addableMasterFor,
+} from '../src/app/pages/plan-logic.js';
+import { mentionMatches } from '../src/app/pages/messages-logic.js';
+import {
+  stakeholderPickerOptions, representedStakeholderOptions,
+} from '../src/app/pages/community-logic.js';
+import {
+  countByWs, marketsByWs, deleteImpact,
+} from '../src/app/pages/setup-logic.js';
+import {
+  shAssigned, wsMarketsRegions,
+} from '../src/app/pages/profile-logic.js';
 
 let passed = 0;
 const ok = (name, fn) => { fn(); passed++; console.log('  ✓ ' + name); };
@@ -121,6 +137,78 @@ ok('paletteResults over the active set: an archived stakeholder never surfaces',
   // and active records still resolve
   assert.equal(paletteResults('Name s1',
     { stakeholders: activeStakeholders(SH) })[0].id, 's1');
+});
+
+/* ── FIX AUDIT (2026-07-19): the consumers that never got rewired ────────── */
+const FSH = [
+  mk('f1', { market: 'Americas', region: 'United States', type: 'Mayor' }),
+  mk('f2', { market: 'EMEA', region: 'Europe', type: 'Media',
+    archived: true, archivedAt: STAMP, archivedBy: 'u' }),
+  mk('f3', { market: 'Americas', region: 'Canada', type: 'NGO' }),
+];
+const FJOINS = { f1: ['ws-a'], f2: ['ws-a'], f3: ['ws-a', 'ws-b'] };
+
+ok('F1 editor/review parity: planMemberRecords over the ACTIVE set drops the archived member; the plan record keeps the id', () => {
+  const plan = { id: 'p', stakeholderIds: ['f1', 'f2', 'f3'] };
+  const roster = activeStakeholders(FSH); // Review's set (visibleStakeholders is active-only)
+  const rosterIds = roster.map((s) => s.id);
+  const editor = planMemberRecords(plan, rosterIds, activeStakeholders(FSH));
+  const review = planMemberRecords(plan, rosterIds, roster);
+  assert.deepEqual(editor.map((s) => s.id), ['f1', 'f3']); // archived f2 drops
+  assert.deepEqual(editor.map((s) => s.id), review.map((s) => s.id)); // parity
+  assert.deepEqual(planStakeholderIds(plan, rosterIds), ['f1', 'f2', 'f3']); // untouched — restore brings it back
+  // the RAW set would render the archived member (the audited bug)
+  assert.deepEqual(planMemberRecords(plan, rosterIds, FSH).map((s) => s.id), ['f1', 'f2', 'f3']);
+});
+ok('F5 plan addableMaster is ACTIVE-only (archived never offered; roster still excluded)', () => {
+  assert.deepEqual(addableMasterFor(FSH, ['f1']).map((s) => s.id), ['f3']);
+  assert.deepEqual(addableMasterFor(FSH, []).map((s) => s.id), ['f1', 'f3']);
+});
+ok('F4 mention PICKER over the active set excludes archived; the raw set would offer it', () => {
+  const mq = { trigger: '@', query: 'name' };
+  const raw = mentionMatches(mq, { stakeholders: FSH });
+  assert.equal(raw.length, 3); // the audited bug: archived offered for NEW mentions
+  const act = mentionMatches(mq, { stakeholders: activeStakeholders(FSH) });
+  assert.deepEqual(act.map((o) => o.id), ['f1', 'f3']);
+});
+ok('F5 community StakeholderPicker options: active-only, selected excluded; chosen chips stay RAW at the call site', () => {
+  const opts = stakeholderPickerOptions(FSH, ['f1']);
+  assert.deepEqual(opts.map((o) => o.value), ['f3']); // f2 archived, f1 chosen
+  assert.equal(opts[0].sub, 'Org f3 · NGO');
+  assert.deepEqual(stakeholderPickerOptions(FSH, []).map((o) => o.value), ['f1', 'f3']);
+});
+ok('F5 represented-stakeholder select: None + active, PLUS the archived CURRENT pick (raw resolution, never a blank select)', () => {
+  assert.deepEqual(representedStakeholderOptions(FSH, '').map((o) => o.value), ['', 'f1', 'f3']);
+  assert.deepEqual(representedStakeholderOptions(FSH, 'f2').map((o) => o.value), ['', 'f2', 'f1', 'f3']);
+  assert.deepEqual(representedStakeholderOptions(FSH, 'f1').map((o) => o.value), ['', 'f1', 'f3']); // active pick: no duplicate
+});
+ok('F6 countByWs with the collection excludes archived — parity with countForWorkspace (the rail)', () => {
+  const c = countByWs(FJOINS, FSH);
+  assert.equal(c['ws-a'], 2); // f2 archived
+  assert.equal(c['ws-a'], countForWorkspace(FJOINS, 'ws-a', FSH));
+  assert.equal(c['ws-b'], countForWorkspace(FJOINS, 'ws-b', FSH));
+  assert.equal(countByWs(FJOINS)['ws-a'], 3); // legacy raw join count preserved
+});
+ok('F6 marketsByWs over the ACTIVE set: no archived-derived market/region chips', () => {
+  const d = marketsByWs(activeStakeholders(FSH), FJOINS);
+  assert.deepEqual(d['ws-a'], { markets: ['Americas'], regions: ['United States', 'Canada'] });
+  // the raw set would leak EMEA/Europe from the archived record
+  assert.ok(marketsByWs(FSH, FJOINS)['ws-a'].markets.includes('EMEA'));
+});
+ok('F6 deleteImpact with the collection discloses the ACTIVE count the user sees', () => {
+  const plans = [{ id: 'p1', workspaceId: 'ws-a' }];
+  assert.deepEqual(deleteImpact('ws-a', FJOINS, plans, FSH), { stakeholders: 2, plans: 1 });
+  assert.deepEqual(deleteImpact('ws-a', FJOINS, plans), { stakeholders: 3, plans: 1 }); // legacy raw
+});
+ok('F3 profile derivations over the ACTIVE set: Relationships excludes archived; ws chips never archived-derived', () => {
+  const user = { id: 'u-me' };
+  const plans = [{ id: 'p1', workspaceId: 'ws-a', owners: ['u-me'], team: [] }];
+  const withArchived = shAssigned(user, plans, FSH, FJOINS);
+  assert.deepEqual(withArchived.map((s) => s.id), ['f1', 'f2', 'f3']); // the audited bug
+  const fixed = shAssigned(user, plans, activeStakeholders(FSH), FJOINS);
+  assert.deepEqual(fixed.map((s) => s.id), ['f1', 'f3']);
+  const mr = wsMarketsRegions('ws-a', activeStakeholders(FSH), FJOINS);
+  assert.deepEqual(mr.markets, ['Americas']);
 });
 
 /* ── UNDO RESTORE (the snackbar action contract) ────────────────────────── */

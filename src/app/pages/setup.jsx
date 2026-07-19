@@ -69,6 +69,7 @@ import {
   SEED_PLANS, SEED_USERS,
 } from '../data/seed.js';
 import { US_STATES, STATE_ABBR } from '../data/catalogs.js';
+import { activeStakeholders } from '../data/workspace.js';
 import {
   segMapFrom, blankWorkspace, draftFromWorkspace, workspaceValid,
   applySegment, applyScope, submitPatch, SCOPE_OPTIONS, formatCreated,
@@ -395,11 +396,18 @@ export function SetupPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openCreate]);
 
-  /* Sealed derivations (computed, never stored). */
+  /* Sealed derivations (computed, never stored).
+   * PHASE 24 FIX (audit F6): the card counts + market/region chips derive
+   * from the ACTIVE set (countByWs takes the collection, the countForWorkspace
+   * mirror; marketsByWs gets the active slice and ghost-skips archived
+   * joins) — the cards agree with the rail counts. */
+  const liveShs = useMemo(() => activeStakeholders(stakeholders), [stakeholders]);
   const derived = useMemo(
-    () => marketsByWs(stakeholders, stakeholderWorkspaces),
-    [stakeholders, stakeholderWorkspaces]);
-  const counts = useMemo(() => countByWs(stakeholderWorkspaces), [stakeholderWorkspaces]);
+    () => marketsByWs(liveShs, stakeholderWorkspaces),
+    [liveShs, stakeholderWorkspaces]);
+  const counts = useMemo(
+    () => countByWs(stakeholderWorkspaces, stakeholders),
+    [stakeholderWorkspaces, stakeholders]);
 
   const visible = visibleWorkspacesFor(workspaces, currentUser);
   const shown = filterWorkspaces(visible, { query, segFilter, marketFilter, regionFilter, derived });
@@ -429,7 +437,8 @@ export function SetupPage({
     ? workspaces.find((w) => w.id === confirmDeleteId) || null
     : null;
   const impact = confirmWs
-    ? deleteImpact(confirmWs.id, stakeholderWorkspaces, plans)
+    /* PHASE 24 FIX (audit F6): disclose the ACTIVE count the user sees. */
+    ? deleteImpact(confirmWs.id, stakeholderWorkspaces, plans, stakeholders)
     : { stakeholders: 0, plans: 0 };
 
   const togglePop = (key) => setOpenPop((cur) => (cur === key ? null : key));

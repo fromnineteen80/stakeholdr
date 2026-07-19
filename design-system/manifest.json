@@ -1243,7 +1243,7 @@
      "name": "readonly",
      "type": "boolean",
      "default": false,
-     "note": "attribute (DECLARED Phase 24): read-only mode for the Lists ARCHIVED view — the same grid with its write surfaces inert: no cell editor ever mounts, inline inputs/dropdown triggers render as plain display text (no hover wash, no pointer), and row-change NEVER fires (every write path funnels through one guarded emitter). Read affordances stay live: search/filter/sort, the selectable column (the archived bulk bar needs it), notes history, owners popover, community pills, Export CSV, and the record opener — whose edit-cell hint reads View person/organization instead of Edit (make-real law: no live-looking dead or lying affordance)"
+     "note": "attribute (DECLARED Phase 24): read-only mode for the Lists ARCHIVED view — the same grid with its write surfaces inert: no cell editor ever mounts, inline inputs/dropdown triggers render as plain display text (no hover wash, no pointer), and row-change NEVER fires (every write path funnels through one guarded emitter). Read affordances stay live: search/filter/sort, the selectable column (the archived bulk bar needs it), notes history (READ history only — the host page's NotesModal hides its composer and refuses addNote for an archived subject, showing the honest muted 'Restore to add notes' line; ruling 2026-07-19, archive audit F7), owners popover, community pills, Export CSV, and the record opener — whose edit-cell hint reads View person/organization instead of Edit, and whose read profile disables its Edit bridge ('Restore to edit') while the record is archived (make-real law: no live-looking dead or lying affordance)"
     },
     {
      "name": "selection",

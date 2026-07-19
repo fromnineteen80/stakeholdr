@@ -73,6 +73,7 @@ import {
   SEED_SCORES, SEED_TEAM, SEED_STAKEHOLDER_WORKSPACES,
 } from '../data/seed.js';
 import { unscoredCountFor } from './scoring-logic.js';
+import { activeStakeholders } from '../data/workspace.js';
 import { useUiEvent, Field, TF, Picker, UAv } from '../modals/stakeholder-modal.jsx';
 import {
   STR, messagePlaceholder,
@@ -103,15 +104,29 @@ function useMessaging() {
    * (the one seam, data/session.js) — the users[0] stand-in is retired. */
   const currentUser = useCurrentUser(users);
 
-  /* Sealed live pending count (Reminders row + sentence) — the ONE formula. */
-  const pending = useMemo(
-    () => unscoredCountFor(stakeholders, scores, team, currentUser?.id),
-    [stakeholders, scores, team, currentUser]);
+  /* PHASE 24 FIX (audit F2/F4): the ONE active-only slice this module reads —
+   * archived records leave every default surface (the activeStakeholders seam
+   * in data/workspace.js). */
+  const liveStakeholders = useMemo(
+    () => activeStakeholders(stakeholders), [stakeholders]);
 
-  /* Census A27 made real: mention sources are LIVE entity lists via props. */
+  /* Sealed live pending count (Reminders row + sentence) — the ONE formula.
+   * PHASE 24 FIX (audit F2): over the ACTIVE set, so the Reminders chip
+   * always agrees with the shell's nav badge + the Scoring queue (an archived
+   * record never demands scoring). */
+  const pending = useMemo(
+    () => unscoredCountFor(liveStakeholders, scores, team, currentUser?.id),
+    [liveStakeholders, scores, team, currentUser]);
+
+  /* Census A27 made real: mention sources are LIVE entity lists via props.
+   * PHASE 24 FIX (audit F4): the composer PICKER authors NEW references, so
+   * its stakeholder source is ACTIVE-only. Existing mention chips stay RAW by
+   * construction: parseMentions resolves label+id from the message body
+   * token itself (never from these sources), so an archived mention still
+   * renders and routes — a recoverable record never dead-ends. */
   const mentionSources = useMemo(
-    () => ({ stakeholders, workspaces, plans, community }),
-    [stakeholders, workspaces, plans, community]);
+    () => ({ stakeholders: liveStakeholders, workspaces, plans, community }),
+    [liveStakeholders, workspaces, plans, community]);
 
   /* Sealed sendMessage: append { id, from, body, at } (no kind field). */
   const send = (convId, body) => {
