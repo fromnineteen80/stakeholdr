@@ -30,6 +30,19 @@ for (const path of pages) {
   const errs = [];
   page.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
   page.on('pageerror', e => errs.push('PAGEERROR: ' + e.message));
+  // PHASE 23 HARNESS BOOTSTRAP (declared): the app now boots to the LOGIN
+  // GATE when no session exists, and every prior drive assumes a signed-in
+  // app — so the harness establishes the session BEFORE any app script runs
+  // (u-alex, the drives' actor). The schema stamp must ride along or
+  // store.js's migration sweeps the injected key (scale-probe precedent).
+  // The gate itself is exercised by the dedicated P23 drive below, which
+  // runs on a clean context with NO seeded session.
+  if (path === '/app.html') {
+    await page.addInitScript(() => {
+      localStorage.setItem('hpsm:__schema', 'v10-rebuild');
+      localStorage.setItem('hpsm:session', JSON.stringify({ userId: 'u-alex' }));
+    });
+  }
   await page.goto('http://127.0.0.1:4173' + path, { waitUntil: 'networkidle', timeout: 30000 }).catch(e => errs.push('NAV: ' + e.message));
   await page.waitForTimeout(1200);
   // interact a little: guide — expand first detail; wireframes — toggle theme
@@ -1267,7 +1280,16 @@ for (const path of pages) {
     await page.waitForTimeout(300);
     await page.locator('.reset-blank-btn').click({ timeout: 3000 }).catch(e => errs.push('P19BGO: ' + e.message));
     await page.waitForTimeout(2000); // location.reload()
-    // Phase 20: blank start also swept the tour flag — assert + skip.
+    // Phase 23: the blank sweep cleared the STORE session; the harness init
+    // script re-seeds u-alex, but the blank org has no such user — so the
+    // GATE renders (the sweep-logs-out contract, asserted head-on in the P23
+    // drive) listing the solo manager u-you. Sign in as u-you to continue
+    // the blank-org drive as its manager.
+    if (await page.locator('.login-shell').count() !== 1) errs.push('P23BLANKGATE: a blank start must land on the login gate (stale session never resolves)');
+    await page.locator('.login-demo-row', { hasText: 'You' }).click({ timeout: 3000 }).catch(e => errs.push('P23BLANKIN: ' + e.message));
+    await page.waitForTimeout(1200); // > the tour's 600ms settle
+    // Phase 20: blank start also swept the tour flag — the re-armed first-run
+    // tour fires AFTER the u-you sign-in (Phase 23: never at the gate).
     if (await page.locator('ui-coachmark.app-tour[open]').count() !== 1) {
       errs.push('P20REARM2: a blank start must re-arm the first-run tour');
     }
@@ -1409,6 +1431,12 @@ for (const path of pages) {
   const errs = [];
   page.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
   page.on('pageerror', e => errs.push('PAGEERROR: ' + e.message));
+  // Phase 23: the mobile drive also assumes a signed-in app (its writes
+  // assert u-alex) — same harness bootstrap as the desktop drive.
+  await page.addInitScript(() => {
+    localStorage.setItem('hpsm:__schema', 'v10-rebuild');
+    localStorage.setItem('hpsm:session', JSON.stringify({ userId: 'u-alex' }));
+  });
   await page.goto('http://127.0.0.1:4173/app.html', { waitUntil: 'networkidle', timeout: 30000 }).catch(e => errs.push('NAV: ' + e.message));
   await page.waitForTimeout(1500);
   // the desktop tour never auto-starts at mobile widths (declared)
@@ -1484,6 +1512,106 @@ for (const path of pages) {
   const real = errs.filter(e => !/fonts\.g(oogleapis|static)\.com|net::ERR_|Failed to load resource/.test(e));
   totalErrors += real.length;
   console.log(`/app.html [mobile 390x844]: ${real.length} real console/page errors` + (real.length ? '\n  - ' + real.slice(0, 8).join('\n  - ') : ''));
+  await page.close();
+}
+
+// ── PHASE 23 — LOGIN GATE drive (a CLEAN context: no seeded session; the
+// gate is the entry). Fresh profile → the gate renders with the demo list;
+// sign in as Alex → the app mounts AND the first-run tour fires (only after
+// login); logout → back to the gate; sign in as a member ("User" role) →
+// Settings hidden (NO auto-promote — the sealed trap stays dead); Start
+// blank → logged out + the gate shows the blank org's solo manager u-you;
+// demo reset → logged out again.
+{
+  const page = await browser.newPage();
+  const errs = [];
+  page.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+  page.on('pageerror', e => errs.push('PAGEERROR: ' + e.message));
+  const session = () => page.evaluate(() => JSON.parse(localStorage.getItem('hpsm:session') || 'null'));
+  await page.goto('http://127.0.0.1:4173/app.html', { waitUntil: 'networkidle', timeout: 30000 }).catch(e => errs.push('P23NAV: ' + e.message));
+  await page.waitForTimeout(1200);
+  // 1. the gate is the ONLY mount (sealed: nothing else mounts)
+  if (await page.locator('.login-shell').count() !== 1) errs.push('P23GATE: the login gate did not render on a fresh profile');
+  if (await page.locator('ui-app-bar').count() !== 0) errs.push('P23GATEONLY: app chrome mounted while signed out');
+  if (await page.locator('ui-coachmark.app-tour[open]').count() !== 0) errs.push('P23TOURGATE: the first-run tour fired AT the gate (must fire only after login)');
+  const p23Rows = await page.locator('.login-demo-row').count();
+  if (p23Rows !== 7) errs.push(`P23DEMO: expected the 7 non-system demo accounts, saw ${p23Rows}`);
+  const p23Dis = await page.locator('ui-button.login-submit').getAttribute('disabled').catch(() => null);
+  if (p23Dis === null) errs.push('P23VALID: submit must be DISABLED while the sealed validity fails');
+  // 2. sign in as Alex → the app mounts, the session persists, the TOUR fires
+  await page.locator('.login-demo-row', { hasText: 'Alex Rivera' }).click({ timeout: 3000 }).catch(e => errs.push('P23IN: ' + e.message));
+  await page.waitForTimeout(1200); // > the tour's 600ms settle
+  if (await page.locator('ui-app-bar').count() !== 1) errs.push('P23IN: the app did not mount after demo sign-in');
+  const p23S1 = await session();
+  if (!p23S1 || p23S1.userId !== 'u-alex') errs.push(`P23SESSION: expected {userId:"u-alex"} in hpsm:session, saw ${JSON.stringify(p23S1)}`);
+  if (await page.locator('ui-coachmark.app-tour[open]').count() !== 1) errs.push('P23TOUR: the first-run tour must fire AFTER login on a fresh profile');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  // 3. logout (sealed census A10) → back to the gate, session cleared
+  await page.locator('#me-anchor').click({ timeout: 3000 }).catch(e => errs.push('P23MENU: ' + e.message));
+  await page.waitForTimeout(300);
+  await page.locator('ui-menu.profile-menu ui-menu-item', { hasText: 'Log out' }).click({ timeout: 3000 }).catch(e => errs.push('P23OUT: ' + e.message));
+  await page.waitForTimeout(500);
+  if (await page.locator('.login-shell').count() !== 1) errs.push('P23OUT: Log out did not return to the gate');
+  if (await session() !== null) errs.push('P23OUT: the session must be null after logout');
+  // 4. sign in as a MEMBER ("User" role): Settings hidden, role untouched
+  await page.locator('.login-demo-row', { hasText: 'Sam Okafor' }).click({ timeout: 3000 }).catch(e => errs.push('P23SAM: ' + e.message));
+  await page.waitForTimeout(800);
+  const p23S2 = await session();
+  if (!p23S2 || p23S2.userId !== 'u-sam') errs.push(`P23SAM: expected the Sam session, saw ${JSON.stringify(p23S2)}`);
+  const p23SamRole = await page.evaluate(() => (JSON.parse(localStorage.getItem('hpsm:users') || '[]').find(u => u.id === 'u-sam') || {}).role);
+  if (p23SamRole !== 'member') errs.push(`P23PROMOTE: a member must STAY member through login (sealed trap) — saw role ${JSON.stringify(p23SamRole)}`);
+  await page.locator('#me-anchor').click({ timeout: 3000 }).catch(e => errs.push('P23SAMMENU: ' + e.message));
+  await page.waitForTimeout(300);
+  if (await page.locator('ui-menu.profile-menu ui-menu-item', { hasText: 'Settings' }).count() !== 0)
+    errs.push('P23SETTINGS: the Settings item must be HIDDEN for a member (no auto-promote)');
+  // 5. blank mode: log out → in as the manager → Start blank (reload sweeps
+  //    the namespace incl. the session) → the gate shows u-you
+  await page.locator('ui-menu.profile-menu ui-menu-item', { hasText: 'Log out' }).click({ timeout: 3000 }).catch(e => errs.push('P23OUT2: ' + e.message));
+  await page.waitForTimeout(500);
+  await page.locator('.login-demo-row', { hasText: 'Alex Rivera' }).click({ timeout: 3000 }).catch(e => errs.push('P23IN2: ' + e.message));
+  await page.waitForTimeout(800);
+  await page.locator('#me-anchor').click({ timeout: 3000 }).catch(e => errs.push('P23MENU2: ' + e.message));
+  await page.waitForTimeout(300);
+  await page.locator('ui-menu.profile-menu ui-menu-item', { hasText: 'Settings' }).click({ timeout: 3000 }).catch(e => errs.push('P23SETNAV: ' + e.message));
+  await page.waitForTimeout(400);
+  await page.locator('.settings-nav ui-list-item', { hasText: 'Team Management' }).click({ timeout: 3000 }).catch(e => errs.push('P23TEAM: ' + e.message));
+  await page.waitForTimeout(300);
+  await page.locator('ui-button.reset-demo-btn').click({ timeout: 3000 }).catch(e => errs.push('P23RESETOPEN: ' + e.message));
+  await page.waitForTimeout(400);
+  await page.locator('.reset-demo-confirm ui-button.reset-blank-btn').click({ timeout: 3000 }).catch(e => errs.push('P23BLANK: ' + e.message));
+  await page.waitForTimeout(2000); // the sealed reload-the-seed step
+  if (await page.locator('.login-shell').count() !== 1) errs.push('P23BLANKOUT: Start blank must LOG OUT (the sweep clears hpsm:session)');
+  const p23Blank = await page.locator('.login-demo-row').count();
+  if (p23Blank !== 1) errs.push(`P23BLANKROW: the blank org's gate must list exactly u-you, saw ${p23Blank} rows`);
+  const p23You = (await page.locator('.login-demo-row').textContent().catch(() => '') || '');
+  if (!p23You.includes('You')) errs.push(`P23BLANKROW: expected the solo manager "You", saw "${p23You.trim()}"`);
+  // sign in as u-you → the blank app mounts, Settings reachable (manager)
+  await page.locator('.login-demo-row').click({ timeout: 3000 }).catch(e => errs.push('P23YOU: ' + e.message));
+  await page.waitForTimeout(1200);
+  if (await page.locator('ui-app-bar').count() !== 1) errs.push('P23YOU: the blank org sign-in did not mount the app');
+  const p23S3 = await session();
+  if (!p23S3 || p23S3.userId !== 'u-you') errs.push(`P23YOU: expected the u-you session, saw ${JSON.stringify(p23S3)}`);
+  await page.keyboard.press('Escape'); // the re-armed first-run tour (fresh namespace)
+  await page.waitForTimeout(300);
+  // 6. demo reset from the blank org → logged out again (sweep = logout)
+  await page.locator('#me-anchor').click({ timeout: 3000 }).catch(e => errs.push('P23MENU3: ' + e.message));
+  await page.waitForTimeout(300);
+  await page.locator('ui-menu.profile-menu ui-menu-item', { hasText: 'Settings' }).click({ timeout: 3000 }).catch(e => errs.push('P23SETNAV2: ' + e.message));
+  await page.waitForTimeout(400);
+  await page.locator('.settings-nav ui-list-item', { hasText: 'Team Management' }).click({ timeout: 3000 }).catch(e => errs.push('P23TEAM2: ' + e.message));
+  await page.waitForTimeout(300);
+  await page.locator('ui-button.reset-demo-btn').click({ timeout: 3000 }).catch(e => errs.push('P23RESETOPEN2: ' + e.message));
+  await page.waitForTimeout(400);
+  await page.locator('.reset-demo-confirm ui-button.reset-demo-go').click({ timeout: 3000 }).catch(e => errs.push('P23RESET: ' + e.message));
+  await page.waitForTimeout(2000);
+  if (await page.locator('.login-shell').count() !== 1) errs.push('P23RESETOUT: Reset demo data must LOG OUT (back to the gate)');
+  if (await session() !== null) errs.push('P23RESETOUT: the session must be gone after the reset sweep');
+  const p23Demo2 = await page.locator('.login-demo-row').count();
+  if (p23Demo2 !== 7) errs.push(`P23RESETROWS: the reset gate must list the 7 demo accounts again, saw ${p23Demo2}`);
+  const real = errs.filter(e => !/fonts\.g(oogleapis|static)\.com|net::ERR_|Failed to load resource/.test(e));
+  totalErrors += real.length;
+  console.log(`/app.html [P23 login gate]: ${real.length} real console/page errors` + (real.length ? '\n  - ' + real.slice(0, 8).join('\n  - ') : ''));
   await page.close();
 }
 

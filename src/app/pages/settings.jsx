@@ -82,6 +82,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { usePersistentState, uid, nowStamp, Store } from '../data/store.js';
+import { useCurrentUser } from '../data/session.js';
 import { SEED_USERS } from '../data/seed.js';
 import { useCompanyConfig, useCompanyCatalogs, applyAppConfigLive } from '../data/company.js';
 import {
@@ -119,7 +120,7 @@ import { useUiEvent, Field, TF, Sel, UAv } from '../modals/stakeholder-modal.jsx
  * the color is DATA from appConfig — it flows in as a host custom property
  * via ref (inline style= is banned; this is the established imperative
  * bridge). */
-function Tinted({ className, color, title, children }) {
+export function Tinted({ className, color, title, children }) {
   const ref = useRef(null);
   useEffect(() => {
     const el = ref.current;
@@ -788,7 +789,9 @@ export function SettingsPage({ onOpenUserProfile }) {
   const [cfg, update] = useCompanyConfig();
   const cats = useCompanyCatalogs();
   const [users, setUsers] = usePersistentState('users', SEED_USERS);
-  const currentUser = users[0] || null;
+  /* Phase 23: currentUser = the SESSION user resolved against the directory
+   * (the one seam, data/session.js) — the users[0] stand-in is retired. */
+  const currentUser = useCurrentUser(users);
   const [pane, setPane] = useState(DEFAULT_PANE);
   const [filter, setFilter] = useState('');
 

@@ -54,11 +54,12 @@
  *  · Swatch aria: the sealed "Pick color {hex}" carries a literal hex; app
  *    code is hex-free, so cards read "Avatar color {n}" over the
  *    --ui-sys-avatar-1..8 tokens (census CAPTURED→TOKEN).
- *  · currentUser = users[0] until the Login phase (established order);
- *    LoginView itself belongs to the Login phase.
+ *  · Phase 23: currentUser derives from the SESSION via data/session.js
+ *    (the users[0] stand-in is retired); LoginView lives in login.jsx.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePersistentState, nowStamp, cmdKeyLabel } from '../data/store.js';
+import { useCurrentUser } from '../data/session.js';
 import {
   SEED_USERS, SEED_WORKSPACES, SEED_PLANS, SEED_COMMUNITY, SEED_STAKEHOLDERS,
   SEED_SCORES, SEED_TEAM, SEED_STAKEHOLDER_WORKSPACES,
@@ -163,7 +164,7 @@ export function UserListPopup({
 
 /* ── small bridges (established patterns) ────────────────────────────────── */
 
-function Upload({ onData, children }) {
+export function Upload({ onData, children }) {
   const ref = useRef(null);
   useUiEvent(ref, 'change', (e) => onData(e.detail.dataUrl));
   return <ui-upload ref={ref} accept="image/*" variant="outlined">{children}</ui-upload>;
@@ -173,7 +174,7 @@ function Upload({ onData, children }) {
  * variant over the --ui-sys-avatar-1..8 tokens). */
 const AVATAR_TOKENS = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => `var(--ui-sys-avatar-${n})`);
 
-function AvatarSwatches({ value, onPick }) {
+export function AvatarSwatches({ value, onPick }) {
   const ref = useRef(null);
   useUiEvent(ref, 'change', (e) => {
     if (e.detail && e.detail.value != null) onPick(e.detail.value);
@@ -347,7 +348,9 @@ export function ProfilePage({
   const { companyFunctions, companyMarkets } = useCompanyCatalogs();
 
   // currentUser = the seeded first user until the login phase (sealed order).
-  const currentUser = users[0] || null;
+  /* Phase 23: currentUser = the SESSION user resolved against the directory
+   * (the one seam, data/session.js) — the users[0] stand-in is retired. */
+  const currentUser = useCurrentUser(users);
   const user = users.find((u) => u.id === userId) || null;
   const isSelf = !!user && !!currentUser && user.id === currentUser.id;
 

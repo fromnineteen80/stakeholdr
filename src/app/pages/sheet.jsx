@@ -67,6 +67,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { usePersistentState, uid, nowStamp, cmdKeyLabel } from '../data/store.js';
+import { useCurrentUser } from '../data/session.js';
 import { weightedCoord, statusFor } from '../data/engine.js';
 import {
   SEED_STAKEHOLDERS, SEED_SCORES, SEED_TEAM, SEED_USERS, SEED_COMMUNITY,
@@ -229,7 +230,9 @@ export function SheetPage({
 
   // currentUser = the seeded first user UNTIL THE LOGIN PHASE lands the real
   // signed-in identity (sealed build order; do not invent auth here).
-  const currentUser = users[0] || null;
+  /* Phase 23: currentUser = the SESSION user resolved against the directory
+   * (the one seam, data/session.js) — the users[0] stand-in is retired. */
+  const currentUser = useCurrentUser(users);
 
   /* Sealed row mapping over the WORKSPACE-VISIBLE set (Phase 6: Master = the
    * union; a workspace = join-filtered): each visible stakeholder computes,

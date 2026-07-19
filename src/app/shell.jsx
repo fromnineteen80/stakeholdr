@@ -40,6 +40,11 @@ import { TOUR_STEPS, hasSeenTour, markTourSeen } from './tour-logic.js';
  * token-driven viewport probe + the honest desktop-surface note. */
 import { useIsMobile, DesktopOnlyNote } from './mobile.jsx';
 import { MOBILE_VIEWS } from './mobile-logic.js';
+/* Phase 23: the LOGIN GATE (sealed App-shell box AUTH GATE & SESSION) — the
+ * one auth seam (data/session.js) + the full-page LoginView surface. */
+import { LoginScreen } from './login.jsx';
+import { useCurrentUser, signIn, signOut } from './data/session.js';
+import { upsertUser } from './login-logic.js';
 
 // NAV_TABS per the sealed App-shell box (icons = the captured semantic→ligature
 // map). Scoring carries hideWhenMaster (sealed rule — REAL as of Phase 6:
@@ -59,7 +64,37 @@ const NAV_TABS = [
 const CREATE_VIEWS = ['sheet', 'scoring', 'plan', 'community', 'setup'];
 const CREATE_LIVE = ['sheet', 'scoring', 'plan', 'community', 'setup'];
 
+/* ── THE GATE (Phase 23, sealed: "If (!currentUser) the WHOLE app renders
+ * only LoginView — nothing else mounts") ─────────────────────────────────
+ * The outer shell owns the sealed login writes so they can never be lost to
+ * an unmount: onLogin runs the sealed directory upsert (if present, map;
+ * else append — NO role mutation, the banned auto-promote is deleted) on
+ * THIS always-mounted instance's users hook, then signIn(u.id) persists the
+ * session ({ userId } under "hpsm:session" — swept by demo-reset/blank-start,
+ * so those also log out). currentUser resolves session-id → directory row;
+ * null (signed out, or the session user was removed) renders ONLY the gate.
+ * The sealed live-theming/tab-title effect lives HERE so the login screen
+ * already wears appConfig (brand color/icon + appName — the Settings ledger's
+ * "apply … to the LOGIN SCREEN when those phases land", honored this phase).
+ */
 export function AppShell() {
+  const [users, setUsers] = usePersistentState('users', SEED_USERS);
+  const [appConfig] = usePersistentState('appConfig', APP_CONFIG_SEED);
+  useEffect(() => { applyAppConfigLive(appConfig); }, [appConfig]);
+  const currentUser = useCurrentUser(users);
+  if (!currentUser) {
+    return (
+      <LoginScreen
+        users={users}
+        appConfig={appConfig}
+        onLogin={(u) => { setUsers((prev) => upsertUser(prev, u)); signIn(u.id); }}
+      />
+    );
+  }
+  return <AppSignedIn />;
+}
+
+function AppSignedIn() {
   const [view, setView] = useState('sheet');
   const snackRef = useRef(null);
 
@@ -108,16 +143,14 @@ export function AppShell() {
    * Identity pane's helper promises header + tab title — both live). */
   const appName = appNameFrom(appConfig);
 
-  /* Sealed LIVE THEMING + DOCUMENT TITLE (App-shell box) + the Phase-11
-   * design-dashboard overrides: BOOT RE-APPLIES the persisted appConfig into
-   * the live document (accent/brand token roles, wrapper theme, dashboard
-   * token overrides, tab title) and re-applies on every config change — no
-   * reload, sealed. */
-  useEffect(() => { applyAppConfigLive(appConfig); }, [appConfig]);
+  /* Sealed LIVE THEMING + DOCUMENT TITLE: applied ONCE at the outer gate
+   * shell (always mounted, login screen included) — see AppShell above. */
 
-  // currentUser = the seeded first user until the login phase (sealed order;
-  // the pages derive the same identity).
-  const currentUser = users[0] || null;
+  /* Phase 23: currentUser derives from the SESSION against the directory
+   * (the one seam, data/session.js) — never users[0]. The gate above
+   * guarantees a resolving user while this frame is mounted; if the session
+   * user is removed mid-flight the derivation nulls and the gate returns. */
+  const currentUser = useCurrentUser(users);
 
   const isMaster = isMasterWorkspace(activeWorkspaceId);
   const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId) || null;
@@ -744,7 +777,7 @@ export function AppShell() {
       </div>
 
       <ui-status-bar slot="footer">
-        <span>Phase 22 — Front-end polish (card zones on three named spacing steps · keyed detail rail · spacing gate)</span>
+        <span>Phase 23 — Login gate (session seam · demo-account sign-in · no auto-promote · logout live)</span>
         <span slot="end">Build Protocol active · zero literal hex</span>
       </ui-status-bar>
 
@@ -834,7 +867,10 @@ export function AppShell() {
           Replay tour
         </ui-menu-item>
         <ui-divider></ui-divider>
-        <ui-menu-item disabled title="Arrives with the Login phase">
+        {/* Phase 23 (sealed census A10, REAL): "Log out" ends the session —
+            signOut() nulls "hpsm:session" and the outer gate renders ONLY
+            the LoginView again. Sealed order: last item, below the divider. */}
+        <ui-menu-item onClick={() => signOut()}>
           <ui-icon slot="icon" size="sm">logout</ui-icon>
           Log out
         </ui-menu-item>
