@@ -9,7 +9,11 @@
  *   swap point. State B replaces the INTERNALS with Supabase auth
  *   (supabase.auth.getSession / signInWith… / signOut; the auth user id maps
  *   to the users-directory row) while the exports keep their signatures, so
- *   no UI code changes. No Supabase code ships now.
+ *   no UI code changes. No Supabase code ships now. STATE-B NOTE (audit
+ *   2026-07-15): State A upsert is ID-keyed and typed sign-in always mints a
+ *   fresh id, so re-typing an existing email creates a twin record (sealed-
+ *   faithful). When auth becomes email-keyed here, the upsert must match on
+ *   email and the twin path disappears.
  *
  * Persistence: the store table 'session' → "hpsm:session", value
  * { userId } | null (login-logic.sessionRecord). INSIDE the namespace ON

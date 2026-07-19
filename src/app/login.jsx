@@ -47,9 +47,9 @@
  *    tokened runway band — the oracle's grid pattern needs gradients, and the
  *    design law is "no gradients ever" (guide canonical mapping: "the
  *    login-bg-grid backdrop and login-card become tokened surfaces").
- *  · Submit is the ui-button click (Enter-to-submit inside the shadow fields
- *    is not wired — the sealed <form onSubmit> anatomy predates the
- *    composition law; declared).
+ *  · The sealed <form onSubmit> anatomy is recomposed as a keydown handler
+ *    on .login-form: Enter in any field submits (when valid) — the sealed
+ *    keyboard path, on the composition-law markup (audit 2026-07-15).
  */
 import { useEffect, useRef, useState } from 'react';
 import { uid, nowStamp } from './data/store.js';
@@ -105,7 +105,10 @@ export function LoginScreen({ users, appConfig, onLogin }) {
         <h1 className="login-h1">{LOGIN.h1}</h1>
         <p className="login-sub">{LOGIN.sub}</p>
 
-        <div className="login-form">
+        <div className="login-form"
+             onKeyDown={(e) => {
+               if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); submit(); }
+             }}>
           <Field label={LOGIN.fullName}>
             <TF label={LOGIN.fullName} placeholder={LOGIN.namePlaceholder}
                 value={name} onValue={setName} fieldRef={nameRef} />

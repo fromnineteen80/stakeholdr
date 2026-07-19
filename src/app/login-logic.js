@@ -28,11 +28,15 @@
  *    label bind to appConfig.appName (the oracle hardcoded "HP's Map"; the
  *    Settings box's helper "Shown in the header, login screen, and browser
  *    tab title" is the design intent — made real this phase).
- *  · DEMO LIST = every seeded NON-SYSTEM user as a full row (avatar + name +
+ *  · DEMO LIST = every SEEDED non-system user as a full row (avatar + name +
  *    title), superseding the sealed slice(0,5) first-name chips — the ruled
- *    Phase-23 presentation; same click = sign-in-as-them behavior. In BLANK
- *    mode this yields exactly the solo manager u-you (the u-system bot is
- *    excluded from every people surface, sealed roles enum).
+ *    Phase-23 presentation; same click = sign-in-as-them behavior. SCOPE
+ *    (audit 2026-07-15): the list filters to the SEED ids (+ the blank-mode
+ *    solo manager) — TYPED accounts never appear under the "demo accounts"
+ *    label (the sealed chip list was static seed data; a live-directory
+ *    filter leaked real users into it). Live records still win for display,
+ *    so a demo user's profile edits show. In BLANK mode this yields exactly
+ *    u-you (the u-system bot is excluded everywhere, sealed roles enum).
  *  · NEW_USER_ROLE = 'member' (the base role; sealed enum manager | member |
  *    system — the sealed submit() minted NO role at all and relied on the
  *    banned auto-promote; a record without a role would dodge every gate).
@@ -45,6 +49,7 @@
  *
  * Pure + node-tested (scripts/login-test.mjs): no React, no DOM globals.
  */
+import { SEED_USERS, BLANK_SOLO_USER } from './data/seed.js';
 
 /* ── session semantics (the shape data/session.js persists) ──────────────── */
 export const SESSION_TABLE = 'session';
@@ -127,7 +132,14 @@ export function upsertUser(users, u) {
     : [...list, u];
 }
 
-/* ── the demo-account quick-entry list (system bot excluded, sealed enum) ── */
+/* ── the demo-account quick-entry list (system bot excluded, sealed enum;
+ * SEED-SCOPED per the declared ledger — typed accounts are real accounts,
+ * not demos, and never render under the demo label) ── */
+const DEMO_IDS = new Set(
+  [...SEED_USERS, BLANK_SOLO_USER]
+    .filter((u) => u.role !== 'system')
+    .map((u) => u.id),
+);
 export function demoAccounts(users) {
-  return (users || []).filter((u) => u.role !== 'system');
+  return (users || []).filter((u) => u.role !== 'system' && DEMO_IDS.has(u.id));
 }

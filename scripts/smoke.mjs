@@ -1547,6 +1547,11 @@ for (const path of pages) {
   if (await page.locator('ui-coachmark.app-tour[open]').count() !== 1) errs.push('P23TOUR: the first-run tour must fire AFTER login on a fresh profile');
   await page.keyboard.press('Escape');
   await page.waitForTimeout(300);
+  // 2b. the session survives a reload (the persistence guarantee, gated)
+  await page.reload();
+  await page.waitForTimeout(1200);
+  if (await page.locator('.login-shell').count() !== 0) errs.push('P23PERSIST: a reload must keep the session (gate reappeared)');
+  if (await page.locator('ui-app-bar').count() !== 1) errs.push('P23PERSIST: the app did not remount after reload');
   // 3. logout (sealed census A10) → back to the gate, session cleared
   await page.locator('#me-anchor').click({ timeout: 3000 }).catch(e => errs.push('P23MENU: ' + e.message));
   await page.waitForTimeout(300);
