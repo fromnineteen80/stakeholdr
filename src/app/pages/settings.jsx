@@ -59,7 +59,8 @@
  *    Settings control vs SHELL DESIGN RULING #4): the ruled Sr mark reads
  *    --ui-sys-on-surface (mark color == title color, by law) and is EXEMPT
  *    from appConfig.brand; the brand color/icon apply to the pane preview
- *    now and to the LOGIN SCREEN + future surfaces when those phases land.
+ *    now and to the LOGIN SCREEN (REAL as of Phase 23 — login.jsx consumes
+ *    brand color + icon) + future surfaces as their phases land.
  *    Surfaced to the user as an open note, not silently absorbed.
  *  · ACCENT/BRAND HEX VALIDATION: applyAppConfigLive applies only strict
  *    #rrggbb values (the sealed oracle applied raw input); a malformed value
