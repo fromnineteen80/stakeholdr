@@ -1240,6 +1240,12 @@
      "note": "attribute (DECLARED Phase 18): opts into the footer Import affordance — a quiet ui-button variant=text with a leading upload_file ui-icon NEXT TO Export CSV (the sealed import spec's 'wherever import is offered' entry point on Lists). The button only emits import-open; the wizard is host-owned. Opt-in so embeds without an import flow never render a dead affordance (make-real law)"
     },
     {
+     "name": "readonly",
+     "type": "boolean",
+     "default": false,
+     "note": "attribute (DECLARED Phase 24): read-only mode for the Lists ARCHIVED view — the same grid with its write surfaces inert: no cell editor ever mounts, inline inputs/dropdown triggers render as plain display text (no hover wash, no pointer), and row-change NEVER fires (every write path funnels through one guarded emitter). Read affordances stay live: search/filter/sort, the selectable column (the archived bulk bar needs it), notes history, owners popover, community pills, Export CSV, and the record opener — whose edit-cell hint reads View person/organization instead of Edit (make-real law: no live-looking dead or lying affordance)"
+    },
+    {
      "name": "selection",
      "type": "array",
      "default": "[]",
@@ -1298,7 +1304,8 @@
     "cell-editing",
     "column-dragging",
     "scrolled-x",
-    "virtualized"
+    "virtualized",
+    "readonly"
    ],
    "import": "./components/stakeholder-table.js"
   },
